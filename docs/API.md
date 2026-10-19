@@ -40,7 +40,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna �
 | `GET\|PUT /wordreplace` | lista zamian słów stanowiska (`{"@p":["Prezydent"]}`) |
 | `GET /backups`, `POST /backups/restore/<nazwa>` | kopie zapasowe show |
 | `GET /locks`, `POST /lock/<rodzaj>/<id>?who=…`, `POST /unlock/<rodzaj>/<id>?who=…[&force=1]` | blokady edycji (45 s bez odświeżenia) |
-| `POST /report`, `GET\|DELETE /errors` | błędy scen zgłaszane przez wyjście |
+| `POST /report`, `GET\|DELETE /errors` | błędy scen zgłaszane przez wyjście (także „tekst nie mieści się (ściśnięcie poniżej N%)” – przepełnienie tekstu na antenie) |
 | `GET /audit[?n=100]` | ostatnie komendy z logu audytowego |
 
 ## TCP (port 6100; przy `--token` pierwsza linia `AUTH <token>`)

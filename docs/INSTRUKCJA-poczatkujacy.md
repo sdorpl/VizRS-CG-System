@@ -139,7 +139,7 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
 | OBS nic nie pokazuje | Trio → **⚙ Stan**: czy „Wyjścia” ≥ 1? W OBS kliknij *Odśwież pamięć podręczną bieżącej strony* w źródle Przeglądarka. Sprawdź URL i token. |
 | Zmiana szablonu nie widać na antenie | to celowe: warstwa ma znacznik **⏳ nowa wersja** – kliknij **Wdróż teraz** albo zrób ponowny TAKE. |
 | Czerwone „⚠ zapis show nieudany” | brak miejsca lub praw zapisu do `vizrs-data/`; antena działa, edycje nie są zapisywane. |
-| „⚠ błędy scen: N” | ⚙ Stan → lista błędów; wadliwy element jest ukryty, reszta gra. Popraw scenę w Artist. |
+| „⚠ błędy scen: N” | ⚙ Stan → lista błędów; wadliwy element jest ukryty, reszta gra. Popraw scenę w Artist. „tekst nie mieści się” = tekst na antenie wystaje poza belkę – skróć go i daj UPDATE. |
 | Tekst za długi / ściśnięty | pod polem widać `ściśnięcie: 72%` albo `w1: 72%` – pomarańczowe = ściśnięte, czerwone = bardzo ściśnięte; **⚠ nie mieści się** = tekst wystaje poza belkę: skróć go albo podziel na wiersze (Enter). |
 | Inny font na antenie niż w Artist | używaj fontów wbudowanych (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat) albo wgraj plik fontu do assets. |
 | „🔒 edytuje …” przy stronie | stronę edytuje inny operator; zapis wymaga potwierdzenia, blokada wygasa po 45 s. |

@@ -231,6 +231,8 @@ Kolejność pól w Trio: najpierw warianty, potem w kolejności drzewa (albo wg 
 
 Trio pokazuje pod polem ściśnięcie tekstu: `ściśnięcie: 72%` (tryby `squeeze`, `squeeze-shrink`) albo każdego wiersza `w1: 100%  w2: 72%` (`squeeze-lines`, `squeeze-each`); pomarańczowe < 100%, czerwone < 70%. W trybach `squeeze` i `squeeze-each` po przekroczeniu granicy pojawia się czerwone **⚠ nie mieści się – skróć tekst**.
 
+To samo widać w Artist: pod „min. ściśnięcie” zaznaczonego tekstu (`ściśnięcie: N%` / `w1 … w2 …`, ⚠ przy przepełnieniu), a przepełniony tekst ma na kanwie czerwoną przerywaną ramkę. Wyjście programu (`/output`, nie `?bus=preview`) zgłasza przepełnienie grafiki na antenie do `/api/errors` – w Trio jako „⚠ błędy scen” z treścią tekstu.
+
 ### 6.2 Tekst sformatowany
 
 Wartość pola pozostaje zwykłym tekstem ze znacznikami (`web/richtext.js`):

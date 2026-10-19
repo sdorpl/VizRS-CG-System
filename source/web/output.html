@@ -56,6 +56,8 @@
     console.error('[vizrs]', e);
     fetch('/api/report', { method: 'POST', body: JSON.stringify({ scene: e.scene, layer: e.node, message: e.message }) }).catch(() => {});
   };
+  // tekst nie mieści się mimo ściśnięcia do squeezeMin – operator widzi to w Trio (⚠ błędy scen); tylko program, nie podgląd
+  if (q.get('bus') !== 'preview') ScenePlayer.onOverflow = (e) => ScenePlayer.onError({ scene: e.scene, node: e.node, message: `tekst nie mieści się (ściśnięcie poniżej ${Math.round(e.min * 100)}%): „${e.text.slice(0, 80)}”` });
   const resize = () => fitStage(stage, box, W, H);
   addEventListener('resize', resize); resize();
   const status = document.getElementById('status');

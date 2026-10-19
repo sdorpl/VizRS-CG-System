@@ -15,6 +15,9 @@
   #box { position: relative; flex: 1; overflow: hidden; }
   #stage { position: absolute; left: 0; top: 0; outline: 1px solid #3a3f48; }
   #stage .vz-node { cursor: move; }
+  #stage .vz-node[data-over] { outline: 2px dashed #ff4d4d; outline-offset: 2px; }
+  .sqinfo { padding: 0 10px 4px 110px; font: 11px ui-monospace, monospace; color: #8b93a1; display: flex; flex-wrap: wrap; gap: 8px; }
+  .sqinfo .warn { color: #ffb020; } .sqinfo .bad { color: #ff4d4d; }
   #sel { position: absolute; border: 1px solid var(--acc); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.6); display: none; z-index: 5; }
   #sel .h { position: absolute; right: -6px; bottom: -6px; width: 11px; height: 11px; background: var(--acc); border: 1px solid #000; pointer-events: auto; cursor: nwse-resize; }
   #sel .lbl { position: absolute; left: -1px; top: -18px; font-size: 10px; background: var(--acc); color: #000; padding: 1px 4px; white-space: nowrap; }
@@ -361,6 +364,7 @@ function renderProps() {
       ${d.anim ? `<button class="icon kbtn" data-key="${p}" title="Klucz animacji w bieżącym czasie (dodaj/usuń)">◆</button>` : '<span></span>'}
       <button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio">⛓</button>
     </div>`;
+    if (p === 'squeezeMin' && n.type === 'text') h += `<div class="sqinfo" id="sqInfo"></div>`;
   }
   const vf = variantFields(scene);
   h += `<div class="pgroup">Wariant – widoczność</div>`;
@@ -377,6 +381,7 @@ function renderProps() {
   <div class="help">◆ – klucz animacji w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy/aktualizuje klucz automatycznie.<br>⛓ – wystawia właściwość jako <b>pole kontrolne</b>: operator Trio wpisze tu wartość na stronie.<br><b>[[tekst]]</b> w tekście = wyróżnienie (kolor tła/tekstu w grupie Tekst).<br><b>Autofollow</b> – prostokąt dopasowuje szerokość/wysokość do tekstu (np. pasek nazwiska). <b>Punkt X/Y</b> = right/bottom sprawia, że element rośnie w lewo/w górę.</div>`;
   el.innerHTML = h;
   syncProps(true);
+  showSqueeze();
   const host = $('[data-tkhost]', el);
   if (host) {
     const ta = $('textarea[data-p="text"]', el);
@@ -568,7 +573,16 @@ function toggleKey(n, p) {
     setKey(n, p, t, v);
   }
 }
-function refresh() { player.apply(t); }
+function refresh() { player.apply(t); showSqueeze(); }
+/** Ściśnięcie zaznaczonego tekstu (jak wskaźnik w Trio); przepełnienie oznacza też ramka na kanwie (`data-over`). */
+function showSqueeze() {
+  const el = $('#sqInfo'); if (!el) return;
+  const n = selNode(), it = n && player.items.find((i) => i.node === n || i.node.id === n.id);
+  if (!it?.sq) { el.innerHTML = ''; return; }
+  const one = it.sq.length === 1;
+  el.innerHTML = it.sq.map((s, i) => `<span class="${s < 0.7 || it.over ? 'bad' : s < 0.999 ? 'warn' : ''}">${one ? 'ściśnięcie' : 'w' + (i + 1)}: ${Math.round(s * 100)}%</span>`).join('')
+    + (it.over ? '<span class="bad" title="Tekst wymaga ściśnięcia poniżej granicy (min. ściśnięcie) – wystaje poza ramkę">⚠ nie mieści się</span>' : '');
+}
 function parseVal(p, inp) {
   const d = PROPS[p];
   if (d.t === 'bool') return inp.checked;

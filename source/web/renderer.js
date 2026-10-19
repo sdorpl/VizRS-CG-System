@@ -1097,6 +1097,11 @@ export class ScenePlayer {
             const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, hlBg, hlFg };
             const m = perLine ? fitLines(sp, text, fo) : fitText(sp, fo);
             it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;
+            // przepełnienie (jak `data-cg-overflow` / `cg-text-overflow` w BTB): Artist rysuje ramkę, wyjście zgłasza do /api/errors
+            if (it.over) {
+              el.dataset.over = '1';
+              ScenePlayer.onOverflow?.({ scene: this.scene?.name || this.scene?.id || '?', node: n.name || n.id || '?', text: stripMarkup(text), sq: it.sq, min: squeezeFloor(sqMin) });
+            } else delete el.dataset.over;
           }
           break;
         }

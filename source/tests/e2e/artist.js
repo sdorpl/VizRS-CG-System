@@ -158,6 +158,17 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     const tkn = sc2.nodes.find((x) => x.type === 'group' && x.children?.some((c) => c.type === 'ticker'))?.children.find((c) => c.type === 'ticker');
     ok(tkn && tkn.fields.text === 'news' && tkn.props.text.split('\n')[0] === 'Próbna z Artist' && sc2.fieldMeta.news?.label === 'Wiadomości', 'preset tickera zapisany: pole news, wiadomości próbne z edytora', tkn && [tkn.fields, tkn.props.text]);
 
+    // ściskanie: wskaźnik pod „min. ściśnięcie” i ramka przepełnienia na kanwie (data-over)
+    await pg.goto(B + '/artist?scene=at'); await sleep(1000);
+    await pg.click('#tree .item[data-id="t1"]'); await sleep(200);
+    await pg.selectOption('[data-p="textFit"]', 'squeeze'); await sleep(200);
+    await pg.locator('[data-p="text"]').fill('Tytuł nieco dłuższy niż ramka tekstu w tej scenie testowej'); await sleep(300);
+    const sqA = await pg.locator('#sqInfo').innerText();
+    ok(/ściśnięcie: \d+%/.test(sqA) && !sqA.includes('nie mieści') && (await pg.locator('#stage [data-id="t1"][data-over]').count()) === 0, 'Artist: wskaźnik ściśnięcia zaznaczonego tekstu', sqA);
+    await pg.locator('[data-p="text"]').fill('Tytuł o wiele za długi, '.repeat(6)); await sleep(300);
+    const sqB = await pg.locator('#sqInfo').innerText();
+    ok(sqB.includes('nie mieści') && (await pg.locator('#stage [data-id="t1"][data-over]').count()) === 1, 'Artist: przepełnienie – ostrzeżenie w panelu i ramka na kanwie', sqB);
+
     ok(errs.length === 0, 'brak błędów JS w Artist' + (errs.length ? ': ' + errs.join('; ') : ''));
   } catch (e) { console.error(e); failures++; } finally {
     if (browser) await browser.close();

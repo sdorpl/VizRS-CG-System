@@ -302,6 +302,9 @@ async function waitUp() {
     await sleep(1200);
     el2 = await eachLines();
     ok(el2.length === 2 && sx(el2[0].tf) === 0.6 && el2.every((l) => !l.fs), 'squeeze-each: za długi wiersz zatrzymuje się na squeezeMin (font bez zmian)', el2);
+    const errsOver = await api('/api/errors');
+    ok(errsOver.some((e) => e.scene === 'Reguly' && e.message.includes('nie mieści się') && e.message.includes('60%')), 'wyjście zgłasza przepełnienie tekstu do /api/errors', errsOver);
+    await api('/api/errors', { method: 'DELETE' });
     await api('/api/clear');
 
     // pole w Trio z regułami
