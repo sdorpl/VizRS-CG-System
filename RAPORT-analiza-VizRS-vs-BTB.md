@@ -128,7 +128,7 @@ Priorytety: **P1** = przed użyciem na antenie, **P2** = duży zysk operacyjny, 
 | 22 | **Biblioteka presetów animacji** | Zapis/zastosowanie zestawu kluczy między scenami (i wymiana z BTB jako JSON). | M |
 | 23 | **Presety show / segmenty** | „Zestaw na segment programu” (lista stron + warstw) jednym kliknięciem — odpowiednik presetów BTB; ładuje i wywołuje grupę stron. | S–M |
 | 24 | **Wiele operatorów** | Blokada edycji strony przez innego operatora, widok „kto edytuje” (po #3). | M |
-| 25 | **Narzędzia wspólne z BTB** | Wspólny kontrakt elementu/sceny (konwerter VizRS ↔ BTB v3 `.json`) albo przynajmniej wspólny zestaw wektorów testowych dla squeeze/autofollow, by trzy implementacje nie rozjeżdżały się. Import `.cgpack` z BTB do VizRS jako sceny. | L |
+| 25 | **Narzędzia wspólne z BTB** | Wspólny kontrakt elementu/sceny (konwerter BTB v3 `.json` → VizRS, jednokierunkowy) albo przynajmniej wspólny zestaw wektorów testowych dla squeeze/autofollow, by trzy implementacje nie rozjeżdżały się. Import `.cgpack` z BTB do VizRS jako sceny. | L |
 | 26 | **Dystrybucja** | Skrypty buildów mają się (`build-*.sh/bat`); dodać CI (GitHub Actions) z buildem Linux/macOS/Windows, sumami kontrolnymi i `--version`; usługa systemd/launchd; opcjonalnie tray. | S–M |
 
 ### Rekomendowana kolejność

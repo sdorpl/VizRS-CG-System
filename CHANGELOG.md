@@ -8,14 +8,18 @@
 - Reguły pola tickera (Artist ⚙): maks. wiadomości, maks. znaków wiadomości, lista dozwolonych kategorii, WERSALIKI, typografia, tylko do odczytu.
 - Artist: panel węzła Ticker pokazuje tylko właściwości bieżącego trybu; presety „Ticker pełny ekran”, „Pasek z wiperem”, „Crawl z linią akcentu”, „Ticker boczny” w menu ＋ Dodaj.
 - Sterowanie: `TICKER <strona[:pole]> LIST|ADD|SET|DEL|CLEAR` (TCP), `/api/ticker/<strona>[/add|/set/<n>|/del/<n>|/clear]` (HTTP), `/vizrs/ticker …` (OSC) – zmiana zapisuje stronę i aktualizuje antenę.
-- BTB: import tickerów z kategoriami, kolorami kategorii, trybem (`horizontal`→crawl, `vertical`→roll, `whip`), etykietą wipera i błyskiem; szablony kodowe przekształcone w scenę (np. `ticker-unified`) odtwarzane jako węzeł ticker zamiast statycznego tekstu; eksport tickera jako element `TICKER` z `items[].category`.
+- BTB: import tickerów z kategoriami, kolorami kategorii, trybem (`horizontal`→crawl, `vertical`→roll, `whip`), etykietą wipera i błyskiem; szablony kodowe przekształcone w scenę (np. `ticker-unified`) odtwarzane jako węzeł ticker zamiast statycznego tekstu.
+- Usunięto eksport sceny VizRS do formatu BTB CG (przycisk „⇩ BTB”, `exportScene`, `toBtbHtml`): BTB CG jest bazą pomysłów, grafiki przenosimy tylko z BTB do VizRS.
+- **Paczka `examples/BTB_CG`**: 31 wzorców BTB CG (belki, plakietki, tickery, zegary, logo) skonwertowanych osobno, strony 8001–8402 na warstwach `main`/`badge`/`ticker`/`clock`/`logo`, font Bahnschrift i logo w `assets/`; budowa `tools/build-btb-pack.mjs`, porównanie wizualne z wyjściem BTB CG `tests/e2e/btb-visual.js` (31/31 zgodnych, znane różnice w `examples/BTB_CG/README.md`).
+- Import BTB: format zegara `HH:MM` (minuty w BTB) → `HH:mm`, formaty rozszerzone `YYYY/DD/MM`; ściskanie tekstu BADGE do szerokości tła; granica ściśnięcia jak w BTB (brak → 0,8, 0 → bez granicy); pole tickera tylko dla elementów `TICKER`; obrazy `https://` zachowują pełny adres; warstwa ticker BTB bez kategorii, z odstępem separatora z `gap`; rozmiar i grubość etykiety z tekstu wipera.
+- Ticker: `crawlFrom` (`right`/`left` – taśma od razu pełna jak w BTB), `labelSize`, `labelWeight` (etykieta/wiper).
 - Walidacja: limity tickera (200 wiadomości × 500 znaków), `catColors`, `fieldMeta.maxItems`/`cats`; wspólne wektory zapisu wiadomości JS ↔ Rust (`tests/vectors/ticker.json`).
 - Trio: zoom dużego podglądu (kółko, dwuklik w element, przeciąganie), wybór tła monitora PGM (szachownica, czarne, białe, kluczowanie, własny kolor); jeden monitor PGM zamiast PGM+PRV.
 
 ## 2.0.0 (2026-10-19) – „Studio”
 - **Powiązania (dock)**: reguły `layer:`/`page:`/`scene:` przesuwają scenę, gdy wskazana grafika jest na antenie; nadpisanie operatora (przycisk ⇅ w Trio); stan odtwarzany po odświeżeniu wyjścia.
 - **Artist**: markery na osi (M, dwuklik; → stop point), zaznaczanie kluczy (Shift, ramka), kopiuj/wklej klucze (Ctrl+C/V), zoom Ctrl+kółko i „dopasuj”, przeciąganie w drzewie (zmiana rodzica z zachowaniem położenia), biblioteka presetów animacji (zapis, zastosowanie, import/eksport).
-- **BTB CG**: import elementów (`.json` v3, `.cgpack`) jako scena + strona z raportem konwersji; eksport sceny jako element BTB; wspólny model tekstu i wektory testowe (`tools/sync-btb.sh`).
+- **BTB CG**: import elementów (`.json` v3, `.cgpack`) jako scena + strona z raportem konwersji; wspólny model tekstu i wektory testowe (`tools/sync-btb.sh`).
 - **Wielu operatorów**: blokady edycji (miękkie, 45 s), znacznik 🔒 w Trio i Artist.
 - **Dystrybucja**: `deploy/` (systemd, launchd, Windows/NSSM), `VIZRS_TOKEN`, runbook awarii, `docs/API.md`, `docs/COMPANION.md`.
 

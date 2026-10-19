@@ -125,7 +125,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     sc = await saved();
     ok(sc.fieldMeta.tytul && sc.fieldMeta.tytul.maxChars === 15 && sc.fieldMeta.tytul.upper === true && sc.fieldMeta.tytul.help === 'wpisz krótko', 'reguły pola zapisane w fieldMeta', sc.fieldMeta);
     ok(Array.isArray(sc.dock) && sc.dock[0].target === 'page:3001', 'powiązanie dock zapisane w scenie', sc.dock);
-    // import / eksport BTB CG
+    // import BTB CG
     const FXD = path.join(__dirname, '../fixtures/btb');
     const importBtb = async (file) => {
       await pg.keyboard.press('Escape');
@@ -144,11 +144,6 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     await pg.click('#repOk').catch(() => {});
     sh = await api('/api/show');
     ok(sh.scenes.length === nBefore + 2, 'import BTB (.cgpack): ZIP rozpakowany, scena dodana', sh.scenes.length);
-    const [dl] = await Promise.all([pg.waitForEvent('download'), pg.click('#bExpBtb')]);
-    const dlPath = await dl.path();
-    const exported = JSON.parse(fs.readFileSync(dlPath, 'utf8'));
-    ok(exported._exportVersion === 3 && exported.elements[0].scene.layers.length > 0, 'eksport BTB: plik v3 z warstwami', Object.keys(exported));
-    await pg.click('#repOk').catch(() => {});
 
     // presety tickerów i panel węzła ticker (tylko właściwości bieżącego trybu, edytor wiadomości próbnych)
     await pg.goto(B + '/artist?scene=at'); await sleep(1000);

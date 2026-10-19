@@ -72,11 +72,14 @@ export const PROPS = {
   sepColor: { t: 'color', d: '', g: 'Ticker', label: 'kolor separatora' },
   tickerMode: { t: 'select', d: 'crawl', g: 'Ticker', opts: TICKER_MODES, label: 'tryb' },
   sepStyle: { t: 'select', d: 'text', g: 'Ticker', opts: SEP_STYLES, label: 'styl separatora' },
+  crawlFrom: { t: 'select', d: 'right', g: 'Ticker', opts: ['right', 'left'], label: 'start crawla' },
   label: { t: 'string', d: '', g: 'Ticker', label: 'etykieta domyślna' },
   catColors: { t: 'string', d: '', g: 'Ticker', label: 'kolory kategorii' },
   gleam: { t: 'num', d: 0, g: 'Ticker', min: 0, step: 0.5, label: 'błysk etykiety (co s)' },
   hold: { t: 'num', d: 5, g: 'Ticker', min: 1, step: 0.5, label: 'czas wiadomości (s)' },
   catW: { t: 'num', d: 170, g: 'Ticker', min: 0, label: 'szer. kategorii' },
+  labelSize: { t: 'num', d: 0, g: 'Ticker', min: 0, label: 'rozmiar etykiety (0 = 80%)' },
+  labelWeight: { t: 'select', d: '', g: 'Ticker', opts: ['', '300', '400', '500', '600', '700', '800', '900'], label: 'grubość etykiety' },
   catBg: { t: 'color', d: '#c8102e', g: 'Ticker', label: 'tło kategorii' },
   catFg: { t: 'color', d: '#ffffff', g: 'Ticker', label: 'tekst kategorii' },
 };
@@ -93,7 +96,7 @@ export const TYPES = {
   qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', 'radius', 'shadow'] },
   image: { label: 'Obraz/wideo', icon: '🖼', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
   clock: { label: 'Zegar', icon: '⏱', props: [...COMMON, 'mode', 'format', 'seconds', 'target', ...TEXT_STYLE] },
-  ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'gleam', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
+  ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'labelSize', 'labelWeight', 'gleam', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
 };
 
 export const FONTS = ['Barlow Condensed', 'Barlow', 'Inter', 'Oswald', 'Bebas Neue', 'Roboto Condensed', 'Montserrat', 'Anton', 'Archivo Black', 'Teko', 'Roboto Mono', 'Playfair Display', 'Arial'];
@@ -456,6 +459,8 @@ function gleamAt(g, period, now) {
   g.style.display = 'block';
   g.style.left = (-60 + u * 170) + '%';
 }
+/** Rozmiar tekstu etykiety/kategorii tickera: `labelSize` w px albo 80% rozmiaru treści. */
+const labFont = (p) => (p('labelSize') > 0 ? p('labelSize') + 'px' : '.8em');
 /** Jeden odcinek taśmy crawla: [plakietka kategorii] treść [separator]. */
 function tickerSegment(x, o) {
   const seg = document.createElement('span');
@@ -685,7 +690,7 @@ export class ScenePlayer {
     const catW = label || items.some((x) => x.cat) ? Math.max(0, p('catW')) : 0;
     it.tkCatW = catW;
     ensureFont(font, this.opts.assetBase);
-    const key = ['slots', up, font, p('size'), p('weight'), p('italic'), p('spacing'), w, h, catW, catBg, p('catFg'), p('color'), p('shadow'), p('catColors'), label, fe].join('|');
+    const key = ['slots', up, font, p('size'), p('weight'), p('italic'), p('spacing'), w, h, catW, catBg, p('catFg'), p('color'), p('shadow'), p('catColors'), label, p('labelSize'), p('labelWeight'), fe].join('|');
     const S = it.strip.style;
     if (it.cache.key !== key || !it.slots) {
       it.cache.key = key;
@@ -699,7 +704,7 @@ export class ScenePlayer {
       const mkSlot = () => {
         const cat = document.createElement('div');
         Object.assign(cat.style, { position: 'absolute', left: '0', top: '0', width: catW + 'px', height: '100%', display: catW ? 'flex' : 'none', zIndex: '2',
-          alignItems: 'center', justifyContent: 'center', color: p('catFg'), fontSize: '.8em', textShadow: 'none', overflow: 'hidden' });
+          alignItems: 'center', justifyContent: 'center', color: p('catFg'), fontSize: labFont(p), fontWeight: p('labelWeight') || '', textShadow: 'none', overflow: 'hidden' });
         const catT = document.createElement('span');
         catT.style.position = 'relative';
         cat.appendChild(catT);
@@ -861,7 +866,7 @@ export class ScenePlayer {
       lab.appendChild(labT);
       const gl = gleamEl(lab);
       it.strip.appendChild(clip); it.strip.appendChild(lab);
-      tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null };
+      tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null, fresh: true };
     }
     const styleKey = [up, p('sep'), p('sepStyle'), p('sepColor'), catBg, p('catFg'), p('catColors'), font, p('size'), p('weight'), p('italic'), p('spacing'), fe].join('|');
     const segOf = (x) => tickerSegment(x, { up, sep: p('sep'), sepStyle: p('sepStyle'), sepColor: p('sepColor'), colors, catBg, catFg: p('catFg') });
@@ -882,7 +887,7 @@ export class ScenePlayer {
     tk.clip.style.left = labW + 'px';
     tk.lab.style.display = labW ? 'flex' : 'none';
     if (labW) {
-      Object.assign(tk.lab.style, { width: labW + 'px', background: catColorOf({ cat: label }, colors, catBg), color: p('catFg') });
+      Object.assign(tk.lab.style, { width: labW + 'px', background: catColorOf({ cat: label }, colors, catBg), color: p('catFg'), fontSize: labFont(p), fontWeight: p('labelWeight') || '' });
       tk.labT.textContent = up ? label.toUpperCase() : label;
       gleamAt(tk.gl, p('gleam'), now);
     }
@@ -906,6 +911,8 @@ export class ScenePlayer {
     tk.last = now;
     tk.d += p('speed') * dt;
     if (!tk.segs.length) tk.cursor = Math.max(tk.cursor, tk.d); // pusta taśma: start od prawej krawędzi
+    // crawlFrom=left: pierwsza wiadomość od lewej krawędzi, taśma od razu pełna (jak warstwa ticker w BTB CG)
+    if (tk.fresh) { tk.fresh = false; if (p('crawlFrom') === 'left') tk.cursor = tk.d - vw; }
     for (let guard = 0; n && tk.cursor - tk.d < vw + 40 && guard < 200; guard++) {
       const idx = tk.nextIdx % n, x = items[idx];
       const el = segOf(x);

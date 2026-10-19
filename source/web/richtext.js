@@ -65,25 +65,8 @@ export function carryLines(lines) {
   });
 }
 
-// ---------------------------------------------------------------- konwersja z/do RichText v1 (BTB-CG, text-model.js)
+// ---------------------------------------------------------------- import z RichText v1 (BTB-CG, text-model.js)
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-/** Znacznik VizRS → HTML kanoniczny BTB-CG (wymaga załadowanego `CGText`). Rozmiar w % jest pomijany (BTB używa px). */
-export function toBtbHtml(text, CGText = globalThis.CGText) {
-  const blocks = String(text ?? '').split('\n').map((line) => {
-    const runs = parseMarkup(line).runs.map((r) => {
-      const m = {};
-      if (r.b) m.weight = 700;
-      if (r.i) m.italic = true;
-      if (r.u) m.underline = true;
-      if (r.c) m.color = r.c;
-      if (r.hl) { m.bg = '#e30613'; m.padding = '0 4px'; }
-      return Object.keys(m).length ? { t: r.t, m } : { t: r.t };
-    });
-    return { runs: runs.length ? runs : [{ t: '' }] };
-  });
-  return CGText.toHtml({ v: 1, blocks });
-}
 
 /** HTML BTB-CG → znacznik VizRS (po sanityzacji przez `CGText.toRich`). */
 export function fromBtbHtml(html, CGText = globalThis.CGText) {

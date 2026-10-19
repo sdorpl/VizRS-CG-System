@@ -1,0 +1,4204 @@
+{
+ "name": "BTB CG – elementy przeniesione",
+ "scenes": [
+  {
+   "name": "Belka - PILNE",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 0.5,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — strong"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Belka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {},
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10,
+        "shadow": 20
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — strong",
+       "props": {
+        "x": 30,
+        "y": 23,
+        "w": 1589.7,
+        "h": 107,
+        "text": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ",
+        "font": "Bahnschrift.ttf",
+        "size": 96,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_-_pilne-new-wasm"
+  },
+  {
+   "name": "Belka - PILNE (Belka_-_PILNE-new.json)",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — strong"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Belka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10,
+        "shadow": 20
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — strong",
+       "props": {
+        "x": 30,
+        "y": 23,
+        "w": 1589.7,
+        "h": 107,
+        "text": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ",
+        "font": "Bahnschrift.ttf",
+        "size": 96,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "blur": [
+         {
+          "t": 0,
+          "v": 14,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ],
+        "opacity": [
+         {
+          "t": 0,
+          "v": 0,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 1,
+          "e": "out"
+         },
+         {
+          "t": 1,
+          "v": 0
+         }
+        ],
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_-_pilne-new"
+  },
+  {
+   "name": "Belka - PILNE (Belka_-_PILNE.cgpack)",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — strong"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Belka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10,
+        "shadow": 20
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — strong",
+       "props": {
+        "x": 30,
+        "y": 23,
+        "w": 1589.7,
+        "h": 107,
+        "text": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ",
+        "font": "Bahnschrift.ttf",
+        "size": 96,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.8
+       },
+       "anim": {
+        "blur": [
+         {
+          "t": 0,
+          "v": 14,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ],
+        "opacity": [
+         {
+          "t": 0,
+          "v": 0,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 1,
+          "e": "out"
+         },
+         {
+          "t": 1,
+          "v": 0
+         }
+        ],
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_-_pilne"
+  },
+  {
+   "name": "Belka - PILNE (Belka_-_PILNE.json)",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — strong"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Belka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10,
+        "shadow": 20
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — strong",
+       "props": {
+        "x": 30,
+        "y": 23,
+        "w": 1589.7,
+        "h": 107,
+        "text": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ",
+        "font": "Bahnschrift.ttf",
+        "size": 96,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "blur": [
+         {
+          "t": 0,
+          "v": 14,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ],
+        "opacity": [
+         {
+          "t": 0,
+          "v": 0,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 1,
+          "e": "out"
+         },
+         {
+          "t": 1,
+          "v": 0
+         }
+        ],
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_-_pilne"
+  },
+  {
+   "name": "belka exp (18:26:40)",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — span"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_5e751639",
+     "type": "group",
+     "name": "belka exp (18:26:40)",
+     "props": {
+      "x": 180,
+      "y": 854.8,
+      "w": 1728,
+      "h": 110
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 964.8,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 854.8
+       }
+      ],
+      "scale": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 110,
+        "color": "#7e3e3e"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — span",
+       "props": {
+        "x": 30,
+        "y": 18.2,
+        "w": 456.2,
+        "h": 72,
+        "text": "Sample Title",
+        "font": "Arial",
+        "size": 64,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      },
+      {
+       "id": "ps3",
+       "type": "rect",
+       "name": "::before — rep-side-graphic",
+       "props": {
+        "x": 1328,
+        "y": 0,
+        "w": 400,
+        "h": 109.6,
+        "opacity": 0.800000011920929,
+        "color": "#7e3e3e",
+        "color2": "#00000000",
+        "gradAngle": 90
+       },
+       "anim": {},
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_exp_18_26_40"
+  },
+  {
+   "name": "Belka glowna",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 0.45,
+   "stops": [
+    0.25
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_ce3ee2c7",
+     "type": "group",
+     "name": "Belka glowna",
+     "props": {
+      "x": 220,
+      "y": 849.9,
+      "w": 1650,
+      "h": 125
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.25,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.25,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 125,
+        "color": "#000057",
+        "color2": "#001a80",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "span",
+       "props": {
+        "x": 30,
+        "y": 6.9,
+        "w": 294.3,
+        "h": 53,
+        "text": "TEST BELEK",
+        "font": "Bahnschrift.ttf",
+        "size": 48,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "span",
+       "props": {
+        "x": 30,
+        "y": 76.9,
+        "w": 110.4,
+        "h": 26,
+        "text": "Font size",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "400",
+        "color": "#ffffff",
+        "italic": true,
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {},
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_glowna"
+  },
+  {
+   "name": "Belka Miasto",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — slt-squash"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_city-bar",
+     "type": "group",
+     "name": "Belka Miasto",
+     "props": {
+      "x": 154.05,
+      "y": 164.5,
+      "w": 217,
+      "h": 58,
+      "scale": 1.5
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": -62.95,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 154.05
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 217,
+        "h": 58,
+        "color": "#ffffff",
+        "radius": 4,
+        "follow": "tx2",
+        "followAxis": "w",
+        "followPad": 32,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — slt-squash",
+       "props": {
+        "x": 16,
+        "y": 8,
+        "w": 900,
+        "h": 42,
+        "text": "WARSZAWA",
+        "font": "Inter",
+        "size": 30,
+        "weight": "700",
+        "color": "#000000",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {
+        "clipT": [
+         {
+          "t": 0.1,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_miasto"
+  },
+  {
+   "name": "Belka pilne",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_6f6d9625",
+     "type": "group",
+     "name": "Belka pilne",
+     "props": {
+      "x": 220,
+      "y": 849.9,
+      "w": 1650,
+      "h": 125
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 125,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "span",
+       "props": {
+        "x": 30,
+        "y": 6.9,
+        "w": 579.9,
+        "h": 53,
+        "text": "KCOM MNIE ZNISZCZYĆ",
+        "font": "Bahnschrift.ttf",
+        "size": 48,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "span",
+       "props": {
+        "x": 30,
+        "y": 76.9,
+        "w": 420.5,
+        "h": 26,
+        "text": "zmasowane ataki w stronę Barneja",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "400",
+        "color": "#ffffff",
+        "italic": true,
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_belka_pilne"
+  },
+  {
+   "name": "Grafika - theme",
+   "layer": "logo",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_republik",
+     "type": "group",
+     "name": "Grafika - theme",
+     "props": {
+      "x": 96,
+      "y": 910,
+      "w": 150,
+      "h": 80
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": -54,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 96
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-logo-box",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 80,
+        "color": "#0047ab"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "bd2",
+       "type": "rect",
+       "name": "Krawędź right — rep-logo-box",
+       "props": {
+        "x": 148,
+        "y": 0,
+        "w": 2,
+        "h": 80,
+        "color": "#ffffff1a"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "im3",
+       "type": "image",
+       "name": "rep-logo-img",
+       "props": {
+        "x": 49,
+        "y": 29,
+        "w": 50,
+        "h": 22,
+        "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/TV_Republika_logo_2024.svg/200px-TV_Republika_logo_2024.svg.png",
+        "fitMode": "contain"
+       },
+       "anim": {},
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_grafika_-_theme"
+  },
+  {
+   "name": "MIASTO lewa",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — b"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_8f122d0f",
+     "type": "group",
+     "name": "MIASTO lewa",
+     "props": {
+      "x": 50.1,
+      "y": 50,
+      "w": 183,
+      "h": 58
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 183,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 31.7,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 183,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 31.7,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "TITLE — b",
+       "props": {
+        "x": 15.9,
+        "y": 18,
+        "w": 900,
+        "h": 26,
+        "text": "BIAŁYSTOK",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_miasto_lewa"
+  },
+  {
+   "name": "MIASTO prawa — Warszawa (odzyskana)",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — slt-squash"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_belka-wa",
+     "type": "group",
+     "name": "MIASTO prawa — Warszawa (odzyskana)",
+     "props": {
+      "x": 1250.1,
+      "y": 50,
+      "w": 1192,
+      "h": 58
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 620,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 620,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "TITLE — slt-squash",
+       "props": {
+        "x": 16,
+        "y": 8,
+        "w": 588,
+        "h": 42,
+        "text": "warszawa / trubunał konsytyucyjny bogdana święczkowskiego",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#000000",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipT": [
+         {
+          "t": 0.1,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_miasto_prawa_warszawa_odzyskana"
+  },
+  {
+   "name": "MIASTO prawa",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — b"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_534a3395",
+     "type": "group",
+     "name": "MIASTO prawa",
+     "props": {
+      "x": 1766,
+      "y": 50,
+      "w": 104,
+      "h": 58
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 32,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 104,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 32,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "TITLE — b",
+       "props": {
+        "x": 16,
+        "y": 18,
+        "w": 900,
+        "h": 26,
+        "text": "Łódź",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_miasto_prawa"
+  },
+  {
+   "name": "NA ŻYWO lewa",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.7,
+   "stops": [
+    0.9
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — span"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_na-zywo-",
+     "type": "group",
+     "name": "NA ŻYWO lewa",
+     "props": {
+      "x": 50.2,
+      "y": 49.8,
+      "w": 180,
+      "h": 51
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.7,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 57.6,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 57.6,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 15.8,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff",
+        "radius": 7
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "TITLE — span",
+       "props": {
+        "x": 41.8,
+        "y": 12.2,
+        "w": 900,
+        "h": 26,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_na_zywo_lewa"
+  },
+  {
+   "name": "NA ŻYWO lewo dol",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.7,
+   "stops": [
+    0.9
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — span"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_30c55e1a",
+     "type": "group",
+     "name": "NA ŻYWO lewo dol",
+     "props": {
+      "x": 50.2,
+      "y": 794.2,
+      "w": 180,
+      "h": 51
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.7,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 57.6,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 57.6,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 15.8,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff",
+        "radius": 7
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "TITLE — span",
+       "props": {
+        "x": 41.8,
+        "y": 12.2,
+        "w": 900,
+        "h": 26,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_na_zywo_lewo_dol"
+  },
+  {
+   "name": "NA ŻYWO prawo",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.7,
+   "stops": [
+    0.9
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — span"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_7879222f",
+     "type": "group",
+     "name": "NA ŻYWO prawo",
+     "props": {
+      "x": 1689.8,
+      "y": 49.8,
+      "w": 180,
+      "h": 51
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.7,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 57.6,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 57.6,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 15.8,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff",
+        "radius": 7
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "TITLE — span",
+       "props": {
+        "x": 41.8,
+        "y": 12.2,
+        "w": 900,
+        "h": 26,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_na_zywo_prawo"
+  },
+  {
+   "name": "PILNE (OCG)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.6
+   ],
+   "fieldMeta": {
+    "wiper_text": {
+     "label": "WIPER_TEXT — utk-wiper-text"
+    },
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_urgent-o",
+     "type": "group",
+     "name": "PILNE (OCG)",
+     "props": {
+      "x": 219.8,
+      "y": 989,
+      "w": 1651,
+      "h": 42
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1031,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 989,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 1031
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "utk-container",
+       "props": {
+        "x": 0.2,
+        "y": 1,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 1,
+        "w": 1650.2,
+        "h": 40,
+        "tickerMode": "whip",
+        "hold": 6,
+        "catBg": "#901414",
+        "gleam": 5,
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "upper": true,
+        "catW": 137,
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900"
+       },
+       "anim": {},
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_pilne_ocg"
+  },
+  {
+   "name": "Plakietka NA ŻYWO",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — slt-squash"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_na-zywo-",
+     "type": "group",
+     "name": "Plakietka NA ŻYWO",
+     "props": {
+      "x": 151.2,
+      "y": 114.5,
+      "w": 206,
+      "h": 58,
+      "scale": 1.5
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": -54.8,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 151.2
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 206,
+        "h": 58,
+        "color": "#b91c1c",
+        "radius": 4,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 58,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.2,
+        "y": 22,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff",
+        "radius": 7
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "TITLE — slt-squash",
+       "props": {
+        "x": 42,
+        "y": 8,
+        "w": 900,
+        "h": 42,
+        "text": "NA ŻYWO",
+        "font": "Inter",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_plakietka_na_zywo"
+  },
+  {
+   "name": "Republika Logo (01:07:36)",
+   "layer": "logo",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_cc8bca3c",
+     "type": "group",
+     "name": "Republika Logo (01:07:36)",
+     "props": {
+      "x": 1695,
+      "y": 814,
+      "w": 50,
+      "h": 22
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": 1745,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1695,
+        "e": "in"
+       },
+       {
+        "t": 1,
+        "v": 1745
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "im1",
+       "type": "image",
+       "name": "rep-logo-img",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 50,
+        "h": 22,
+        "src": "f0b33a963f37c8dabf1bd0f40531ac64c889f96e.webp",
+        "fitMode": "contain"
+       },
+       "anim": {},
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_republika_logo_01_07_36"
+  },
+  {
+   "name": "Republika Lower Third",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.05,
+   "stops": [
+    0.55
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — slt-squash"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_republik",
+     "type": "group",
+     "name": "Republika Lower Third",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": -1550,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 100
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.55,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.05,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#0047ab"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "TITLE — slt-squash",
+       "props": {
+        "x": 29.8,
+        "y": 10,
+        "w": 441,
+        "h": 42,
+        "text": "MECHANIZM WARUNKOWOŚCI",
+        "font": "Inter",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipT": [
+         {
+          "t": 0.1,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.55,
+          "v": 0
+         }
+        ],
+        "clipB": [
+         {
+          "t": 0.55,
+          "v": 0,
+          "e": "out"
+         },
+         {
+          "t": 0.85,
+          "v": 100
+         }
+        ]
+       },
+       "fields": {
+        "text": "title"
+       }
+      },
+      {
+       "id": "ps3",
+       "type": "rect",
+       "name": "::before — rep-side-graphic",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#0047ab",
+        "color2": "#00000000",
+        "gradAngle": 90
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.15,
+          "v": 0,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 1
+         }
+        ]
+       },
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_republika_lower_third"
+  },
+  {
+   "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.6
+   ],
+   "fieldMeta": {
+    "introtext": {
+     "label": "introText — utk-wiper-text"
+    },
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_g-dac2fa",
+     "type": "group",
+     "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
+     "props": {
+      "x": 0,
+      "y": 1020,
+      "w": 1920,
+      "h": 60
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1080,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 1020,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 1080
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "utk-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 60,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "utk-wiper",
+       "props": {
+        "x": 0.2,
+        "y": 0,
+        "w": 165,
+        "h": 60,
+        "color": "#901414",
+        "radius": 10,
+        "shadow": 20
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "introText — utk-wiper-text",
+       "props": {
+        "x": 36.2,
+        "y": 9,
+        "w": 93,
+        "h": 42,
+        "text": "PILNE",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "900",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "introtext"
+       }
+      },
+      {
+       "id": "tk4",
+       "type": "ticker",
+       "name": "utk-body",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 60,
+        "sep": "          •         ",
+        "tickerMode": "crawl",
+        "speed": 120,
+        "catBg": "#901414",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+        "crawlFrom": "left",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "upper": true
+       },
+       "anim": {},
+       "fields": {
+        "text": "items"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_ticker_tryb_whip_poziomy_pionowy"
+  },
+  {
+   "name": "Ticker (Whip / Poziomy / Pionowy)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "introtext": {
+     "label": "introText — utk-wiper-text"
+    },
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_g-394552",
+     "type": "group",
+     "name": "Ticker (Whip / Poziomy / Pionowy)",
+     "props": {
+      "x": 220,
+      "y": 989,
+      "w": 1650,
+      "h": 42
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": -1430,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 220
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "utk-container",
+       "props": {
+        "x": 0,
+        "y": 1,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0.2,
+        "y": 1,
+        "w": 1649.8,
+        "h": 40,
+        "tickerMode": "roll",
+        "hold": 5,
+        "label": "PILNE",
+        "catBg": "#901414",
+        "gleam": 5,
+        "text": "PILNE|PRZYKŁADOWA WIADOMOŚĆ NR 1\nINFO|PRZYKŁADOWA WIADOMOŚĆ NR 2\nPRZYKŁADOWA WIADOMOŚĆ NR 3",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "upper": true,
+        "catW": 165,
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900"
+       },
+       "anim": {},
+       "fields": {
+        "text": "items",
+        "label": "introtext"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_ticker_whip_poziomy_pionowy"
+  },
+  {
+   "name": "Ticker - Pilne",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.6
+   ],
+   "fieldMeta": {
+    "wiper_text": {
+     "label": "WIPER_TEXT — utk-wiper-text"
+    },
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Ticker - Pilne",
+     "props": {
+      "x": 219.8,
+      "y": 989,
+      "w": 1651,
+      "h": 42
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1031,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 989,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 1031
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "utk-container",
+       "props": {
+        "x": 0.2,
+        "y": 1,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 1,
+        "w": 1650.2,
+        "h": 40,
+        "tickerMode": "whip",
+        "hold": 6,
+        "catBg": "#901414",
+        "gleam": 5,
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "upper": true,
+        "catW": 137,
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900"
+       },
+       "anim": {},
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_ticker_-_pilne"
+  },
+  {
+   "name": "TICKER PEŁNY EKRAN",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "duration": 0.85,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_btb-full",
+     "type": "group",
+     "name": "TICKER PEŁNY EKRAN",
+     "props": {
+      "x": 0,
+      "y": 1025,
+      "w": 1920,
+      "h": 55
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1080,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1025,
+        "e": "out"
+       },
+       {
+        "t": 0.85,
+        "v": 1080
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "btb-fw-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 55,
+        "color": "#000000"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "btb-fw-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 55,
+        "sep": "         •        ",
+        "tickerMode": "crawl",
+        "speed": 120,
+        "text": "70. RAJD POLSKI: ROBERT KUBICA WYGRAŁ ETAP GÓRSKI PRZEDOSTATNIEGO DNIA\nWYNIKI NA ŻYWO: KUBICA AWANSOWAŁ NA PODIUM RAJDU POLSKI\nSPORTOWE EMOCJE: DRAMATYCZNA WALKA O WYNIK W OSTATNIM OKRĄŻENIU\nORGANIZATORZY RAJDU POTWIERDZAJĄ: REKORDOWA FREKWENCJA NA TRASIE",
+        "crawlFrom": "left",
+        "font": "Bahnschrift.ttf",
+        "size": 32,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true
+       },
+       "anim": {},
+       "fields": {
+        "text": "items"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_ticker_pelny_ekran"
+  },
+  {
+   "name": "tylko w btb info",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.7,
+   "stops": [
+    0.9
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — span"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_accbbc51",
+     "type": "group",
+     "name": "tylko w btb info",
+     "props": {
+      "x": 1560.1,
+      "y": 49.8,
+      "w": 310,
+      "h": 51
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.9,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.7,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 310,
+        "h": 51,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 58.2,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 310,
+        "h": 51,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 58.2,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.1,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff",
+        "radius": 7
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "TITLE — span",
+       "props": {
+        "x": 42.1,
+        "y": 12.2,
+        "w": 900,
+        "h": 26,
+        "text": "tylko w btb info",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_tylko_w_btb_info"
+  },
+  {
+   "name": "Whiper - Ticker - Pilne",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.6
+   ],
+   "fieldMeta": {
+    "wiper_text": {
+     "label": "WIPER_TEXT — utk-wiper-text"
+    },
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_tpl-mv8l",
+     "type": "group",
+     "name": "Whiper - Ticker - Pilne",
+     "props": {
+      "x": 219.8,
+      "y": 989,
+      "w": 1651,
+      "h": 42
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1031,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 989,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 1031
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "utk-container",
+       "props": {
+        "x": 0.2,
+        "y": 1,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 1,
+        "w": 1650.2,
+        "h": 40,
+        "tickerMode": "whip",
+        "hold": 6,
+        "catBg": "#901414",
+        "gleam": 5,
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "upper": true,
+        "catW": 137,
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900"
+       },
+       "anim": {},
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_whiper_-_ticker_-_pilne"
+  },
+  {
+   "name": "Wizytówka - normalna",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Wizytówka - normalna",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#170033",
+        "color2": "#0134ad",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "strong",
+       "props": {
+        "x": 30,
+        "y": 16,
+        "w": 367.8,
+        "h": 44,
+        "text": "Karol Nawrocki",
+        "font": "Inter",
+        "size": 40,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "span",
+       "props": {
+        "x": 30,
+        "y": 70,
+        "w": 240.6,
+        "h": 36,
+        "text": "Prezydent RP",
+        "font": "Inter",
+        "size": 32,
+        "weight": "400",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_wizytowka_-_normalna"
+  },
+  {
+   "name": "Wizytówka - PILNE",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_trio-179",
+     "type": "group",
+     "name": "Wizytówka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "strong",
+       "props": {
+        "x": 30,
+        "y": 16,
+        "w": 367.8,
+        "h": 44,
+        "text": "Karol Nawrocki",
+        "font": "Inter",
+        "size": 40,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "span",
+       "props": {
+        "x": 30,
+        "y": 70,
+        "w": 240.6,
+        "h": 36,
+        "text": "Prezydent RP",
+        "font": "Inter",
+        "size": 32,
+        "weight": "400",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": -0.5,
+        "lineHeight": 1.399999976158142,
+        "textFit": "squeeze",
+        "squeezeMin": 0.3
+       },
+       "anim": {
+        "clipR": [
+         {
+          "t": 0,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.5,
+          "v": 0
+         }
+        ]
+       },
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_wizytowka_-_pilne"
+  },
+  {
+   "name": "WYDANIE SPECJALNE",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "duration": 0.6,
+   "stops": [
+    0.3
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — b"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_b9bb1f87",
+     "type": "group",
+     "name": "WYDANIE SPECJALNE",
+     "props": {
+      "x": 219.9,
+      "y": 929.8,
+      "w": 340,
+      "h": 51
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.3,
+        "v": 1
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.3,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 0.6,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 340,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#7a0000",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 58.3,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 340,
+        "h": 51,
+        "color": "#b91c1c",
+        "color2": "#7a0000",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx4",
+        "followAxis": "w",
+        "followPad": 58.3,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.1,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff",
+        "radius": 7
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "TITLE — b",
+       "props": {
+        "x": 42.1,
+        "y": 12.2,
+        "w": 900,
+        "h": 26,
+        "text": "WYDANIE SPECJALNE",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_wydanie_specjalne"
+  },
+  {
+   "name": "Z osoatniej chwili",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "title": {
+     "label": "TITLE — b"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp_86b4e9f5",
+     "type": "group",
+     "name": "Z osoatniej chwili",
+     "props": {
+      "x": 220.1,
+      "y": 930,
+      "w": 305,
+      "h": 58
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "inout"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 305,
+        "h": 58,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 31.8,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 305,
+        "h": 58,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10,
+        "follow": "tx3",
+        "followAxis": "w",
+        "followPad": 31.8,
+        "followMin": 0
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "TITLE — b",
+       "props": {
+        "x": 15.9,
+        "y": 18,
+        "w": 900,
+        "h": 26,
+        "text": "Z OSTATNIEJ CHWILI",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "upper": true,
+        "align": "left",
+        "valign": "middle",
+        "spacing": 1,
+        "lineHeight": 1.399999976158142,
+        "textFit": "none"
+       },
+       "anim": {},
+       "fields": {
+        "text": "title"
+       }
+      }
+     ]
+    }
+   ],
+   "id": "btb_z_osoatniej_chwili"
+  },
+  {
+   "name": "Zegar",
+   "layer": "clock",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_republik",
+     "type": "group",
+     "name": "Zegar",
+     "props": {
+      "x": 96,
+      "y": 910,
+      "w": 152,
+      "h": 40
+     },
+     "anim": {
+      "x": [
+       {
+        "t": 0,
+        "v": -56,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 96
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-left-panel",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 152,
+        "h": 40,
+        "color": "#0047ab"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "bd2",
+       "type": "rect",
+       "name": "Krawędź right — rep-left-panel",
+       "props": {
+        "x": 150,
+        "y": 0,
+        "w": 2,
+        "h": 40,
+        "color": "#ffffff1a"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "color": "#0047ab"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "ck4",
+       "type": "clock",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "mode": "time",
+        "format": "HH:mm",
+        "font": "Inter",
+        "size": 28,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle"
+       },
+       "anim": {},
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_zegar"
+  },
+  {
+   "name": "zegarek (kopia)",
+   "layer": "clock",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp_c2d17e72",
+     "type": "group",
+     "name": "zegarek (kopia)",
+     "props": {
+      "x": 50,
+      "y": 990,
+      "w": 152,
+      "h": 40
+     },
+     "anim": {
+      "scale": [
+       {
+        "t": 0,
+        "v": 0.85,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0.85
+       }
+      ],
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 0.5,
+        "v": 1,
+        "e": "out"
+       },
+       {
+        "t": 1,
+        "v": 0
+       }
+      ]
+     },
+     "fields": {},
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-left-panel",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 152,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "bd2",
+       "type": "rect",
+       "name": "Krawędź right — rep-left-panel",
+       "props": {
+        "x": 150,
+        "y": 0,
+        "w": 2,
+        "h": 40,
+        "color": "#ffffff1a"
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       },
+       "anim": {},
+       "fields": {}
+      },
+      {
+       "id": "ck4",
+       "type": "clock",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "mode": "time",
+        "format": "HH:mm",
+        "font": "Arial",
+        "size": 28,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle"
+       },
+       "anim": {},
+       "fields": {}
+      }
+     ]
+    }
+   ],
+   "id": "btb_zegarek_kopia"
+  }
+ ],
+ "pages": [
+  {
+   "id": "p8001",
+   "number": 8001,
+   "name": "Belka - PILNE",
+   "scene": "btb_belka_-_pilne-new-wasm",
+   "values": {
+    "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
+   }
+  },
+  {
+   "id": "p8002",
+   "number": 8002,
+   "name": "Belka - PILNE (Belka_-_PILNE-new.json)",
+   "scene": "btb_belka_-_pilne-new",
+   "values": {
+    "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
+   }
+  },
+  {
+   "id": "p8003",
+   "number": 8003,
+   "name": "Belka - PILNE (Belka_-_PILNE.cgpack)",
+   "scene": "btb_belka_-_pilne",
+   "values": {
+    "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
+   }
+  },
+  {
+   "id": "p8004",
+   "number": 8004,
+   "name": "Belka - PILNE (Belka_-_PILNE.json)",
+   "scene": "btb_belka_-_pilne",
+   "values": {
+    "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
+   }
+  },
+  {
+   "id": "p8005",
+   "number": 8005,
+   "name": "belka exp (18:26:40)",
+   "scene": "btb_belka_exp_18_26_40",
+   "values": {
+    "title": "Sample Title"
+   }
+  },
+  {
+   "id": "p8006",
+   "number": 8006,
+   "name": "Belka glowna",
+   "scene": "btb_belka_glowna",
+   "values": {}
+  },
+  {
+   "id": "p8007",
+   "number": 8007,
+   "name": "Belka Miasto",
+   "scene": "btb_belka_miasto",
+   "values": {
+    "title": "WARSZAWA"
+   }
+  },
+  {
+   "id": "p8008",
+   "number": 8008,
+   "name": "Belka pilne",
+   "scene": "btb_belka_pilne",
+   "values": {}
+  },
+  {
+   "id": "p8009",
+   "number": 8009,
+   "name": "NA ŻYWO lewo dol",
+   "scene": "btb_na_zywo_lewo_dol",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "p8010",
+   "number": 8010,
+   "name": "Plakietka NA ŻYWO",
+   "scene": "btb_plakietka_na_zywo",
+   "values": {
+    "title": "NA ŻYWO"
+   }
+  },
+  {
+   "id": "p8011",
+   "number": 8011,
+   "name": "Republika Lower Third",
+   "scene": "btb_republika_lower_third",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "p8012",
+   "number": 8012,
+   "name": "Wizytówka - normalna",
+   "scene": "btb_wizytowka_-_normalna",
+   "values": {}
+  },
+  {
+   "id": "p8013",
+   "number": 8013,
+   "name": "Wizytówka - PILNE",
+   "scene": "btb_wizytowka_-_pilne",
+   "values": {}
+  },
+  {
+   "id": "p8014",
+   "number": 8014,
+   "name": "Z osoatniej chwili",
+   "scene": "btb_z_osoatniej_chwili",
+   "values": {
+    "title": "Z OSTATNIEJ CHWILI"
+   }
+  },
+  {
+   "id": "p8101",
+   "number": 8101,
+   "name": "MIASTO lewa",
+   "scene": "btb_miasto_lewa",
+   "values": {
+    "title": "BIAŁYSTOK"
+   }
+  },
+  {
+   "id": "p8102",
+   "number": 8102,
+   "name": "MIASTO prawa — Warszawa (odzyskana)",
+   "scene": "btb_miasto_prawa_warszawa_odzyskana",
+   "values": {
+    "title": "warszawa / trubunał konsytyucyjny bogdana święczkowskiego"
+   }
+  },
+  {
+   "id": "p8103",
+   "number": 8103,
+   "name": "MIASTO prawa",
+   "scene": "btb_miasto_prawa",
+   "values": {
+    "title": "Łódź"
+   }
+  },
+  {
+   "id": "p8104",
+   "number": 8104,
+   "name": "NA ŻYWO lewa",
+   "scene": "btb_na_zywo_lewa",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "p8105",
+   "number": 8105,
+   "name": "NA ŻYWO prawo",
+   "scene": "btb_na_zywo_prawo",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "p8106",
+   "number": 8106,
+   "name": "tylko w btb info",
+   "scene": "btb_tylko_w_btb_info",
+   "values": {
+    "title": "tylko w btb info"
+   }
+  },
+  {
+   "id": "p8107",
+   "number": 8107,
+   "name": "WYDANIE SPECJALNE",
+   "scene": "btb_wydanie_specjalne",
+   "values": {
+    "title": "WYDANIE SPECJALNE"
+   }
+  },
+  {
+   "id": "p8201",
+   "number": 8201,
+   "name": "PILNE (OCG)",
+   "scene": "btb_pilne_ocg",
+   "values": {
+    "wiper_text": "BTB",
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "p8202",
+   "number": 8202,
+   "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
+   "scene": "btb_ticker_tryb_whip_poziomy_pionowy",
+   "values": {
+    "introtext": "PILNE",
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\""
+   }
+  },
+  {
+   "id": "p8203",
+   "number": 8203,
+   "name": "Ticker (Whip / Poziomy / Pionowy)",
+   "scene": "btb_ticker_whip_poziomy_pionowy",
+   "values": {
+    "introtext": "PILNE",
+    "items": "PILNE|PRZYKŁADOWA WIADOMOŚĆ NR 1\nINFO|PRZYKŁADOWA WIADOMOŚĆ NR 2\nPRZYKŁADOWA WIADOMOŚĆ NR 3"
+   }
+  },
+  {
+   "id": "p8204",
+   "number": 8204,
+   "name": "Ticker - Pilne",
+   "scene": "btb_ticker_-_pilne",
+   "values": {
+    "wiper_text": "BTB",
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "p8205",
+   "number": 8205,
+   "name": "TICKER PEŁNY EKRAN",
+   "scene": "btb_ticker_pelny_ekran",
+   "values": {
+    "items": "70. RAJD POLSKI: ROBERT KUBICA WYGRAŁ ETAP GÓRSKI PRZEDOSTATNIEGO DNIA\nWYNIKI NA ŻYWO: KUBICA AWANSOWAŁ NA PODIUM RAJDU POLSKI\nSPORTOWE EMOCJE: DRAMATYCZNA WALKA O WYNIK W OSTATNIM OKRĄŻENIU\nORGANIZATORZY RAJDU POTWIERDZAJĄ: REKORDOWA FREKWENCJA NA TRASIE"
+   }
+  },
+  {
+   "id": "p8206",
+   "number": 8206,
+   "name": "Whiper - Ticker - Pilne",
+   "scene": "btb_whiper_-_ticker_-_pilne",
+   "values": {
+    "wiper_text": "BTB",
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "p8301",
+   "number": 8301,
+   "name": "Zegar",
+   "scene": "btb_zegar",
+   "values": {}
+  },
+  {
+   "id": "p8302",
+   "number": 8302,
+   "name": "zegarek (kopia)",
+   "scene": "btb_zegarek_kopia",
+   "values": {}
+  },
+  {
+   "id": "p8401",
+   "number": 8401,
+   "name": "Grafika - theme",
+   "scene": "btb_grafika_-_theme",
+   "values": {}
+  },
+  {
+   "id": "p8402",
+   "number": 8402,
+   "name": "Republika Logo (01:07:36)",
+   "scene": "btb_republika_logo_01_07_36",
+   "values": {}
+  }
+ ],
+ "playlists": []
+}

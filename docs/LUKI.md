@@ -17,9 +17,8 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 6 | `OUT` zdejmuje warstwę w silniku od razu; animację OUT gra tylko klient | kolejny TAKE w czasie OUT może ją ściąć |
 | 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | BTB ma osie i krawędzie (`layout.dock`) |
 | 8 | Konwerter BTB: efekty tekstu (poza reveal/clip), pętle uwagi, maski, `layout.dock`, auto-szerokość `follow` → ostrzeżenia, nie przenoszone | lista w raporcie importu |
-| 9 | Eksport do BTB: klucze animacji i formatowanie tekstu nie są przenoszone | ustawia domyślne wejście/wyjście |
 | 10 | Pisownia: natywna przeglądarki (lang=pl); brak własnego słownika (sjp.pl/Hunspell) | w CEF (OBS dock) zależy od przeglądarki |
-| 11 | Znaczniki tekstu: rozmiar `{sz=}` w % (BTB używa px) – przy konwersji pomijany | |
+| 11 | Znaczniki tekstu: rozmiar `{sz=}` w % (BTB używa px) – przy imporcie z BTB pomijany | |
 
 ## G3 – funkcje
 | # | Luka | Uwagi |
@@ -29,4 +28,3 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 14 | Parenting przez drzewo (zmiana rodzica); brak „pick whip” jak w AE | |
 | 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | propozycje G, H, K z btb-cgeditor |
 | 16 | Ticker: brak źródła zewnętrznego (URL z JSON/RSS i odświeżanie) | PLAN-ticker.md T5.2 (opcja); dziś: `TICKER …` / `/api/ticker` z zewnętrznego skryptu |
-| 17 | Eksport tickera do BTB: scena BTB przewija tylko poziomo; tryby roll/wipe/whip zapisywane w `tickerMode` (działają w szablonach kodowych BTB) | ostrzeżenie w raporcie eksportu |

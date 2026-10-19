@@ -97,7 +97,7 @@ Każdy krok = osobny commit z testem i aktualizacją dokumentacji (README, CHANG
 | Krok | Zakres | Pozycja | Koszt |
 |---|---|---|---|
 | F4.1 | Wspólny zestaw **wektorów testowych** (squeeze, autofollow, dopasowanie tekstu, RichText) używany w VizRS, BTB i btb-cgeditor; test rozjazdu w CI. Cel: koniec dryfu trzech implementacji. | #25 | M |
-| F4.2 | Konwerter **BTB `.json` v3 / `.cgpack` → scena VizRS** (jednokierunkowy, z raportem „co się nie przeniosło”) i eksport sceny VizRS do formatu odczytywanego przez BTB, tam gdzie model pasuje. | #25 | L |
+| F4.2 | Konwerter **BTB `.json` v3 / `.cgpack` → scena VizRS** (jednokierunkowy, z raportem „co się nie przeniosło”). BTB CG jest bazą pomysłów – grafik nie przenosimy w drugą stronę. | #25 | L |
 | F4.3 | **Wiele operatorów**: blokada edycji strony/sceny, widok „kto edytuje” (wymaga F1.3). | #24 | M |
 | F4.4 | Dystrybucja: usługa systemd/launchd, katalog danych per użytkownik, instrukcja wdrożenia i „runbook awarii” (co robić, gdy output milczy), checklista prób w OBS/vMix. | #26 | S–M |
 

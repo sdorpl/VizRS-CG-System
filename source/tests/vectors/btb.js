@@ -1,9 +1,7 @@
-// Konwersja BTB ↔ VizRS (F4.2):  node tests/vectors/btb.js
-// Testy na kopiach elementów z BTB CG Editor (tests/fixtures/btb). Jeśli obok leży repo BTB-CG-System-alpha (BTB_CG_DIR),
-// dodatkowo sprawdza, że eksport VizRS → BTB przechodzi przez `EditorIO.prepare/validate` systemu BTB.
+// Import BTB → VizRS (F4.2):  node tests/vectors/btb.js
+// Testy na kopiach elementów z BTB CG Editor (tests/fixtures/btb).
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 let failed = 0, passed = 0;
 const check = (name, cond, info) => { if (cond) passed++; else { failed++; console.log('FAIL ' + name + (info !== undefined ? ' → ' + JSON.stringify(info).slice(0, 300) : '')); } };
 const FX = path.join(__dirname, '../fixtures/btb');
@@ -63,17 +61,6 @@ const FX = path.join(__dirname, '../fixtures/btb');
   check('pilny wiper: wiadomości-stringi, tryb whip, błysk etykiety, wiper bez ::before', twk && twk.props.tickerMode === 'whip' && twk.props.text.split('\n').length === 3 && twk.props.gleam > 0 && !tw.scene.nodes[0].children.some((c) => /::before/.test(c.name)), twk && twk.props);
   check('pilny wiper: kolor pasa z gradientu wipera', twk && twk.props.catBg === '#ff0055', twk && twk.props.catBg);
 
-  // eksport tickera: lista z kategoriami, tryb, etykieta, kolory kategorii
-  const tex = io.exportScene({ id: 't1', name: 'T', width: 1920, height: 1080, stops: [], fieldMeta: {}, nodes: [
-    { id: 'tk', type: 'ticker', name: 'tk', fields: { text: 'news' }, props: { x: 0, y: 1000, w: 1920, h: 60, text: 'x', tickerMode: 'roll', hold: 4, label: 'INFO', catBg: '#c00000', catColors: 'PILNE=#e00000', sepStyle: 'skew' } }] }, { news: 'PILNE|Pierwsza\nDruga\nSPORT#1f8a4c|Trzecia' });
-  const te = tex.file.elements[0];
-  check('eksport tickera: typ TICKER, items z category', te.type === 'TICKER' && JSON.stringify(te.items) === JSON.stringify([{ text: 'Pierwsza', category: 'PILNE' }, { text: 'Druga' }, { text: 'Trzecia', category: 'SPORT' }]), te.items);
-  check('eksport tickera: roll → vertical (speed = hold), etykieta, separator, kolory kategorii', te.tickerMode === 'vertical' && te.speed === 4 && te.introText === 'INFO' && te.separatorStyle === 'skewed' && te.fields.CATEGORY_COLORS === 'PILNE=#e00000' && te.wiper.bgColor === '#c00000', te);
-  check('eksport tickera: ostrzeżenia o trybie i kolorach w wiadomościach', tex.warnings.some((w) => /przewija tylko poziomo/.test(w)) && tex.warnings.some((w) => /KAT#kolor/.test(w)), tex.warnings);
-  const back = io.convertElement(te);
-  const bk = back.scene.nodes[0].children.find((c) => c.type === 'ticker');
-  check('round-trip tickera VizRS → BTB → VizRS: wiadomości z kategoriami', bk && bk.props.text === 'PILNE|Pierwsza\nDruga\nSPORT|Trzecia', bk && bk.props.text);
-
   const rl = io.convertElement((await load('republika_lt.json')).elements[0]);
   check('Republika: konwersja bez wyjątku, scena ma węzły', rl.scene.nodes[0].children.length > 0);
 
@@ -93,6 +80,26 @@ const FX = path.join(__dirname, '../fixtures/btb');
   try { await io.unzip(new Uint8Array(zb)); } catch (e) { slip = e.message; }
   check('unzip: zip-slip („..” w nazwie) odrzucony', /niedozwolona|uszkodzony/.test(slip), slip);
 
+  // --- poprawki z przeniesienia wzorców BTB (examples/BTB_CG, tests/e2e/btb-visual.js)
+  check('zegar: HH:MM (minuty w BTB) → HH:mm', io.mapClockFormat('HH:MM') === 'HH:mm' && io.mapClockFormat('HH:MM:SS') === 'HH:mm:ss' && io.mapClockFormat() === 'HH:mm:ss');
+  check('zegar: format rozszerzony DD.MM.YYYY HH:mm → dd.MM.yyyy HH:mm', io.mapClockFormat('DD.MM.YYYY HH:mm') === 'dd.MM.yyyy HH:mm');
+  const zg = io.convertElement((await load('zegar.json')).elements[0]);
+  const ck = zg.scene.nodes[0].children.find((c) => c.type === 'clock');
+  check('zegar: węzeł clock z formatem HH:mm', ck && ck.props.format === 'HH:mm', ck && ck.props);
+  const ml = io.convertElement((await load('miasto_lewa.json')).elements[0]);
+  check('BADGE z domyślnymi items BTB: bez pola ticker i bez ostrzeżenia o tickerze', !('items' in ml.page.values) && !ml.warnings.some((w) => /TICKER/.test(w)), [Object.keys(ml.page.values), ml.warnings]);
+  const bd = io.convertElement((await load('badge_dlugi_tekst.json')).elements[0]);
+  const bt = bd.scene.nodes[0].children.find((c) => c.type === 'text');
+  check('BADGE: tekst szerszy niż tło → ściskanie do wnętrza tła (620 − 2×16)', bt.props.w === 588 && bt.props.textFit === 'squeeze' && bt.props.squeezeMin === 0.3, bt.props);
+  const sq = g.children.find((c) => c.props.textFit === 'squeeze'), srcSq = elements[0].scene.layers.find((l) => l.id === sq.id);
+  check('squash: granica ściśnięcia z BTB (brak → 0,8, 0 → 0,3)', sq.props.squeezeMin === (srcSq.minSquash == null ? 0.8 : srcSq.minSquash > 0 ? Math.max(0.3, srcSq.minSquash) : 0.3), [sq.props.squeezeMin, srcSq.minSquash]);
+  const gt = io.convertElement((await load('grafika_theme.json')).elements[0]);
+  const im = gt.scene.nodes[0].children.find((c) => c.type === 'image');
+  check('obraz z adresem https zostaje pełnym adresem (+ ostrzeżenie o sieci)', /^https:\/\//.test(im.props.src) && gt.warnings.some((w) => /z sieci/.test(w)), [im.props.src, gt.warnings]);
+  check('warstwa ticker BTB: treści bez kategorii, crawl od lewej', !tn.props.text.includes('|') && tn.props.crawlFrom === 'left', tn.props);
+  const wl = io.convertElement((await load('ticker_unified.json')).elements[0]).scene.nodes[0].children.find((c) => c.type === 'ticker');
+  check('wiper → rozmiar i grubość etykiety z tekstu wipera', wl.props.labelSize > 0 && (!wl.props.labelWeight || wl.props.labelWeight !== wl.props.weight), wl.props);
+
   // --- błędne wejście
   let bad = '';
   try { await io.readBtb('{"foo":1}'); } catch (e) { bad = e.message; }
@@ -100,39 +107,6 @@ const FX = path.join(__dirname, '../fixtures/btb');
   bad = '';
   try { io.convertElement({ name: 'X', html_template: '<div></div>' }); } catch (e) { bad = e.message; }
   check('convertElement: element z ręcznym kodem → komunikat „Przekształć w scenę”', /Przekształć w scenę/.test(bad), bad);
-
-  // --- eksport VizRS → BTB
-  const out = io.exportScene({ id: 's1', name: 'Test', width: 1920, height: 1080, stops: [0.5], fieldMeta: { title: { label: 'Tytuł', maxChars: 40, upper: true, typo: true, tab: 1 } }, nodes: [
-    { id: 'g', type: 'group', name: 'g', props: { x: 100, y: 800, w: 600, h: 100 }, children: [
-      { id: 'bg', type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 600, h: 100, color: '#112233', color2: '#334455', gradAngle: 90, radius: 8 } },
-      { id: 'tt', type: 'text', name: 'napis', fields: { text: 'title' }, props: { x: 20, y: 10, w: 560, h: 80, text: 'Tytuł {b}x{/b}', size: 50, font: 'Oswald', weight: '700', color: '#ffffff', textFit: 'squeeze' } } ] } ] }, { title: 'Ala {b}ma{/b} kota' });
-  const e0 = out.file.elements[0];
-  check('eksport: format v3 z jedną warstwą kształtu i tekstu', out.file._exportVersion === 3 && e0.scene.layers.length === 2 && e0.scene.layers[0].type === 'shape' && e0.scene.layers[1].type === 'text');
-  check('eksport: współrzędne warstw względem ramki, ramka w layout', e0.layout.x === 100 && e0.layout.y === 800 && e0.scene.layers[0].x === 0 && e0.scene.layers[1].x === 20, [e0.layout, e0.scene.layers.map((l) => [l.x, l.y])]);
-  check('eksport: pole title → ocgInputs TITLE z regułami (maxChars, wersaliki, typografia, Tab)', e0.ocgInputs[0].id === 'TITLE' && e0.ocgInputs[0].text.maxChars === 40 && e0.ocgInputs[0].text.upperCase && e0.ocgInputs[0].text.typography.pl && e0.ocgInputs[0].tab === 1, e0.ocgInputs);
-  check('eksport: wartość pola bez znaczników formatowania', e0.ocgInputs[0].default === 'Ala ma kota', e0.ocgInputs[0].default);
-  check('eksport: ostrzeżenie o formatowaniu tekstu', out.warnings.some((w) => /formatowanie/.test(w)), out.warnings);
-
-  // --- BTB: prepare/validate (opcjonalnie)
-  const BTB = process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha');
-  if (fs.existsSync(path.join(BTB, 'editor-io.js'))) {
-    try {
-      global.SceneModel = require(path.join(BTB, 'scene-model.js'));
-      const EditorIO = require(path.join(BTB, 'editor-io.js'));
-      const prepared = EditorIO.prepare(e0);
-      const v = EditorIO.validate(prepared);
-      const errs = (Array.isArray(v) ? v : v.errors || []).filter((x) => (x.level || x.severity) === 'error');
-      check('BTB EditorIO.prepare skompilował kod z warstw (html/css niepuste)', !!prepared.html_template && prepared.html_template.length > 50 && !!prepared.css_template, Object.keys(prepared));
-      check('BTB EditorIO.validate: brak błędów dla wyeksportowanego elementu', errs.length === 0, v);
-      // i import odwrotny przez nasz konwerter: element BTB po prepare → scena
-      const back = io.convertElement(prepared);
-      const tp = EditorIO.prepare(te);
-      const tv = EditorIO.validate(tp);
-      const terrs = (Array.isArray(tv) ? tv : tv.errors || []).filter((x) => (x.level || x.severity) === 'error');
-      check('BTB EditorIO: wyeksportowany ticker kompiluje się i przechodzi walidację', !!tp.html_template && /ITEMS_B64/.test(tp.html_template) && terrs.length === 0, terrs);
-      check('round-trip VizRS → BTB → VizRS zachowuje pole i tekst', back.scene.nodes[0].children.some((c) => c.fields.text === 'title'), back.scene.nodes[0].children.map((c) => c.fields));
-    } catch (e) { check('BTB EditorIO dostępny', false, String(e.stack || e).slice(0, 400)); }
-  } else console.log('(pominięto test z kodem BTB – brak ' + BTB + ')');
 
   console.log(failed ? `\n${failed} NIEUDANYCH (zaliczone: ${passed})` : `Konwersja BTB zgodna (${passed} sprawdzeń)`);
   process.exit(failed ? 1 : 0);

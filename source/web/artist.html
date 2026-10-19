@@ -103,7 +103,6 @@
   <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
   <button id="bImp" title="Import sceny z pliku JSON">⇧ Import</button>
     <button id="bImpBtb" title="Importuj element z BTB CG (.json eksport v3 lub .cgpack) jako scenę + stronę">⇧ BTB</button>
-    <button id="bExpBtb" title="Eksportuj bieżącą scenę jako element BTB CG (.json v3)">⇩ BTB</button>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
   <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
@@ -346,7 +345,7 @@ function renderProps() {
   let h = `<div class="phead"><span class="ic">${def.icon}</span><input id="pname" class="grow" value="${esc(n.name)}" title="Nazwa kontenera"></div>`;
   let g = null;
   const tkMode = n.type === 'ticker' ? propAt(n, 'tickerMode', t, null) : null;
-  const TK_HIDE = { crawl: ['hold'], roll: ['speed', 'sep', 'sepStyle', 'sepColor'], wipe: ['speed', 'sep', 'sepStyle', 'sepColor'], whip: ['speed', 'sep', 'sepStyle', 'sepColor'] };
+  const TK_HIDE = { crawl: ['hold'], roll: ['speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor'], wipe: ['speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor'], whip: ['speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor'] };
   for (const p of def.props) {
     const d = PROPS[p];
     if (tkMode && TK_HIDE[tkMode]?.includes(p)) continue;
@@ -1242,7 +1241,7 @@ $('#bImp').onclick = () => {
   fi.click();
 };
 
-// ------------------------------------------------------------ BTB CG: import / eksport elementów
+// ------------------------------------------------------------ BTB CG: import elementów
 function showReport(title, lines) {
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center';
@@ -1285,17 +1284,6 @@ $('#bImpBtb').onclick = () => {
     } catch (e) { toast('Import BTB: ' + e.message, true); }
   };
   fi.click();
-};
-$('#bExpBtb').onclick = async () => {
-  try {
-    const show = await api('GET', '/api/show');
-    const page = show.pages.find((p) => p.scene === scene.id);
-    const r = BTB.exportScene(scene, page?.values || {});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(r.file, null, 2)], { type: 'application/json' }));
-    a.download = (scene.name || 'scena').replace(/[^\w.\-]+/g, '_') + '.btb.json'; a.click();
-    showReport(`Wyeksportowano „${scene.name}” jako element BTB CG`, r.warnings);
-  } catch (e) { toast('Eksport BTB: ' + e.message, true); }
 };
 
 // ------------------------------------------------------------ klawiatura

@@ -1,6 +1,5 @@
-// VizRS ↔ BTB CG: konwersja elementów (F4.2).
-//   import: BTB `.json` (eksport v3, goły element lub lista) i `.cgpack` (ZIP) → scena + strona VizRS, z raportem „co się nie przeniosło”
-//   eksport: scena VizRS → element BTB (`scene.layers`, kod HTML/JS BTB kompiluje sam `SceneModel` przy imporcie)
+// Import elementów BTB CG do VizRS (F4.2) – tylko w tym kierunku: BTB jest bazą pomysłów, VizRS systemem docelowym.
+//   BTB `.json` (eksport v3 z BTB, goły element lub lista) i `.cgpack` (ZIP) → scena + strona VizRS, z raportem „co się nie przeniosło”
 // Moduł bez DOM (jedyna zależność: ticker-model.js) – działa w przeglądarce i w Node (testy: tests/vectors/btb.js).
 // Format: docs w BTB-CG `docs/edytor-kontrakt.md` (scene = { version, detached, frame:{w,h}, layers[] }).
 
@@ -35,6 +34,20 @@ const weightOf = (w) => {
   const n = parseInt(s);
   return isNaN(n) ? '700' : String(Math.max(300, Math.min(900, Math.round(n / 100) * 100)));
 };
+
+/** Format zegara BTB → VizRS. BTB: `HH:MM` i `HH:MM:SS` (MM = minuty) albo format rozszerzony
+ *  z tokenami `dddd MMMM YYYY DD MM D HH mm ss` (MM = miesiąc). VizRS: `yyyy MM dd HH H mm ss`. */
+export function mapClockFormat(f, warn = () => {}) {
+  const s = String(f || 'HH:MM:SS');
+  if (s === 'HH:MM') return 'HH:mm';
+  if (s === 'HH:MM:SS') return 'HH:mm:ss';
+  return s.replace(/dddd|MMMM|YYYY|DD|MM|D|HH|mm|ss/g, (t) => {
+    const m = { YYYY: 'yyyy', DD: 'dd', MM: 'MM', HH: 'HH', mm: 'mm', ss: 'ss' }[t];
+    if (m) return m;
+    warn(`token zegara „${t}” nie ma odpowiednika w VizRS – pominięty`);
+    return t === 'D' ? 'dd' : '';
+  });
+}
 
 // ---------------------------------------------------------------- ZIP (.cgpack)
 /** Minimalny czytnik ZIP (stored + deflate przez DecompressionStream). Limity jak w BTB `pack-io.js`. */
@@ -137,11 +150,9 @@ function textTracks(kind, t, warn, where) {
   return [inn ? { prop: 'opacity', a: 0, b: 1 } : { prop: 'opacity', a: 1, b: 0 }];
 }
 
-// ---------------------------------------------------------------- tickery (BTB ↔ VizRS)
+// ---------------------------------------------------------------- tickery (import z BTB)
 const MODE_IN = { horizontal: 'crawl', scrolling: 'crawl', vertical: 'roll', whip: 'whip' };
-const MODE_OUT = { crawl: 'horizontal', roll: 'vertical', wipe: 'whip', whip: 'whip' };
 const SEP_IN = { skewed: 'skew', dot: 'dot', square: 'square', pipe: 'pipe' };
-const SEP_OUT = { skew: 'skewed', dot: 'dot', square: 'square', pipe: 'pipe', text: 'dot' };
 /** Wiadomości elementu BTB (stringi albo {text, category}) → wiersze `KAT|treść`. */
 export function btbItemsText(items) {
   return serializeTickerItems((items || []).map((i) => (i && typeof i === 'object' ? { cat: String(i.category || ''), color: '', text: String(i.text || '') } : { cat: '', color: '', text: String(i ?? '') })));
@@ -219,7 +230,8 @@ export function convertElement(el, opts = {}) {
 
   // --- ticker z szablonu kodowego przekształconego w scenę: warstwa ticker zginęła, został statyczny tekst pierwszej wiadomości.
   // Odtwarzamy węzeł ticker z `items` i ustawień elementu; wiper (kształt + tekst etykiety) przejmuje pas kategorii tickera.
-  const isTickerEl = el.type === 'TICKER' || (Array.isArray(el.items) && el.items.length > 0);
+  // tylko typ TICKER: BTB zapisuje domyślne `items` („Wiadomość 1/2”) także w belkach, plakietkach i obrazach
+  const isTickerEl = el.type === 'TICKER';
   let tkPlan = null;
   if (isTickerEl && !sc.layers.some((l) => l.type === 'ticker')) {
     const first = String((el.items || [])[0]?.text ?? (el.items || [])[0] ?? '').trim();
@@ -254,7 +266,10 @@ export function convertElement(el, opts = {}) {
         if (!p.catBg) p.catBg = toHex(tkPlan.wShape.fill?.color || '#c8102e');
       }
       if (tkPlan.wText) {
-        if (!p.catFg && tkPlan.wText.font?.color) p.catFg = toHex(tkPlan.wText.font.color);
+        const wf = tkPlan.wText.font || {};
+        if (!p.catFg && wf.color) p.catFg = toHex(wf.color);
+        if (num(wf.size)) p.labelSize = wf.size;
+        if (wf.weight && weightOf(wf.weight) !== p.weight) p.labelWeight = weightOf(wf.weight);
         if (tkPlan.wText.field) { const lf = String(tkPlan.wText.field).toLowerCase().replace(/[^\w.\-]/g, '_'); node.fields.label = lf; if (!(lf in fields)) fields[lf] = p.label || ''; fieldMeta[lf] ||= { label: 'Etykieta' }; }
       }
       rest[l.id] = { x: p.x, y: p.y, opacity: p.opacity ?? 1, scale: p.scale ?? 1 };
@@ -296,8 +311,20 @@ export function convertElement(el, opts = {}) {
         p.lineHeight = num(f.lineHeight, 1.15);
         if (f.shadow && f.shadow !== 'none') p.shadow = 8;
         p.textFit = l.squash ? 'squeeze' : 'none';
-        if (l.squash && num(l.minSquash) > 0) p.squeezeMin = l.minSquash;
+        // granica ściśnięcia jak w BTB: brak = 0,8; 0 = bez granicy (w VizRS najmniejsze dozwolone 0,3)
+        if (l.squash) p.squeezeMin = l.minSquash === undefined || l.minSquash === null ? 0.8 : num(l.minSquash) > 0 ? Math.max(0.3, l.minSquash) : 0.3;
         if (l.autoW) { p.w = round3(num(l.maxW, num(l.w))); }
+        if (l.squash && el.type === 'BADGE' && !l.autoW) {
+          // BADGE w BTB ściska tekst wg długości (> 25 znaków → 25/len, min. 0,5), a nie do szerokości warstwy;
+          // tekst szerszy niż tło plakietki (bez dopasowania tła) ściskamy w VizRS do wnętrza tła z tym samym marginesem
+          const plate = sc.layers.filter((s) => s.type === 'shape' && !s.fitText && num(s.x) <= num(l.x) && num(s.x) + num(s.w) > num(l.x))
+            .sort((a, b) => num(b.w) - num(a.w))[0];
+          const inner = plate ? num(plate.x) + num(plate.w) - num(l.x) - (num(l.x) - num(plate.x)) : 0;
+          if (plate && inner > 0 && inner < num(l.w)) {
+            p.w = round3(inner);
+            warn(`ściskanie tekstu „${name}” wg długości (BADGE) zastąpiono ściskaniem do szerokości tła (${p.w} px)`);
+          }
+        }
         if (l.field) {
           const fid = String(l.field).toLowerCase().replace(/[^\w.\-]/g, '_') + (l.line ? `_l${l.line}` : '');
           node.fields.text = fid;
@@ -311,8 +338,10 @@ export function convertElement(el, opts = {}) {
         node.type = 'image';
         const src = String(l.src || '');
         const mapped = opts.assetName ? opts.assetName(src) : null;
-        p.src = mapped || (src && !src.startsWith('data:') ? src.split('/').pop() : '');
-        if (src && !mapped) warn(`plik „${src}” (warstwa „${name}”) nie został dołączony – wgraj go ręcznie w Artist`);
+        const remote = /^https?:\/\//i.test(src);
+        p.src = mapped || (remote ? src : src && !src.startsWith('data:') ? src.split('/').pop() : '');
+        if (remote && !mapped) warn(`obraz „${name}” ładowany z sieci (${src}) – bez internetu nie pojawi się na antenie; wgraj plik w Artist`);
+        else if (src && !mapped) warn(`plik „${src}” (warstwa „${name}”) nie został dołączony – wgraj go ręcznie w Artist`);
         p.fitMode = l.fit === 'cover' ? 'cover' : l.fit === 'fill' ? 'fill' : 'contain';
         if (num(l.radius)) p.radius = l.radius;
         if (l.bind) warn(`powiązanie obrazu z polem „${l.bind}” pominięte`);
@@ -321,13 +350,15 @@ export function convertElement(el, opts = {}) {
       case 'clock': {
         node.type = 'clock';
         const f = l.font || {};
-        p.mode = 'time'; p.format = l.format || 'HH:mm:ss';
+        p.mode = 'time'; p.format = mapClockFormat(l.format, warn);
         p.font = f.family || 'Inter'; p.size = num(f.size, 32); p.weight = weightOf(f.weight); p.color = toHex(f.color || '#ffffff');
         p.align = f.align || 'left'; p.valign = f.valign || 'middle';
         break;
       }
       case 'ticker': {
-        p.sep = `   ${l.separator || '•'}   `;
+        // BTB: „treść␣[odstęp gap]sep[odstęp gap]” – odstęp w px przybliżony spacjami (~0,26 em)
+        const sep = String(l.separator ?? '•'), gapN = Math.max(1, Math.round(num(l.gap, 48) / (num(l.font?.size, 32) * 0.18)));
+        p.sep = sep ? ' '.repeat(gapN + 1) + sep + ' '.repeat(gapN) : ' '.repeat(gapN);
         tickerNode(node, l.font || {}, true);
         if (!el.speed) p.speed = num(l.speed, 120);
         break;
@@ -343,7 +374,10 @@ export function convertElement(el, opts = {}) {
     const p = node.props;
     node.type = 'ticker';
     Object.assign(p, tickerSettings(el, layerBased));
-    p.text = btbItemsText(el.items) || 'Wiadomość 1\nWiadomość 2';
+    // warstwa ticker sceny BTB pokazuje same treści (bez kategorii) i startuje z taśmą od lewej krawędzi
+    const its = layerBased ? (el.items || []).map((i) => (i && typeof i === 'object' ? String(i.text || '') : String(i ?? ''))) : el.items;
+    p.text = btbItemsText(its) || 'Wiadomość 1\nWiadomość 2';
+    if (layerBased) p.crawlFrom = 'left';
     p.font = f.family || 'Inter'; p.size = num(f.size, 32); p.weight = weightOf(f.weight); p.color = toHex(f.color || '#ffffff');
     if (f.transform === 'uppercase') p.upper = true;
     if (opts.knownFonts && f.family && !opts.knownFonts.includes(f.family)) warn(`font „${f.family}” niedostępny w VizRS – wgraj plik fontu w Artist albo zostanie użyty zastępczy`);
@@ -410,99 +444,4 @@ export function convertElement(el, opts = {}) {
   for (const [id, v] of Object.entries(fields)) values[id] = typeof v === 'string' ? v : String(v ?? '');
   if (el.title && values.title !== undefined && !values.title) values.title = el.title;
   return { scene, page: { name: scene.name, values }, warnings };
-}
-
-// ---------------------------------------------------------------- eksport: scena VizRS → element BTB
-/** Spłaszcza drzewo (grupy → pozycje bezwzględne) i buduje `scene.layers` BTB. */
-export function exportScene(scene, values = {}) {
-  const warnings = [];
-  const warn = (m) => { if (!warnings.includes(m)) warnings.push(m); };
-  const layers = [];
-  const ocg = [];
-  const used = new Set();
-  const W = scene.width || 1920, H = scene.height || 1080;
-  const strip = (s) => String(s ?? '').replace(/\{\/?(?:b|i|u|c|sz)(?:=[^}]*)?\}/gi, '').replace(/\[\[|\]\]/g, '');
-  let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
-  let idc = 0;
-  let ticker = null;
-  const walkNodes = (nodes, ox, oy, depth) => {
-    for (const n of nodes || []) {
-      const p = n.props || {};
-      const x = (+p.x || 0) + ox, y = (+p.y || 0) + oy, w = +p.w || 0, h = +p.h || 0;
-      if (n.type === 'group') {
-        if (p.rotation || (p.scale && p.scale !== 1)) warn(`grupa „${n.name}”: obrót/skala grupy nie są przenoszone`);
-        walkNodes(n.children, x, y, depth + 1); continue;
-      }
-      if (n.hidden) { warn(`ukryty węzeł „${n.name}” pominięty`); continue; }
-      const id = (n.id || '').replace(/[^\w-]/g, '') || 'l' + (++idc);
-      const base = { id: used.has(id) ? id + '_' + (++idc) : id, name: n.name || id, visible: true, locked: false, x: round3(x), y: round3(y), w: round3(w), h: round3(h), rotation: +p.rotation || 0, skew: +p.skewX || 0, opacity: p.opacity ?? 1, motion: { in: null, out: null, text: null, textOut: null } };
-      used.add(base.id);
-      minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
-      const fontOf = () => ({ family: p.font || 'Inter', size: +p.size || 40, weight: String(p.weight || '700'), color: p.color || '#ffffff', transform: p.upper ? 'uppercase' : 'none', align: p.align || 'left', valign: p.valign || 'middle', letterSpacing: +p.spacing || 0, lineHeight: +p.lineHeight || 1.15, italic: !!p.italic, shadow: p.shadow ? '0 2px 8px rgba(0,0,0,.6)' : 'none' });
-      if (n.type === 'rect' || n.type === 'ellipse') {
-        layers.push({ ...base, type: 'shape', fill: p.color2 ? { type: 'gradient', color: p.color || '#ffffff', color2: p.color2, angle: +p.gradAngle || 90 } : { type: 'solid', color: p.color || '#ffffff', color2: '', angle: 90 }, stroke: { color: p.borderColor || '#ffffff', width: +p.borderWidth || 0 }, radius: n.type === 'ellipse' ? Math.round(Math.min(w, h) / 2) : +p.radius || 0, shadow: (+p.shadow || 0) > 0, effect: 'none' });
-        if (p.follow) warn(`autofollow „${n.name}” → pole fitText BTB wymaga ręcznego ustawienia`);
-      } else if (n.type === 'text') {
-        const f = n.fields?.text;
-        const fid = f ? f.toUpperCase() : '';
-        layers.push({ ...base, type: 'text', field: fid, text: strip(f ? (values[f] ?? p.text) : p.text), defaultText: '', font: fontOf(), squash: /squeeze/.test(p.textFit || ''), minSquash: +p.squeezeMin || 0 });
-        if (f && !ocg.some((o) => o.id === fid)) {
-          const m = scene.fieldMeta?.[f] || {};
-          const o = { id: fid, label: m.label || f, default: strip(values[f] ?? p.text), type: 'text' };
-          const text = {};
-          if (m.maxChars) text.maxChars = m.maxChars;
-          if (m.softMax) text.softMax = m.softMax;
-          if (m.maxLines) text.maxLines = m.maxLines;
-          if (m.oneLine) text.singleLine = true;
-          if (m.upper) text.upperCase = true;
-          if (m.typo) text.typography = { pl: true };
-          if (Object.keys(text).length) o.text = text;
-          if (m.tab) o.tab = m.tab;
-          if (m.help) o.help = m.help;
-          if (m.readonly) o.readonly = true;
-          ocg.push(o);
-        }
-        if (/\{\/?(?:b|i|u|c|sz)|\[\[/i.test(String(p.text || ''))) warn(`formatowanie tekstu „${n.name}” ({b}, [[ ]]…) pominięte – w BTB ustaw je w Edytorze Tekstu`);
-      } else if (n.type === 'image') {
-        layers.push({ ...base, type: /\.(mp4|webm|mov)$/i.test(p.src || '') ? 'video' : 'image', src: p.src ? '/assets/' + p.src : '', fit: p.fitMode || 'contain', radius: +p.radius || 0, bind: '' });
-        warn(`obraz „${p.src}”: skopiuj plik do BTB (ścieżka /assets/… z VizRS)`);
-      } else if (n.type === 'clock') {
-        layers.push({ ...base, type: 'clock', font: fontOf(), format: p.format || 'HH:mm:ss' });
-      } else if (n.type === 'ticker') {
-        layers.push({ ...base, type: 'ticker', font: fontOf(), speed: +p.speed || 120, separator: p.sepStyle && p.sepStyle !== 'text' ? '•' : String(p.sep || '•').trim() || '•', gap: 48 });
-        if (!ticker) {
-          const f = n.fields?.text;
-          const mode = p.tickerMode || 'crawl';
-          const src = parseTickerItems(String(f ? values[f] ?? p.text : p.text ?? ''));
-          ticker = { items: src.map((x) => (x.cat ? { text: x.text, category: x.cat } : { text: x.text })), tickerMode: MODE_OUT[mode] || 'horizontal', speed: mode === 'crawl' ? +p.speed || 120 : +p.hold || 5 };
-          if (p.label) ticker.introText = String(p.label);
-          if (p.sepStyle && SEP_OUT[p.sepStyle] && p.sepStyle !== 'text') ticker.separatorStyle = SEP_OUT[p.sepStyle];
-          if (p.catBg || p.catFg) ticker.wiper = { show: !!p.label, ...(p.catBg ? { bgColor: p.catBg } : {}), ...(p.catFg ? { textColor: p.catFg } : {}) };
-          if (p.catColors) ticker.fields = { CATEGORY_COLORS: String(p.catColors) };
-          if (mode !== 'crawl') warn(`ticker „${n.name}”: scena BTB przewija tylko poziomo – tryb „${mode}” zapisany w tickerMode (działa w szablonach kodowych BTB)`);
-          if (src.some((x) => x.color)) warn(`ticker „${n.name}”: kolory w wiadomościach (KAT#kolor) pominięte – użyj kolorów kategorii`);
-        } else warn(`ticker „${n.name}”: BTB ma jedną listę wiadomości na element – przeniesiono wiadomości pierwszego tickera`);
-      } else warn(`węzeł „${n.name}” typu ${n.type} pominięty`);
-    }
-  };
-  walkNodes(scene.nodes, 0, 0, 0);
-  if (!layers.length) throw new Error('scena nie ma węzłów do wyeksportowania');
-  // ramka elementu = obwiednia warstw; współrzędne warstw względem jej lewego górnego rogu
-  const fx = Math.max(0, minX), fy = Math.max(0, minY);
-  for (const l of layers) { l.x = round3(l.x - fx); l.y = round3(l.y - fy); }
-  const fw = Math.max(1, Math.round(maxX - fx)), fh = Math.max(1, Math.round(maxY - fy));
-  if ((scene.stops || []).length > 1) warn('wiele stop pointów: BTB nie ma Local Stop na wizji – przeniesiono tylko wejście/wyjście');
-  if (scene.nodes.some((n) => hasKeys(n))) warn('klucze animacji nie są przenoszone – ustawiono domyślne wejście/wyjście (przenikanie 0,3 s)');
-  const el = {
-    id: scene.id ? 'vizrs-' + scene.id : 'vizrs-' + Date.now().toString(36), name: scene.name || 'Scena VizRS', type: 'LOWER_THIRD', title: '', subtitle: '', visible: false,
-    layout: { side: 'custom', x: round3(fx), y: round3(fy), width: fw, height: fh, marginX: 0, marginY: 0, scale: 1, layer: 1 },
-    animation: { in: { type: 'fade', direction: 'bottom', duration: 0.3, delay: 0, ease: 'ease-out' }, out: { type: 'fade', direction: 'bottom', duration: 0.3, delay: 0, ease: 'ease-in' } },
-    ocgInputs: ocg, fields: {}, scene: { version: 1, detached: false, frame: { w: fw, h: fh }, layers },
-  };
-  if (ticker) { el.type = 'TICKER'; Object.assign(el, { ...ticker, fields: { ...el.fields, ...(ticker.fields || {}) } }); }
-  return { file: { _exportVersion: 3, elements: [el] }, warnings };
-}
-function hasKeys(n) {
-  if (Object.values(n.anim || {}).some((t) => t && t.length)) return true;
-  return (n.children || []).some(hasKeys);
 }
