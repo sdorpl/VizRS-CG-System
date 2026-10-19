@@ -49,7 +49,7 @@ export const PROPS = {
   lineHeight: { t: 'num', d: 1.15, g: 'Tekst', step: 0.05, label: 'interlinia' },
   align: { t: 'select', d: 'left', g: 'Tekst', opts: ['left', 'center', 'right'], label: 'wyrównanie' },
   valign: { t: 'select', d: 'middle', g: 'Tekst', opts: ['top', 'middle', 'bottom'], label: 'w pionie' },
-  textFit: { t: 'select', d: 'shrink', g: 'Tekst', opts: ['squeeze', 'squeeze-shrink', 'squeeze-lines', 'shrink', 'none'], label: 'dopasowanie' },
+  textFit: { t: 'select', d: 'shrink', g: 'Tekst', opts: ['squeeze', 'squeeze-shrink', 'squeeze-lines', 'squeeze-each', 'shrink', 'none'], label: 'dopasowanie' },
   squeezeMin: { t: 'num', d: 0.6, g: 'Tekst', min: 0.3, max: 1, step: 0.05, label: 'min. ściśnięcie' },
   maxLines: { t: 'num', d: 1, g: 'Tekst', min: 1, label: 'maks. linii' },
   padX: { t: 'num', d: 0, g: 'Tekst', anim: 1, min: 0, label: 'margines X' },
@@ -346,15 +346,19 @@ function balanceLines(line, k, W) {
 }
 
 /**
- * Tryb "squeeze-lines" – każdy wiersz jest ściskany poziomo NIEZALEŻNIE.
- * Wiersze: ręczne (Enter) albo automatyczny, zrównoważony podział, gdy tekst nie mieści się w jednym.
- * Gdy wiersz wymagałby ściśnięcia poniżej minimum, zmniejszany jest font tylko tego wiersza.
+ * Tryby "squeeze-lines" i "squeeze-each" – każdy wiersz jest ściskany poziomo NIEZALEŻNIE.
+ * squeeze-lines: wiersze ręczne (Enter) albo automatyczny, zrównoważony podział, gdy tekst nie mieści się w jednym;
+ *   gdy wiersz wymagałby ściśnięcia poniżej minimum, zmniejszany jest font tylko tego wiersza.
+ * squeeze-each: wiersze operatora (Enter) zostają, każdy ściskany do `squeezeMin`; font (wysokość) się nie zmienia.
+ *   Podział automatyczny tylko dla wiersza, który nie mieści się nawet przy granicy; reszta wystaje (`over`).
  */
 function fitLines(sp, text, o) {
   const ss = sp.style;
   const L = Math.max(1, Math.round(o.maxLines || 1));
   const avail = Math.max(1, o.avail);
   const MIN = squeezeFloor(o.minSqueeze);
+  const each = o.mode === 'squeeze-each';
+  const room = each ? avail / MIN : avail; // szerokość, powyżej której wiersz jest dzielony
   const origin = o.align === 'right' ? '100% 50%' : o.align === 'center' ? '50% 50%' : '0 50%';
   Object.assign(ss, { transform: '', whiteSpace: 'pre', maxWidth: 'none', display: 'flex', flexDirection: 'column', fontSize: o.size + 'px',
     alignItems: o.align === 'right' ? 'flex-end' : o.align === 'center' ? 'center' : 'flex-start' });
@@ -373,15 +377,15 @@ function fitLines(sp, text, o) {
       changed = false;
       const ws = lines.map(W);
       const i = ws.indexOf(Math.max(...ws));
-      if (ws[i] > avail) {
-        const parts = balanceLines(lines[i], Math.min(L - lines.length + 1, Math.ceil(ws[i] / avail)), W);
+      if (ws[i] > room) {
+        const parts = balanceLines(lines[i], Math.min(L - lines.length + 1, Math.ceil(ws[i] / room)), W);
         if (parts.length > 1) { lines.splice(i, 1, ...parts); changed = true; }
       }
     }
   }
   sp.textContent = '';
   lines = carryLines(lines); // każdy wiersz samodzielnie poprawny (znaczniki przeniesione przez podział)
-  let maxW = 0;
+  let maxW = 0, over = false;
   const sq = [];
   for (const line of lines) {
     const d = document.createElement('span');
@@ -391,7 +395,9 @@ function fitLines(sp, text, o) {
     let w = d.offsetWidth;
     let s = w > avail ? avail / w : 1;
     let f = 1;
-    if (s < MIN) {
+    if (s < MIN && each) {
+      s = MIN; over = true; // font bez zmian – wiersz wystaje, Trio ostrzega
+    } else if (s < MIN) {
       // ten wiersz: ściśnij do minimum, resztę nadrób mniejszym fontem (tylko w tym wierszu)
       f = s / MIN;
       d.style.fontSize = o.size * f + 'px';
@@ -402,7 +408,7 @@ function fitLines(sp, text, o) {
     sq.push(Math.round(s * f * 100) / 100);
     maxW = Math.max(maxW, w * s);
   }
-  return { w: Math.min(maxW, avail), h: sp.offsetHeight, sq, over: false };
+  return { w: Math.min(maxW, avail), h: sp.offsetHeight, sq, over };
 }
 
 /** Granica ściśnięcia (squeezeMin) w dozwolonym zakresie 0,3…1; brak = 0,6. */
@@ -706,7 +712,7 @@ export class ScenePlayer {
     const out = items.map((x) => { m.textContent = up ? x.text.toUpperCase() : x.text; return Math.min(1, avail / Math.max(1, m.scrollWidth)); });
     m.remove();
     const fit = it.p('textFit');
-    out.min = fit === 'none' ? 1 : fit === 'squeeze' || fit === 'squeeze-lines' ? squeezeFloor(it.p('squeezeMin')) : 0;
+    out.min = fit === 'none' ? 1 : fit === 'squeeze' || fit === 'squeeze-lines' || fit === 'squeeze-each' ? squeezeFloor(it.p('squeezeMin')) : 0;
     return out;
   }
 
@@ -1080,7 +1086,8 @@ export class ScenePlayer {
           ss.textShadow = sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '';
           if (it.cache.key !== key) {
             it.cache.key = key;
-            if (fitMode !== 'squeeze-lines') setRich(sp, text, hlBg, hlFg);
+            const perLine = fitMode === 'squeeze-lines' || fitMode === 'squeeze-each';
+            if (!perLine) setRich(sp, text, hlBg, hlFg);
             ss.fontFamily = `"${font}", "Barlow Condensed", Inter, Arial, sans-serif`;
             ss.fontWeight = p('weight');
             ss.fontStyle = p('italic') ? 'italic' : 'normal';
@@ -1088,7 +1095,7 @@ export class ScenePlayer {
             ss.lineHeight = lh;
             ss.fontVariantNumeric = 'tabular-nums';
             const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, hlBg, hlFg };
-            const m = fitMode === 'squeeze-lines' ? fitLines(sp, text, fo) : fitText(sp, fo);
+            const m = perLine ? fitLines(sp, text, fo) : fitText(sp, fo);
             it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;
           }
           break;

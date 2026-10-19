@@ -1,6 +1,8 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Tryb dopasowania `squeeze-each`:** wiersze wpisuje operator (Enter, do `maxLines`), każdy wiersz ściskany osobno do `squeezeMin` bez zmiany fontu – belka dwuwierszowa z różną szerokością liter i tą samą wysokością; wskaźnik `w1/w2` i ostrzeżenie w Trio.
+- Paczka `examples/BTB_CG`: `Belka_-_PILNE.json` i `.cgpack` dostawały to samo id sceny (strony 8003 i 8004 wskazywały jedną scenę) – scena z `.json` ma teraz id `btb_belka_-_pilne_json`; `build-btb-pack.mjs` dopisuje rozszerzenie przy kolizji.
 - **Fonty z assets wczytują się ponownie:** font wgrany do assets już po otwarciu Trio/Artist/wyjścia (albo chwilowo niedostępny) jest ponawiany co 2–30 s i teksty przeliczają się po jego wczytaniu; wcześniej zostawał font zastępczy (inne łamanie wierszy, inne ściśnięcie) aż do odświeżenia strony – także na wyjściu OBS.
 - **Ściskanie tekstu jak w BTB CG:** `textFit: squeeze` ściska tylko poziomo, do granicy `squeezeMin` (wcześniej na sztywno 62% i potem mniejszy font); font się nie zmienia, za długi tekst wystaje, a Trio ostrzega „⚠ nie mieści się”. Dawne zachowanie – nowy tryb `squeeze-shrink` (w scenach demo dla wąskich pól: „NA ŻYWO”, etykiety, programy). Nowy tekst w Artist ma `squeeze` (60%).
 - Trio: wskaźnik `ściśnięcie: N%` także dla trybów `squeeze`/`squeeze-shrink`; edytor wiadomości tickera oznacza ⚠ wiadomości, które zostaną ucięte.

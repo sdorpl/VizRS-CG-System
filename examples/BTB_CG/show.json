@@ -539,7 +539,7 @@
      ]
     }
    ],
-   "id": "btb_belka_-_pilne"
+   "id": "btb_belka_-_pilne_json"
   },
   {
    "name": "belka exp (18:26:40)",
@@ -4016,7 +4016,7 @@
    "id": "p8004",
    "number": 8004,
    "name": "Belka - PILNE (Belka_-_PILNE.json)",
-   "scene": "btb_belka_-_pilne",
+   "scene": "btb_belka_-_pilne_json",
    "values": {
     "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
    }

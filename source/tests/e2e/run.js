@@ -261,10 +261,12 @@ async function waitUp() {
         title: { label: 'Tytuł', maxChars: 20, softMax: 10, upper: true, typo: true, tab: 2, help: 'wpisz tytuł' },
         sub: { label: 'Podtytuł', maxLines: 2, tab: 1 },
         ro: { label: 'Stały', readonly: true, tab: 3 },
+        each: { label: 'Wiersze', maxLines: 2, tab: 4 },
       },
       nodes: [
         { id: 'tt', type: 'text', name: 'titleNode', fields: { text: 'title' }, props: { x: 100, y: 100, w: 1200, h: 100, size: 60, color: '#ffffff', font: 'Barlow Condensed', text: 'Tytul', textFit: 'squeeze-lines', maxLines: 2 } },
         { id: 'st', type: 'text', name: 'subNode', fields: { text: 'sub' }, props: { x: 100, y: 300, w: 1200, h: 100, size: 50, color: '#ffffff', font: 'Barlow Condensed', text: 'Sub', textFit: 'squeeze-lines', maxLines: 2 } },
+        { id: 'ea', type: 'text', name: 'eachNode', fields: { text: 'each' }, props: { x: 100, y: 700, w: 600, h: 140, size: 50, color: '#ffffff', font: 'Barlow Condensed', text: 'Each', textFit: 'squeeze-each', maxLines: 2, squeezeMin: 0.6 } },
         { id: 'rt', type: 'text', name: 'roNode', fields: { text: 'ro' }, props: { x: 100, y: 500, w: 600, h: 60, size: 40, color: '#ffffff', font: 'Barlow Condensed', text: 'stały' } },
       ] });
     sh3.pages.push({ id: 'prules', number: 9200, scene: 'rules', values: { title: 'a', sub: 'b', ro: 'stały' } });
@@ -289,6 +291,17 @@ async function waitUp() {
     await sleep(1200);
     const carry = await out.evaluate(() => [...document.querySelector('[data-id="st"] > span').children].map((l) => (l.querySelector('span') ? getComputedStyle(l.querySelector('span')).fontWeight : 'brak')));
     ok(carry.length === 2 && carry.every((w) => Number(w) >= 800), 'znacznik {b}…{/b} przenosi się na oba wiersze', carry);
+    // squeeze-each: wiersze operatora, każdy ściśnięty osobno, font (wysokość) bez zmian
+    const eachLines = () => out.evaluate(() => [...document.querySelector('[data-id="ea"] > span').children].map((l) => ({ t: l.textContent, tf: l.style.transform, fs: l.style.fontSize })));
+    const sx = (tf) => +(/scaleX\(([\d.]+)\)/.exec(tf)?.[1] ?? 1);
+    await api('/api/take/9200?each=' + encodeURIComponent('Krótki\nBardzo długi drugi wiersz belki, który trzeba ścisnąć'));
+    await sleep(1200);
+    let el2 = await eachLines();
+    ok(el2.length === 2 && sx(el2[0].tf) === 1 && sx(el2[1].tf) < 1 && sx(el2[1].tf) >= 0.6 && el2.every((l) => !l.fs), 'squeeze-each: każdy wiersz ma własne ściśnięcie, font bez zmian', el2);
+    await api('/api/take/9200?each=' + encodeURIComponent('Wiersz o wiele za długi nawet przy granicy ściśnięcia sześćdziesięciu procent, naprawdę bardzo długi\nDrugi'));
+    await sleep(1200);
+    el2 = await eachLines();
+    ok(el2.length === 2 && sx(el2[0].tf) === 0.6 && el2.every((l) => !l.fs), 'squeeze-each: za długi wiersz zatrzymuje się na squeezeMin (font bez zmian)', el2);
     await api('/api/clear');
 
     // pole w Trio z regułami
@@ -296,7 +309,7 @@ async function waitUp() {
     await trio.fill('#filter', '9200'); await sleep(200);
     await trio.click('#pages .item'); await sleep(500);
     const order = await trio.evaluate(() => [...document.querySelectorAll('#fields [data-f]')].map((e) => e.dataset.f));
-    ok(order.join() === 'sub,title,ro', 'kolejność Tab wg reguły tab (sub, title, ro)', order);
+    ok(order.join() === 'sub,title,ro,each', 'kolejność Tab wg reguły tab (sub, title, ro, each)', order);
     ok(await trio.evaluate(() => document.querySelector('#fields').innerText.includes('wpisz tytuł')), 'podpowiedź pola widoczna');
     ok(await trio.evaluate(() => document.querySelector('[data-f="ro"]').readOnly), 'pole readonly');
     const tf = trio.locator('[data-f="title"]');

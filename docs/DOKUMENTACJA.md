@@ -223,12 +223,13 @@ Kolejność pól w Trio: najpierw warianty, potem w kolejności drzewa (albo wg 
 | `squeeze` | jak w BTB CG: ściska tekst poziomo, najwyżej do `squeezeMin` (domyślnie 60%); **font się nie zmienia**. Gdy to za mało, tekst wystaje poza ramkę, a Trio ostrzega. Domyślny tryb nowego tekstu w Artist |
 | `squeeze-shrink` | ściska do `squeezeMin`, a dopiero potem zmniejsza font (dla wąskich, stałych pól: „NA ŻYWO”, etykiety) |
 | `squeeze-lines` | każdy wiersz osobno (z Enter albo automatyczny, wyrównany podział): ściskany do `squeezeMin`, poniżej zmniejsza się font tylko tego wiersza |
+| `squeeze-each` | wiersze wpisuje operator (Enter, do `maxLines`); **każdy wiersz ściskany osobno** do `squeezeMin`, font i wysokość wierszy bez zmian (belka dwuwierszowa jak w TV: różna szerokość liter, ta sama wysokość). Wiersz za długi nawet przy granicy jest dzielony, gdy zostało miejsce na kolejny; inaczej wystaje, a Trio ostrzega |
 | `shrink` | zmniejsza font, aż tekst się zmieści (`maxLines` linii); domyślny dla tekstów bez ustawionego trybu (starsze sceny) |
 | `none` | bez dopasowania |
 
 `squeezeMin` (0,3–1) to najmocniejsze dozwolone ściśnięcie: 0,6 = litery zwężone najwyżej do 60% szerokości.
 
-Trio pokazuje pod polem ściśnięcie tekstu: `ściśnięcie: 72%` (tryby `squeeze`, `squeeze-shrink`) albo każdego wiersza `w1: 100%  w2: 72%` (`squeeze-lines`); pomarańczowe < 100%, czerwone < 70%. W trybie `squeeze` po przekroczeniu granicy pojawia się czerwone **⚠ nie mieści się – skróć tekst**.
+Trio pokazuje pod polem ściśnięcie tekstu: `ściśnięcie: 72%` (tryby `squeeze`, `squeeze-shrink`) albo każdego wiersza `w1: 100%  w2: 72%` (`squeeze-lines`, `squeeze-each`); pomarańczowe < 100%, czerwone < 70%. W trybach `squeeze` i `squeeze-each` po przekroczeniu granicy pojawia się czerwone **⚠ nie mieści się – skróć tekst**.
 
 ### 6.2 Tekst sformatowany
 

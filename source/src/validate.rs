@@ -25,7 +25,7 @@ fn text_ok(v: &Json, what: &str, max: usize) -> R {
 }
 
 /// Tryby dopasowania tekstu do ramki (`props.textFit`).
-const TEXT_FIT: [&str; 5] = ["squeeze", "squeeze-shrink", "squeeze-lines", "shrink", "none"];
+const TEXT_FIT: [&str; 6] = ["squeeze", "squeeze-shrink", "squeeze-lines", "squeeze-each", "shrink", "none"];
 
 fn num_in(v: &Json, what: &str, lo: f64, hi: f64) -> R {
     match v {
@@ -591,6 +591,7 @@ mod tests {
         assert!(scene(&p(&format!(r#"{{"nodes":[{{"type":"ticker","props":{{"text":"{many}"}}}}]}}"#))).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"ticker","props":{"catColors":"PILNE"}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"squeeze-shrink","squeezeMin":0.3}}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"squeeze-each","maxLines":2}}]}"#)).is_ok());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"rozciągnij"}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":3}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":1.5}}]}"#)).is_err());

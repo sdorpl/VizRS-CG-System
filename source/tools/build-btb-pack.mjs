@@ -58,7 +58,9 @@ for (const file of fs.readdirSync(SRC).filter((f) => /\.(json|cgpack)$/i.test(f)
     let name = r.scene.name;
     if (names.has(name)) name = `${name} (${file})`.slice(0, 100);
     names.add(name);
-    const id = ('btb_' + slug(stem)).slice(0, 50);
+    // ten sam rdzeń nazwy (Belka_-_PILNE.json i .cgpack) → różne id, inaczej strony wskazują jedną scenę
+    let id = ('btb_' + slug(stem)).slice(0, 50);
+    if (show.scenes.some((s) => s.id === id)) id = ('btb_' + slug(stem)).slice(0, 44) + '_' + slug(path.extname(file).slice(1));
     show.scenes.push({ ...r.scene, id, name, layer });
     show.pages.push({ id: 'p' + number, number, name, scene: id, values: r.page.values });
     report.push({ file, element: el.name, type: el.type || '', scene: id, page: number, layer, warnings: r.warnings });
