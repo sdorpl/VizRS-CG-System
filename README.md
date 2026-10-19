@@ -8,6 +8,8 @@ OBS pobiera przez źródło **Przeglądarka (Browser Source)**.
 - UI (Artist, Trio, wyjście) jest wbudowane w binarkę.
 - Show zapisywany w `vizrs-data/show.json`, pliki graficzne w `vizrs-data/assets/`.
 
+**Dokumentacja:** [instrukcja dla początkujących](docs/INSTRUKCJA-poczatkujacy.md) · [pełna dokumentacja](docs/DOKUMENTACJA.md) · [spis dokumentów](docs/README.md)
+
 ## Uruchomienie
 
 ```bash

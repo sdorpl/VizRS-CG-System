@@ -1,0 +1,149 @@
+# VizRS – instrukcja dla początkujących
+
+> Krótka ścieżka od uruchomienia do pierwszej grafiki na antenie. Pełny opis: [DOKUMENTACJA.md](DOKUMENTACJA.md).
+
+## Najważniejsze pojęcia (w 1 minutę)
+
+| Pojęcie | Co to jest |
+|---|---|
+| **Scena** (szablon) | wygląd i animacja grafiki, projektowana w **Artist** – np. „Belka” |
+| **Strona** | scena + konkretne dane + numer, np. *1001 Belka – budżet*; operator pracuje na stronach w **Trio** |
+| **Pole kontrolne** ⛓ | właściwość sceny, którą operator zmienia na stronie (tekst, kolor, obraz…) |
+| **Warstwa** | `back`, `main`, `front` lub własna; grafiki na tej samej warstwie się zastępują, na różnych grają razem |
+| **Stop point** | miejsce, w którym animacja się zatrzymuje: TAKE gra do 1. stopu, CONTINUE do kolejnego, OUT do końca |
+| **Wyjście** | strona `/output`, którą OBS pokazuje jako przezroczystą grafikę |
+
+## 1. Uruchomienie
+
+| System | Polecenie |
+|---|---|
+| Linux | `./start-linux.sh` |
+| Windows | raz `build-windows.bat` (wymaga Rust z https://rustup.rs), potem `start-windows.bat` |
+| macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data` |
+
+W przeglądarce otwórz:
+
+- `http://localhost:8088/trio` – playout (operator),
+- `http://localhost:8088/artist` – projektowanie szablonów,
+- `http://localhost:8088/output?checker=1` – podgląd wyjścia.
+
+Za pierwszym razem startuje przykładowy zestaw **INFO24** (belki, ticker, zegar, NA ŻYWO…).
+
+## 2. Pierwsza grafika na antenie (5 minut, Trio)
+
+1. Otwórz **Trio**. Na liście **Strony** kliknij *1001* (albo wpisz `1001` i Enter).
+2. W środkowej kolumnie zmień tekst w polu „Treść belki”. Podgląd pod polami pokazuje wynik od razu.
+3. Naciśnij **F1** (TAKE). Grafika wchodzi na antenę – widać ją w monitorze **PGM** po prawej i na liście **Na antenie**.
+4. Popraw tekst i naciśnij **F4** (UPDATE) – dane zmieniają się bez ponownej animacji.
+5. Naciśnij **F3** (OUT) – grafika schodzi.
+6. **Ctrl+S** zapisuje zmiany na stronie (TAKE wysyła to, co jest w polach, także bez zapisu).
+
+## 3. Własna strona z szablonu
+
+1. W Trio, panel **Szablony**: kliknij **＋** przy wybranym szablonie.
+2. Powstaje nowa strona z kolejnym numerem i wartościami domyślnymi. Zmień numer i nazwę w nagłówku edytora.
+3. Wypełnij pola i zapisz (**Ctrl+S**).
+4. Przycisk **⧉ Duplikuj** pod listą stron tworzy kopię bieżącej strony – wygodne przy serii podpisów.
+
+## 4. Pierwsza belka w Artist (10 minut)
+
+1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
+2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
+3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px).
+4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. W grupie **Tekst** wybierz dopasowanie `squeeze-lines` – długi tekst zostanie ściśnięty zamiast wyjść poza belkę.
+5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
+6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
+
+### Tło dopasowane do tekstu (autofollow)
+
+Zaznacz prostokąt i w grupie **Autofollow** wpisz w polu „śledź węzeł(y)” nazwę węzła tekstu. Prostokąt dopasuje szerokość (oś `w`) albo wysokość (`h`) do treści, z marginesem `margines`.
+Element przy prawej krawędzi ekranu ustaw z **punktem X = right** – będzie rósł w lewo.
+
+## 5. Animacja wejścia i wyjścia
+
+1. Ustaw głowicę osi czasu na **0** (Home). Zaznacz prostokąt, ustaw **maska P%** = 100 i kliknij **◆** przy tej właściwości.
+2. Przesuń głowicę na **0,4 s**, ustaw **maska P%** = 0 – klucz powstaje sam (właściwość ma już animację). Belka „wyjeżdża” z lewej.
+3. W **0,6 s** kliknij **＋ Stop** – tu grafika stanie po TAKE.
+4. Za stop pointem (np. 1,0–1,4 s) zrób odwrotną animację – to będzie wyjście (OUT).
+5. Sprawdź: **▶ Take**, **⏏ Out** na osi czasu. Klik w klucz pozwala zmienić krzywą (`out` – hamowanie, `back` – lekkie przestrzelenie).
+
+Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości → Presety animacji → ＋ zapisz) i stosować na innych węzłach.
+
+## 6. Wyświetlenie w OBS
+
+1. OBS → Źródła → **+** → **Przeglądarka**.
+2. URL `http://localhost:8088/output`, szerokość 1920, wysokość 1080.
+3. Zaznacz **„Odśwież przeglądarkę, gdy scena staje się aktywna”** – po odświeżeniu VizRS odtwarza bieżący stan anteny.
+4. Opcjonalnie: Trio jako dock w OBS (*Docki → Niestandardowe docki przeglądarki* → `http://localhost:8088/trio`).
+
+Mikser z kluczowaniem (ATEM, Tricaster): dwa źródła – `/output?mode=fill` i `/output?mode=key`.
+
+## 7. Ticker
+
+1. Wczytaj stronę z tickerem (w INFO24: *3001*).
+2. Pole wiadomości to lista: kategoria + treść. **Enter** dodaje wiadomość, **Ctrl+↑↓** przesuwa, ✕ usuwa. Wklejenie kilku wierszy tworzy kilka wiadomości.
+3. Najechanie myszą na wiadomość pokazuje ją w podglądzie.
+4. Na antenie **UPDATE** (F4) dokłada zmiany bez restartu przewijania.
+
+Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|Treść`, bez kategorii – sama treść.
+
+## 8. Program na żywo: rundown i makra
+
+- **Rundown** (prawa kolumna): **＋ strona** dodaje zaznaczoną stronę, kolejność zmieniasz przeciąganiem, przy pozycji możesz dopisać notatkę. **F8 (NEXT)** bierze następną pozycję na antenę (▶ = następna, ● = na antenie, ✓ = odegrana).
+- **Makra**: jedna komenda w wierszu, np.
+  ```
+  CLEAR
+  TAKE 1001
+  +2.5 TAKE 3001
+  ```
+  **⇥ z anteny** zapisuje bieżący zestaw grafik jako makro (preset segmentu).
+- **Skrót strony**: kliknij pole „skrót” w nagłówku edytora i naciśnij np. Ctrl+1 – ten skrót robi TAKE strony, a gdy jest na antenie, OUT.
+
+## 9. Ściąga skrótów
+
+**Trio**
+
+| Skrót | Działanie |
+|---|---|
+| F1 / Ctrl+Enter | TAKE |
+| F2 | CONTINUE |
+| F3 | OUT |
+| F4 | UPDATE |
+| F6 | ARM (Preview) |
+| F8 | NEXT (rundown) |
+| cyfry + Enter | wczytaj stronę |
+| ↑ / ↓ | poprzednia / następna strona |
+| Ctrl+S | zapisz stronę |
+| Ctrl+Spacja | Word Replace (skrót → słowo) |
+| Shift+Esc | CLEAR ALL |
+
+**Artist**
+
+| Skrót | Działanie |
+|---|---|
+| Ctrl+S | zapisz |
+| Ctrl+Z / Ctrl+Y | cofnij / ponów |
+| Ctrl+D | duplikuj węzeł |
+| Delete | usuń węzeł / klucz |
+| Spacja | odtwórz / pauza |
+| Home / End | początek / koniec |
+| M | marker |
+| strzałki (+Shift) | przesuń o 1 (10) px |
+
+**Podgląd w Trio:** kółko = zoom, przeciąganie = przesunięcie, dwuklik w element = powiększ, dwuklik w tło = kadr na element, ⤢ = cały ekran.
+
+## 10. Najczęstsze problemy
+
+| Problem | Co zrobić |
+|---|---|
+| OBS nic nie pokazuje | Trio → **⚙ Stan**: czy „Wyjścia” ≥ 1? W OBS kliknij *Odśwież pamięć podręczną bieżącej strony* w źródle Przeglądarka. Sprawdź URL i token. |
+| Zmiana szablonu nie widać na antenie | to celowe: warstwa ma znacznik **⏳ nowa wersja** – kliknij **Wdróż teraz** albo zrób ponowny TAKE. |
+| Czerwone „⚠ zapis show nieudany” | brak miejsca lub praw zapisu do `vizrs-data/`; antena działa, edycje nie są zapisywane. |
+| „⚠ błędy scen: N” | ⚙ Stan → lista błędów; wadliwy element jest ukryty, reszta gra. Popraw scenę w Artist. |
+| Tekst za długi / ściśnięty | pod polem widać `w1: 72%` – pomarańczowe = ściśnięte, czerwone = bardzo ściśnięte; skróć tekst albo podziel na wiersze (Enter). |
+| Inny font na antenie niż w Artist | używaj fontów wbudowanych (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat) albo wgraj plik fontu do assets. |
+| „🔒 edytuje …” przy stronie | stronę edytuje inny operator; zapis wymaga potwierdzenia, blokada wygasa po 45 s. |
+| Trzeba wrócić do wcześniejszej wersji show | ⚙ Stan → **Kopie zapasowe show** → Przywróć. |
+| Zdjąć wszystko natychmiast | **Shift+Esc** (CLEAR ALL). |
+
+Więcej: [RUNBOOK.md](RUNBOOK.md) (awarie i lista kontrolna przed emisją).

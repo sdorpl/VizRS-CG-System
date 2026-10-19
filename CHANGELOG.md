@@ -1,6 +1,8 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Dokumentacja:** `docs/DOKUMENTACJA.md` (pełny opis aplikacji), `docs/INSTRUKCJA-poczatkujacy.md` (instrukcja krok po kroku), `docs/README.md` (spis), `CLAUDE.md` (zasady pracy z kodem).
+- Trio: duży podgląd strony sam kadruje element – środek na elemencie, mały element powiększony tak, by zmieścił się cały; dwuklik w puste miejsce wraca do tego kadru.
 - **Edytor wiadomości tickera** w Trio i Artist (`ticker-items.js`): lista *kategoria + treść* z ↑↓ i ✕, widok grup po kategoriach (przeciąganie między grupami, zmiana nazwy grupy), tekst surowy; Enter = nowa wiadomość, Ctrl+↑↓ = przesuń, wklejenie wielu wierszy = wiele wiadomości; najechanie na wiersz pokazuje tę wiadomość w podglądzie; ściśnięcie każdej wiadomości widoczne od razu.
 - **Ciągłość przy UPDATE**: zmiana wiadomości na antenie nie zaczyna przewijania od nowa – crawl płynie dalej, a nowe wiadomości dochodzą za tym, co jest na ekranie; w roll/wipe/whip bieżąca wiadomość dogrywa swój czas.
 - **Tryb `whip`**: etykieta (pas kategorii) przejeżdża przez pasek między wiadomościami i w połowie drogi zmienia się na kategorię następnej (jak w BTB).
