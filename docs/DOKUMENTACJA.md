@@ -189,7 +189,7 @@ Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warst
 - Wbudowane offline: **Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat** (`/fonts/fonts.css`).
 - Fonty systemowe (Arial, Verdana…) – bez ładowania.
 - Inne nazwy z Google Fonts ładują się z internetu (na antenie lepiej tego unikać).
-- Własny font: wgraj `.ttf/.otf/.woff/.woff2` do assets i wpisz w polu „font” nazwę pliku, np. `MojFont.ttf`.
+- Własny font: wgraj `.ttf/.otf/.woff/.woff2` do assets i wpisz w polu „font” nazwę pliku, np. `MojFont.ttf`. Font wgrany, gdy Trio lub wyjście są już otwarte, wczyta się sam w ciągu kilkunastu sekund (bez odświeżania strony).
 
 ## 5. Pola kontrolne i reguły pól
 

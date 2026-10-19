@@ -1,6 +1,7 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Fonty z assets wczytują się ponownie:** font wgrany do assets już po otwarciu Trio/Artist/wyjścia (albo chwilowo niedostępny) jest ponawiany co 2–30 s i teksty przeliczają się po jego wczytaniu; wcześniej zostawał font zastępczy (inne łamanie wierszy, inne ściśnięcie) aż do odświeżenia strony – także na wyjściu OBS.
 - **Ściskanie tekstu jak w BTB CG:** `textFit: squeeze` ściska tylko poziomo, do granicy `squeezeMin` (wcześniej na sztywno 62% i potem mniejszy font); font się nie zmienia, za długi tekst wystaje, a Trio ostrzega „⚠ nie mieści się”. Dawne zachowanie – nowy tryb `squeeze-shrink` (w scenach demo dla wąskich pól: „NA ŻYWO”, etykiety, programy). Nowy tekst w Artist ma `squeeze` (60%).
 - Trio: wskaźnik `ściśnięcie: N%` także dla trybów `squeeze`/`squeeze-shrink`; edytor wiadomości tickera oznacza ⚠ wiadomości, które zostaną ucięte.
 - Ticker (`roll`/`wipe`/`whip`): dopasowanie wiadomości wg `textFit` i `squeezeMin` węzła (domyślnie `squeeze-shrink` 60% – jak dotąd).

@@ -239,9 +239,7 @@ export function ensureFont(name, assetBase = '') {
   const sys = ['Arial', 'Helvetica', 'Verdana', 'Georgia', 'Times New Roman', 'Courier New', 'Tahoma', 'Impact', 'sans-serif', 'serif', 'monospace'];
   if (sys.includes(name)) return;
   if (/\.(ttf|otf|woff2?)$/i.test(name)) {
-    const st = document.createElement('style');
-    st.textContent = `@font-face{font-family:"${name}";src:url("${assetBase}/assets/${encodeURIComponent(name)}");font-display:block}`;
-    document.head.appendChild(st);
+    loadAssetFont(name, assetBase, 0);
   } else {
     const l = document.createElement('link');
     l.rel = 'stylesheet';
@@ -249,6 +247,20 @@ export function ensureFont(name, assetBase = '') {
     l.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name).replace(/%20/g, '+')}:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=block`;
     document.head.appendChild(l);
   }
+}
+/**
+ * Font z assets (jak @font-face z font-display:block – tekst czeka na font, nie miga zastępczym).
+ * Nieudane wczytanie (np. font wgrany do assets już po otwarciu Trio/wyjścia) jest ponawiane,
+ * a po sukcesie teksty mierzą się od nowa – bez tego zastępczy font zostawał do odświeżenia strony.
+ */
+function loadAssetFont(name, assetBase, tries) {
+  const ff = new FontFace(name, `url("${assetBase}/assets/${encodeURIComponent(name)}")`, { display: 'block' });
+  document.fonts.add(ff);
+  ff.load().then(() => { fontEpoch++; }, () => {
+    document.fonts.delete(ff);
+    fontEpoch++;
+    setTimeout(() => loadAssetFont(name, assetBase, tries + 1), Math.min(30000, 2000 * 2 ** tries));
+  });
 }
 let fontEpoch = 0;
 if (typeof document !== 'undefined' && document.fonts) {
