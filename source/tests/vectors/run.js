@@ -29,5 +29,28 @@ wr.parse.forEach((c) => {
 
 load('spell-tokens').cases.forEach((c) => check('spellTokens: ' + JSON.stringify(c.text).slice(0, 30), eq(T.spellTokens(c.text), c.expect)));
 
-console.log(failed ? `\n${failed} NIEUDANYCH (zaliczone: ${passed})` : `Wektory zgodne (${passed} sprawdzeń)`);
-process.exit(failed ? 1 : 0);
+// model wiadomości tickera (web/ticker-model.js) – te same wektory sprawdza src/ticker.rs
+import(path.join(__dirname, '../../web/ticker-model.js')).then((K) => {
+  const tk = load('ticker');
+  tk.parse.forEach((c) => check('ticker parse: ' + c.in, eq(K.parseTickerItem(c.in), c.out), K.parseTickerItem(c.in)));
+  tk.serialize.forEach((c) => {
+    const s = K.serializeTickerItem(c.in);
+    check('ticker serialize: ' + JSON.stringify(c.in), s === c.out, s);
+    check('ticker round-trip: ' + JSON.stringify(c.in), K.parseTickerItem(s).text === c.roundtrip, K.parseTickerItem(s));
+  });
+  tk.items.forEach((c) => check('ticker items: ' + JSON.stringify(c.in), K.serializeTickerItems(K.parseTickerItems(c.in)) === c.out));
+  // mapa kolorów, kolejność koloru, ciągłość po zmianie listy, reguły
+  const map = K.parseCatColors('pilne=#e00000; INFO = #0050c0;zle;');
+  check('parseCatColors', eq(map, { PILNE: '#e00000', INFO: '#0050c0' }), map);
+  check('catColorOf: kolor wiadomości > mapa > domyślny', K.catColorOf({ cat: 'PILNE', color: '#123' }, map, '#fff') === '#123' && K.catColorOf({ cat: 'Pilne' }, map, '#fff') === '#e00000' && K.catColorOf({ cat: 'X' }, map, '#fff') === '#fff');
+  check('labelOf: kategoria albo etykieta domyślna', K.labelOf({ cat: 'A' }, 'INFO') === 'A' && K.labelOf({ cat: '' }, 'INFO') === 'INFO');
+  const I = (s) => K.parseTickerItems(s);
+  check('continuation: bieżąca zostaje', eq(K.continuation(I('a\nb\nc'), 1, I('x\nb\ny')), { cur: 1, next: 2 }));
+  check('continuation: bieżąca usunięta → następna stara, która przetrwała', eq(K.continuation(I('a\nb\nc'), 1, I('c\na')), { cur: -1, next: 0 }));
+  check('continuation: nic nie przetrwało → od początku', eq(K.continuation(I('a\nb'), 0, I('x\ny')), { cur: -1, next: 0 }));
+  check('continuation: pusta lista', eq(K.continuation(I('a'), 0, []), { cur: -1, next: 0 }));
+  const errs = K.checkTickerItems(I('A|abc\nZ|abcdef\nx'), { maxItems: 2, maxChars: 5, cats: ['A', 'B'] }).map((e) => e.i);
+  check('checkTickerItems: limit wiadomości, znaków i kategorie', eq(errs, [-1, 1, 1]), errs);
+  console.log(failed ? `\n${failed} NIEUDANYCH (zaliczone: ${passed})` : `Wektory zgodne (${passed} sprawdzeń)`);
+  process.exit(failed ? 1 : 0);
+});

@@ -1,4 +1,6 @@
 import { qrSvg } from '/qr.js';
+import { parseTickerItems, parseCatColors, catColorOf, labelOf, continuation, TICKER_MODES, SEP_STYLES } from '/ticker-model.js';
+export { parseTickerItem, serializeTickerItem, parseTickerItems, serializeTickerItems, parseCatColors, checkTickerItems } from '/ticker-model.js';
 import { hasMarkup, parseMarkup, stripMarkup, carryLines } from '/richtext.js';
 export { hasMarkup, parseMarkup, stripMarkup, carryLines } from '/richtext.js';
 
@@ -68,7 +70,11 @@ export const PROPS = {
   speed: { t: 'num', d: 140, g: 'Ticker', anim: 1, label: 'prędkość px/s' },
   sep: { t: 'string', d: '   •   ', g: 'Ticker', label: 'separator' },
   sepColor: { t: 'color', d: '', g: 'Ticker', label: 'kolor separatora' },
-  tickerMode: { t: 'select', d: 'crawl', g: 'Ticker', opts: ['crawl', 'roll', 'wipe'], label: 'tryb' },
+  tickerMode: { t: 'select', d: 'crawl', g: 'Ticker', opts: TICKER_MODES, label: 'tryb' },
+  sepStyle: { t: 'select', d: 'text', g: 'Ticker', opts: SEP_STYLES, label: 'styl separatora' },
+  label: { t: 'string', d: '', g: 'Ticker', label: 'etykieta domyślna' },
+  catColors: { t: 'string', d: '', g: 'Ticker', label: 'kolory kategorii' },
+  gleam: { t: 'num', d: 0, g: 'Ticker', min: 0, step: 0.5, label: 'błysk etykiety (co s)' },
   hold: { t: 'num', d: 5, g: 'Ticker', min: 1, step: 0.5, label: 'czas wiadomości (s)' },
   catW: { t: 'num', d: 170, g: 'Ticker', min: 0, label: 'szer. kategorii' },
   catBg: { t: 'color', d: '#c8102e', g: 'Ticker', label: 'tło kategorii' },
@@ -87,7 +93,7 @@ export const TYPES = {
   qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', 'radius', 'shadow'] },
   image: { label: 'Obraz/wideo', icon: '🖼', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
   clock: { label: 'Zegar', icon: '⏱', props: [...COMMON, 'mode', 'format', 'seconds', 'target', ...TEXT_STYLE] },
-  ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'sep', 'sepColor', 'catW', 'catBg', 'catFg', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
+  ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'gleam', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
 };
 
 export const FONTS = ['Barlow Condensed', 'Barlow', 'Inter', 'Oswald', 'Bebas Neue', 'Roboto Condensed', 'Montserrat', 'Anton', 'Archivo Black', 'Teko', 'Roboto Mono', 'Playfair Display', 'Arial'];
@@ -434,15 +440,44 @@ function fitText(sp, o) {
   return { w: Math.min(sp.offsetWidth * sx, L > 1 ? avail : Infinity), h: sp.offsetHeight };
 }
 
-// ------------------------------------------------------------------ ticker: kategorie
-/** "SPORT#1f8a4c|Treść" -> {cat:'SPORT', color:'#1f8a4c', text:'Treść'}; bez '|' – sama treść. */
-export function parseTickerItem(line) {
-  const i = line.indexOf('|');
-  if (i < 0) return { cat: '', color: '', text: line.trim() };
-  let cat = line.slice(0, i).trim(), color = '';
-  const m = cat.match(/^(.*?)#([0-9a-fA-F]{3,8})$/);
-  if (m) { cat = m[1].trim(); color = '#' + m[2]; }
-  return { cat, color, text: line.slice(i + 1).trim() };
+// ------------------------------------------------------------------ ticker: elementy wspólne dla trybów
+/** Pas błysku (gleam) w etykiecie; pozycja liczona z czasu, więc działa także w render_video.py. */
+function gleamEl(parent) {
+  const g = document.createElement('div');
+  Object.assign(g.style, { position: 'absolute', top: '0', bottom: '0', width: '45%', left: '-60%', display: 'none', pointerEvents: 'none',
+    background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.4), rgba(255,255,255,0))', transform: 'skewX(-20deg)' });
+  parent.appendChild(g);
+  return g;
+}
+function gleamAt(g, period, now) {
+  if (!(period > 0)) { g.style.display = 'none'; return; }
+  const dur = Math.min(1.6, period * 0.6), u = ((now / 1000) % period) / dur;
+  if (u >= 1) { g.style.display = 'none'; return; }
+  g.style.display = 'block';
+  g.style.left = (-60 + u * 170) + '%';
+}
+/** Jeden odcinek taśmy crawla: [plakietka kategorii] treść [separator]. */
+function tickerSegment(x, o) {
+  const seg = document.createElement('span');
+  Object.assign(seg.style, { position: 'absolute', top: '0', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'pre' });
+  if (x.cat) {
+    const b = document.createElement('span');
+    b.textContent = o.up ? x.cat.toUpperCase() : x.cat;
+    Object.assign(b.style, { background: catColorOf(x, o.colors, o.catBg), color: o.catFg, padding: '.05em .45em', marginRight: '.5em', borderRadius: '3px', fontSize: '.78em', textShadow: 'none' });
+    seg.appendChild(b);
+  }
+  seg.appendChild(document.createTextNode(o.up ? x.text.toUpperCase() : x.text));
+  const sp = document.createElement('span');
+  if (o.sepStyle && o.sepStyle !== 'text') {
+    const dim = { dot: ['.32em', '.32em', '50%', ''], square: ['.3em', '.3em', '0', ''], pipe: ['.12em', '.95em', '0', ''], skew: ['.16em', '1.05em', '0', 'skewX(-20deg)'] }[o.sepStyle] || ['.32em', '.32em', '50%', ''];
+    Object.assign(sp.style, { display: 'inline-block', width: dim[0], height: dim[1], borderRadius: dim[2], transform: dim[3], margin: '0 .9em', flex: 'none',
+      background: o.sepColor || 'currentColor', opacity: o.sepColor ? '1' : '.55' });
+  } else {
+    sp.textContent = o.sep;
+    if (o.sepColor) sp.style.color = o.sepColor;
+  }
+  seg.appendChild(sp);
+  return seg;
 }
 const easeIO = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
 
@@ -531,6 +566,7 @@ export class ScenePlayer {
   take() {
     this.t = 0;
     this.wallStart = performance.now();
+    for (const it of this.items) it.tk = null;
     const s = this.stops;
     this.target = s.length ? s[0] : this.duration;
     this.mode = 'in';
@@ -607,54 +643,104 @@ export class ScenePlayer {
     this.apply(this.t, now);
   }
 
-  /** Ticker w trybie "roll" (przewijanie góra-dół) lub "wipe" (odsłanianie maską z wycieraczką). */
-  tickerSlots(it, p, now, fe) {
+  // ---- ticker ----
+  // Stan tickera (it.tk) jest osobno od it.cache: UPDATE czyści cache, ale nie przerywa przewijania ani rotacji.
+
+  /** Wiadomości węzła (parsowane tylko po zmianie tekstu). */
+  tickerItems(it, p) {
+    const raw = String(p('text') ?? '');
+    if (it.tkRaw !== raw) { it.tkRaw = raw; it.tkItems = parseTickerItems(stripMarkup(raw)); }
+    return it.tkItems;
+  }
+
+  /** Podgląd jednej wiadomości (najechanie na wiersz listy); fid = pole albo id węzła, idx = null wyłącza. */
+  tickerPin(fid, idx) {
+    for (const it of this.items) if (it.node.type === 'ticker' && (it.node.fields?.text === fid || it.node.id === fid)) it.pin = idx;
+    this.apply(this.t);
+  }
+
+  /**
+   * Ściśnięcie każdej wiadomości (1 = mieści się) dla węzła tickera z polem `fid`; crawl → null (tekst przewija się).
+   * Mierzone od razu dla całej listy – operator nie musi czekać na rotację.
+   */
+  tickerSqueeze(fid) {
+    const it = this.items.find((i) => i.node.type === 'ticker' && (i.node.fields?.text === fid || i.node.id === fid) && i.vis && i.p);
+    if (!it || it.p('tickerMode') === 'crawl') return null;
+    const items = this.tickerItems(it, it.p), up = it.p('upper');
+    const avail = Math.max(1, it.w - (it.tkCatW || 0) - 36);
+    const m = document.createElement('span');
+    Object.assign(m.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre', left: '0', top: '0' });
+    it.strip.appendChild(m);
+    const out = items.map((x) => { m.textContent = up ? x.text.toUpperCase() : x.text; return Math.min(1, avail / Math.max(1, m.scrollWidth)); });
+    m.remove();
+    return out;
+  }
+
+  /** Ticker w trybach roll (góra–dół), wipe (maska z wycieraczką) i whip (etykieta przejeżdża przez pasek). */
+  tickerSlots(it, p, now, fe, items) {
     const mode = p('tickerMode');
-    const items = stripMarkup(String(p('text') ?? '')).split('\n').map((s) => s.trim()).filter(Boolean).map(parseTickerItem);
     const n = items.length;
     const up = p('upper'), font = p('font'), w = it.w, h = it.h;
-    const hasCat = items.some((x) => x.cat);
-    const catW = hasCat ? Math.max(0, p('catW')) : 0;
+    const label = String(p('label') || ''), colors = parseCatColors(p('catColors')), catBg = p('catBg');
+    const catW = label || items.some((x) => x.cat) ? Math.max(0, p('catW')) : 0;
+    it.tkCatW = catW;
     ensureFont(font, this.opts.assetBase);
-    const key = [mode, JSON.stringify(items), up, font, p('size'), p('weight'), p('italic'), p('spacing'), w, h, catW, p('catBg'), p('catFg'), p('color'), p('shadow'), fe].join('|');
+    const key = ['slots', up, font, p('size'), p('weight'), p('italic'), p('spacing'), w, h, catW, catBg, p('catFg'), p('color'), p('shadow'), p('catColors'), label, fe].join('|');
     const S = it.strip.style;
-    if (it.cache.key !== key) {
+    if (it.cache.key !== key || !it.slots) {
       it.cache.key = key;
-      it.cache.idx = -1;
+      if (it.tk?.mode === 'crawl') it.tk = null;
       it.strip.innerHTML = '';
       const sh = p('shadow');
-      Object.assign(S, { position: 'absolute', inset: '0', width: '100%', height: '100%', transform: '', display: 'block', color: p('color'),
+      Object.assign(S, { position: 'absolute', inset: '0', left: '0', top: '0', width: '100%', height: '100%', transform: '', display: 'block', color: p('color'),
         fontFamily: `"${font}", "Barlow Condensed", Inter, Arial, sans-serif`, fontWeight: p('weight'), fontSize: p('size') + 'px',
         fontStyle: p('italic') ? 'italic' : 'normal', letterSpacing: p('spacing') + 'px', whiteSpace: 'pre',
         textShadow: sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '' });
       const mkSlot = () => {
         const cat = document.createElement('div');
-        Object.assign(cat.style, { position: 'absolute', left: '0', top: '0', width: catW + 'px', height: '100%', display: catW ? 'flex' : 'none',
+        Object.assign(cat.style, { position: 'absolute', left: '0', top: '0', width: catW + 'px', height: '100%', display: catW ? 'flex' : 'none', zIndex: '2',
           alignItems: 'center', justifyContent: 'center', color: p('catFg'), fontSize: '.8em', textShadow: 'none', overflow: 'hidden' });
         const catT = document.createElement('span');
+        catT.style.position = 'relative';
         cat.appendChild(catT);
+        const gl = gleamEl(cat);
         const box = document.createElement('div');
         Object.assign(box.style, { position: 'absolute', left: catW + 'px', top: '0', right: '0', height: '100%', display: 'flex', alignItems: 'center', paddingLeft: '18px', overflow: 'hidden' });
         const tx = document.createElement('span');
         Object.assign(tx.style, { display: 'block', flex: 'none', transformOrigin: '0 50%' });
         box.appendChild(tx);
-        it.strip.appendChild(cat); it.strip.appendChild(box);
-        return { cat, catT, box, tx, idx: -1 };
+        it.strip.appendChild(box); it.strip.appendChild(cat);
+        return { cat, catT, gl, box, tx, k: null, lk: null };
       };
       it.slots = [mkSlot(), mkSlot()];
       const wiper = document.createElement('div');
-      Object.assign(wiper.style, { position: 'absolute', top: '0', height: '100%', width: '6px', background: p('catBg'), display: 'none' });
+      Object.assign(wiper.style, { position: 'absolute', top: '0', height: '100%', width: '6px', background: catBg, display: 'none', zIndex: '3' });
       it.strip.appendChild(wiper);
       it.wiper = wiper;
     }
-    if (!n) { for (const sl of it.slots) { sl.cat.style.visibility = sl.box.style.visibility = 'hidden'; } return; }
-    const fill = (sl, i) => {
-      if (sl.idx === i) return;
-      sl.idx = i;
-      const itm = items[((i % n) + n) % n];
-      sl.catT.textContent = up ? itm.cat.toUpperCase() : itm.cat;
-      sl.cat.style.background = itm.cat ? (itm.color || p('catBg')) : 'transparent';
-      sl.tx.textContent = up ? itm.text.toUpperCase() : itm.text;
+    const [A, B] = it.slots;
+    const vis = (sl, on) => { sl.cat.style.visibility = sl.box.style.visibility = on ? 'visible' : 'hidden'; };
+    for (const sl of it.slots) {
+      for (const e of [sl.cat, sl.box]) { e.style.transform = ''; e.style.clipPath = ''; e.style.opacity = ''; }
+      vis(sl, false);
+    }
+    it.wiper.style.display = 'none';
+    const lab = (x) => (x ? labelOf(x, label) : '');
+    const labKey = (x) => lab(x) + '#' + (x ? catColorOf(x, colors, catBg) : '');
+    const fillLabel = (sl, x) => {
+      const k = labKey(x);
+      if (sl.lk === k) return;
+      sl.lk = k;
+      const l = lab(x);
+      sl.catT.textContent = up ? l.toUpperCase() : l;
+      sl.cat.style.background = l ? catColorOf(x, colors, catBg) : 'transparent';
+    };
+    const fill = (sl, x) => {
+      fillLabel(sl, x);
+      const k = x ? x.text : '';
+      if (sl.k === k) return;
+      sl.k = k;
+      sl.tx.textContent = up ? k.toUpperCase() : k;
       sl.tx.style.transform = ''; sl.tx.style.fontSize = '';
       const avail = Math.max(1, w - catW - 36), sw = sl.tx.scrollWidth;
       if (sw > avail) {
@@ -663,16 +749,38 @@ export class ScenePlayer {
         sl.tx.style.transform = `scaleX(${Math.max(0.6, s)})`;
       }
     };
+    const gp = p('gleam');
+    const gleams = () => { for (const sl of it.slots) gleamAt(sl.gl, sl.cat.style.visibility === 'visible' ? gp : 0, now); };
+
+    // podgląd jednej wiadomości (Trio)
+    if (it.pin != null && n) {
+      fill(A, items[Math.max(0, Math.min(n - 1, it.pin))]); vis(A, true); gleams();
+      return;
+    }
+    // stan rotacji: bieżąca wiadomość, następna, początek bieżącej
     const hold = Math.max(1, p('hold'));
-    const el_s = Math.max(0, (now - this.wallStart) / 1000);
-    const idx = Math.floor(el_s / hold), ph = el_s - idx * hold;
-    const A = it.slots[0], B = it.slots[1];
-    fill(A, idx); fill(B, idx + 1);
-    const catOf = (i) => items[((i % n) + n) % n].cat + '#' + items[((i % n) + n) % n].color;
-    const vis = (sl, on) => { sl.cat.style.visibility = sl.box.style.visibility = on ? 'visible' : 'hidden'; };
-    const reset = (sl) => { for (const e of [sl.cat, sl.box]) { e.style.transform = ''; e.style.clipPath = ''; } };
-    reset(A); reset(B); vis(A, true); vis(B, false); it.wiper.style.display = 'none';
-    if (n < 2) return;
+    let tk = it.tk;
+    if (!tk || tk.mode !== 'slots') tk = it.tk = { mode: 'slots', items, cur: items[0] || null, curIdx: n ? 0 : -1, prev: null, nextIdx: n > 1 ? 1 : 0, t0: now };
+    if (tk.items !== items) {
+      if (!tk.cur && n) Object.assign(tk, { cur: items[0], curIdx: 0, nextIdx: n > 1 ? 1 : 0, t0: now });
+      else if (tk.curIdx >= 0) { const c = continuation(tk.items, tk.curIdx, items); tk.curIdx = c.cur; tk.nextIdx = c.next; }
+      else { const c = continuation(tk.items, tk.nextIdx, items); tk.nextIdx = c.cur >= 0 ? c.cur : c.next; }
+      tk.items = items;
+    }
+    if (!n || !tk.cur) { gleams(); return; }
+    const single = n === 1 && tk.curIdx === 0;
+    if (single) tk.t0 = now;
+    if (now - tk.t0 > hold * 50000) tk.t0 = now; // po długiej przerwie (karta w tle) – bez nadrabiania
+    while ((now - tk.t0) / 1000 >= hold) {
+      tk.prev = tk.cur;
+      tk.curIdx = tk.nextIdx % n; tk.cur = items[tk.curIdx]; tk.nextIdx = (tk.curIdx + 1) % n;
+      tk.t0 += hold * 1000;
+    }
+    const cur = tk.cur, next = items[tk.nextIdx % n];
+    const ph = (now - tk.t0) / 1000;
+    fill(A, cur); fill(B, next);
+    vis(A, true);
+    if (single) { gleams(); return; }
     if (mode === 'roll') {
       const T = Math.min(0.55, hold * 0.3);
       if (ph > hold - T) {
@@ -680,28 +788,142 @@ export class ScenePlayer {
         vis(B, true);
         A.box.style.transform = `translateY(${-u * h}px)`;
         B.box.style.transform = `translateY(${(1 - u) * h}px)`;
-        if (catOf(idx) !== catOf(idx + 1)) {
+        if (labKey(cur) !== labKey(next)) {
           A.cat.style.transform = `translateY(${-u * h}px)`;
           B.cat.style.transform = `translateY(${(1 - u) * h}px)`;
         } else B.cat.style.visibility = 'hidden';
+      }
+    } else if (mode === 'whip') {
+      // wiadomość wchodzi i wychodzi przenikaniem; potem etykieta przejeżdża w prawo przez pasek,
+      // w połowie drogi zmienia się na kategorię następnej wiadomości i wraca na miejsce
+      const Tin = Math.min(0.25, hold * 0.1), Tout = Math.min(0.35, hold * 0.1);
+      const Tw = catW ? Math.min(1.5, hold * 0.35) : 0;
+      const outAt = hold - Tw - Tout;
+      A.box.style.opacity = ph < Tin ? ph / Tin : ph < outAt ? 1 : Math.max(0, 1 - (ph - outAt) / Tout);
+      if (Tw && ph >= hold - Tw) {
+        const u = (ph - (hold - Tw)) / Tw, travel = Math.max(0, w - catW);
+        const x = u < 0.65 ? easeIO(u / 0.65) * travel : (1 - easeIO((u - 0.65) / 0.35)) * travel;
+        const sl = u < 0.325 ? A : B;
+        if (sl === B) { A.cat.style.visibility = 'hidden'; B.cat.style.visibility = 'visible'; }
+        sl.cat.style.transform = `translateX(${x}px)`;
       }
     } else {
       // wipe: odsłonięcie w lewo->prawo, na końcu zmazanie; krawędź maski prowadzi "wycieraczka"
       const T = Math.min(0.45, hold * 0.25);
       const bw = w - catW;
+      it.wiper.style.background = catColorOf(cur, colors, catBg);
       const wipeEdge = (u) => { it.wiper.style.display = 'block'; it.wiper.style.left = (catW + u * bw - 3) + 'px'; };
-      if (ph < T) {
+      if (ph < T && tk.prev) {
         const u = easeIO(ph / T);
         A.box.style.clipPath = `inset(0 ${(1 - u) * 100}% 0 0)`;
-        if (catOf(idx) !== catOf(idx - 1)) A.cat.style.clipPath = `inset(${(1 - u) * 100}% 0 0 0)`;
+        if (labKey(cur) !== labKey(tk.prev)) A.cat.style.clipPath = `inset(${(1 - u) * 100}% 0 0 0)`;
         if (u < 0.999) wipeEdge(u);
       } else if (ph > hold - T) {
         const u = easeIO((ph - (hold - T)) / T);
         A.box.style.clipPath = `inset(0 0 0 ${u * 100}%)`;
-        if (catOf(idx) !== catOf(idx + 1)) A.cat.style.clipPath = `inset(0 0 ${u * 100}% 0)`;
+        if (labKey(cur) !== labKey(next)) A.cat.style.clipPath = `inset(0 0 ${u * 100}% 0)`;
         if (u > 0.001) wipeEdge(u);
       }
     }
+    gleams();
+  }
+
+  /**
+   * Crawl: taśma z wiadomościami doklejanymi na końcu i usuwanymi za lewą krawędzią.
+   * Po zmianie listy to, co jest na ekranie, przewija się dalej, a nowe wiadomości dochodzą za nim (bez skoku).
+   */
+  tickerCrawl(it, p, now, fe, items) {
+    const n = items.length;
+    const up = p('upper'), font = p('font'), w = it.w;
+    const label = String(p('label') || ''), colors = parseCatColors(p('catColors')), catBg = p('catBg');
+    const labW = label ? Math.max(0, p('catW')) : 0;
+    ensureFont(font, this.opts.assetBase);
+    const S = it.strip.style;
+    S.color = p('color');
+    const sh = p('shadow');
+    S.textShadow = sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '';
+    let tk = it.tk;
+    if (!tk || tk.mode !== 'crawl') {
+      it.strip.innerHTML = '';
+      it.slots = null; it.cache.key = null;
+      Object.assign(S, { position: 'absolute', inset: '0', left: '0', top: '0', width: '100%', height: '100%', display: 'block', transform: '', whiteSpace: 'pre' });
+      const clip = document.createElement('div');
+      Object.assign(clip.style, { position: 'absolute', top: '0', bottom: '0', right: '0', overflow: 'hidden' });
+      const tape = document.createElement('div');
+      Object.assign(tape.style, { position: 'absolute', left: '0', top: '0', height: '100%', willChange: 'transform' });
+      const pinEl = document.createElement('div');
+      Object.assign(pinEl.style, { position: 'absolute', inset: '0', display: 'none' });
+      clip.appendChild(tape); clip.appendChild(pinEl);
+      const lab = document.createElement('div');
+      Object.assign(lab.style, { position: 'absolute', left: '0', top: '0', height: '100%', display: 'none', alignItems: 'center', justifyContent: 'center', fontSize: '.8em', textShadow: 'none', overflow: 'hidden', zIndex: '2' });
+      const labT = document.createElement('span');
+      labT.style.position = 'relative';
+      lab.appendChild(labT);
+      const gl = gleamEl(lab);
+      it.strip.appendChild(clip); it.strip.appendChild(lab);
+      tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null };
+    }
+    const styleKey = [up, p('sep'), p('sepStyle'), p('sepColor'), catBg, p('catFg'), p('catColors'), font, p('size'), p('weight'), p('italic'), p('spacing'), fe].join('|');
+    const segOf = (x) => tickerSegment(x, { up, sep: p('sep'), sepStyle: p('sepStyle'), sepColor: p('sepColor'), colors, catBg, catFg: p('catFg') });
+    if (tk.styleKey !== styleKey) {
+      tk.styleKey = styleKey;
+      Object.assign(S, { fontFamily: `"${font}", "Barlow Condensed", Inter, Arial, sans-serif`, fontWeight: p('weight'), fontSize: p('size') + 'px', fontStyle: p('italic') ? 'italic' : 'normal', letterSpacing: p('spacing') + 'px' });
+      // przerysuj to, co jest na taśmie, w nowym stylu i ułóż od nowa od pierwszej pozycji
+      let pos = tk.segs[0]?.pos ?? tk.cursor;
+      for (const sg of tk.segs) {
+        const el = segOf(sg.item);
+        sg.el.replaceWith(el); sg.el = el;
+        el.style.left = pos + 'px'; sg.pos = pos; sg.w = Math.max(1, el.offsetWidth); pos += sg.w;
+      }
+      tk.cursor = pos;
+      tk.pinK = null;
+    }
+    // etykieta stała (jak wiper w trybie poziomym BTB)
+    tk.clip.style.left = labW + 'px';
+    tk.lab.style.display = labW ? 'flex' : 'none';
+    if (labW) {
+      Object.assign(tk.lab.style, { width: labW + 'px', background: catColorOf({ cat: label }, colors, catBg), color: p('catFg') });
+      tk.labT.textContent = up ? label.toUpperCase() : label;
+      gleamAt(tk.gl, p('gleam'), now);
+    }
+    const vw = Math.max(1, w - labW);
+    // podgląd jednej wiadomości (Trio)
+    if (it.pin != null && n) {
+      const x = items[Math.max(0, Math.min(n - 1, it.pin))];
+      const k = styleKey + '|' + JSON.stringify(x);
+      if (tk.pinK !== k) { tk.pinK = k; tk.pinEl.innerHTML = ''; const el = segOf(x); el.style.left = '18px'; tk.pinEl.appendChild(el); }
+      tk.pinEl.style.display = 'block'; tk.tape.style.visibility = 'hidden';
+      return;
+    }
+    tk.pinEl.style.display = 'none'; tk.tape.style.visibility = 'visible';
+    // zmiana listy: dalej od wiadomości po ostatnio doklejonej
+    if (tk.items !== items) {
+      const lastSeg = tk.segs[tk.segs.length - 1];
+      if (lastSeg && tk.items.length) { const c = continuation(tk.items, lastSeg.idx, items); tk.nextIdx = c.cur >= 0 ? c.next : c.next; } else tk.nextIdx = 0;
+      tk.items = items;
+    }
+    const dt = tk.last == null ? 0 : Math.max(0, Math.min(0.25, (now - tk.last) / 1000));
+    tk.last = now;
+    tk.d += p('speed') * dt;
+    if (!tk.segs.length) tk.cursor = Math.max(tk.cursor, tk.d); // pusta taśma: start od prawej krawędzi
+    for (let guard = 0; n && tk.cursor - tk.d < vw + 40 && guard < 200; guard++) {
+      const idx = tk.nextIdx % n, x = items[idx];
+      const el = segOf(x);
+      el.style.left = tk.cursor + 'px';
+      tk.tape.appendChild(el);
+      const sw = Math.max(1, el.offsetWidth);
+      tk.segs.push({ el, item: x, idx, pos: tk.cursor, w: sw });
+      tk.cursor += sw;
+      tk.nextIdx = (idx + 1) % n;
+    }
+    while (tk.segs.length && tk.segs[0].pos + tk.segs[0].w < tk.d - vw) tk.segs.shift().el.remove();
+    // przesunięcie układu, żeby współrzędne nie rosły bez końca (precyzja kompozytora)
+    if (tk.d > 50000) {
+      const off = tk.segs.length ? tk.segs[0].pos : tk.d;
+      for (const sg of tk.segs) { sg.pos -= off; sg.el.style.left = sg.pos + 'px'; }
+      tk.d -= off; tk.cursor -= off;
+    }
+    tk.tape.style.transform = `translateX(${vw - tk.d}px)`;
   }
 
   // ---- renderowanie ----
@@ -841,47 +1063,9 @@ export class ScenePlayer {
           break;
         }
         case 'ticker': {
-          if (p('tickerMode') !== 'crawl') { this.tickerSlots(it, p, now, fe); break; }
-          const items = stripMarkup(String(p('text') ?? '')).split('\n').map((s) => s.trim()).filter(Boolean);
-          const up = p('upper');
-          const sep = p('sep'), sepColor = p('sepColor');
-          const font = p('font');
-          ensureFont(font, this.opts.assetBase);
-          const w = it.w;
-          const key = [items.join('\n'), up, sep, sepColor, p('catBg'), p('catFg'), font, p('size'), p('weight'), p('italic'), p('spacing'), w, fe].join('|');
-          const S = it.strip.style;
-          S.color = p('color');
-          const sh = p('shadow');
-          S.textShadow = sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '';
-          if (it.cache.key !== key) {
-            it.cache.key = key;
-            Object.assign(S, { position: 'absolute', inset: '', left: '0', top: '0', width: 'auto', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'pre', fontFamily: `"${font}", "Barlow Condensed", Inter, Arial, sans-serif`, fontWeight: p('weight'), fontSize: p('size') + 'px', fontStyle: p('italic') ? 'italic' : 'normal', letterSpacing: p('spacing') + 'px' });
-            it.strip.innerHTML = '';
-            const one = document.createElement('span');
-            for (const line of items) {
-              const itm = parseTickerItem(line);
-              if (itm.cat) {
-                const b = document.createElement('span');
-                b.textContent = up ? itm.cat.toUpperCase() : itm.cat;
-                Object.assign(b.style, { background: itm.color || p('catBg'), color: p('catFg'), padding: '.05em .45em', marginRight: '.5em', borderRadius: '3px', fontSize: '.78em', verticalAlign: '.08em', textShadow: 'none' });
-                one.appendChild(b);
-              }
-              one.appendChild(document.createTextNode(up ? itm.text.toUpperCase() : itm.text));
-              const sp = document.createElement('span');
-              sp.textContent = sep;
-              if (sepColor) sp.style.color = sepColor;
-              one.appendChild(sp);
-            }
-            it.strip.appendChild(one);
-            const cw = Math.max(1, one.offsetWidth);
-            const copies = Math.ceil(w / cw) + 1;
-            for (let i = 0; i < copies; i++) it.strip.appendChild(one.cloneNode(true));
-            it.cache.cw = cw;
-          }
-          const d = ((now - this.wallStart) / 1000) * p('speed');
-          const cw = it.cache.cw || 1;
-          const x = d < w ? w - d : -((d - w) % cw);
-          S.transform = `translateX(${x}px)`;
+          const items = this.tickerItems(it, p);
+          if (p('tickerMode') === 'crawl') this.tickerCrawl(it, p, now, fe, items);
+          else this.tickerSlots(it, p, now, fe, items);
           break;
         }
       }

@@ -150,6 +150,19 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     ok(exported._exportVersion === 3 && exported.elements[0].scene.layers.length > 0, 'eksport BTB: plik v3 z warstwami', Object.keys(exported));
     await pg.click('#repOk').catch(() => {});
 
+    // presety tickerów i panel węzła ticker (tylko właściwości bieżącego trybu, edytor wiadomości próbnych)
+    await pg.goto(B + '/artist?scene=at'); await sleep(1000);
+    await pg.selectOption('#addSel', 'preset:whip'); await sleep(400);
+    ok((await pg.locator('#props .tkx').count()) === 1, 'preset tickera: węzeł zaznaczony, edytor wiadomości w panelu');
+    ok((await pg.locator('#props [data-prop="speed"]').count()) === 0 && (await pg.locator('#props [data-prop="hold"]').count()) === 1, 'ticker whip: panel bez prędkości crawla, z czasem wiadomości');
+    await pg.selectOption('[data-p="tickerMode"]', 'crawl'); await sleep(300);
+    ok((await pg.locator('#props [data-prop="speed"]').count()) === 1 && (await pg.locator('#props [data-prop="hold"]').count()) === 0, 'ticker crawl: panel z prędkością, bez czasu wiadomości');
+    await pg.locator('#props .tkx-txt').first().fill('Próbna z Artist');
+    await pg.keyboard.press('Control+s'); await sleep(600);
+    const sc2 = await saved();
+    const tkn = sc2.nodes.find((x) => x.type === 'group' && x.children?.some((c) => c.type === 'ticker'))?.children.find((c) => c.type === 'ticker');
+    ok(tkn && tkn.fields.text === 'news' && tkn.props.text.split('\n')[0] === 'Próbna z Artist' && sc2.fieldMeta.news?.label === 'Wiadomości', 'preset tickera zapisany: pole news, wiadomości próbne z edytora', tkn && [tkn.fields, tkn.props.text]);
+
     ok(errs.length === 0, 'brak błędów JS w Artist' + (errs.length ? ': ' + errs.join('; ') : ''));
   } catch (e) { console.error(e); failures++; } finally {
     if (browser) await browser.close();

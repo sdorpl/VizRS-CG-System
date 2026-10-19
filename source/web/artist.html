@@ -84,6 +84,10 @@
   .sep { width: 1px; height: 20px; background: var(--line); margin: 0 2px; }
   .dirty::after { content: ' ●'; color: var(--acc); }
   .empty { padding: 30px; text-align: center; color: var(--dim); }
+  .prtk { padding: 4px 8px; }
+  .prtk .prtk-h { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 3px; }
+  .prtk .tkx-row { grid-template-columns: 18px 8px minmax(52px, 80px) 1fr auto auto auto auto; gap: 3px; }
+  .prtk .tkx-txt { font-size: 13px; padding: 2px 4px; }
 </style>
 </head>
 <body>
@@ -171,6 +175,7 @@
 <script type="module">
 import * as BTB from '/btb-io.js';
 import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor } from '/renderer.js';
+import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -340,8 +345,16 @@ function renderProps() {
   $('#propsTitle').textContent = 'Właściwości – ' + def.label;
   let h = `<div class="phead"><span class="ic">${def.icon}</span><input id="pname" class="grow" value="${esc(n.name)}" title="Nazwa kontenera"></div>`;
   let g = null;
+  const tkMode = n.type === 'ticker' ? propAt(n, 'tickerMode', t, null) : null;
+  const TK_HIDE = { crawl: ['hold'], roll: ['speed', 'sep', 'sepStyle', 'sepColor'], wipe: ['speed', 'sep', 'sepStyle', 'sepColor'], whip: ['speed', 'sep', 'sepStyle', 'sepColor'] };
   for (const p of def.props) {
     const d = PROPS[p];
+    if (tkMode && TK_HIDE[tkMode]?.includes(p)) continue;
+    if (tkMode && p === 'text') {
+      if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
+      h += `<div class="prtk" data-prop="text"><div class="prtk-h"><span class="grow">wiadomości próbne <span class="dim">(w Trio: pole strony)</span></span><button class="icon fbtn" data-field="text" title="Pole kontrolne (Control Object) – edytowalne w Trio">⛓</button></div><div data-tkhost></div><textarea data-p="text" hidden></textarea></div>`;
+      continue;
+    }
     if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
     h += `<div class="pr" data-prop="${p}">
       <label data-scrub="${d.t === 'num' ? p : ''}" title="${p}${d.t === 'num' ? ' – przeciągnij, aby zmienić' : ''}">${esc(d.label || p)}</label>
@@ -365,6 +378,15 @@ function renderProps() {
   <div class="help">◆ – klucz animacji w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy/aktualizuje klucz automatycznie.<br>⛓ – wystawia właściwość jako <b>pole kontrolne</b>: operator Trio wpisze tu wartość na stronie.<br><b>[[tekst]]</b> w tekście = wyróżnienie (kolor tła/tekstu w grupie Tekst).<br><b>Autofollow</b> – prostokąt dopasowuje szerokość/wysokość do tekstu (np. pasek nazwiska). <b>Punkt X/Y</b> = right/bottom sprawia, że element rośnie w lewo/w górę.</div>`;
   el.innerHTML = h;
   syncProps(true);
+  const host = $('[data-tkhost]', el);
+  if (host) {
+    const ta = $('textarea[data-p="text"]', el);
+    mountTickerEditor(host, {
+      value: ta.value, catColors: propAt(n, 'catColors', t, null), catBg: propAt(n, 'catBg', t, null), rules: scene.fieldMeta?.[n.fields?.text] || {},
+      onChange: (v) => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); },
+      onHover: (i) => player.tickerPin(n.id, i),
+    });
+  }
 }
 
 const hex6 = (c) => { const p = parseColor(c); if (!p) return '#000000'; return '#' + p.slice(0, 3).map((x) => Math.round(x).toString(16).padStart(2, '0')).join(''); };
@@ -403,6 +425,15 @@ function rulesForm(f) {
   const num = (k, label, ph) => `<label>${label}</label><input type="number" min="0" data-fr="${id}::${k}" value="${m[k] ?? ''}" placeholder="${ph || '—'}">`;
   const chk = (k, label, def) => `<label class="rchk"><input type="checkbox" data-fr="${id}::${k}" ${(def ? m[k] !== false : !!m[k]) ? 'checked' : ''}> ${label}</label>`;
   const isText = f.type === 'text';
+  if (f.nodeType === 'ticker' && f.prop === 'text') {
+    return `<div class="rules">
+    ${num('maxItems', 'maks. wiadomości', '200')}${num('maxChars', 'maks. znaków wiadomości', '500')}
+    <label>kategorie (lista)</label><input data-fr="${id}::cats" value="${esc((m.cats || []).join(', '))}" placeholder="dowolne; np. PILNE, SPORT">
+    ${num('tab', 'kolejność Tab')}
+    <label>podpowiedź</label><input data-fr="${id}::help" value="${esc(m.help || '')}" placeholder="widoczna pod etykietą w Trio">
+    <div class="rchks">${chk('upper', 'WERSALIKI') + chk('typo', 'polska typografia') + chk('readonly', 'tylko do odczytu')}</div>
+  </div>`;
+  }
   return `<div class="rules">
     ${isText ? num('maxChars', 'maks. znaków (twardy)') + num('softMax', 'próg ostrzeżenia (żółty)', 'domyślnie 85%') + num('maxLines', 'maks. linii', 'z węzła') : ''}
     ${num('tab', 'kolejność Tab')}
@@ -434,7 +465,7 @@ function renderSceneProps() {
     h += `<table class="ftable"><tr class="dim"><td>pole</td><td>etykieta w Trio</td><td>kontener</td><td></td></tr>` +
       pfields.map((f) => {
         const m = scene.fieldMeta?.[f.id] || {};
-        const has = ['maxChars', 'softMax', 'maxLines', 'tab', 'help', 'oneLine', 'upper', 'typo', 'readonly'].some((k) => m[k]) || m.rich === false || m.spell === false;
+        const has = ['maxChars', 'softMax', 'maxLines', 'maxItems', 'cats', 'tab', 'help', 'oneLine', 'upper', 'typo', 'readonly'].some((k) => m[k]) || m.rich === false || m.spell === false;
         return `<tr><td class="mono">${esc(f.id)}</td><td><input data-fm="${esc(f.id)}" value="${esc(m.label || '')}" placeholder="${esc(f.id)}"></td><td class="dim">${esc(f.node)}.${esc(f.prop)}</td><td><button class="icon ${has ? 'acc' : ''}" data-frtoggle="${esc(f.id)}" title="Reguły pola (limity znaków, wersaliki, typografia, Tab…)">⚙</button></td></tr>` +
           (openRules.has(f.id) ? `<tr><td colspan="4">${rulesForm(f)}</td></tr>` : '');
       }).join('') + '</table>';
@@ -557,6 +588,7 @@ function onPropInput(e) {
   if (inp.id === 'pname' && n) { cp(); n.name = inp.value; renderTree(); return; }
   if (n && inp.dataset.p) {
     cp(); setProp(n, inp.dataset.p, parseVal(inp.dataset.p, inp)); refresh();
+    if (n.type === 'ticker' && (inp.dataset.p === 'tickerMode' || (inp.dataset.p === 'catColors' && e.type === 'change'))) { renderProps(); return; }
     if (n.anim?.[inp.dataset.p]?.length) renderTimeline();
     syncProps(); return;
   }
@@ -615,6 +647,9 @@ function onPropInput(e) {
     } else if (inp.type === 'number') {
       const v = parseInt(inp.value);
       if (v > 0 || (key === 'tab' && v === 0)) m[key] = v; else delete m[key];
+    } else if (key === 'cats') {
+      const list = inp.value.split(',').map((x) => x.trim()).filter(Boolean);
+      if (list.length) m.cats = list; else delete m.cats;
     } else if (inp.value.trim()) m[key] = inp.value; else delete m[key];
     if (m.softMax && m.maxChars && m.softMax > m.maxChars) { m.softMax = m.maxChars; }
     return;
@@ -736,7 +771,39 @@ const DEFAULTS = {
   clock: { w: 300, h: 80, size: 48, color: '#ffffff', font: 'Roboto Mono', align: 'center' },
   ticker: { w: 1920, h: 70, text: 'Pierwsza wiadomość\nDruga wiadomość', size: 32, color: '#ffffff' },
 };
+/** Presety tickerów (jak „Paski i tickery” w edytorze BTB): grupa z tłem i węzłem ticker z polem `news`. */
+const TICKER_PRESETS = {
+  full: { name: 'Ticker pełny ekran (crawl)', g: { x: 0, y: 1010, w: 1920, h: 70 }, nodes: [
+    { type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 1920, h: 70, color: '#0b1a33' } },
+    { type: 'rect', name: 'linia', props: { x: 0, y: 0, w: 1920, h: 3, color: '#e30613' } },
+    { type: 'ticker', name: 'ticker', field: 'news', props: { x: 0, y: 3, w: 1920, h: 67, tickerMode: 'crawl', label: 'INFO', catW: 180, catBg: '#e30613', sepStyle: 'dot', speed: 140, size: 34, weight: '600', upper: true, font: 'Barlow Condensed', text: 'PILNE|Pierwsza wiadomość\nDruga wiadomość\nSPORT|Trzecia wiadomość', catColors: 'PILNE=#e30613; SPORT=#1f8a4c' } }] },
+  whip: { name: 'Pasek z wiperem (whip)', g: { x: 80, y: 990, w: 1760, h: 60 }, nodes: [
+    { type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 1760, h: 60, color: '#0b0f19', color2: '#1e293b', gradAngle: 90, radius: 4 } },
+    { type: 'ticker', name: 'ticker', field: 'news', props: { x: 0, y: 0, w: 1760, h: 60, tickerMode: 'whip', hold: 6, label: 'PILNE', catW: 190, catBg: '#c8102e', gleam: 3, size: 30, weight: '700', font: 'Barlow Condensed', text: 'Pierwsza wiadomość\nKRAJ|Druga wiadomość\nŚWIAT|Trzecia wiadomość', catColors: 'KRAJ=#c8102e; ŚWIAT=#1c3f94' } }] },
+  line: { name: 'Crawl z linią akcentu', g: { x: 0, y: 1020, w: 1920, h: 60 }, nodes: [
+    { type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 1920, h: 60, color: '#0f172a' } },
+    { type: 'rect', name: 'akcent', props: { x: 0, y: 0, w: 1920, h: 2, color: '#38bdf8' } },
+    { type: 'ticker', name: 'ticker', field: 'news', props: { x: 30, y: 2, w: 1890, h: 58, tickerMode: 'crawl', sepStyle: 'pipe', sepColor: '#38bdf8', speed: 120, size: 28, weight: '600', upper: true, font: 'Barlow Condensed', text: 'Giełda w Warszawie notuje wzrosty\nKurs złotego stabilny\nJutro słonecznie' } }] },
+  side: { name: 'Ticker boczny (roll)', g: { x: 1420, y: 300, w: 460, h: 90 }, nodes: [
+    { type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 460, h: 90, color: '#0b0f19', radius: 8, borderColor: '#3b82f6', borderWidth: 1 } },
+    { type: 'ticker', name: 'ticker', field: 'news', props: { x: 0, y: 0, w: 460, h: 90, tickerMode: 'roll', hold: 5, catW: 120, catBg: '#2563eb', size: 26, weight: '600', font: 'Barlow Condensed', text: 'SKRÓT|Nowe przepisy drogowe\nSKRÓT|Spotkanie ministrów UE' } }] },
+};
+$('#addSel').innerHTML += `<optgroup label="Presety tickerów">${Object.entries(TICKER_PRESETS).map(([k, v]) => `<option value="preset:${k}">⇠ ${v.name}</option>`).join('')}</optgroup>`;
+function addPreset(key) {
+  const pr = TICKER_PRESETS[key]; if (!pr) return;
+  checkpoint();
+  const used = new Set(listFields(scene).map((f) => f.id));
+  let fid = 'news', k = 2; while (used.has(fid)) fid = 'news' + k++;
+  const g = { id: uid('n'), type: 'group', name: pr.name.toLowerCase().replace(/\s*\(.*$/, '').replace(/[^a-ząćęłńóśźż0-9]+/g, '_'), props: { ...pr.g }, anim: {}, fields: {}, children: pr.nodes.map((x) => ({ id: uid('n'), type: x.type, name: x.name, props: { ...x.props }, anim: {}, fields: x.field ? { text: fid } : {} })) };
+  scene.nodes.push(g);
+  scene.fieldMeta ||= {};
+  scene.fieldMeta[fid] = { label: 'Wiadomości', ...(scene.fieldMeta[fid] || {}) };
+  player.setScene(scene); player.seek(t);
+  select(g.children.find((c) => c.type === 'ticker').id);
+  toast(`Dodano „${pr.name}” – pole „${fid}” edytuje operator w Trio`);
+}
 function addNode(type) {
+  if (type.startsWith('preset:')) { addPreset(type.slice(7)); return; }
   checkpoint();
   let count = 0; walk(scene.nodes, (n) => { if (n.type === type) count++; });
   const props = { ...DEFAULTS[type] };

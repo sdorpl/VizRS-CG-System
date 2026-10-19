@@ -664,6 +664,31 @@ impl Engine {
         Ok(Json::obj().with("ok", true).with("onAir", live))
     }
 
+    /// Wiadomości tickera strony (komenda `TICKER`, `/api/ticker`). `key` = strona albo `strona:pole`.
+    /// Zmiana zapisuje stronę i – gdy jest na antenie – podmienia dane na żywo (UPDATE: przewijanie nie startuje od nowa).
+    pub fn ticker(&self, key: &str, op: crate::ticker::Op) -> Result<Json, String> {
+        let (page_key, fid, text) = {
+            let inner = self.inner.lk();
+            let split = key.rsplit_once(':').filter(|(p, f)| !f.is_empty() && Self::find_page(&inner.show, p).is_some());
+            let (page_key, want) = match split {
+                Some((p, f)) => (p, Some(f)),
+                None => (key, None),
+            };
+            let page = Self::find_page(&inner.show, page_key).ok_or(format!("brak strony '{page_key}'"))?;
+            let scene = Self::find_scene(&inner.show, page.str("scene").unwrap_or("")).ok_or("strona wskazuje nieistniejący szablon")?;
+            let (fid, def) = crate::ticker::find_field(&scene, want).ok_or("ta strona nie ma pola tickera")?;
+            let text = page.get("values").and_then(|v| v.str(&fid)).map(str::to_string).unwrap_or(def);
+            (page_key.to_string(), fid, text)
+        };
+        let list = |t: &str| Json::Arr(crate::ticker::parse_items(t).iter().map(|x| x.to_json()).collect());
+        if op == crate::ticker::Op::List {
+            return Ok(Json::obj().with("field", fid.as_str()).with("items", list(&text)));
+        }
+        let new = crate::ticker::apply(&text, &op)?;
+        let r = self.update(&page_key, &Json::obj().with(&fid, new.as_str()), true)?;
+        Ok(r.with("field", fid.as_str()).with("items", list(&new)))
+    }
+
     /// Wdraża aktualną wersję szablonu do warstwy na antenie bez ponownej animacji (F2.4).
     pub fn deploy(&self, key: &str) -> Result<Json, String> {
         let layer = self.resolve_layer(key);

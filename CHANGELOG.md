@@ -1,5 +1,17 @@
 # VizRS – historia zmian
 
+## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Edytor wiadomości tickera** w Trio i Artist (`ticker-items.js`): lista *kategoria + treść* z ↑↓ i ✕, widok grup po kategoriach (przeciąganie między grupami, zmiana nazwy grupy), tekst surowy; Enter = nowa wiadomość, Ctrl+↑↓ = przesuń, wklejenie wielu wierszy = wiele wiadomości; najechanie na wiersz pokazuje tę wiadomość w podglądzie; ściśnięcie każdej wiadomości widoczne od razu.
+- **Ciągłość przy UPDATE**: zmiana wiadomości na antenie nie zaczyna przewijania od nowa – crawl płynie dalej, a nowe wiadomości dochodzą za tym, co jest na ekranie; w roll/wipe/whip bieżąca wiadomość dogrywa swój czas.
+- **Tryb `whip`**: etykieta (pas kategorii) przejeżdża przez pasek między wiadomościami i w połowie drogi zmienia się na kategorię następnej (jak w BTB).
+- Nowe właściwości węzła Ticker: `catColors` (mapa `PILNE=#e00000; INFO=#0050c0`), `label` (etykieta domyślna; w crawl – stała etykieta po lewej), `sepStyle` (tekst, kropka, kwadrat, kreska, skos), `gleam` (błysk etykiety co N s).
+- Reguły pola tickera (Artist ⚙): maks. wiadomości, maks. znaków wiadomości, lista dozwolonych kategorii, WERSALIKI, typografia, tylko do odczytu.
+- Artist: panel węzła Ticker pokazuje tylko właściwości bieżącego trybu; presety „Ticker pełny ekran”, „Pasek z wiperem”, „Crawl z linią akcentu”, „Ticker boczny” w menu ＋ Dodaj.
+- Sterowanie: `TICKER <strona[:pole]> LIST|ADD|SET|DEL|CLEAR` (TCP), `/api/ticker/<strona>[/add|/set/<n>|/del/<n>|/clear]` (HTTP), `/vizrs/ticker …` (OSC) – zmiana zapisuje stronę i aktualizuje antenę.
+- BTB: import tickerów z kategoriami, kolorami kategorii, trybem (`horizontal`→crawl, `vertical`→roll, `whip`), etykietą wipera i błyskiem; szablony kodowe przekształcone w scenę (np. `ticker-unified`) odtwarzane jako węzeł ticker zamiast statycznego tekstu; eksport tickera jako element `TICKER` z `items[].category`.
+- Walidacja: limity tickera (200 wiadomości × 500 znaków), `catColors`, `fieldMeta.maxItems`/`cats`; wspólne wektory zapisu wiadomości JS ↔ Rust (`tests/vectors/ticker.json`).
+- Trio: zoom dużego podglądu (kółko, dwuklik w element, przeciąganie), wybór tła monitora PGM (szachownica, czarne, białe, kluczowanie, własny kolor); jeden monitor PGM zamiast PGM+PRV.
+
 ## 2.0.0 (2026-10-19) – „Studio”
 - **Powiązania (dock)**: reguły `layer:`/`page:`/`scene:` przesuwają scenę, gdy wskazana grafika jest na antenie; nadpisanie operatora (przycisk ⇅ w Trio); stan odtwarzany po odświeżeniu wyjścia.
 - **Artist**: markery na osi (M, dwuklik; → stop point), zaznaczanie kluczy (Shift, ramka), kopiuj/wklej klucze (Ctrl+C/V), zoom Ctrl+kółko i „dopasuj”, przeciąganie w drzewie (zmiana rodzica z zachowaniem położenia), biblioteka presetów animacji (zapis, zastosowanie, import/eksport).

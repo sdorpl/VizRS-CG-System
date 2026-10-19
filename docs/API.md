@@ -28,6 +28,8 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna �
 | `GET\|POST /carousel/start/<playlista>`, `/carousel/stop[?out=0]` | karuzela playlisty |
 | `GET\|POST /rundown/<id>/next`, `/take/<pozycja>`, `/cursor/<pozycja>`, `/reset` | rundown: NEXT, wzięcie pozycji, ustawienie kursora, zerowanie |
 | `GET\|POST /macro/<nazwa\|id>`, `/macro/stop` | makro (kroki z opóźnieniami); nowe makro przerywa poprzednie |
+| `GET /ticker/<strona[:pole]>` | wiadomości tickera strony: `{"field":"items","items":[{"cat","color","text"}]}` |
+| `GET\|POST /ticker/<strona>/add?item=KAT\|treść`, `/set/<n>?item=…`, `/del/<n>`, `/clear` | zmiana listy (n od 1; `item` także w treści `{"item":"…"}`); zapisuje stronę i – gdy jest na antenie – aktualizuje bez restartu przewijania; odpowiedź jak UPDATE + `items` |
 
 ## Zasoby i narzędzia
 | Ścieżka | Opis |
@@ -43,11 +45,12 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna �
 
 ## TCP (port 6100; przy `--token` pierwsza linia `AUTH <token>`)
 `TAKE <strona[,strona…]> [k=v|k2=v2]` · `ARM <strona>` · `CONTINUE <warstwa|strona>` · `OUT <warstwa|strona>` · `CLEAR` · `UPDATE <strona> k=v|…` · `LIVE <strona> k=v|…` (bez zapisu)
+· `TICKER <strona[:pole]> LIST|ADD <KAT|treść>|SET <n> <KAT|treść>|DEL <n>|CLEAR`
 · `NEXT <rundown>` · `RUNDOWN TAKE <rundown> [pozycja]` · `RUNDOWN RESET <rundown>` · `MACRO <nazwa>` · `MACRO STOP` · `CAROUSEL START <playlista>` · `CAROUSEL STOP` · `STATE` · `PING`.
 Odpowiedź: `OK {json}` albo `ERR komunikat`.
 
 ## OSC (UDP; `--osc 8000`)
-`/vizrs/take 1001` · `/vizrs/arm 1001` · `/vizrs/out main` · `/vizrs/continue main` · `/vizrs/clear` · `/vizrs/next <rundown>` · `/vizrs/macro <nazwa>` · `/vizrs/update 1001 pole wartość [pole wartość…]`.
+`/vizrs/take 1001` · `/vizrs/arm 1001` · `/vizrs/out main` · `/vizrs/continue main` · `/vizrs/clear` · `/vizrs/next <rundown>` · `/vizrs/macro <nazwa>` · `/vizrs/update 1001 pole wartość [pole wartość…]` · `/vizrs/ticker 3001 ADD SPORT|Gol` (argumenty jak w TCP `TICKER`).
 Przy `--token` adres musi mieć postać `/vizrs/<token>/take …`.
 
 ## Webhook (`--webhook http://host:port/ścieżka`)

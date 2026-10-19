@@ -13,6 +13,7 @@ mod hook;
 mod http;
 mod json;
 mod osc;
+mod ticker;
 mod validate;
 
 use std::io::{BufRead, BufReader, Write};
@@ -42,6 +43,8 @@ const STATIC: &[Static] = &[
     Static { path: "/btb-io.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/btb-io.js") },
     Static { path: "/text-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/text-model.js") },
     Static { path: "/qr.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/qr.js") },
+    Static { path: "/ticker-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-model.js") },
+    Static { path: "/ticker-items.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-items.js") },
     Static { path: "/ui.css", ctype: "text/css; charset=utf-8", body: include_str!("../web/ui.css") },
 ];
 
@@ -509,6 +512,19 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             res(engine.update(key, &vals, persist), |j| Response::json(&j))
         }
         ("POST" | "GET", ["deploy", key]) => res(engine.deploy(key), |j| Response::json(&j)),
+        // ticker: lista wiadomości strony (GET) i zmiany z automatycznym UPDATE, gdy strona jest na antenie
+        ("GET", ["ticker", key]) => res(engine.ticker(key, ticker::Op::List), |j| Response::json(&j)),
+        ("POST" | "GET", ["ticker", key, op @ ..]) => {
+            let item = body.str("item").map(str::to_string).or_else(|| req.q("item").map(str::to_string)).unwrap_or_default();
+            let line = match op {
+                ["add"] => format!("ADD {item}"),
+                ["set", n] => format!("SET {n} {item}"),
+                ["del", n] => format!("DEL {n}"),
+                ["clear"] => "CLEAR".to_string(),
+                _ => "?".to_string(),
+            };
+            res(ticker::parse_op(&line).and_then(|o| engine.ticker(key, o)), |j| Response::json(&j))
+        }
         ("POST" | "GET", ["carousel", "start", id]) => res(engine.carousel_start(id), |_| Response::ok()),
         ("POST" | "GET", ["carousel", "stop"]) => {
             engine.carousel_stop(req.q("out") != Some("0"));
@@ -682,6 +698,7 @@ pub fn exec_command(engine: &Arc<Engine>, line: &str) -> String {
         }
         "UPDATE" => engine.update(arg, &parse_kv(tail), true),
         "LIVE" => engine.update(arg, &parse_kv(tail), false),
+        "TICKER" => ticker::parse_op(tail).and_then(|op| engine.ticker(arg, op)),
         "CAROUSEL" => match arg.to_ascii_uppercase().as_str() {
             "START" => engine.carousel_start(tail.trim()).map(|_| Json::obj()),
             "STOP" => {
@@ -692,7 +709,7 @@ pub fn exec_command(engine: &Arc<Engine>, line: &str) -> String {
         },
         "STATE" => Ok(engine.state()),
         "PING" => Ok(Json::obj().with("pong", true)),
-        "HELP" | "" => Err("komendy: TAKE <strona[,strona…]> [k=v|k2=v2], ARM <strona>, NEXT <rundown>, RUNDOWN TAKE|RESET <rundown> [pozycja], MACRO <nazwa>|STOP, CONTINUE <warstwa|strona>, OUT <warstwa|strona>, CLEAR, UPDATE <strona> k=v|..., LIVE <strona> k=v|..., CAROUSEL START <playlista>, CAROUSEL STOP, STATE".into()),
+        "HELP" | "" => Err("komendy: TAKE <strona[,strona…]> [k=v|k2=v2], ARM <strona>, NEXT <rundown>, RUNDOWN TAKE|RESET <rundown> [pozycja], MACRO <nazwa>|STOP, CONTINUE <warstwa|strona>, OUT <warstwa|strona>, CLEAR, UPDATE <strona> k=v|..., LIVE <strona> k=v|..., TICKER <strona[:pole]> LIST|ADD <KAT|treść>|SET <n> <KAT|treść>|DEL <n>|CLEAR, CAROUSEL START <playlista>, CAROUSEL STOP, STATE".into()),
         other => Err(format!("nieznana komenda {other}")),
     };
     match r {
@@ -830,6 +847,35 @@ mod tests {
         assert!(exec_command(&e, "BLAH").starts_with("ERR"));
         assert!(exec_command(&e, "CLEAR").starts_with("OK"));
         std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn ticker_commands() {
+        let (e, cfg, d) = setup("ticker");
+        let r = exec_command(&e, "TICKER 3001 LIST");
+        assert!(r.starts_with("OK") && r.contains("\"field\":\"items\""), "{r}");
+        let r = exec_command(&e, "TICKER 3001 ADD SPORT#1f8a4c|Gol w doliczonym czasie");
+        assert!(r.contains("Gol w doliczonym czasie") && r.contains("#1f8a4c") && r.contains("\"onAir\":false"), "{r}");
+        assert!(exec_command(&e, "TAKE 3001").starts_with("OK"));
+        let r = exec_command(&e, "ticker 3001 set 1 PILNE|Nowa pierwsza");
+        assert!(r.contains("\"onAir\":true") && r.contains("Nowa pierwsza"), "{r}");
+        assert!(exec_command(&e, "TICKER 3001 DEL 999").starts_with("ERR"));
+        assert!(exec_command(&e, "TICKER 3001 FOO").starts_with("ERR"));
+        assert!(exec_command(&e, "TICKER 1001 LIST").starts_with("ERR"), "strona bez tickera");
+        assert!(exec_command(&e, "TICKER 3001:items LIST").starts_with("OK"), "strona:pole");
+        let (c, b) = call(&e, &cfg, "GET", "/api/ticker/3001", "");
+        assert!(c == 200 && b.contains("Nowa pierwsza"), "{b}");
+        let (c, b) = call(&e, &cfg, "POST", "/api/ticker/3001/add?item=KRAJ%7CZ%20HTTP", "");
+        assert!(c == 200 && b.contains("Z HTTP"), "{b}");
+        let (c, b) = call(&e, &cfg, "POST", "/api/ticker/3001/del/1", "");
+        assert!(c == 200 && !b.contains("Nowa pierwsza"), "{b}");
+        assert_eq!(call(&e, &cfg, "POST", "/api/ticker/3001/bogus", "").0, 400);
+        let (c, _) = call(&e, &cfg, "POST", "/api/ticker/3001/clear", "");
+        assert_eq!(c, 200);
+        let show = e.show();
+        let p = show.arr("pages").iter().find(|p| p.num("number") == Some(3001.0)).unwrap().clone();
+        assert_eq!(p.get("values").and_then(|v| v.str("items")), Some(""), "zmiany zapisane na stronie");
+        std::fs::remove_dir_all(&d).ok();
     }
 
     #[test]

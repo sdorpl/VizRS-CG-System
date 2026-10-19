@@ -102,6 +102,7 @@ pub fn to_command(addr: &str, args: &[Arg], token: &Option<String>) -> Result<St
         "clear" => "CLEAR".to_string(),
         "next" => format!("NEXT {}", join(0)),
         "macro" => format!("MACRO {}", join(0)),
+        "ticker" => format!("TICKER {}", join(0)),
         "update" => {
             let page = a.first().ok_or("update: brak strony")?;
             let kv: Vec<String> = a[1..].chunks(2).filter(|c| c.len() == 2).map(|c| format!("{}={}", c[0], c[1])).collect();
@@ -169,6 +170,7 @@ mod tests {
     #[test]
     fn command_mapping_and_token() {
         assert_eq!(to_command("/vizrs/take", &[Arg::Int(1001)], &None).unwrap(), "TAKE 1001");
+        assert_eq!(to_command("/vizrs/ticker", &[Arg::Int(3001), Arg::Str("ADD".into()), Arg::Str("SPORT|Gol".into())], &None).unwrap(), "TICKER 3001 ADD SPORT|Gol");
         assert_eq!(to_command("/vizrs/update", &[Arg::Int(5001), Arg::Str("homeScore".into()), Arg::Int(3)], &None).unwrap(), "UPDATE 5001 homeScore=3");
         assert!(to_command("/inne/take", &[], &None).is_err());
         assert!(to_command("/vizrs/zla", &[], &None).is_err());

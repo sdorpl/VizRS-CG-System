@@ -44,6 +44,36 @@ const FX = path.join(__dirname, '../fixtures/btb');
   const tn = tk.scene.nodes[0].children.find((c) => c.type === 'ticker');
   check('ticker: warstwa ticker → węzeł ticker z wiadomościami z items', tn && tn.props.text.split('\n').length >= 3 && tn.props.speed === 120, tn && tn.props);
 
+  check('ticker: pole kontrolne items z wiadomościami, tryb crawl (warstwa sceny BTB)', tn.fields.text === 'items' && tk.page.values.items === tn.props.text && tn.props.tickerMode === 'crawl', [tn.fields, tn.props.tickerMode]);
+
+  // szablon kodowy przekształcony w scenę (ticker-unified): warstwa ticker zginęła – odtwarzamy z items
+  const tu = io.convertElement((await load('ticker_unified.json')).elements[0]);
+  const tun = tu.scene.nodes[0].children;
+  const tuk = tun.find((c) => c.type === 'ticker');
+  check('ticker-unified: węzeł ticker zamiast statycznego tekstu wiadomości', !!tuk && !tun.some((c) => c.type === 'text' && /PRZYKŁADOWA/.test(c.props.text || '')), tun.map((c) => [c.type, c.name]));
+  check('ticker-unified: kategorie przeniesione (KAT|treść)', tuk && tuk.props.text === 'PILNE|PRZYKŁADOWA WIADOMOŚĆ NR 1\nINFO|PRZYKŁADOWA WIADOMOŚĆ NR 2\nPRZYKŁADOWA WIADOMOŚĆ NR 3', tuk && tuk.props.text);
+  check('ticker-unified: tryb vertical → roll, speed (s) → hold', tuk && tuk.props.tickerMode === 'roll' && tuk.props.hold === 5, tuk && tuk.props);
+  check('ticker-unified: wiper → pas kategorii (szerokość, kolor), etykieta z introText', tuk && tuk.props.catW === 165 && tuk.props.catBg === '#901414' && tuk.props.label === 'PILNE', tuk && tuk.props);
+  check('ticker-unified: kształt i tekst wipera usunięte, etykieta jako pole kontrolne', !tun.some((c) => /wiper/i.test(c.name)) && tuk.fields.label === 'introtext', [tun.map((c) => c.name), tuk.fields]);
+  check('ticker-unified: ticker od wipera do prawej krawędzi tła', tuk && tuk.props.x === 0.2 && Math.abs(tuk.props.x + tuk.props.w - 1650) < 0.01, tuk && [tuk.props.x, tuk.props.w]);
+  check('ticker-unified: ostrzeżenie o odtworzeniu z kodu', tu.warnings.some((w) => /odtworzony/.test(w)), tu.warnings);
+
+  const tw = io.convertElement((await load('ticker_wiper_pilny.json')).elements[0]);
+  const twk = tw.scene.nodes[0].children.find((c) => c.type === 'ticker');
+  check('pilny wiper: wiadomości-stringi, tryb whip, błysk etykiety, wiper bez ::before', twk && twk.props.tickerMode === 'whip' && twk.props.text.split('\n').length === 3 && twk.props.gleam > 0 && !tw.scene.nodes[0].children.some((c) => /::before/.test(c.name)), twk && twk.props);
+  check('pilny wiper: kolor pasa z gradientu wipera', twk && twk.props.catBg === '#ff0055', twk && twk.props.catBg);
+
+  // eksport tickera: lista z kategoriami, tryb, etykieta, kolory kategorii
+  const tex = io.exportScene({ id: 't1', name: 'T', width: 1920, height: 1080, stops: [], fieldMeta: {}, nodes: [
+    { id: 'tk', type: 'ticker', name: 'tk', fields: { text: 'news' }, props: { x: 0, y: 1000, w: 1920, h: 60, text: 'x', tickerMode: 'roll', hold: 4, label: 'INFO', catBg: '#c00000', catColors: 'PILNE=#e00000', sepStyle: 'skew' } }] }, { news: 'PILNE|Pierwsza\nDruga\nSPORT#1f8a4c|Trzecia' });
+  const te = tex.file.elements[0];
+  check('eksport tickera: typ TICKER, items z category', te.type === 'TICKER' && JSON.stringify(te.items) === JSON.stringify([{ text: 'Pierwsza', category: 'PILNE' }, { text: 'Druga' }, { text: 'Trzecia', category: 'SPORT' }]), te.items);
+  check('eksport tickera: roll → vertical (speed = hold), etykieta, separator, kolory kategorii', te.tickerMode === 'vertical' && te.speed === 4 && te.introText === 'INFO' && te.separatorStyle === 'skewed' && te.fields.CATEGORY_COLORS === 'PILNE=#e00000' && te.wiper.bgColor === '#c00000', te);
+  check('eksport tickera: ostrzeżenia o trybie i kolorach w wiadomościach', tex.warnings.some((w) => /przewija tylko poziomo/.test(w)) && tex.warnings.some((w) => /KAT#kolor/.test(w)), tex.warnings);
+  const back = io.convertElement(te);
+  const bk = back.scene.nodes[0].children.find((c) => c.type === 'ticker');
+  check('round-trip tickera VizRS → BTB → VizRS: wiadomości z kategoriami', bk && bk.props.text === 'PILNE|Pierwsza\nDruga\nSPORT|Trzecia', bk && bk.props.text);
+
   const rl = io.convertElement((await load('republika_lt.json')).elements[0]);
   check('Republika: konwersja bez wyjątku, scena ma węzły', rl.scene.nodes[0].children.length > 0);
 
@@ -96,6 +126,10 @@ const FX = path.join(__dirname, '../fixtures/btb');
       check('BTB EditorIO.validate: brak błędów dla wyeksportowanego elementu', errs.length === 0, v);
       // i import odwrotny przez nasz konwerter: element BTB po prepare → scena
       const back = io.convertElement(prepared);
+      const tp = EditorIO.prepare(te);
+      const tv = EditorIO.validate(tp);
+      const terrs = (Array.isArray(tv) ? tv : tv.errors || []).filter((x) => (x.level || x.severity) === 'error');
+      check('BTB EditorIO: wyeksportowany ticker kompiluje się i przechodzi walidację', !!tp.html_template && /ITEMS_B64/.test(tp.html_template) && terrs.length === 0, terrs);
       check('round-trip VizRS → BTB → VizRS zachowuje pole i tekst', back.scene.nodes[0].children.some((c) => c.fields.text === 'title'), back.scene.nodes[0].children.map((c) => c.fields));
     } catch (e) { check('BTB EditorIO dostępny', false, String(e.stack || e).slice(0, 400)); }
   } else console.log('(pominięto test z kodem BTB – brak ' + BTB + ')');

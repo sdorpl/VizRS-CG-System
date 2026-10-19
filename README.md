@@ -77,7 +77,7 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test                       # silnik, API, parser JSON (w tym testy losowe), ochrona, kopie zapasowe
 cargo build --release
-node tests/vectors/run.js && node tests/vectors/btb.js           # wspólne wektory tekstu, konwersja BTB
+node tests/vectors/run.js && node tests/vectors/btb.js           # wspólne wektory tekstu i tickera, konwersja BTB
 node tests/e2e/run.js target/release/vizrs                       # E2E Trio/Output (Playwright; PLAYWRIGHT_DIR=katalog z node_modules)
 node tests/e2e/artist.js target/release/vizrs                    # E2E Artist
 node tests/e2e/golden.js target/release/vizrs [--update]         # zrzuty wzorcowe Outputu (INFO24, R7) – test lokalny
@@ -144,16 +144,21 @@ Wczytaj w Trio: „⇧ Import show” albo uruchom `vizrs --data katalog` z tym 
 | NA ŻYWO z 2-wierszowym miejscem | 1404 | 7504 | Enter w polu „Miejsce” = drugi wiersz, każdy ściskany osobno |
 | Rotujący kafel programu | 1405 | 7505 | programy i godziny w kolejnych liniach; właściwość tekstu „rotacja wierszy (s)” zmienia je z przenikaniem |
 
-## Tickery – trzy tryby
+## Tickery – cztery tryby
 
 | Tryb | INFO24 | R7 | Działanie |
 |---|---|---|---|
-| `crawl` | 3001, 3004 | 7301, 7304 | klasyczne przewijanie poziome; kategorie jako kolorowe plakietki |
+| `crawl` | 3001, 3004 | 7301, 7304 | klasyczne przewijanie poziome; kategorie jako kolorowe plakietki, opcjonalnie stała etykieta po lewej |
 | `roll` | 3002 | 7302 | wiadomości zmieniają się góra-dół; kategoria w osobnym polu, przewija się tylko gdy się zmienia |
 | `wipe` | 3003 | 7303 | wiadomość odsłaniana maską z „wycieraczką”, po czasie zmazywana; kategoria zmienia się pionowo |
+| `whip` | – | – | wiadomość wchodzi i wychodzi; etykieta przejeżdża przez pasek i w połowie drogi zmienia się na kategorię następnej |
 
-Format wiadomości (jedna w linii): `KATEGORIA|treść`, z własnym kolorem: `SPORT#1f8a4c|treść`, bez kategorii: sama treść.
-Właściwości węzła Ticker: tryb, czas wiadomości (s), szer. kategorii, tło/tekst kategorii. Za długa wiadomość jest ściskana.
+Operator edytuje wiadomości w Trio listą (kategoria + treść, ↑↓, grupy po kategoriach, tekst surowy); najechanie na wiersz pokazuje tę wiadomość w podglądzie.
+UPDATE na antenie nie zaczyna przewijania od nowa – nowe wiadomości dochodzą za tym, co jest na ekranie.
+Zapis w polu (jedna wiadomość w linii): `KATEGORIA|treść`, z własnym kolorem: `SPORT#1f8a4c|treść`, bez kategorii: sama treść (`\|` = znak `|`).
+Właściwości węzła Ticker: tryb, czas wiadomości (s), prędkość (crawl), separator i jego styl (kropka, kwadrat, kreska, skos), kolory kategorii (`PILNE=#e00000; INFO=#0050c0`),
+etykieta domyślna (gdy wiadomość nie ma kategorii), szer./tło/tekst kategorii, błysk etykiety. Za długa wiadomość jest ściskana.
+Presety tickerów: Artist → ＋ Dodaj… → „Presety tickerów”. Zdalnie: `TICKER 3001 ADD SPORT|Gol` (TCP), `/api/ticker/3001/add?item=…` (HTTP).
 
 ## Animacje OUT
 
@@ -180,7 +185,8 @@ HTTP (działa też jako GET – np. Bitfocus Companion / Stream Deck):
 
 TCP (port 6100, linia = komenda): `TAKE 1001`, `TAKE 1001 name=Anna|title=Ekspertka`,
 `CONTINUE main`, `OUT main`, `UPDATE 5001 homeScore=3`, `LIVE 5001 homeScore=4`,
-`CAROUSEL START <playlista>`, `CAROUSEL STOP`, `CLEAR`, `STATE`.
+`CAROUSEL START <playlista>`, `CAROUSEL STOP`, `CLEAR`, `STATE`,
+`TICKER 3001 ADD PILNE|Treść`, `TICKER 3001 DEL 2`, `TICKER 3001 LIST`.
 
 ## Fonty
 

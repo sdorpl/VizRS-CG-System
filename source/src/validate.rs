@@ -90,6 +90,16 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
             }
         }
     }
+    if n.str("type") == Some("ticker") {
+        if let Some(p) = opt(n, "props") {
+            if let Some(t) = p.str("text") {
+                crate::ticker::check_text(t)?;
+            }
+            if let Some(c) = p.str("catColors") {
+                crate::ticker::check_cat_colors(c)?;
+            }
+        }
+    }
     if let Some(Json::Obj(tracks)) = opt(n, "anim") {
         for (prop, kf) in tracks {
             let Json::Arr(keys) = kf else { return Err(format!("anim.{prop}: oczekiwano listy kluczy")) };
@@ -209,7 +219,7 @@ fn field_meta(v: &Json) -> R {
                 text_ok(t, &format!("fieldMeta.{id}.{k}"), 500)?;
             }
         }
-        for (k, lo, hi) in [("maxChars", 1.0, 100_000.0), ("softMax", 1.0, 100_000.0), ("maxLines", 1.0, 50.0), ("tab", 0.0, 999.0)] {
+        for (k, lo, hi) in [("maxChars", 1.0, 100_000.0), ("softMax", 1.0, 100_000.0), ("maxLines", 1.0, 50.0), ("maxItems", 1.0, 1_000.0), ("tab", 0.0, 999.0)] {
             if let Some(n) = opt(m, k) {
                 num_in(n, &format!("fieldMeta.{id}.{k}"), lo, hi)?;
             }
@@ -224,6 +234,12 @@ fn field_meta(v: &Json) -> R {
         if let (Some(Json::Num(soft)), Some(Json::Num(max))) = (opt(m, "softMax"), opt(m, "maxChars")) {
             if soft > max {
                 return Err(format!("fieldMeta.{id}: softMax większy niż maxChars"));
+            }
+        }
+        if let Some(o) = opt(m, "cats") {
+            let Json::Arr(list) = o else { return Err(format!("fieldMeta.{id}.cats: oczekiwano listy")) };
+            if list.len() > 100 || list.iter().any(|x| !matches!(x, Json::Str(s) if !s.is_empty() && s.chars().count() <= 100)) {
+                return Err(format!("fieldMeta.{id}.cats: lista kategorii (maks. 100 × 100 znaków)"));
             }
         }
         if let Some(o) = opt(m, "options") {
@@ -552,6 +568,17 @@ mod tests {
         assert!(anim_presets(&p(r#"[{"id":"a","name":"x","duration":0.5,"tracks":{"x":[{"t":-1,"v":0}]}}]"#)).is_err());
         assert!(anim_presets(&p(r#"[{"id":"a","name":"x","duration":0.5}]"#)).is_err());
         assert!(anim_presets(&p(r#"{}"#)).is_err());
+    }
+
+    #[test]
+    fn ticker_limits() {
+        assert!(scene(&p(r#"{"nodes":[{"type":"ticker","props":{"text":"a\nb","catColors":"PILNE=#e00000; INFO=#0050c0"}}]}"#)).is_ok());
+        let many = vec!["x"; crate::ticker::MAX_ITEMS + 1].join("\\n");
+        assert!(scene(&p(&format!(r#"{{"nodes":[{{"type":"ticker","props":{{"text":"{many}"}}}}]}}"#))).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"ticker","props":{"catColors":"PILNE"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":20,"cats":["PILNE","SPORT"]}}}"#)).is_ok());
+        assert!(scene(&p(r#"{"fieldMeta":{"news":{"cats":"PILNE"}}}"#)).is_err());
+        assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":0}}}"#)).is_err());
     }
 
     #[test]

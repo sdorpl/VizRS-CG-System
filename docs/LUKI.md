@@ -28,3 +28,5 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 13 | Brak dedykowanego modułu Companion (jest generyczny HTTP/OSC + zmienne) | |
 | 14 | Parenting przez drzewo (zmiana rodzica); brak „pick whip” jak w AE | |
 | 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | propozycje G, H, K z btb-cgeditor |
+| 16 | Ticker: brak źródła zewnętrznego (URL z JSON/RSS i odświeżanie) | PLAN-ticker.md T5.2 (opcja); dziś: `TICKER …` / `/api/ticker` z zewnętrznego skryptu |
+| 17 | Eksport tickera do BTB: scena BTB przewija tylko poziomo; tryby roll/wipe/whip zapisywane w `tickerMode` (działają w szablonach kodowych BTB) | ostrzeżenie w raporcie eksportu |

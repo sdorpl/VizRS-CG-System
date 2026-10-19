@@ -1,8 +1,10 @@
 // VizRS ↔ BTB CG: konwersja elementów (F4.2).
 //   import: BTB `.json` (eksport v3, goły element lub lista) i `.cgpack` (ZIP) → scena + strona VizRS, z raportem „co się nie przeniosło”
 //   eksport: scena VizRS → element BTB (`scene.layers`, kod HTML/JS BTB kompiluje sam `SceneModel` przy imporcie)
-// Moduł bez zależności i bez DOM – działa w przeglądarce i w Node (testy: tests/vectors/btb.js).
+// Moduł bez DOM (jedyna zależność: ticker-model.js) – działa w przeglądarce i w Node (testy: tests/vectors/btb.js).
 // Format: docs w BTB-CG `docs/edytor-kontrakt.md` (scene = { version, detached, frame:{w,h}, layers[] }).
+
+import { serializeTickerItems, parseTickerItems } from './ticker-model.js';
 
 const EASES = { 'ease-in': 'in', 'ease-out': 'out', 'ease-in-out': 'inout', ease: 'inout', linear: 'linear' };
 const round3 = (n) => Math.round(n * 1000) / 1000;
@@ -135,6 +137,35 @@ function textTracks(kind, t, warn, where) {
   return [inn ? { prop: 'opacity', a: 0, b: 1 } : { prop: 'opacity', a: 1, b: 0 }];
 }
 
+// ---------------------------------------------------------------- tickery (BTB ↔ VizRS)
+const MODE_IN = { horizontal: 'crawl', scrolling: 'crawl', vertical: 'roll', whip: 'whip' };
+const MODE_OUT = { crawl: 'horizontal', roll: 'vertical', wipe: 'whip', whip: 'whip' };
+const SEP_IN = { skewed: 'skew', dot: 'dot', square: 'square', pipe: 'pipe' };
+const SEP_OUT = { skew: 'skewed', dot: 'dot', square: 'square', pipe: 'pipe', text: 'dot' };
+/** Wiadomości elementu BTB (stringi albo {text, category}) → wiersze `KAT|treść`. */
+export function btbItemsText(items) {
+  return serializeTickerItems((items || []).map((i) => (i && typeof i === 'object' ? { cat: String(i.category || ''), color: '', text: String(i.text || '') } : { cat: '', color: '', text: String(i ?? '') })));
+}
+/** Ustawienia tickera z elementu BTB (tryb, prędkość, etykieta, kolory kategorii, separator, wiper). */
+function tickerSettings(el, layerBased) {
+  const p = {};
+  const f = el.fields || {};
+  const mode = layerBased ? 'crawl' : MODE_IN[el.tickerMode] || (el.features?.wiper || el.features?.ticker_mode ? 'whip' : 'crawl');
+  p.tickerMode = mode;
+  if (mode === 'crawl') p.speed = num(el.speed, 120);
+  else p.hold = mode === 'roll' ? Math.max(1, num(el.speed, 5)) : 6;
+  const label = el.introText ?? f.INTROTEXT ?? f.introText ?? '';
+  if (label && !layerBased) p.label = String(label);
+  const cc = f.CATEGORY_COLORS ?? (el.ocgInputs || []).find((i) => i.id === 'CATEGORY_COLORS')?.default;
+  if (cc) p.catColors = String(cc);
+  if (el.separatorStyle) { if (SEP_IN[el.separatorStyle]) p.sepStyle = SEP_IN[el.separatorStyle]; else if (el.separatorStyle === 'none') p.sep = '   '; }
+  const w = el.wiper || {};
+  if (w.bgColor) p.catBg = toHex(w.bgColor);
+  if (w.textColor) p.catFg = toHex(w.textColor);
+  if (el.features?.wiper && w.gleamEnabled !== false && !layerBased) p.gleam = round3(num(w.gleamDuration, 2) + num(w.gleamFrequency, 3));
+  return p;
+}
+
 // ---------------------------------------------------------------- import: element BTB → scena VizRS
 /**
  * @param el   element BTB (eksport v3)
@@ -186,6 +217,26 @@ export function convertElement(el, opts = {}) {
     fields[id] = f.default ?? '';
   }
 
+  // --- ticker z szablonu kodowego przekształconego w scenę: warstwa ticker zginęła, został statyczny tekst pierwszej wiadomości.
+  // Odtwarzamy węzeł ticker z `items` i ustawień elementu; wiper (kształt + tekst etykiety) przejmuje pas kategorii tickera.
+  const isTickerEl = el.type === 'TICKER' || (Array.isArray(el.items) && el.items.length > 0);
+  let tkPlan = null;
+  if (isTickerEl && !sc.layers.some((l) => l.type === 'ticker')) {
+    const first = String((el.items || [])[0]?.text ?? (el.items || [])[0] ?? '').trim();
+    const msg = sc.layers.find((l) => l.type === 'text' && !l.field && first && String(l.text || l.defaultText || '').trim() === first)
+      || sc.layers.find((l) => l.type === 'text' && !l.field && /msg|news|wiadomo|tre[sś][cć]/i.test(l.name || ''));
+    if (msg) {
+      const wipers = sc.layers.filter((l) => /wiper/i.test(l.name || ''));
+      const wShape = wipers.find((l) => l.type === 'shape' && !/::/.test(l.name || ''));
+      const wText = sc.layers.find((l) => l.type === 'text' && (/wiper/i.test(l.name || '') || /^intro_?text$/i.test(l.field || '')));
+      const drop = new Set([...wipers, wText].filter(Boolean).map((l) => l.id));
+      const cont = sc.layers.filter((l) => l.type === 'shape' && !drop.has(l.id)).sort((a, b) => num(b.w) * num(b.h) - num(a.w) * num(a.h))[0];
+      const left = wShape ? num(wShape.x) : num(msg.x), right = cont ? num(cont.x) + num(cont.w) : W;
+      tkPlan = { msg, drop, wShape, wText, x: left, y: cont ? num(cont.y) : num(msg.y), w: Math.max(10, right - left), h: cont ? num(cont.h) : num(msg.h) };
+      warn('ticker: kod szablonu BTB (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist');
+    } else warn('element TICKER bez warstwy ticker i bez tekstu wiadomości – wiadomości trafiły tylko do pola strony');
+  }
+
   // --- warstwy
   const rest = {};
   const layerById = new Map(sc.layers.map((l) => [l.id, l]));
@@ -193,6 +244,23 @@ export function convertElement(el, opts = {}) {
     const name = String(l.name || l.id).replace(/^(Kształt|Tekst|Obraz|Ticker|Zegar)\s*—\s*/i, '') || l.id;
     const node = { id: l.id, type: 'rect', name: `${name}`.slice(0, 60), props: { x: round3(num(l.x)), y: round3(num(l.y)), w: round3(num(l.w)), h: round3(num(l.h)) }, anim: {}, fields: {} };
     const p = node.props;
+    if (tkPlan?.msg === l) {
+      // tekst wiadomości → ticker na całej szerokości paska (od wipera do prawej krawędzi tła)
+      Object.assign(p, { x: round3(tkPlan.x), y: round3(tkPlan.y), w: round3(tkPlan.w), h: round3(tkPlan.h) });
+      node.name = 'ticker';
+      tickerNode(node, l.font || {}, false);
+      if (tkPlan.wShape) {
+        p.catW = round3(num(tkPlan.wShape.w));
+        if (!p.catBg) p.catBg = toHex(tkPlan.wShape.fill?.color || '#c8102e');
+      }
+      if (tkPlan.wText) {
+        if (!p.catFg && tkPlan.wText.font?.color) p.catFg = toHex(tkPlan.wText.font.color);
+        if (tkPlan.wText.field) { const lf = String(tkPlan.wText.field).toLowerCase().replace(/[^\w.\-]/g, '_'); node.fields.label = lf; if (!(lf in fields)) fields[lf] = p.label || ''; fieldMeta[lf] ||= { label: 'Etykieta' }; }
+      }
+      rest[l.id] = { x: p.x, y: p.y, opacity: p.opacity ?? 1, scale: p.scale ?? 1 };
+      idMap.set(l.id, node);
+      return node;
+    }
     if (num(l.rotation)) p.rotation = l.rotation;
     if (num(l.skew)) p.skewX = l.skew;
     if (l.opacity !== undefined && l.opacity !== 1) p.opacity = l.opacity;
@@ -259,12 +327,9 @@ export function convertElement(el, opts = {}) {
         break;
       }
       case 'ticker': {
-        node.type = 'ticker';
-        const f = l.font || {};
-        p.text = (el.items || []).map((i) => i.text || '').filter(Boolean).join('\n') || 'Wiadomość 1\nWiadomość 2';
-        p.speed = num(l.speed, 120); p.sep = `   ${l.separator || '•'}   `; p.tickerMode = 'crawl';
-        p.font = f.family || 'Inter'; p.size = num(f.size, 32); p.weight = weightOf(f.weight); p.color = toHex(f.color || '#ffffff');
-        if (f.transform === 'uppercase') p.upper = true;
+        p.sep = `   ${l.separator || '•'}   `;
+        tickerNode(node, l.font || {}, true);
+        if (!el.speed) p.speed = num(l.speed, 120);
         break;
       }
       default: warn(`nieznany typ warstwy „${l.type}” (${name}) – pominięta`); return null;
@@ -273,7 +338,21 @@ export function convertElement(el, opts = {}) {
     idMap.set(l.id, node);
     return node;
   };
-  for (const l of sc.layers) { const n = toNode(l); if (n) nodes.push(n); }
+  /** Węzeł ticker: wiadomości z `items` (z kategoriami) jako pole kontrolne `items`, ustawienia z elementu. */
+  function tickerNode(node, f, layerBased) {
+    const p = node.props;
+    node.type = 'ticker';
+    Object.assign(p, tickerSettings(el, layerBased));
+    p.text = btbItemsText(el.items) || 'Wiadomość 1\nWiadomość 2';
+    p.font = f.family || 'Inter'; p.size = num(f.size, 32); p.weight = weightOf(f.weight); p.color = toHex(f.color || '#ffffff');
+    if (f.transform === 'uppercase') p.upper = true;
+    if (opts.knownFonts && f.family && !opts.knownFonts.includes(f.family)) warn(`font „${f.family}” niedostępny w VizRS – wgraj plik fontu w Artist albo zostanie użyty zastępczy`);
+    if (!p.catW && parseTickerItems(p.text).some((x) => x.cat) && p.tickerMode !== 'crawl') p.catW = 170;
+    node.fields.text = 'items';
+    fields.items = p.text;
+    fieldMeta.items ||= { label: 'Wiadomości' };
+  }
+  for (const l of sc.layers) { if (tkPlan?.drop.has(l.id)) continue; const n = toNode(l); if (n) nodes.push(n); }
 
   // --- animacje
   const ins = [], outs = []; // { node, tracks, delay, dur, ease }
@@ -345,6 +424,7 @@ export function exportScene(scene, values = {}) {
   const strip = (s) => String(s ?? '').replace(/\{\/?(?:b|i|u|c|sz)(?:=[^}]*)?\}/gi, '').replace(/\[\[|\]\]/g, '');
   let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
   let idc = 0;
+  let ticker = null;
   const walkNodes = (nodes, ox, oy, depth) => {
     for (const n of nodes || []) {
       const p = n.props || {};
@@ -389,7 +469,19 @@ export function exportScene(scene, values = {}) {
       } else if (n.type === 'clock') {
         layers.push({ ...base, type: 'clock', font: fontOf(), format: p.format || 'HH:mm:ss' });
       } else if (n.type === 'ticker') {
-        layers.push({ ...base, type: 'ticker', font: fontOf(), speed: +p.speed || 120, separator: String(p.sep || '•').trim() || '•', gap: 48 });
+        layers.push({ ...base, type: 'ticker', font: fontOf(), speed: +p.speed || 120, separator: p.sepStyle && p.sepStyle !== 'text' ? '•' : String(p.sep || '•').trim() || '•', gap: 48 });
+        if (!ticker) {
+          const f = n.fields?.text;
+          const mode = p.tickerMode || 'crawl';
+          const src = parseTickerItems(String(f ? values[f] ?? p.text : p.text ?? ''));
+          ticker = { items: src.map((x) => (x.cat ? { text: x.text, category: x.cat } : { text: x.text })), tickerMode: MODE_OUT[mode] || 'horizontal', speed: mode === 'crawl' ? +p.speed || 120 : +p.hold || 5 };
+          if (p.label) ticker.introText = String(p.label);
+          if (p.sepStyle && SEP_OUT[p.sepStyle] && p.sepStyle !== 'text') ticker.separatorStyle = SEP_OUT[p.sepStyle];
+          if (p.catBg || p.catFg) ticker.wiper = { show: !!p.label, ...(p.catBg ? { bgColor: p.catBg } : {}), ...(p.catFg ? { textColor: p.catFg } : {}) };
+          if (p.catColors) ticker.fields = { CATEGORY_COLORS: String(p.catColors) };
+          if (mode !== 'crawl') warn(`ticker „${n.name}”: scena BTB przewija tylko poziomo – tryb „${mode}” zapisany w tickerMode (działa w szablonach kodowych BTB)`);
+          if (src.some((x) => x.color)) warn(`ticker „${n.name}”: kolory w wiadomościach (KAT#kolor) pominięte – użyj kolorów kategorii`);
+        } else warn(`ticker „${n.name}”: BTB ma jedną listę wiadomości na element – przeniesiono wiadomości pierwszego tickera`);
       } else warn(`węzeł „${n.name}” typu ${n.type} pominięty`);
     }
   };
@@ -407,6 +499,7 @@ export function exportScene(scene, values = {}) {
     animation: { in: { type: 'fade', direction: 'bottom', duration: 0.3, delay: 0, ease: 'ease-out' }, out: { type: 'fade', direction: 'bottom', duration: 0.3, delay: 0, ease: 'ease-in' } },
     ocgInputs: ocg, fields: {}, scene: { version: 1, detached: false, frame: { w: fw, h: fh }, layers },
   };
+  if (ticker) { el.type = 'TICKER'; Object.assign(el, { ...ticker, fields: { ...el.fields, ...(ticker.fields || {}) } }); }
   return { file: { _exportVersion: 3, elements: [el] }, warnings };
 }
 function hasKeys(n) {

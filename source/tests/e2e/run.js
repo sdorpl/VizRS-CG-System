@@ -425,6 +425,37 @@ async function waitUp() {
       srv2.kill(); hook.close(); fs.rmSync(d2, { recursive: true, force: true });
     }
 
+    // --- ticker: edytor wiadomości w Trio, UPDATE na antenie bez restartu przewijania, /api/ticker ---
+    await trio.reload(); await sleep(900);
+    await trio.fill('#filter', '3001'); await sleep(200);
+    await trio.click('#pages .item'); await sleep(600);
+    ok((await trio.locator('.tkx-row').count()) >= 2, 'Trio: pole tickera jako lista wiadomości', await trio.locator('.tkx-row').count());
+    await trio.locator('.tkx-txt').first().click();
+    await trio.keyboard.press('End'); await trio.keyboard.press('Enter'); await trio.keyboard.type('E2E nowa wiadomość');
+    await trio.locator('.tkx-cat').nth(1).fill('SPORT');
+    const tkv = await trio.evaluate(() => document.querySelector('[data-tk]').value);
+    ok(tkv.split('\n')[1] === 'SPORT|E2E nowa wiadomość', 'Trio: Enter dodaje wiadomość, kategoria zapisana jako KAT|treść', tkv);
+    await trio.keyboard.press('Control+ArrowUp');
+    ok((await trio.evaluate(() => document.querySelector('[data-tk]').value)).startsWith('SPORT|E2E nowa wiadomość'), 'Trio: Ctrl+↑ przesuwa wiadomość');
+    await trio.keyboard.press('Control+s'); await sleep(600);
+    ok(((await api('/api/show')).pages.find((p) => p.number === 3001)?.values.items || '').startsWith('SPORT|E2E nowa wiadomość'), 'Trio: zapis strony z listą wiadomości');
+    await trio.click('[data-view="groups"]'); await sleep(200);
+    ok((await trio.locator('.tkx-card').count()) >= 2, 'Trio: widok grup po kategoriach');
+    await trio.click('[data-view="list"]');
+    // ciągłość crawla: zmiana wiadomości na antenie nie zaczyna przewijania od nowa
+    await api('/api/clear'); await sleep(300);
+    await api('/api/take/3001'); await sleep(2500);
+    const tape = () => out.evaluate(() => { const t = document.querySelector('.vz-ticker > div > div > div'); const m = /translateX\((-?[\d.]+)px\)/.exec(t?.style.transform || ''); return { x: m ? +m[1] : null, first: t?.firstElementChild?.textContent || '', t: performance.now() }; });
+    const a1 = await tape();
+    const add = await api('/api/ticker/3001/add?item=' + encodeURIComponent('E2E|Dodana na antenie'), { method: 'POST' });
+    ok(add.onAir === true && add.items.some((x) => x.text === 'Dodana na antenie'), '/api/ticker add: strona na antenie zaktualizowana', add);
+    await sleep(700);
+    const a2 = await tape();
+    const exp = 150 * (a2.t - a1.t) / 1000;
+    ok(a1.x !== null && a2.x < a1.x && Math.abs((a1.x - a2.x) - exp) < exp * 0.5 + 40 && a2.first === a1.first, 'UPDATE tickera na antenie: przewijanie płynie dalej (bez skoku)', [a1, a2, exp]);
+    ok((await api('/api/ticker/3001')).items.length >= 3, '/api/ticker: lista wiadomości strony');
+    await api('/api/clear');
+
     // --- Trio: okno Stan systemu ---
     await trio.click('#bSys');
     await sleep(600);

@@ -1,6 +1,6 @@
 # PLAN – tickery w VizRS na wzór BTB CG System
 
-Status: **propozycja** (2026-10-19). Źródło analizy: `BTB-CG-System-alpha` – `app.js` (inspektor, szybka edycja wiadomości),
+Status: **wdrożony** (2026-10-19) – poza opcjonalnym T5.2 (źródło zewnętrzne, `docs/LUKI.md` #16). Źródło analizy: `BTB-CG-System-alpha` – `app.js` (inspektor, szybka edycja wiadomości),
 `inspector-window.html` / `inspector-shared.js` (okno Trio), `scene-model.js` i `scene_designer.js` (edytor scen, warstwa `ticker`),
 `renderer.js` (zmienne szablonów), szablony `templates/ticker-unified.json`, `tpl-btb-fullwidth-ticker.json`,
 `tpl-urgent-ocg-wiper.json`, `upgrade-templates.js` (kolory kategorii, błysk wipera).

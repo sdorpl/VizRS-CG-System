@@ -1,0 +1,222 @@
+{
+ "_opis": "Wspólne wektory zapisu wiadomości tickera: web/ticker-model.js (node tests/vectors/run.js) i src/ticker.rs (cargo test).",
+ "parse": [
+  {
+   "in": "Zwykła wiadomość",
+   "out": {
+    "cat": "",
+    "color": "",
+    "text": "Zwykła wiadomość"
+   }
+  },
+  {
+   "in": "  spacje dookoła  ",
+   "out": {
+    "cat": "",
+    "color": "",
+    "text": "spacje dookoła"
+   }
+  },
+  {
+   "in": "SPORT|Gol w 90. minucie",
+   "out": {
+    "cat": "SPORT",
+    "color": "",
+    "text": "Gol w 90. minucie"
+   }
+  },
+  {
+   "in": "SPORT#1f8a4c|Gol",
+   "out": {
+    "cat": "SPORT",
+    "color": "#1f8a4c",
+    "text": "Gol"
+   }
+  },
+  {
+   "in": "PILNE#c00|Krótki kolor",
+   "out": {
+    "cat": "PILNE",
+    "color": "#c00",
+    "text": "Krótki kolor"
+   }
+  },
+  {
+   "in": "INFO#11223344|Kolor z alfą",
+   "out": {
+    "cat": "INFO",
+    "color": "#11223344",
+    "text": "Kolor z alfą"
+   }
+  },
+  {
+   "in": " KAT | treść ",
+   "out": {
+    "cat": "KAT",
+    "color": "",
+    "text": "treść"
+   }
+  },
+  {
+   "in": "A|B|C",
+   "out": {
+    "cat": "A",
+    "color": "",
+    "text": "B|C"
+   }
+  },
+  {
+   "in": "a\\|b",
+   "out": {
+    "cat": "",
+    "color": "",
+    "text": "a|b"
+   }
+  },
+  {
+   "in": "KAT|x\\|y",
+   "out": {
+    "cat": "KAT",
+    "color": "",
+    "text": "x|y"
+   }
+  },
+  {
+   "in": "#c00|Sam kolor",
+   "out": {
+    "cat": "",
+    "color": "#c00",
+    "text": "Sam kolor"
+   }
+  },
+  {
+   "in": "NR#1|Hasztag nie jest kolorem (za krótki)",
+   "out": {
+    "cat": "NR#1",
+    "color": "",
+    "text": "Hasztag nie jest kolorem (za krótki)"
+   }
+  },
+  {
+   "in": "A#B#abc|Ostatni # jest kolorem",
+   "out": {
+    "cat": "A#B",
+    "color": "#abc",
+    "text": "Ostatni # jest kolorem"
+   }
+  },
+  {
+   "in": "ŚWIAT#1c3f94|Zażółć gęślą jaźń",
+   "out": {
+    "cat": "ŚWIAT",
+    "color": "#1c3f94",
+    "text": "Zażółć gęślą jaźń"
+   }
+  },
+  {
+   "in": "|Pusta kategoria",
+   "out": {
+    "cat": "",
+    "color": "",
+    "text": "Pusta kategoria"
+   }
+  }
+ ],
+ "serialize": [
+  {
+   "in": {
+    "cat": "",
+    "color": "",
+    "text": "Zwykła"
+   },
+   "out": "Zwykła",
+   "roundtrip": "Zwykła"
+  },
+  {
+   "in": {
+    "cat": "SPORT",
+    "color": "",
+    "text": "Gol"
+   },
+   "out": "SPORT|Gol",
+   "roundtrip": "Gol"
+  },
+  {
+   "in": {
+    "cat": "SPORT",
+    "color": "#1f8a4c",
+    "text": "Gol"
+   },
+   "out": "SPORT#1f8a4c|Gol",
+   "roundtrip": "Gol"
+  },
+  {
+   "in": {
+    "cat": "",
+    "color": "",
+    "text": "a|b"
+   },
+   "out": "a\\|b",
+   "roundtrip": "a|b"
+  },
+  {
+   "in": {
+    "cat": "K",
+    "color": "",
+    "text": "a|b"
+   },
+   "out": "K|a|b",
+   "roundtrip": "a|b"
+  },
+  {
+   "in": {
+    "cat": "A|B",
+    "color": "",
+    "text": "x"
+   },
+   "out": "A B|x",
+   "roundtrip": "x"
+  },
+  {
+   "in": {
+    "cat": "K",
+    "color": "zly",
+    "text": "x"
+   },
+   "out": "K|x",
+   "roundtrip": "x"
+  },
+  {
+   "in": {
+    "cat": "",
+    "color": "#c00",
+    "text": "x"
+   },
+   "out": "#c00|x",
+   "roundtrip": "x"
+  },
+  {
+   "in": {
+    "cat": "K",
+    "color": "",
+    "text": "dwa\n\nwiersze "
+   },
+   "out": "K|dwa wiersze",
+   "roundtrip": "dwa wiersze"
+  }
+ ],
+ "items": [
+  {
+   "in": "a\n\n  b  \nK|c\n",
+   "out": "a\nb\nK|c"
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": "K|\nL|treść",
+   "out": "L|treść"
+  }
+ ]
+}

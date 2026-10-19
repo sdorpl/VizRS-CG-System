@@ -245,7 +245,8 @@
 <input type="file" id="fileIn" hidden>
 
 <script type="module">
-import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup } from '/renderer.js';
+import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup, walk } from '/renderer.js';
+import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -385,6 +386,8 @@ function fieldInput(f, v) {
     }
     default: {
       const R = f.rules || {};
+      // wiadomości tickera: edytor listy (ticker-items.js) zapisujący do ukrytego pola
+      if (f.nodeType === 'ticker' && f.prop === 'text') return `<div data-tkhost="${esc(f.id)}"></div><textarea hidden data-tk="1" ${id}>${esc(v)}</textarea>`;
       const maxLines = R.maxLines || f.lines || 1;
       const multi = !R.oneLine && (f.nodeType === 'ticker' || maxLines > 1 || String(v ?? '').includes('\n'));
       const rows = f.nodeType === 'ticker' ? 6 : Math.max(2, maxLines);
@@ -409,8 +412,10 @@ function renderEditor() {
   $('#fields').innerHTML = fields.length ? fields.map((f) => {
     const v = draft.values[f.id] ?? f.default;
     const R = f.rules || {}, ml = R.maxLines || f.lines;
-    return `<div class="fl"><label>${esc(f.label)}<small>${esc(f.id)}${f.type === 'text' ? ' · [[…]] = wyróżnienie' : ''}${ml > 1 ? ` · Enter = nowy wiersz (maks. ${ml})` : ''}</small>${R.help ? `<div class="hlp">${esc(R.help)}</div>` : ''}</label><div>${fieldInput(f, v)}</div></div>`;
+    const tk = f.nodeType === 'ticker' && f.prop === 'text';
+    return `<div class="fl"><label>${esc(f.label)}<small>${esc(f.id)}${tk ? ' · Enter = nowa wiadomość · Ctrl+↑↓ = przesuń · najedź = podgląd' : f.type === 'text' ? ' · [[…]] = wyróżnienie' : ''}${ml > 1 && !tk ? ` · Enter = nowy wiersz (maks. ${ml})` : ''}</small>${R.help ? `<div class="hlp">${esc(R.help)}</div>` : ''}</label><div>${fieldInput(f, v)}</div></div>`;
   }).join('') : '<div class="empty">Ten szablon nie ma pól kontrolnych (dodaj je w Artist ⛓).</div>';
+  mountTickers(s);
   updateCounters();
   pv = new ScenePlayer($('#pvStage'), s, draft.values);
   pv.seekStop(0);
@@ -418,9 +423,29 @@ function renderEditor() {
   showSqueeze();
   setDirtyPage(dirtyPage);
 }
+/** Edytory wiadomości dla pól tickera; zmiany idą przez ukryte pole, więc draft, UPDATE i zapis działają jak dla tekstu. */
+const tkEditors = new Map();
+function mountTickers(s) {
+  tkEditors.clear();
+  for (const host of $$('[data-tkhost]')) {
+    const fid = host.dataset.tkhost, ta = $(`[data-f="${CSS.escape(fid)}"]`);
+    let node = null;
+    walk(s.nodes, (n) => { if (!node && n.type === 'ticker' && n.fields?.text === fid) node = n; });
+    const pr = node?.props || {};
+    const ed = mountTickerEditor(host, {
+      value: ta.value,
+      catColors: pr.catColors || '', catBg: pr.catBg || PROPS.catBg.d,
+      rules: rulesOf(fid),
+      onChange: (v) => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); },
+      onHover: (i) => pv?.tickerPin(fid, i),
+    });
+    tkEditors.set(fid, ed);
+  }
+}
 /** Pokazuje operatorowi stopień ściśnięcia każdego wiersza (jak wskaźnik squeeze w Viz). */
 function showSqueeze() {
   if (!pv) return;
+  for (const [fid, ed] of tkEditors) ed.setSqueeze(pv.tickerSqueeze(fid));
   for (const el of $$('[data-sq]')) {
     const it = pv.items.find((i) => i.node.fields && Object.values(i.node.fields).includes(el.dataset.sq) && i.sq);
     if (!it) { el.innerHTML = ''; continue; }
@@ -522,6 +547,7 @@ function updateCounters() {
 function enforceRules(el) {
   const fid = el.dataset.f, R = rulesOf(fid);
   if (R.readonly) return false;
+  if (el.dataset.tk) return true; // ticker: reguły (limit wiadomości, znaków na wiadomość) pilnuje edytor listy
   let v = el.value;
   const caret = el.selectionStart, fromEnd = v.length - (caret ?? v.length);
   if (R.upper) v = v.toUpperCase();
@@ -546,7 +572,7 @@ function applyFinalRules() {
     const R = rulesOf(el.dataset.f);
     if (!R.typo || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) continue;
     const nv = polish(el.value);
-    if (nv !== el.value) { el.value = nv; draft.values[el.dataset.f] = nv; setDirtyPage(true); }
+    if (nv !== el.value) { el.value = nv; draft.values[el.dataset.f] = nv; setDirtyPage(true); tkEditors.get(el.dataset.f)?.setValue(nv); }
   }
   pv?.update(draft.values); showSqueeze(); updateCounters();
 }
@@ -610,6 +636,8 @@ $('#pvBox').addEventListener('mouseleave', () => { $('#pvHit').style.display = '
 $('#pvBox').addEventListener('click', (e) => {
   if (pvPanned) { pvPanned = false; return; }
   const h = hitField(e.clientX, e.clientY); if (!h) return;
+  const ed = tkEditors.get(h.fid);
+  if (ed) { ed.el.scrollIntoView({ block: 'nearest' }); ed.focus(); return; }
   const el = $(`[data-f="${CSS.escape(h.fid)}"]`);
   el.scrollIntoView({ block: 'nearest' }); el.focus(); if (el.select) el.select();
 });
