@@ -32,6 +32,17 @@
   const W = +q.get('w') || 1920, H = +q.get('h') || 1080;
   if (q.get('bg')) document.body.style.background = q.get('bg');
   if (q.get('checker')) document.body.classList.add('checker');
+  // podgląd (?checker=1 bez ?bg): tło jak w panelu Trio (ten sam localStorage), zmiana w panelu działa na żywo; OBS (bez checker) zostaje przezroczysty
+  if (q.get('checker') && !q.get('bg')) {
+    const applyPanelBg = () => {
+      let bg = 'checker';
+      try { const v = localStorage.getItem('vizrs.pgmBg') || 'checker'; bg = v === 'custom' ? localStorage.getItem('vizrs.pgmBgCol') || '#808080' : v; } catch { /* brak localStorage */ }
+      document.body.classList.toggle('checker', bg === 'checker');
+      document.body.style.background = bg === 'checker' ? '' : bg;
+    };
+    applyPanelBg();
+    addEventListener('storage', (e) => { if (!e.key || e.key.startsWith('vizrs.pgmBg')) applyPanelBg(); });
+  }
   const stage = document.getElementById('stage');
   const box = document.getElementById('box');
   if (q.get('mode') === 'fill' || q.get('mode') === 'key') document.body.classList.add(q.get('mode'));

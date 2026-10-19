@@ -159,7 +159,7 @@
         <span id="pvZoom" title="Powiększenie podglądu">100%</span>
         <button id="pvZIn" title="Powiększ (kółko myszy)">＋</button>
         <button id="pvZEl" title="Powiększ element edytowanego pola (dwuklik w element = to samo)">⌖</button>
-        <button id="pvZFit" title="Dopasuj całość (dwuklik w puste miejsce)">⤢</button>
+        <button id="pvZFit" title="Cały kadr 1920×1080 (dwuklik w puste miejsce = kadr na element)">⤢</button>
       </div>
     </section>
     <div id="ctl">
@@ -419,7 +419,10 @@ function renderEditor() {
   updateCounters();
   pv = new ScenePlayer($('#pvStage'), s, draft.values);
   pv.seekStop(0);
+  pvAuto = true; pvZ = { k: 1, x: 0, y: 0 };
   fitPv();
+  pvFrame();
+  requestAnimationFrame(() => { fitPv(); if (pvAuto) pvFrame(); }); pvReframe(); // układ panelu i fonty ustalają się po otwarciu strony
   showSqueeze();
   setDirtyPage(dirtyPage);
 }
@@ -452,9 +455,10 @@ function showSqueeze() {
     el.innerHTML = it.sq.map((s, i) => `<span class="${s < 0.7 ? 'bad' : s < 0.999 ? 'warn' : ''}">w${i + 1}: ${Math.round(s * 100)}%</span>`).join('');
   }
 }
-document.fonts?.addEventListener?.('loadingdone', () => setTimeout(showSqueeze, 50));
+document.fonts?.addEventListener?.('loadingdone', () => setTimeout(() => { showSqueeze(); pvReframe(); }, 50));
 // zoom podglądu: k – krotność względem dopasowania, x/y – przesunięcie w px pudełka
-let pvZ = { k: 1, x: 0, y: 0 }, pvFit = { base: 1, ox: 0, oy: 0 };
+// pvAuto: kadr na element (środek na elementach strony, mały element powiększony w całości) – do ręcznego zoomu/przesunięcia
+let pvZ = { k: 1, x: 0, y: 0 }, pvFit = { base: 1, ox: 0, oy: 0 }, pvAuto = true;
 function fitPv() {
   const s = sceneOf(draft), W = s?.width || 1920, H = s?.height || 1080, st = $('#pvStage'), r = $('#pvBox').getBoundingClientRect();
   const base = fitStage(st, $('#pvBox'), W, H);
@@ -462,11 +466,51 @@ function fitPv() {
   if (pvZ.k !== 1 || pvZ.x || pvZ.y) st.style.transform = `translate(${pvFit.ox + pvZ.x}px, ${pvFit.oy + pvZ.y}px) scale(${base * pvZ.k})`;
   $('#pvZoom').textContent = Math.round(pvZ.k * 100) + '%';
 }
+/** Prostokąt widocznych elementów strony w px sceny (przycięty do kadru) albo null. */
+function pvBounds() {
+  const s = sceneOf(draft), W = s?.width || 1920, H = s?.height || 1080, B = $('#pvBox').getBoundingClientRect();
+  const S = pvFit.base * pvZ.k, tx = pvFit.ox + pvZ.x, ty = pvFit.oy + pvZ.y;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const it of pv?.items || []) {
+    // to, co widać: tekst/zegar – sam napis (pole węzła bywa dużo szersze), grupy – przez dzieci, bez węzłów przezroczystych
+    if (!it.vis || it.node.type === 'group' || +getComputedStyle(it.el).opacity === 0) continue;
+    const r = (it.span && it.span.textContent ? it.span : it.el).getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) continue;
+    x0 = Math.min(x0, (r.left - B.left - tx) / S); y0 = Math.min(y0, (r.top - B.top - ty) / S);
+    x1 = Math.max(x1, (r.right - B.left - tx) / S); y1 = Math.max(y1, (r.bottom - B.top - ty) / S);
+  }
+  x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W, x1); y1 = Math.min(H, y1);
+  return x1 - x0 >= 1 && y1 - y0 >= 1 ? { x0, y0, x1, y1 } : null;
+}
+/** Kadr na element: środek podglądu na elementach strony; mały element powiększony tak, by zmieścił się cały (~90% podglądu). */
+function pvFrame() {
+  if (!pv) return;
+  const b = pvBounds(), B = $('#pvBox').getBoundingClientRect();
+  if (!b || B.width < 2 || B.height < 2) return;
+  const bw = (b.x1 - b.x0) * pvFit.base, bh = (b.y1 - b.y0) * pvFit.base; // rozmiar przy dopasowaniu całości
+  const k = Math.min(32, Math.max(1, Math.min(0.9 * B.width / bw, 0.9 * B.height / bh)));
+  const S2 = pvFit.base * k, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+  pvZ = { k, x: B.width / 2 - cx * S2 - pvFit.ox, y: B.height / 2 - cy * S2 - pvFit.oy };
+  pvAuto = true;
+  fitPv();
+}
+let pvFrameT = 0;
+/** Ponowny kadr po zmianie treści (dłuższy tekst, inna wersja) – tylko w trybie automatycznym. */
+const pvReframe = () => { if (!pvAuto) return; clearTimeout(pvFrameT); pvFrameT = setTimeout(pvFrame, 120); };
 /** Zoom do krotności k, z punktem (px, py) pudełka nieruchomym. */
 function pvZoomAt(k, px, py) {
   k = Math.min(32, Math.max(1, k));
+  // oddalenie do minimum: cała scena, ale ze środkiem na elemencie
+  if (k === 1) {
+    const b = pvBounds(), B = $('#pvBox').getBoundingClientRect();
+    pvZ = b ? { k: 1, x: B.width / 2 - ((b.x0 + b.x1) / 2) * pvFit.base - pvFit.ox, y: B.height / 2 - ((b.y0 + b.y1) / 2) * pvFit.base - pvFit.oy } : { k: 1, x: 0, y: 0 };
+    pvAuto = false;
+    fitPv();
+    return;
+  }
+  pvAuto = false;
   const f = k / pvZ.k;
-  pvZ = k === 1 ? { k: 1, x: 0, y: 0 } : { k, x: px - pvFit.ox - (px - pvFit.ox - pvZ.x) * f, y: py - pvFit.oy - (py - pvFit.oy - pvZ.y) * f };
+  pvZ = { k, x: px - pvFit.ox - (px - pvFit.ox - pvZ.x) * f, y: py - pvFit.oy - (py - pvFit.oy - pvZ.y) * f };
   fitPv();
 }
 /** Powiększa tak, by prostokąt (współrzędne ekranu) zajął ~80% podglądu. */
@@ -478,6 +522,7 @@ function pvZoomRect(r) {
   const cx = (r.left + r.width / 2 - B.left - tx) / S, cy = (r.top + r.height / 2 - B.top - ty) / S; // środek w px sceny
   const S2 = pvFit.base * k;
   pvZ = { k, x: B.width / 2 - cx * S2 - pvFit.ox, y: B.height / 2 - cy * S2 - pvFit.oy };
+  pvAuto = false;
   fitPv();
 }
 function pvItemAt(x, y) {
@@ -492,7 +537,7 @@ function pvItemAt(x, y) {
 }
 const pvBoxPt = (e) => { const B = $('#pvBox').getBoundingClientRect(); return [e.clientX - B.left, e.clientY - B.top]; };
 $('#pvBox').addEventListener('wheel', (e) => { e.preventDefault(); pvZoomAt(pvZ.k * Math.exp(-e.deltaY * 0.0015), ...pvBoxPt(e)); }, { passive: false });
-$('#pvBox').addEventListener('dblclick', (e) => { const h = hitField(e.clientX, e.clientY); const r = h?.r || pvItemAt(e.clientX, e.clientY); if (r) pvZoomRect(r); else pvZoomAt(1, 0, 0); });
+$('#pvBox').addEventListener('dblclick', (e) => { const h = hitField(e.clientX, e.clientY); const r = h?.r || pvItemAt(e.clientX, e.clientY); if (r) pvZoomRect(r); else pvFrame(); });
 // przeciąganie (lewy przycisk przy powiększeniu albo środkowy) przesuwa podgląd
 let pvDrag = null, pvPanned = false;
 $('#pvBox').addEventListener('mousedown', (e) => {
@@ -503,13 +548,13 @@ addEventListener('mousemove', (e) => {
   const dx = e.clientX - pvDrag.x, dy = e.clientY - pvDrag.y;
   if (!pvDrag.on && Math.hypot(dx, dy) < 4) return;
   pvDrag.on = pvPanned = true; $('#pvBox').classList.add('pan');
-  pvZ.x = pvDrag.zx + dx; pvZ.y = pvDrag.zy + dy; fitPv();
+  pvZ.x = pvDrag.zx + dx; pvZ.y = pvDrag.zy + dy; pvAuto = false; fitPv();
 });
 addEventListener('mouseup', () => { pvDrag = null; $('#pvBox').classList.remove('pan'); });
 const pvCenter = () => { const B = $('#pvBox').getBoundingClientRect(); return [B.width / 2, B.height / 2]; };
 $('#pvZIn').onclick = () => pvZoomAt(pvZ.k * 1.5, ...pvCenter());
 $('#pvZOut').onclick = () => pvZoomAt(pvZ.k / 1.5, ...pvCenter());
-$('#pvZFit').onclick = () => pvZoomAt(1, 0, 0);
+$('#pvZFit').onclick = () => { pvZ = { k: 1, x: 0, y: 0 }; pvAuto = false; fitPv(); }; // cały kadr 1920×1080
 $('#pvZEl').onclick = () => {
   // element powiązany z ostatnio edytowanym polem (albo pierwszym polem strony)
   const fid = (document.activeElement?.closest?.('[data-f]') || lastField || $('#fields [data-f]'))?.dataset.f;
@@ -520,7 +565,7 @@ $('#pvZEl').onclick = () => {
 };
 let lastField = null;
 $('#fields').addEventListener('focusin', (e) => { const f = e.target.closest('[data-f]'); if (f) lastField = f; });
-new ResizeObserver(fitPv).observe($('#pvBox'));
+new ResizeObserver(() => { fitPv(); if (pvAuto) pvFrame(); }).observe($('#pvBox'));
 
 function renderStatus() {
   if (!draft) { $('#estatus').innerHTML = ''; return; }
@@ -574,7 +619,7 @@ function applyFinalRules() {
     const nv = polish(el.value);
     if (nv !== el.value) { el.value = nv; draft.values[el.dataset.f] = nv; setDirtyPage(true); tkEditors.get(el.dataset.f)?.setValue(nv); }
   }
-  pv?.update(draft.values); showSqueeze(); updateCounters();
+  pv?.update(draft.values); showSqueeze(); updateCounters(); pvReframe();
 }
 $('#fields').addEventListener('change', (e) => { if (e.target.dataset.f && rulesOf(e.target.dataset.f).typo) applyFinalRules(); });
 
@@ -697,6 +742,7 @@ $('#fields').addEventListener('input', (e) => {
   setDirtyPage(true);
   pv?.update(draft.values);
   showSqueeze();
+  pvReframe();
 });
 $('#fields').addEventListener('click', (e) => {
   const b = e.target.closest('[data-up]'); if (!b) return;
