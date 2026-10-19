@@ -568,7 +568,7 @@
         "weight": "700",
         "upper": true,
         "color": "#ffffff",
-        "textFit": "squeeze"
+        "textFit": "squeeze-shrink"
        },
        "fields": {
         "text": "live"
@@ -828,7 +828,7 @@
         "upper": true,
         "color": "#ffffff",
         "padX": 10,
-        "textFit": "squeeze"
+        "textFit": "squeeze-shrink"
        },
        "fields": {
         "text": "label"
@@ -1381,7 +1381,7 @@
         "upper": true,
         "color": "#ffffff",
         "padX": 8,
-        "textFit": "squeeze"
+        "textFit": "squeeze-shrink"
        },
        "anim": {
         "opacity": [
@@ -2417,7 +2417,7 @@
       "align": "center",
       "color": "#ffffff",
       "padX": 12,
-      "textFit": "squeeze",
+      "textFit": "squeeze-shrink",
       "shadow": 6
      },
      "anim": {
@@ -3231,7 +3231,7 @@
       "align": "center",
       "color": "#ffffff",
       "padX": 12,
-      "textFit": "squeeze"
+      "textFit": "squeeze-shrink"
      },
      "anim": {
       "opacity": [
@@ -3547,7 +3547,7 @@
         "weight": "800",
         "upper": true,
         "color": "#ffffff",
-        "textFit": "squeeze"
+        "textFit": "squeeze-shrink"
        },
        "fields": {
         "text": "live"
@@ -3856,7 +3856,7 @@
         "align": "center",
         "color": "#ffffff",
         "padX": 14,
-        "textFit": "squeeze",
+        "textFit": "squeeze-shrink",
         "lineHeight": 1.0
        },
        "fields": {
@@ -4093,7 +4093,7 @@
         "upper": true,
         "color": "#ffffff",
         "padX": 10,
-        "textFit": "squeeze"
+        "textFit": "squeeze-shrink"
        },
        "fields": {
         "text": "label"
@@ -4265,7 +4265,7 @@
         "upper": true,
         "color": "#ffffff",
         "padX": 10,
-        "textFit": "squeeze"
+        "textFit": "squeeze-shrink"
        },
        "fields": {
         "text": "label"

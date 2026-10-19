@@ -245,7 +245,7 @@
 <input type="file" id="fileIn" hidden>
 
 <script type="module">
-import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup, walk } from '/renderer.js';
+import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -450,9 +450,13 @@ function showSqueeze() {
   if (!pv) return;
   for (const [fid, ed] of tkEditors) ed.setSqueeze(pv.tickerSqueeze(fid));
   for (const el of $$('[data-sq]')) {
-    const it = pv.items.find((i) => i.node.fields && Object.values(i.node.fields).includes(el.dataset.sq) && i.sq);
-    if (!it) { el.innerHTML = ''; continue; }
-    el.innerHTML = it.sq.map((s, i) => `<span class="${s < 0.7 ? 'bad' : s < 0.999 ? 'warn' : ''}">w${i + 1}: ${Math.round(s * 100)}%</span>`).join('');
+    const its = pv.items.filter((i) => i.vis && i.node.fields && Object.values(i.node.fields).includes(el.dataset.sq) && i.sq);
+    if (!its.length) { el.innerHTML = ''; continue; }
+    // ten sam tekst w kilku węzłach (np. warianty): pokazujemy najmocniej ściśnięty
+    const it = its.reduce((a, b) => (Math.min(...b.sq) < Math.min(...a.sq) || b.over ? b : a));
+    const one = it.sq.length === 1;
+    el.innerHTML = it.sq.map((s, i) => `<span class="${s < 0.7 || it.over ? 'bad' : s < 0.999 ? 'warn' : ''}">${one ? 'ściśnięcie' : 'w' + (i + 1)}: ${Math.round(s * 100)}%</span>`).join('')
+      + (it.over ? `<span class="bad" title="Tekst wymaga ściśnięcia poniżej granicy ${Math.round(squeezeFloor(it.p('squeezeMin')) * 100)}% (squeezeMin) – wystaje poza ramkę">⚠ nie mieści się – skróć tekst</span>` : '');
   }
 }
 document.fonts?.addEventListener?.('loadingdone', () => setTimeout(() => { showSqueeze(); pvReframe(); }, 50));

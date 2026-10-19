@@ -572,7 +572,12 @@ function refresh() { player.apply(t); }
 function parseVal(p, inp) {
   const d = PROPS[p];
   if (d.t === 'bool') return inp.checked;
-  if (d.t === 'num') { const v = parseFloat(inp.value); return isNaN(v) ? 0 : v; }
+  if (d.t === 'num') {
+    let v = parseFloat(inp.value);
+    if (isNaN(v)) v = 0;
+    if (d.min != null) v = Math.max(d.min, v); if (d.max != null) v = Math.min(d.max, v);
+    return v;
+  }
   return inp.value;
 }
 
@@ -765,7 +770,7 @@ const DEFAULTS = {
   group: { w: 600, h: 200 },
   rect: { w: 400, h: 100, color: '#e30613' },
   ellipse: { w: 200, h: 200, color: '#3d8bfd' },
-  text: { w: 800, h: 100, text: 'Nowy tekst', size: 64, color: '#ffffff', font: 'Inter' },
+  text: { w: 800, h: 100, text: 'Nowy tekst', size: 64, color: '#ffffff', font: 'Inter', textFit: 'squeeze', squeezeMin: 0.6 },
   image: { w: 400, h: 300 },
   clock: { w: 300, h: 80, size: 48, color: '#ffffff', font: 'Roboto Mono', align: 'center' },
   ticker: { w: 1920, h: 70, text: 'Pierwsza wiadomość\nDruga wiadomość', size: 32, color: '#ffffff' },

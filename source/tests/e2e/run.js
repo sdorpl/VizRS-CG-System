@@ -375,6 +375,18 @@ async function waitUp() {
     ok((await dockTf()) === '0,0', 'dock: po zdjęciu grafiki scena wraca na miejsce', await dockTf());
     await api('/api/clear');
 
+    // --- ściskanie tekstu (squeeze jak w BTB): wskaźnik w Trio, ostrzeżenie po przekroczeniu squeezeMin ---
+    await trio.reload(); await sleep(900);
+    await trio.fill('#filter', '1102'); await sleep(200);
+    await trio.click('#pages .item'); await sleep(500);
+    await trio.locator('[data-f="name"]').fill('prof. Konstanty Ildefons Gałczyński-Brzęczyszczykiewicz-Wolański, Politechnika Warszawska'); await sleep(600);
+    const sqName = await trio.locator('[data-sq="name"]').innerText();
+    ok(/ściśnięcie: \d+%/.test(sqName) && !sqName.includes('nie mieści'), 'Trio: squeeze – wskaźnik ściśnięcia pola', sqName);
+    await trio.locator('[data-f="title"]').fill('Bardzo długi opis funkcji gościa programu '.repeat(7)); await sleep(600);
+    const sqTitle = await trio.locator('[data-sq="title"]').innerText();
+    ok(sqTitle.includes('nie mieści się') && sqTitle.includes('60%'), 'Trio: squeeze – ostrzeżenie poniżej granicy squeezeMin (font bez zmian)', sqTitle);
+    ok(await trio.evaluate(() => { const s = document.querySelector('#pvStage [data-id="p_title"] > span'); return s && getComputedStyle(s).fontSize === '32px' && /scaleX\(0\.6\)/.test(s.style.transform); }), 'podgląd: squeeze ściska do 60% bez zmiany fontu');
+
     // --- v2.0: blokady edycji (dwóch operatorów) ---
     {
       await trio.goto('about:blank'); await sleep(400); // główna strona Trio zwalnia swoje blokady (pagehide)

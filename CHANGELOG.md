@@ -1,6 +1,11 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Ściskanie tekstu jak w BTB CG:** `textFit: squeeze` ściska tylko poziomo, do granicy `squeezeMin` (wcześniej na sztywno 62% i potem mniejszy font); font się nie zmienia, za długi tekst wystaje, a Trio ostrzega „⚠ nie mieści się”. Dawne zachowanie – nowy tryb `squeeze-shrink` (w scenach demo dla wąskich pól: „NA ŻYWO”, etykiety, programy). Nowy tekst w Artist ma `squeeze` (60%).
+- Trio: wskaźnik `ściśnięcie: N%` także dla trybów `squeeze`/`squeeze-shrink`; edytor wiadomości tickera oznacza ⚠ wiadomości, które zostaną ucięte.
+- Ticker (`roll`/`wipe`/`whip`): dopasowanie wiadomości wg `textFit` i `squeezeMin` węzła (domyślnie `squeeze-shrink` 60% – jak dotąd).
+- Import BTB: brak granicy ściśnięcia → bez granicy (jak migracja `upgrade-minsquash` w BTB; wcześniej 0,8); BADGE z granicą 0,5; tekst z `autoW` → `squeeze` w `maxW`; warstwy tekstu bez pola → pola `tekst1`, `tekst2`… z szerokością do krawędzi tła (paczka `examples/BTB_CG` przebudowana: belki „Belka glowna”, „Belka pilne”, „Wizytówka” edytowalne w Trio).
+- Walidacja: `props.textFit` (lista trybów) i `props.squeezeMin` (0–1); Artist przycina liczby do zakresu właściwości.
 - **Dokumentacja:** `docs/DOKUMENTACJA.md` (pełny opis aplikacji), `docs/INSTRUKCJA-poczatkujacy.md` (instrukcja krok po kroku), `docs/README.md` (spis), `CLAUDE.md` (zasady pracy z kodem).
 - Trio: duży podgląd strony sam kadruje element – środek na elemencie, mały element powiększony tak, by zmieścił się cały; dwuklik w puste miejsce wraca do tego kadru.
 - **Edytor wiadomości tickera** w Trio i Artist (`ticker-items.js`): lista *kategoria + treść* z ↑↓ i ✕, widok grup po kategoriach (przeciąganie między grupami, zmiana nazwy grupy), tekst surowy; Enter = nowa wiadomość, Ctrl+↑↓ = przesuń, wklejenie wielu wierszy = wiele wiadomości; najechanie na wiersz pokazuje tę wiadomość w podglądzie; ściśnięcie każdej wiadomości widoczne od razu.
@@ -13,7 +18,7 @@
 - BTB: import tickerów z kategoriami, kolorami kategorii, trybem (`horizontal`→crawl, `vertical`→roll, `whip`), etykietą wipera i błyskiem; szablony kodowe przekształcone w scenę (np. `ticker-unified`) odtwarzane jako węzeł ticker zamiast statycznego tekstu.
 - Usunięto eksport sceny VizRS do formatu BTB CG (przycisk „⇩ BTB”, `exportScene`, `toBtbHtml`): BTB CG jest bazą pomysłów, grafiki przenosimy tylko z BTB do VizRS.
 - **Paczka `examples/BTB_CG`**: 31 wzorców BTB CG (belki, plakietki, tickery, zegary, logo) skonwertowanych osobno, strony 8001–8402 na warstwach `main`/`badge`/`ticker`/`clock`/`logo`, font Bahnschrift i logo w `assets/`; budowa `tools/build-btb-pack.mjs`, porównanie wizualne z wyjściem BTB CG `tests/e2e/btb-visual.js` (31/31 zgodnych, znane różnice w `examples/BTB_CG/README.md`).
-- Import BTB: format zegara `HH:MM` (minuty w BTB) → `HH:mm`, formaty rozszerzone `YYYY/DD/MM`; ściskanie tekstu BADGE do szerokości tła; granica ściśnięcia jak w BTB (brak → 0,8, 0 → bez granicy); pole tickera tylko dla elementów `TICKER`; obrazy `https://` zachowują pełny adres; warstwa ticker BTB bez kategorii, z odstępem separatora z `gap`; rozmiar i grubość etykiety z tekstu wipera.
+- Import BTB: format zegara `HH:MM` (minuty w BTB) → `HH:mm`, formaty rozszerzone `YYYY/DD/MM`; ściskanie tekstu BADGE do szerokości tła; pole tickera tylko dla elementów `TICKER`; obrazy `https://` zachowują pełny adres; warstwa ticker BTB bez kategorii, z odstępem separatora z `gap`; rozmiar i grubość etykiety z tekstu wipera.
 - Ticker: `crawlFrom` (`right`/`left` – taśma od razu pełna jak w BTB), `labelSize`, `labelWeight` (etykieta/wiper).
 - Walidacja: limity tickera (200 wiadomości × 500 znaków), `catColors`, `fieldMeta.maxItems`/`cats`; wspólne wektory zapisu wiadomości JS ↔ Rust (`tests/vectors/ticker.json`).
 - Trio: zoom dużego podglądu (kółko, dwuklik w element, przeciąganie), wybór tła monitora PGM (szachownica, czarne, białe, kluczowanie, własny kolor); jeden monitor PGM zamiast PGM+PRV.

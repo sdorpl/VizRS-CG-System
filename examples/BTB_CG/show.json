@@ -340,7 +340,7 @@
         "spacing": -0.5,
         "lineHeight": 1.399999976158142,
         "textFit": "squeeze",
-        "squeezeMin": 0.8
+        "squeezeMin": 0.3
        },
        "anim": {
         "blur": [
@@ -675,7 +675,14 @@
    "stops": [
     0.25
    ],
-   "fieldMeta": {},
+   "fieldMeta": {
+    "tekst1": {
+     "label": "Tekst 1"
+    },
+    "tekst2": {
+     "label": "Tekst 2"
+    }
+   },
    "nodes": [
     {
      "id": "grp_ce3ee2c7",
@@ -747,7 +754,7 @@
        "props": {
         "x": 30,
         "y": 6.9,
-        "w": 294.3,
+        "w": 1590,
         "h": 53,
         "text": "TEST BELEK",
         "font": "Bahnschrift.ttf",
@@ -763,7 +770,9 @@
         "squeezeMin": 0.3
        },
        "anim": {},
-       "fields": {}
+       "fields": {
+        "text": "tekst1"
+       }
       },
       {
        "id": "tx3",
@@ -772,7 +781,7 @@
        "props": {
         "x": 30,
         "y": 76.9,
-        "w": 110.4,
+        "w": 1590,
         "h": 26,
         "text": "Font size",
         "font": "Bahnschrift.ttf",
@@ -789,7 +798,9 @@
         "squeezeMin": 0.3
        },
        "anim": {},
-       "fields": {}
+       "fields": {
+        "text": "tekst2"
+       }
       }
      ]
     }
@@ -886,7 +897,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {
         "clipT": [
@@ -919,7 +931,14 @@
    "stops": [
     0.5
    ],
-   "fieldMeta": {},
+   "fieldMeta": {
+    "tekst1": {
+     "label": "Tekst 1"
+    },
+    "tekst2": {
+     "label": "Tekst 2"
+    }
+   },
    "nodes": [
     {
      "id": "grp_6f6d9625",
@@ -991,7 +1010,7 @@
        "props": {
         "x": 30,
         "y": 6.9,
-        "w": 579.9,
+        "w": 1590,
         "h": 53,
         "text": "KCOM MNIE ZNISZCZYĆ",
         "font": "Bahnschrift.ttf",
@@ -1019,7 +1038,9 @@
          }
         ]
        },
-       "fields": {}
+       "fields": {
+        "text": "tekst1"
+       }
       },
       {
        "id": "tx3",
@@ -1028,7 +1049,7 @@
        "props": {
         "x": 30,
         "y": 76.9,
-        "w": 420.5,
+        "w": 1590,
         "h": 26,
         "text": "zmasowane ataki w stronę Barneja",
         "font": "Bahnschrift.ttf",
@@ -1057,7 +1078,9 @@
          }
         ]
        },
-       "fields": {}
+       "fields": {
+        "text": "tekst2"
+       }
       }
      ]
     }
@@ -1281,7 +1304,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -1408,7 +1432,7 @@
         "spacing": 1,
         "lineHeight": 1.399999976158142,
         "textFit": "squeeze",
-        "squeezeMin": 0.3
+        "squeezeMin": 0.5
        },
        "anim": {
         "clipT": [
@@ -1554,7 +1578,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -1698,7 +1723,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -1842,7 +1868,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -1986,7 +2013,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -2203,7 +2231,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -2989,7 +3018,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -3110,7 +3140,14 @@
    "stops": [
     0.5
    ],
-   "fieldMeta": {},
+   "fieldMeta": {
+    "tekst1": {
+     "label": "Tekst 1"
+    },
+    "tekst2": {
+     "label": "Tekst 2"
+    }
+   },
    "nodes": [
     {
      "id": "grp_trio-179",
@@ -3182,7 +3219,7 @@
        "props": {
         "x": 30,
         "y": 16,
-        "w": 367.8,
+        "w": 1590,
         "h": 44,
         "text": "Karol Nawrocki",
         "font": "Inter",
@@ -3210,7 +3247,9 @@
          }
         ]
        },
-       "fields": {}
+       "fields": {
+        "text": "tekst1"
+       }
       },
       {
        "id": "tx3",
@@ -3219,7 +3258,7 @@
        "props": {
         "x": 30,
         "y": 70,
-        "w": 240.6,
+        "w": 1590,
         "h": 36,
         "text": "Prezydent RP",
         "font": "Inter",
@@ -3247,7 +3286,9 @@
          }
         ]
        },
-       "fields": {}
+       "fields": {
+        "text": "tekst2"
+       }
       }
      ]
     }
@@ -3263,7 +3304,14 @@
    "stops": [
     0.5
    ],
-   "fieldMeta": {},
+   "fieldMeta": {
+    "tekst1": {
+     "label": "Tekst 1"
+    },
+    "tekst2": {
+     "label": "Tekst 2"
+    }
+   },
    "nodes": [
     {
      "id": "grp_trio-179",
@@ -3335,7 +3383,7 @@
        "props": {
         "x": 30,
         "y": 16,
-        "w": 367.8,
+        "w": 1590,
         "h": 44,
         "text": "Karol Nawrocki",
         "font": "Inter",
@@ -3363,7 +3411,9 @@
          }
         ]
        },
-       "fields": {}
+       "fields": {
+        "text": "tekst1"
+       }
       },
       {
        "id": "tx3",
@@ -3372,7 +3422,7 @@
        "props": {
         "x": 30,
         "y": 70,
-        "w": 240.6,
+        "w": 1590,
         "h": 36,
         "text": "Prezydent RP",
         "font": "Inter",
@@ -3400,7 +3450,9 @@
          }
         ]
        },
-       "fields": {}
+       "fields": {
+        "text": "tekst2"
+       }
       }
      ]
     }
@@ -3539,7 +3591,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -3673,7 +3726,8 @@
         "valign": "middle",
         "spacing": 1,
         "lineHeight": 1.399999976158142,
-        "textFit": "none"
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
        },
        "anim": {},
        "fields": {
@@ -3981,7 +4035,10 @@
    "number": 8006,
    "name": "Belka glowna",
    "scene": "btb_belka_glowna",
-   "values": {}
+   "values": {
+    "tekst1": "TEST BELEK",
+    "tekst2": "Font size"
+   }
   },
   {
    "id": "p8007",
@@ -3997,7 +4054,10 @@
    "number": 8008,
    "name": "Belka pilne",
    "scene": "btb_belka_pilne",
-   "values": {}
+   "values": {
+    "tekst1": "KCOM MNIE ZNISZCZYĆ",
+    "tekst2": "zmasowane ataki w stronę Barneja"
+   }
   },
   {
    "id": "p8009",
@@ -4031,14 +4091,20 @@
    "number": 8012,
    "name": "Wizytówka - normalna",
    "scene": "btb_wizytowka_-_normalna",
-   "values": {}
+   "values": {
+    "tekst1": "Karol Nawrocki",
+    "tekst2": "Prezydent RP"
+   }
   },
   {
    "id": "p8013",
    "number": 8013,
    "name": "Wizytówka - PILNE",
    "scene": "btb_wizytowka_-_pilne",
-   "values": {}
+   "values": {
+    "tekst1": "Karol Nawrocki",
+    "tekst2": "Prezydent RP"
+   }
   },
   {
    "id": "p8014",

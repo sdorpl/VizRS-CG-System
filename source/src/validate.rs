@@ -24,6 +24,9 @@ fn text_ok(v: &Json, what: &str, max: usize) -> R {
     }
 }
 
+/// Tryby dopasowania tekstu do ramki (`props.textFit`).
+const TEXT_FIT: [&str; 5] = ["squeeze", "squeeze-shrink", "squeeze-lines", "shrink", "none"];
+
 fn num_in(v: &Json, what: &str, lo: f64, hi: f64) -> R {
     match v {
         Json::Num(n) if n.is_finite() && *n >= lo && *n <= hi => Ok(()),
@@ -88,6 +91,17 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
             if !v.is_obj() {
                 return Err(format!("węzeł.{k}: oczekiwano obiektu"));
             }
+        }
+    }
+    if let Some(p) = opt(n, "props") {
+        // dopasowanie tekstu (renderer.js: PROPS.textFit, squeezeMin)
+        match opt(p, "textFit") {
+            None => {}
+            Some(Json::Str(f)) if TEXT_FIT.contains(&f.as_str()) => {}
+            Some(_) => return Err(format!("props.textFit: dozwolone {}", TEXT_FIT.join(", "))),
+        }
+        if let Some(v) = opt(p, "squeezeMin") {
+            num_in(v, "props.squeezeMin", 0.0, 1.0)?;
         }
     }
     if n.str("type") == Some("ticker") {
@@ -576,6 +590,11 @@ mod tests {
         let many = vec!["x"; crate::ticker::MAX_ITEMS + 1].join("\\n");
         assert!(scene(&p(&format!(r#"{{"nodes":[{{"type":"ticker","props":{{"text":"{many}"}}}}]}}"#))).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"ticker","props":{"catColors":"PILNE"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"squeeze-shrink","squeezeMin":0.3}}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"rozciągnij"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":3}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":1.5}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":"0.5"}}]}"#)).is_err());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":20,"cats":["PILNE","SPORT"]}}}"#)).is_ok());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"cats":"PILNE"}}}"#)).is_err());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":0}}}"#)).is_err());

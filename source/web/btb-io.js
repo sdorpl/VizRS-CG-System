@@ -251,6 +251,7 @@ export function convertElement(el, opts = {}) {
 
   // --- warstwy
   const rest = {};
+  let freeText = 0; // warstwy tekstu bez pola BTB → pola tekst1, tekst2…
   const layerById = new Map(sc.layers.map((l) => [l.id, l]));
   const toNode = (l) => {
     const name = String(l.name || l.id).replace(/^(Kształt|Tekst|Obraz|Ticker|Zegar)\s*—\s*/i, '') || l.id;
@@ -310,23 +311,44 @@ export function convertElement(el, opts = {}) {
         if (num(f.letterSpacing)) p.spacing = f.letterSpacing;
         p.lineHeight = num(f.lineHeight, 1.15);
         if (f.shadow && f.shadow !== 'none') p.shadow = 8;
+        // ściskanie jak w BTB (renderer: tryb `squeeze` – tylko scaleX do granicy, font bez zmian)
         p.textFit = l.squash ? 'squeeze' : 'none';
-        // granica ściśnięcia jak w BTB: brak = 0,8; 0 = bez granicy (w VizRS najmniejsze dozwolone 0,3)
-        if (l.squash) p.squeezeMin = l.minSquash === undefined || l.minSquash === null ? 0.8 : num(l.minSquash) > 0 ? Math.max(0.3, l.minSquash) : 0.3;
-        if (l.autoW) { p.w = round3(num(l.maxW, num(l.w))); }
-        if (l.squash && el.type === 'BADGE' && !l.autoW) {
-          // BADGE w BTB ściska tekst wg długości (> 25 znaków → 25/len, min. 0,5), a nie do szerokości warstwy;
-          // tekst szerszy niż tło plakietki (bez dopasowania tła) ściskamy w VizRS do wnętrza tła z tym samym marginesem
+        // granica ściśnięcia jak w BTB: 0 = bez granicy (w VizRS najmniejsze dozwolone 0,3); brak granicy w zapisie to element
+        // sprzed M7 – BTB migruje go (upgrade-minsquash.js) do minSquash 0, więc też bez granicy (nowe warstwy BTB zapisują 0,8 jawnie)
+        if (l.squash) p.squeezeMin = num(l.minSquash) > 0 ? Math.max(0.3, Math.min(1, num(l.minSquash))) : 0.3;
+        // wnętrze tła pod tekstem: od lewej krawędzi tekstu do prawej krawędzi tła minus ten sam margines co z lewej
+        const plateInner = () => {
           const plate = sc.layers.filter((s) => s.type === 'shape' && !s.fitText && num(s.x) <= num(l.x) && num(s.x) + num(s.w) > num(l.x))
             .sort((a, b) => num(b.w) - num(a.w))[0];
-          const inner = plate ? num(plate.x) + num(plate.w) - num(l.x) - (num(l.x) - num(plate.x)) : 0;
-          if (plate && inner > 0 && inner < num(l.w)) {
-            p.w = round3(inner);
-            warn(`ściskanie tekstu „${name}” wg długości (BADGE) zastąpiono ściskaniem do szerokości tła (${p.w} px)`);
-          }
+          return plate ? num(plate.x) + num(plate.w) - num(l.x) - (num(l.x) - num(plate.x)) : 0;
+        };
+        if (l.autoW) {
+          // BTB: warstwa rośnie z tekstem do maxW (tło za nią); dłuższy tekst ściskamy w maxW, zamiast wypychać plakietkę poza ekran
+          p.w = round3(num(l.maxW, num(l.w)));
+          if (!l.squash) { p.textFit = 'squeeze'; p.squeezeMin = 0.5; }
         }
-        if (l.field) {
-          const fid = String(l.field).toLowerCase().replace(/[^\w.\-]/g, '_') + (l.line ? `_l${l.line}` : '');
+        if (l.squash && el.type === 'BADGE' && !l.autoW) {
+          // BADGE w BTB ściska tekst wg długości (> 25 znaków → 25/len, min. 0,5), a nie do szerokości warstwy;
+          // w VizRS: ściskanie do wnętrza tła z tym samym marginesem, z tą samą granicą 0,5
+          p.squeezeMin = 0.5;
+          const inner = plateInner();
+          if (inner > 0 && inner < num(l.w)) p.w = round3(inner);
+          warn(`ściskanie tekstu „${name}” wg długości (BADGE) zastąpiono ściskaniem do szerokości ${inner > 0 && inner < num(l.w) ? `tła (${p.w} px)` : 'warstwy'}, granica 50%`);
+        }
+        let fid = l.field ? String(l.field).toLowerCase().replace(/[^\w.\-]/g, '_') + (l.line ? `_l${l.line}` : '') : '';
+        if (!fid) {
+          // BTB edytuje takie warstwy w edytorze WYSIWYG; w VizRS operator zmienia tekst w polu strony
+          freeText++;
+          fid = 'tekst' + freeText;
+          while (fid in fields) fid += '_';
+          fieldMeta[fid] = { label: `Tekst ${freeText}` };
+          // szerokość = szerokość tekstu przykładowego z BTB; przy wyrównaniu do lewej rozszerzamy do krawędzi tła,
+          // żeby dłuższy tekst nie był ściskany do szerokości przykładu (przy środku/prawej zmieniłoby to położenie)
+          const inner = p.align === 'left' && !l.autoW ? plateInner() : 0;
+          if (inner > num(l.w) + 1) p.w = round3(inner);
+          warn(`warstwa tekstu „${name}” bez pola w BTB – dodano pole „${fid}”${inner > num(l.w) + 1 ? `, szerokość do krawędzi tła (${p.w} px)` : ''}`);
+        }
+        if (fid) {
           node.fields.text = fid;
           if (!(fid in fields)) fields[fid] = p.text;
           if (!fieldMeta[fid]) fieldMeta[fid] = { label: l.field };

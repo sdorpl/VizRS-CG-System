@@ -49,7 +49,7 @@ export const PROPS = {
   lineHeight: { t: 'num', d: 1.15, g: 'Tekst', step: 0.05, label: 'interlinia' },
   align: { t: 'select', d: 'left', g: 'Tekst', opts: ['left', 'center', 'right'], label: 'wyrównanie' },
   valign: { t: 'select', d: 'middle', g: 'Tekst', opts: ['top', 'middle', 'bottom'], label: 'w pionie' },
-  textFit: { t: 'select', d: 'shrink', g: 'Tekst', opts: ['shrink', 'squeeze', 'squeeze-lines', 'none'], label: 'dopasowanie' },
+  textFit: { t: 'select', d: 'shrink', g: 'Tekst', opts: ['squeeze', 'squeeze-shrink', 'squeeze-lines', 'shrink', 'none'], label: 'dopasowanie' },
   squeezeMin: { t: 'num', d: 0.6, g: 'Tekst', min: 0.3, max: 1, step: 0.05, label: 'min. ściśnięcie' },
   maxLines: { t: 'num', d: 1, g: 'Tekst', min: 1, label: 'maks. linii' },
   padX: { t: 'num', d: 0, g: 'Tekst', anim: 1, min: 0, label: 'margines X' },
@@ -96,7 +96,7 @@ export const TYPES = {
   qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', 'radius', 'shadow'] },
   image: { label: 'Obraz/wideo', icon: '🖼', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
   clock: { label: 'Zegar', icon: '⏱', props: [...COMMON, 'mode', 'format', 'seconds', 'target', ...TEXT_STYLE] },
-  ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'labelSize', 'labelWeight', 'gleam', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
+  ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'labelSize', 'labelWeight', 'gleam', 'textFit', 'squeezeMin', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
 };
 
 export const FONTS = ['Barlow Condensed', 'Barlow', 'Inter', 'Oswald', 'Bebas Neue', 'Roboto Condensed', 'Montserrat', 'Anton', 'Archivo Black', 'Teko', 'Roboto Mono', 'Playfair Display', 'Arial'];
@@ -205,6 +205,7 @@ export function propAt(node, prop, t, values) {
   const v = node.props?.[prop];
   if (v === undefined) {
     if (prop === 'textFit' && node.props?.fit === false) return 'none'; // zgodność ze starszymi scenami
+    if (prop === 'textFit' && node.type === 'ticker') return 'squeeze-shrink'; // tickery sprzed ustawienia dopasowania
     return def.d;
   }
   return v;
@@ -341,7 +342,7 @@ function fitLines(sp, text, o) {
   const ss = sp.style;
   const L = Math.max(1, Math.round(o.maxLines || 1));
   const avail = Math.max(1, o.avail);
-  const MIN = Math.min(1, Math.max(0.3, +o.minSqueeze || 0.6));
+  const MIN = squeezeFloor(o.minSqueeze);
   const origin = o.align === 'right' ? '100% 50%' : o.align === 'center' ? '50% 50%' : '0 50%';
   Object.assign(ss, { transform: '', whiteSpace: 'pre', maxWidth: 'none', display: 'flex', flexDirection: 'column', fontSize: o.size + 'px',
     alignItems: o.align === 'right' ? 'flex-end' : o.align === 'center' ? 'center' : 'flex-start' });
@@ -389,14 +390,19 @@ function fitLines(sp, text, o) {
     sq.push(Math.round(s * f * 100) / 100);
     maxW = Math.max(maxW, w * s);
   }
-  return { w: Math.min(maxW, avail), h: sp.offsetHeight, sq };
+  return { w: Math.min(maxW, avail), h: sp.offsetHeight, sq, over: false };
 }
+
+/** Granica ściśnięcia (squeezeMin) w dozwolonym zakresie 0,3…1; brak = 0,6. */
+export const squeezeFloor = (v) => Math.min(1, Math.max(0.3, +v || 0.6));
 
 /**
  * Dopasowanie tekstu do ramki (jak "Shrink"/"Squeeze" w Viz):
- *  shrink  – zmniejsza font, by zmieścić się w szerokości i w maxLines liniach
- *  squeeze – najpierw ściska tekst poziomo (do 62%), dopiero potem zmniejsza font
- * Zwraca rzeczywisty rozmiar treści (szer., wys.) w px sceny.
+ *  squeeze        – jak w BTB CG: ściska tekst poziomo, najwyżej do `squeezeMin`; font się nie zmienia.
+ *                   Gdy to za mało, tekst wystaje poza ramkę, a wynik ma `over` (ostrzeżenie dla operatora).
+ *  squeeze-shrink – ściska do `squeezeMin`, a dopiero potem zmniejsza font
+ *  shrink         – zmniejsza font, by zmieścić się w szerokości i w maxLines liniach
+ * Zwraca rzeczywisty rozmiar treści (szer., wys.) w px sceny, ściśnięcie `sq` (lista z jednym elementem) i `over`.
  */
 function fitText(sp, o) {
   const ss = sp.style;
@@ -404,6 +410,7 @@ function fitText(sp, o) {
   const L = Math.max(1, Math.round(o.maxLines || 1));
   const avail = Math.max(1, o.avail);
   const lh = o.lineHeight || 1.15;
+  const MIN = squeezeFloor(o.minSqueeze);
   ss.transform = '';
   ss.transformOrigin = o.align === 'right' ? '100% 50%' : o.align === 'center' ? '50% 50%' : '0 50%';
   ss.whiteSpace = L > 1 ? 'pre-wrap' : 'pre';
@@ -417,30 +424,37 @@ function fitText(sp, o) {
     let lo = 4, hi = o.size;
     for (let i = 0; i < 9; i++) { const mid = (lo + hi) / 2; if (fits(mid, width)) lo = mid; else hi = mid; }
     fits(lo, width);
+    return lo;
   };
-  let sx = 1;
+  let sx = 1, fs = o.size, over = false;
+  const squeeze = o.mode === 'squeeze' || o.mode === 'squeeze-shrink';
   if (o.mode === 'none') {
     ss.fontSize = o.size + 'px';
     ss.maxWidth = L > 1 ? avail + 'px' : 'none';
   } else if (fits(o.size, avail)) {
     // mieści się bez zmian
-  } else if (o.mode === 'squeeze') {
-    const MIN = 0.62;
+  } else if (squeeze) {
+    const shrink = o.mode === 'squeeze-shrink';
     if (L === 1) {
       ss.fontSize = o.size + 'px';
-      const sw = sp.scrollWidth;
-      sx = Math.max(MIN, avail / sw);
-      if (avail / sw < MIN) searchFont(avail / MIN);
+      const need = avail / sp.scrollWidth;
+      sx = Math.max(MIN, need);
+      if (need < MIN) { if (shrink) fs = searchFont(avail / MIN); else over = true; }
     } else if (fits(o.size, avail / MIN)) {
       let lo = MIN, hi = 1;
       for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; if (fits(o.size, avail / mid)) lo = mid; else hi = mid; }
       sx = lo; fits(o.size, avail / lo);
-    } else { sx = MIN; searchFont(avail / MIN); }
+    } else {
+      sx = MIN;
+      if (shrink) fs = searchFont(avail / MIN);
+      else { fits(o.size, avail / MIN); over = true; }
+    }
     if (sx < 0.999) ss.transform = `scaleX(${sx})`;
   } else {
-    searchFont(avail);
+    fs = searchFont(avail);
   }
-  return { w: Math.min(sp.offsetWidth * sx, L > 1 ? avail : Infinity), h: sp.offsetHeight };
+  const sq = squeeze ? [Math.round(sx * fs / o.size * 100) / 100] : null;
+  return { w: Math.min(sp.offsetWidth * sx, L > 1 && !over ? avail : Infinity), h: sp.offsetHeight, sq, over };
 }
 
 // ------------------------------------------------------------------ ticker: elementy wspólne dla trybów
@@ -665,8 +679,9 @@ export class ScenePlayer {
   }
 
   /**
-   * Ściśnięcie każdej wiadomości (1 = mieści się) dla węzła tickera z polem `fid`; crawl → null (tekst przewija się).
-   * Mierzone od razu dla całej listy – operator nie musi czekać na rotację.
+   * Ściśnięcie potrzebne każdej wiadomości (1 = mieści się) dla węzła tickera z polem `fid`; crawl → null (tekst przewija się).
+   * Mierzone od razu dla całej listy – operator nie musi czekać na rotację. Lista ma `min` – granicę ściśnięcia
+   * (poniżej niej wiadomość w trybie `squeeze` wystaje i jest ucinana; w `squeeze-shrink` dostaje mniejszy font).
    */
   tickerSqueeze(fid) {
     const it = this.items.find((i) => i.node.type === 'ticker' && (i.node.fields?.text === fid || i.node.id === fid) && i.vis && i.p);
@@ -678,6 +693,8 @@ export class ScenePlayer {
     it.strip.appendChild(m);
     const out = items.map((x) => { m.textContent = up ? x.text.toUpperCase() : x.text; return Math.min(1, avail / Math.max(1, m.scrollWidth)); });
     m.remove();
+    const fit = it.p('textFit');
+    out.min = fit === 'none' ? 1 : fit === 'squeeze' || fit === 'squeeze-lines' ? squeezeFloor(it.p('squeezeMin')) : 0;
     return out;
   }
 
@@ -690,7 +707,7 @@ export class ScenePlayer {
     const catW = label || items.some((x) => x.cat) ? Math.max(0, p('catW')) : 0;
     it.tkCatW = catW;
     ensureFont(font, this.opts.assetBase);
-    const key = ['slots', up, font, p('size'), p('weight'), p('italic'), p('spacing'), w, h, catW, catBg, p('catFg'), p('color'), p('shadow'), p('catColors'), label, p('labelSize'), p('labelWeight'), fe].join('|');
+    const key = ['slots', up, font, p('size'), p('weight'), p('italic'), p('spacing'), w, h, catW, catBg, p('catFg'), p('color'), p('shadow'), p('catColors'), label, p('labelSize'), p('labelWeight'), p('textFit'), p('squeezeMin'), fe].join('|');
     const S = it.strip.style;
     if (it.cache.key !== key || !it.slots) {
       it.cache.key = key;
@@ -749,9 +766,12 @@ export class ScenePlayer {
       sl.tx.style.transform = ''; sl.tx.style.fontSize = '';
       const avail = Math.max(1, w - catW - 36), sw = sl.tx.scrollWidth;
       if (sw > avail) {
+        const fit = p('textFit'), MIN = squeezeFloor(p('squeezeMin'));
         let s = avail / sw;
-        if (s < 0.6) { sl.tx.style.fontSize = (p('size') * s / 0.6) + 'px'; s = Math.min(1, avail / sl.tx.scrollWidth); }
-        sl.tx.style.transform = `scaleX(${Math.max(0.6, s)})`;
+        if (fit === 'none') return; // wiadomość ucięta na krawędzi paska
+        if (fit === 'shrink') { sl.tx.style.fontSize = (p('size') * s) + 'px'; s = Math.min(1, avail / sl.tx.scrollWidth); if (s < 0.999) sl.tx.style.transform = `scaleX(${s})`; return; }
+        if (s < MIN && fit === 'squeeze-shrink') { sl.tx.style.fontSize = (p('size') * s / MIN) + 'px'; s = Math.min(1, avail / sl.tx.scrollWidth); }
+        sl.tx.style.transform = `scaleX(${Math.max(MIN, s)})`;
       }
     };
     const gp = p('gleam');
@@ -1057,7 +1077,7 @@ export class ScenePlayer {
             ss.fontVariantNumeric = 'tabular-nums';
             const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, hlBg, hlFg };
             const m = fitMode === 'squeeze-lines' ? fitLines(sp, text, fo) : fitText(sp, fo);
-            it.mw = m.w; it.mh = m.h; it.sq = m.sq || null;
+            it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;
           }
           break;
         }

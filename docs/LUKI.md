@@ -19,6 +19,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 8 | Konwerter BTB: efekty tekstu (poza reveal/clip), pętle uwagi, maski, `layout.dock`, auto-szerokość `follow` → ostrzeżenia, nie przenoszone | lista w raporcie importu |
 | 10 | Pisownia: natywna przeglądarki (lang=pl); brak własnego słownika (sjp.pl/Hunspell) | w CEF (OBS dock) zależy od przeglądarki |
 | 11 | Znaczniki tekstu: rozmiar `{sz=}` w % (BTB używa px) – przy imporcie z BTB pomijany | |
+| 17 | Ostrzeżenie „tekst nie mieści się” (`squeeze` poniżej `squeezeMin`) tylko w Trio; Artist nie oznacza go na kanwie, wyjście nie zgłasza go do `/api/errors` | BTB: zdarzenie `cg-text-overflow` |
 
 ## G3 – funkcje
 | # | Luka | Uwagi |

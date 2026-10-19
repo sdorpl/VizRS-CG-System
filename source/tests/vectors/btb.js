@@ -31,11 +31,17 @@ const FX = path.join(__dirname, '../fixtures/btb');
   check('belka: ostrzeżenie o foncie Bahnschrift', r.warnings.some((w) => /Bahnschrift/.test(w)), r.warnings);
   check('belka: tekst z squash → textFit squeeze', g.children.some((c) => c.type === 'text' && c.props.textFit === 'squeeze'));
 
+  // warstwy tekstu bez pola (BTB: edycja w WYSIWYG) → pola tekst1, tekst2; szerokość do krawędzi tła
+  const ft = g.children.filter((c) => c.type === 'text');
+  check('belka: tekst bez pola → pola tekst1/tekst2 z wartością przykładu', ft.map((c) => c.fields.text).join() === 'tekst1,tekst2' && r.page.values.tekst1 === 'TEST BELEK' && r.scene.fieldMeta.tekst1?.label === 'Tekst 1', [ft.map((c) => c.fields), r.page.values]);
+  check('belka: tekst bez pola rozszerzony do krawędzi tła (1650 − 2×30)', ft.every((c) => c.props.w === 1590), ft.map((c) => c.props.w));
+  check('belka: ostrzeżenie o dodanym polu', r.warnings.some((w) => /bez pola w BTB/.test(w)), r.warnings);
   const nz = io.convertElement((await load('na_zywo_lewa.json')).elements[0]);
   const t = nz.scene.nodes[0].children.find((c) => c.type === 'text');
   check('na żywo: pole TITLE → pole kontrolne title', t.fields.text === 'title' && nz.scene.fieldMeta.title && nz.page.values.title === 'na żywo', [t.fields, nz.page.values]);
   const sh = nz.scene.nodes[0].children[0];
   check('na żywo: fitText → autofollow kształtu za tekstem', sh.props.follow === t.id && sh.props.followAxis === 'w' && sh.props.followPad >= 0, sh.props);
+  check('na żywo: autoW bez squash → squeeze w maxW, granica 0,5', t.props.textFit === 'squeeze' && t.props.squeezeMin === 0.5 && t.props.w > 122, t.props);
   check('na żywo: slide/zoom IN + fade OUT zamienione na klucze', Object.keys(nz.scene.nodes[0].anim).length >= 2);
 
   const tk = io.convertElement((await load('ticker_pelny.json')).elements[0]);
@@ -90,9 +96,13 @@ const FX = path.join(__dirname, '../fixtures/btb');
   check('BADGE z domyślnymi items BTB: bez pola ticker i bez ostrzeżenia o tickerze', !('items' in ml.page.values) && !ml.warnings.some((w) => /TICKER/.test(w)), [Object.keys(ml.page.values), ml.warnings]);
   const bd = io.convertElement((await load('badge_dlugi_tekst.json')).elements[0]);
   const bt = bd.scene.nodes[0].children.find((c) => c.type === 'text');
-  check('BADGE: tekst szerszy niż tło → ściskanie do wnętrza tła (620 − 2×16)', bt.props.w === 588 && bt.props.textFit === 'squeeze' && bt.props.squeezeMin === 0.3, bt.props);
+  check('BADGE: tekst szerszy niż tło → ściskanie do wnętrza tła (620 − 2×16), granica 0,5 jak w BTB', bt.props.w === 588 && bt.props.textFit === 'squeeze' && bt.props.squeezeMin === 0.5, bt.props);
   const sq = g.children.find((c) => c.props.textFit === 'squeeze'), srcSq = elements[0].scene.layers.find((l) => l.id === sq.id);
-  check('squash: granica ściśnięcia z BTB (brak → 0,8, 0 → 0,3)', sq.props.squeezeMin === (srcSq.minSquash == null ? 0.8 : srcSq.minSquash > 0 ? Math.max(0.3, srcSq.minSquash) : 0.3), [sq.props.squeezeMin, srcSq.minSquash]);
+  check('squash: granica ściśnięcia z BTB (0 i brak → bez granicy 0,3, jak migracja upgrade-minsquash BTB)', sq.props.squeezeMin === (srcSq.minSquash > 0 ? Math.max(0.3, srcSq.minSquash) : 0.3), [sq.props.squeezeMin, srcSq.minSquash]);
+  const sq8 = io.convertElement({ ...elements[0], scene: { ...elements[0].scene, layers: elements[0].scene.layers.map((l) => (l.id === sq.id ? { ...l, minSquash: 0.8 } : l)) } });
+  check('squash: jawna granica 0,8 przenoszona', sq8.scene.nodes[0].children.find((c) => c.id === sq.id).props.squeezeMin === 0.8);
+  const sqNo = io.convertElement({ ...elements[0], scene: { ...elements[0].scene, layers: elements[0].scene.layers.map((l) => (l.id === sq.id ? { ...l, minSquash: undefined } : l)) } });
+  check('squash: brak granicy (element sprzed M7) → 0,3', sqNo.scene.nodes[0].children.find((c) => c.id === sq.id).props.squeezeMin === 0.3);
   const gt = io.convertElement((await load('grafika_theme.json')).elements[0]);
   const im = gt.scene.nodes[0].children.find((c) => c.type === 'image');
   check('obraz z adresem https zostaje pełnym adresem (+ ostrzeżenie o sieci)', /^https:\/\//.test(im.props.src) && gt.warnings.some((w) => /z sieci/.test(w)), [im.props.src, gt.warnings]);

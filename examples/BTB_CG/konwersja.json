@@ -59,7 +59,10 @@
   "scene": "btb_belka_glowna",
   "page": 8006,
   "layer": "main",
-  "warnings": []
+  "warnings": [
+   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+  ]
  },
  {
   "file": "Belka_Miasto.json",
@@ -79,7 +82,10 @@
   "scene": "btb_belka_pilne",
   "page": 8008,
   "layer": "main",
-  "warnings": []
+  "warnings": [
+   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+  ]
  },
  {
   "file": "Grafika_-_theme.json",
@@ -109,7 +115,7 @@
   "page": 8102,
   "layer": "badge",
   "warnings": [
-   "ściskanie tekstu „TITLE — slt-squash” wg długości (BADGE) zastąpiono ściskaniem do szerokości tła (588 px)"
+   "ściskanie tekstu „TITLE — slt-squash” wg długości (BADGE) zastąpiono ściskaniem do szerokości tła (588 px), granica 50%"
   ]
  },
  {
@@ -255,7 +261,10 @@
   "scene": "btb_wizytowka_-_normalna",
   "page": 8012,
   "layer": "main",
-  "warnings": []
+  "warnings": [
+   "warstwa tekstu „strong” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+  ]
  },
  {
   "file": "Wizytówka_-_PILNE.json",
@@ -264,7 +273,10 @@
   "scene": "btb_wizytowka_-_pilne",
   "page": 8013,
   "layer": "main",
-  "warnings": []
+  "warnings": [
+   "warstwa tekstu „strong” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+  ]
  },
  {
   "file": "WYDANIE_SPECJALNE.json",

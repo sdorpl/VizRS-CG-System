@@ -50,7 +50,7 @@ Za pierwszym razem startuje przykładowy zestaw **INFO24** (belki, ticker, zegar
 1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
 2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
 3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px).
-4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. W grupie **Tekst** wybierz dopasowanie `squeeze-lines` – długi tekst zostanie ściśnięty zamiast wyjść poza belkę.
+4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze` (jak w BTB CG): długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej wybierz `squeeze-lines`, dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
 5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
 
@@ -140,7 +140,7 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
 | Zmiana szablonu nie widać na antenie | to celowe: warstwa ma znacznik **⏳ nowa wersja** – kliknij **Wdróż teraz** albo zrób ponowny TAKE. |
 | Czerwone „⚠ zapis show nieudany” | brak miejsca lub praw zapisu do `vizrs-data/`; antena działa, edycje nie są zapisywane. |
 | „⚠ błędy scen: N” | ⚙ Stan → lista błędów; wadliwy element jest ukryty, reszta gra. Popraw scenę w Artist. |
-| Tekst za długi / ściśnięty | pod polem widać `w1: 72%` – pomarańczowe = ściśnięte, czerwone = bardzo ściśnięte; skróć tekst albo podziel na wiersze (Enter). |
+| Tekst za długi / ściśnięty | pod polem widać `ściśnięcie: 72%` albo `w1: 72%` – pomarańczowe = ściśnięte, czerwone = bardzo ściśnięte; **⚠ nie mieści się** = tekst wystaje poza belkę: skróć go albo podziel na wiersze (Enter). |
 | Inny font na antenie niż w Artist | używaj fontów wbudowanych (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat) albo wgraj plik fontu do assets. |
 | „🔒 edytuje …” przy stronie | stronę edytuje inny operator; zapis wymaga potwierdzenia, blokada wygasa po 45 s. |
 | Trzeba wrócić do wcześniejszej wersji show | ⚙ Stan → **Kopie zapasowe show** → Przywróć. |

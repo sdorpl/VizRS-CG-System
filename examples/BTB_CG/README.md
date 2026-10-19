@@ -43,6 +43,8 @@ reszta to przesunięcia krawędzi tekstu o 1–2 px (zaokrąglenia silników).
 - **Belka - PILNE (8001–8004):** pulsująca poświata `glow` belki nie jest przenoszona (VizRS ma tylko czarny cień).
 - **Tickery whip (8201, 8203, 8204, 8206):** wiper w VizRS ma proste rogi i nie rzuca cienia.
 - **Crawl (8202, 8205):** odstęp wokół separatora przybliżony spacjami (różnica kilkunastu px).
-- **MIASTO prawa — Warszawa (8102):** BTB ściska tekst plakietki wg długości (25/len), VizRS do szerokości tła – ten sam efekt dla tekstu domyślnego.
+- **MIASTO prawa — Warszawa (8102):** BTB ściska tekst plakietki wg długości (25/len, min. 50%), VizRS do szerokości tła z tą samą granicą 50% – ten sam efekt dla tekstu domyślnego.
+- **Belka glowna, Belka pilne, Wizytówki (8006, 8008, 8012, 8013):** w BTB teksty bez pola (edycja w WYSIWYG); w VizRS pola `tekst1`, `tekst2` („Tekst 1”, „Tekst 2”), a pole tekstu sięga do krawędzi tła – dłuższy tekst nie jest ściskany do szerokości przykładu.
+- **Plakietki z auto-szerokością (np. Plakietka NA ŻYWO):** w BTB napis dłuższy niż `maxW` wychodził poza plakietkę; w VizRS jest ściskany w `maxW` (do 50%).
 - **Grafika - theme (8401):** obraz z adresu Wikimedii zwraca HTTP 400 – pusty także w BTB; podmień obraz w Artist.
 - **Bahnschrift** to font Microsoftu (skopiowany z BTB CG) – nie publikuj go w publicznym repozytorium.

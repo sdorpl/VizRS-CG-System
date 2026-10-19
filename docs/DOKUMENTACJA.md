@@ -220,12 +220,15 @@ Kolejność pól w Trio: najpierw warianty, potem w kolejności drzewa (albo wg 
 
 | Tryb | Działanie |
 |---|---|
-| `shrink` | zmniejsza font, aż tekst się zmieści (`maxLines` linii) |
-| `squeeze` | ściska poziomo (do ok. 62%), potem zmniejsza font |
-| `squeeze-lines` | każdy wiersz osobno (z Enter albo automatyczny, wyrównany podział): ściskany do `squeezeMin` (domyślnie 60%), poniżej zmniejsza się font tylko tego wiersza |
+| `squeeze` | jak w BTB CG: ściska tekst poziomo, najwyżej do `squeezeMin` (domyślnie 60%); **font się nie zmienia**. Gdy to za mało, tekst wystaje poza ramkę, a Trio ostrzega. Domyślny tryb nowego tekstu w Artist |
+| `squeeze-shrink` | ściska do `squeezeMin`, a dopiero potem zmniejsza font (dla wąskich, stałych pól: „NA ŻYWO”, etykiety) |
+| `squeeze-lines` | każdy wiersz osobno (z Enter albo automatyczny, wyrównany podział): ściskany do `squeezeMin`, poniżej zmniejsza się font tylko tego wiersza |
+| `shrink` | zmniejsza font, aż tekst się zmieści (`maxLines` linii); domyślny dla tekstów bez ustawionego trybu (starsze sceny) |
 | `none` | bez dopasowania |
 
-Trio pokazuje ściśnięcie każdego wiersza pod polem: `w1: 100%  w2: 72%` (pomarańczowe < 100%, czerwone < 70%).
+`squeezeMin` (0,3–1) to najmocniejsze dozwolone ściśnięcie: 0,6 = litery zwężone najwyżej do 60% szerokości.
+
+Trio pokazuje pod polem ściśnięcie tekstu: `ściśnięcie: 72%` (tryby `squeeze`, `squeeze-shrink`) albo każdego wiersza `w1: 100%  w2: 72%` (`squeeze-lines`); pomarańczowe < 100%, czerwone < 70%. W trybie `squeeze` po przekroczeniu granicy pojawia się czerwone **⚠ nie mieści się – skróć tekst**.
 
 ### 6.2 Tekst sformatowany
 
@@ -262,7 +265,9 @@ sama treść (bez kategorii)        \|  = znak |
 | `wipe` | wiadomość odsłaniana maską z „wycieraczką”, po czasie zmazywana |
 | `whip` | wiadomość wchodzi i wychodzi; etykieta przejeżdża przez pasek i w połowie zmienia się na kategorię następnej |
 
-Pozostałe właściwości: `sep` + `sepStyle` (tekst, kropka, kwadrat, kreska, skos) + `sepColor`, `catColors` (`PILNE=#e00000; INFO=#0050c0`), `label` (etykieta domyślna), `catW`, `catBg`, `catFg`, `labelSize`, `labelWeight`, `gleam` (błysk etykiety co N s). Za długa wiadomość jest ściskana.
+Pozostałe właściwości: `sep` + `sepStyle` (tekst, kropka, kwadrat, kreska, skos) + `sepColor`, `catColors` (`PILNE=#e00000; INFO=#0050c0`), `label` (etykieta domyślna), `catW`, `catBg`, `catFg`, `labelSize`, `labelWeight`, `gleam` (błysk etykiety co N s).
+
+Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `squeezeMin` węzła: domyślnie (`squeeze-shrink`, 60%) ściskana, a poniżej granicy dostaje mniejszy font; `squeeze` – tylko ściskanie, reszta ucięta na krawędzi paska; `shrink` – mniejszy font; `none` – bez dopasowania. Edytor wiadomości pokazuje przy każdej wiadomości potrzebne ściśnięcie, a ⚠ na czerwono, gdy wiadomość zostanie ucięta.
 
 **Ciągłość przy UPDATE:** zmiana wiadomości na antenie nie zaczyna przewijania od nowa – crawl płynie dalej, nowe wiadomości dochodzą za tym, co jest na ekranie; w `roll`/`wipe`/`whip` bieżąca wiadomość dogrywa swój czas.
 
@@ -409,7 +414,9 @@ Pełna lista: [API.md](API.md). W skrócie:
 VizRS **importuje** grafiki z BTB CG; eksportu w drugą stronę nie ma.
 
 - Artist → **⇧ BTB**: element `.json` (eksport v3) albo `.cgpack` → scena + strona, z raportem konwersji (ostrzeżenia o tym, czego nie przeniesiono).
-- Przenoszone: układ, teksty z regułami, animacje (presety → klucze), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), ściskanie BADGE, obrazy.
+- Przenoszone: układ, teksty z regułami, animacje (presety → klucze), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
+- Ściskanie: warstwa z `squash` → `textFit: squeeze` z granicą `minSquash` (0 i brak granicy → bez granicy, w VizRS 0,3 – jak migracja BTB `upgrade-minsquash`); BADGE (BTB ściska wg długości, min. 50%) → ściskanie do wnętrza tła z granicą 0,5; tekst z auto-szerokością (`autoW`) → `squeeze` w szerokości `maxW` z granicą 0,5.
+- Warstwy tekstu bez pola (w BTB edytowane w WYSIWYG) dostają pola `tekst1`, `tekst2`… (etykiety „Tekst 1”, „Tekst 2”), a przy wyrównaniu do lewej szerokość do krawędzi tła.
 - Nieprzenoszone (ostrzeżenia): część efektów tekstu, pętle uwagi, maski, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, poświata `glow`.
 - Paczka wzorców: [examples/BTB_CG](../examples/BTB_CG/README.md) – 31 elementów, strony 8001–8402, warstwy `main`/`badge`/`ticker`/`clock`/`logo`.
 

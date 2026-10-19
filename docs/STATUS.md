@@ -15,6 +15,7 @@
 | F2 | F2.1 rundown, F2.2 skróty stron, F2.3 preview bus + key/fill, F2.4 odroczony szablon + deploy, F2.5 makra/komendy zbiorcze, F2.6 presety segmentów (makra „z anteny”), F2.7 log audytowy, F2.8 znacznik zapisu, F2.9 OSC/webhook/zmienne Companion | `engine.rs`, `main.rs`, `osc.rs`, `hook.rs`, `trio.html` |
 | F3 | F3.1 reguły pól, F3.2 tekst sformatowany, F3.3 Word Replace (+ pisownia przeglądarki), F3.4 dock, F3.5 markery/zoom/kopiuj-wklej/ramka/DnD w drzewie, F3.6 presety animacji, F3.7 edycja w podglądzie | `artist.html`, `trio.html`, `richtext.js`, `renderer.js` |
 | Ticker | T1 model i parser (`ticker-model.js`, `ticker.rs`, wspólne wektory), T2 renderer (ciągłość przy UPDATE, whip, separatory, błysk, squeeze), T3 edytor wiadomości w Trio, T4 Artist (panel trybu, presety, reguły pola), T5.1 komendy `TICKER`/`/api/ticker`/OSC, T6 import z BTB, T7 testy | [../PLAN-ticker.md](../PLAN-ticker.md), `web/ticker-*.js`, `src/ticker.rs` |
+| Tekst | ściskanie jak w BTB (`squeeze` do `squeezeMin` bez zmiany fontu, `squeeze-shrink`), wskaźnik i ostrzeżenie w Trio, dopasowanie wiadomości tickera, import BTB (granice, pola dla warstw bez pola) | `renderer.js`, `trio.html`, `btb-io.js`, `validate.rs` |
 | F4 | F4.1 wspólne wektory (`tools/sync-btb.sh`), F4.2 konwerter BTB (`btb-io.js`, `.cgpack`), F4.3 blokady edycji, F4.4 `deploy/`, runbook | `tests/vectors`, `web/btb-io.js`, `deploy/`, `docs/` |
 
 ## Następne zadanie

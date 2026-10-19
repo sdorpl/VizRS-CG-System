@@ -47,7 +47,7 @@ export function mountTickerEditor(host, o = {}) {
   let items = parseTickerItems(o.value);
   if (!items.length) items = [{ cat: '', color: '', text: '' }];
   let last = serializeTickerItems(items);
-  let sq = null;
+  let sq = null, sqMin = 0;
   let view = 'list';
   try { view = localStorage.getItem('vizrs.tkView') || 'list'; } catch { /* brak localStorage */ }
   if (!VIEWS[view]) view = 'list';
@@ -76,7 +76,8 @@ export function mountTickerEditor(host, o = {}) {
   const meta = (x, i) => {
     const n = Array.from(x.text).length, mc = maxChars();
     const s = sq?.[i];
-    return `<span class="tkx-meta">${s != null && s < 0.999 ? `<span class="${s < 0.7 ? 'bad' : 'warn'}" title="ściśnięcie w grafice">${Math.round(s * 100)}%</span>` : ''}${isFinite(mc) && R().maxChars ? `<span class="${n >= mc ? 'bad' : n >= mc * 0.85 ? 'warn' : ''}">${n}/${mc}</span>` : ''}</span>`;
+    const over = s != null && s < sqMin - 1e-3;
+    return `<span class="tkx-meta">${s != null && s < 0.999 ? `<span class="${over ? 'bad' : 'warn'}" title="${over ? `nie mieści się: potrzebne ściśnięcie poniżej granicy ${Math.round(sqMin * 100)}% – wiadomość zostanie ucięta` : 'ściśnięcie w grafice'}">${over ? '⚠ ' : ''}${Math.round(s * 100)}%</span>` : ''}${isFinite(mc) && R().maxChars ? `<span class="${n >= mc ? 'bad' : n >= mc * 0.85 ? 'warn' : ''}">${n}/${mc}</span>` : ''}</span>`;
   };
   const txt = (x, i) => `<input class="tkx-txt" data-i="${i}" value="${esc(x.text)}" maxlength="${isFinite(maxChars()) ? maxChars() : ''}" placeholder="treść wiadomości" spellcheck="true" lang="pl" ${R().readonly ? 'readonly' : ''}>`;
   const btns = (i, g) => R().readonly ? '<span></span><span></span>' : `${g ? '' : `<button data-a="up" data-i="${i}" title="W górę (Ctrl+↑)">↑</button><button data-a="down" data-i="${i}" title="W dół (Ctrl+↓)">↓</button>`}<button data-a="del" data-i="${i}" title="Usuń wiadomość">✕</button>`;
@@ -284,6 +285,7 @@ export function mountTickerEditor(host, o = {}) {
       let k = 0;
       items.forEach((x, i) => { if (x.text.trim()) map[i] = arr?.[k++]; });
       sq = arr ? map : null;
+      sqMin = arr?.min || 0;
       root.querySelectorAll('[data-row]').forEach((r) => { const i = +r.dataset.row; const m = r.querySelector('.tkx-meta'); if (m) m.outerHTML = meta(items[i], i); });
     },
     setOptions(n) { Object.assign(o, n); render(); },
