@@ -1,0 +1,57 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wspólne wektory tekstu i konwersja BTB
+        shell: bash
+        run: node tests/vectors/run.js && node tests/vectors/btb.js
+      - run: cargo build --release
+      - name: Wersja i suma kontrolna
+        shell: bash
+        run: |
+          ./target/release/vizrs --version
+          (sha256sum target/release/vizrs* 2>/dev/null || shasum -a 256 target/release/vizrs) | head -1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vizrs-${{ matrix.os }}
+          path: |
+            source/target/release/vizrs
+            source/target/release/vizrs.exe
+
+  e2e:
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/run.js target/release/vizrs
+      - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/artist.js target/release/vizrs

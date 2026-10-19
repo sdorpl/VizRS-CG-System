@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>VizRS Output</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+  #box { position: fixed; inset: 0; }
+  #stage { position: absolute; left: 0; top: 0; overflow: hidden; }
+  #status { position: fixed; right: 8px; top: 8px; font: 12px/1 system-ui, sans-serif; padding: 4px 8px; border-radius: 4px; background: #c00; color: #fff; display: none; z-index: 9999; }
+  body.fill, body.key { background: #000; }
+  /* key: kanał alfa jako luma (biały = pełna nieprzezroczystość) – dla mikserów sprzętowych z osobnym Fill i Key */
+  body.key #stage { filter: brightness(0) invert(1); }
+  body.checker { background: repeating-conic-gradient(#2a2a2e 0 25%, #1f1f22 0 50%) 0 0 / 24px 24px; }
+</style>
+</head>
+<body>
+<div id="box"><div id="stage"></div></div>
+<div id="status">brak połączenia z VizRS</div>
+<script type="module">
+  import { LayerHost, ScenePlayer, connectEvents, fitStage } from '/renderer.js';
+  // Parametry URL:
+  //   ?layers=main,front   – renderuj tylko wybrane warstwy (osobne źródła w OBS)
+  //   ?w=1920&h=1080       – rozdzielczość kanału
+  //   ?bg=%2300ff00        – tło (np. chroma key); domyślnie przezroczyste
+  //   ?checker=1           – szachownica (podgląd przezroczystości)
+  //   ?status=1            – pokaż wskaźnik braku połączenia
+  //   ?bus=preview         – wyjście Preview (strony uzbrojone ARM, bez wejścia na antenę)
+  //   ?mode=fill | key     – Fill (kolor na czerni) i Key (alfa jako luma) dla ATEM/Tricaster
+  const q = new URLSearchParams(location.search);
+  const W = +q.get('w') || 1920, H = +q.get('h') || 1080;
+  if (q.get('bg')) document.body.style.background = q.get('bg');
+  if (q.get('checker')) document.body.classList.add('checker');
+  const stage = document.getElementById('stage');
+  const box = document.getElementById('box');
+  if (q.get('mode') === 'fill' || q.get('mode') === 'key') document.body.classList.add(q.get('mode'));
+  const host = new LayerHost(stage, { bus: q.get('bus') === 'preview' ? 'preview' : 'program', layers: q.get('layers') ? q.get('layers').split(',').map((s) => s.trim()) : null });
+  // błędy scen trafiają do serwera (Trio pokazuje je operatorowi); wizja gra dalej
+  const reported = new Map();
+  ScenePlayer.onError = (e) => {
+    const key = e.scene + '|' + e.message, now = Date.now();
+    if (now - (reported.get(key) || 0) < 10000) return;
+    reported.set(key, now);
+    console.error('[vizrs]', e);
+    fetch('/api/report', { method: 'POST', body: JSON.stringify({ scene: e.scene, layer: e.node, message: e.message }) }).catch(() => {});
+  };
+  const resize = () => fitStage(stage, box, W, H);
+  addEventListener('resize', resize); resize();
+  const status = document.getElementById('status');
+  connectEvents((ev) => host.handle(ev), (ok) => {
+    // wskaźnik tylko w trybie podglądu – nigdy na antenie
+    if (q.get('status') === '1' || q.get('checker')) status.style.display = ok ? 'none' : 'block';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+{
+  "comment": "Zamiana słów (Viz Word Replace): CGText.wordReplaceFind / text::word_replace_find. Zmiana = oba języki + node test-word-replace.js --update + kopia do btb-cgeditor/tests/text/.",
+  "cases": [
+    {
+      "name": "klucz na początku linii",
+      "before": "@p",
+      "list": {
+        "@p": [
+          "Prezydent",
+          "Premier"
+        ],
+        "@m": [
+          "Minister"
+        ]
+      },
+      "expect": {
+        "key": "@p",
+        "words": [
+          "Prezydent",
+          "Premier"
+        ],
+        "start": 0
+      }
+    },
+    {
+      "name": "klucz po spacji",
+      "before": "Spotkał się z @m",
+      "list": {
+        "@p": [
+          "Prezydent"
+        ],
+        "@m": [
+          "Minister"
+        ]
+      },
+      "expect": {
+        "key": "@m",
+        "words": [
+          "Minister"
+        ],
+        "start": 14
+      }
+    },
+    {
+      "name": "klucz w środku słowa nie pasuje",
+      "before": "mail@p",
+      "list": {
+        "@p": [
+          "Prezydent"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "rozróżnia wielkość liter",
+      "before": "X",
+      "list": {
+        "x": [
+          "mały"
+        ],
+        "X": [
+          "DUŻY"
+        ]
+      },
+      "expect": {
+        "key": "X",
+        "words": [
+          "DUŻY"
+        ],
+        "start": 0
+      }
+    },
+    {
+      "name": "dłuższy klucz wygrywa",
+      "before": "..p",
+      "list": {
+        "p": [
+          "Pierwszy"
+        ],
+        ".p": [
+          "Kropka"
+        ],
+        "..p": [
+          "Dwie kropki"
+        ]
+      },
+      "expect": {
+        "key": "..p",
+        "words": [
+          "Dwie kropki"
+        ],
+        "start": 0
+      }
+    },
+    {
+      "name": "po interpunkcji",
+      "before": "(@p",
+      "list": {
+        "@p": [
+          "Prezydent"
+        ]
+      },
+      "expect": {
+        "key": "@p",
+        "words": [
+          "Prezydent"
+        ],
+        "start": 1
+      }
+    },
+    {
+      "name": "brak klucza",
+      "before": "zwykły tekst",
+      "list": {
+        "@p": [
+          "Prezydent"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "puste i błędne wpisy odrzucone",
+      "before": "@z",
+      "list": {
+        "@z": [],
+        "zły klucz": [
+          "x"
+        ],
+        "@y": "nie tablica",
+        "@w": [
+          "  ",
+          "ok"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "polskie znaki w kluczu i słowach",
+      "before": "Pan ż",
+      "list": {
+        "ż": [
+          "żółć",
+          "żaba"
+        ]
+      },
+      "expect": {
+        "key": "ż",
+        "words": [
+          "żółć",
+          "żaba"
+        ],
+        "start": 4
+      }
+    },
+    {
+      "name": "pusty tekst",
+      "before": "",
+      "list": {
+        "@p": [
+          "Prezydent"
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "lista nie jest obiektem",
+      "before": "@p",
+      "list": [
+        1,
+        2
+      ],
+      "expect": null
+    }
+  ],
+  "parse": [
+    {
+      "name": "podstawowy format",
+      "text": "@p: Prezydent | Premier\n@m: Minister",
+      "expectList": {
+        "@m": [
+          "Minister"
+        ],
+        "@p": [
+          "Prezydent",
+          "Premier"
+        ]
+      },
+      "expectText": "@m: Minister\n@p: Prezydent | Premier"
+    },
+    {
+      "name": "komentarze, puste wiersze, spacje",
+      "text": "# lista\n\n  @p :  Prezydent |  Premier  \n   \n#@x: pominięty",
+      "expectList": {
+        "@p": [
+          "Prezydent",
+          "Premier"
+        ]
+      },
+      "expectText": "@p: Prezydent | Premier"
+    },
+    {
+      "name": "powtórzony klucz dokłada słowa",
+      "text": "@p: A\n@p: B | C",
+      "expectList": {
+        "@p": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "expectText": "@p: A | B | C"
+    },
+    {
+      "name": "błędne wiersze pomijane",
+      "text": "bez dwukropka\n@a:\n@b: |\n@c: ok\nza_długi_klucz: x",
+      "expectList": {
+        "@c": [
+          "ok"
+        ]
+      },
+      "expectText": "@c: ok"
+    },
+    {
+      "name": "polskie znaki",
+      "text": "ż: żółć | żaba\nł: łódź",
+      "expectList": {
+        "ł": [
+          "łódź"
+        ],
+        "ż": [
+          "żółć",
+          "żaba"
+        ]
+      },
+      "expectText": "ł: łódź\nż: żółć | żaba"
+    }
+  ]
+}

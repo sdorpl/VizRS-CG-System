@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Usługa launchd dla VizRS (macOS). Instalacja:
+       mkdir -p ~/Library/Application\ Support/VizRS && cp bin/native/vizrs ~/Library/Application\ Support/VizRS/
+       cp deploy/pl.vizrs.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/pl.vizrs.plist
+     Ustaw własny token w EnvironmentVariables; dane w ~/Library/Application Support/VizRS/data. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>pl.vizrs</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/UZYTKOWNIK/Library/Application Support/VizRS/vizrs</string>
+    <string>--bind</string><string>127.0.0.1</string>
+    <string>--data</string><string>/Users/UZYTKOWNIK/Library/Application Support/VizRS/data</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict><key>VIZRS_TOKEN</key><string>ZMIEN_MNIE</string></dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/vizrs.log</string>
+  <key>StandardErrorPath</key><string>/tmp/vizrs.log</string>
+</dict>
+</plist>

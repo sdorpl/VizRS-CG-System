@@ -1,0 +1,196 @@
+{
+  "comment": "Podział na słowa do sprawdzania pisowni: CGText.spellTokens / text::spell_tokens. Zmiana = oba języki + node test-spell-tokens.js --update + kopia do btb-cgeditor/tests/text/.",
+  "cases": [
+    {
+      "text": "Zażółć gęślą jaźń",
+      "expect": [
+        {
+          "word": "Zażółć",
+          "form": "Zażółć",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "word": "gęślą",
+          "form": "gęślą",
+          "start": 7,
+          "end": 12
+        },
+        {
+          "word": "jaźń",
+          "form": "jaźń",
+          "start": 13,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "text": "TVP INFO i PAP: Prezydent",
+      "expect": [
+        {
+          "word": "Prezydent",
+          "form": "Prezydent",
+          "start": 16,
+          "end": 25
+        }
+      ]
+    },
+    {
+      "text": "PREZYDENT ANDRZEJ DUDA",
+      "expect": [
+        {
+          "word": "PREZYDENT",
+          "form": "Prezydent",
+          "start": 0,
+          "end": 9
+        },
+        {
+          "word": "ANDRZEJ",
+          "form": "Andrzej",
+          "start": 10,
+          "end": 17
+        }
+      ]
+    },
+    {
+      "text": "kot-pies i d'Artagnan oraz it’s",
+      "expect": [
+        {
+          "word": "kot-pies",
+          "form": "kot-pies",
+          "start": 0,
+          "end": 8
+        },
+        {
+          "word": "d'Artagnan",
+          "form": "d'Artagnan",
+          "start": 11,
+          "end": 21
+        },
+        {
+          "word": "oraz",
+          "form": "oraz",
+          "start": 22,
+          "end": 26
+        },
+        {
+          "word": "it’s",
+          "form": "it’s",
+          "start": 27,
+          "end": 31
+        }
+      ]
+    },
+    {
+      "text": "abc123 123abc a1b ok",
+      "expect": [
+        {
+          "word": "ok",
+          "form": "ok",
+          "start": 18,
+          "end": 20
+        }
+      ]
+    },
+    {
+      "text": "a b c dd",
+      "expect": [
+        {
+          "word": "dd",
+          "form": "dd",
+          "start": 6,
+          "end": 8
+        }
+      ]
+    },
+    {
+      "text": "e-mail, -start end- a--b",
+      "expect": [
+        {
+          "word": "e-mail",
+          "form": "e-mail",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "word": "start",
+          "form": "start",
+          "start": 9,
+          "end": 14
+        },
+        {
+          "word": "end",
+          "form": "end",
+          "start": 15,
+          "end": 18
+        }
+      ]
+    },
+    {
+      "text": "Ala ma kota.\nDruga linia!",
+      "expect": [
+        {
+          "word": "Ala",
+          "form": "Ala",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "word": "ma",
+          "form": "ma",
+          "start": 4,
+          "end": 6
+        },
+        {
+          "word": "kota",
+          "form": "kota",
+          "start": 7,
+          "end": 11
+        },
+        {
+          "word": "Druga",
+          "form": "Druga",
+          "start": 13,
+          "end": 18
+        },
+        {
+          "word": "linia",
+          "form": "linia",
+          "start": 19,
+          "end": 24
+        }
+      ]
+    },
+    {
+      "text": "ŁÓDŹ",
+      "expect": []
+    },
+    {
+      "text": "",
+      "expect": []
+    },
+    {
+      "text": "złóty café naïve",
+      "expect": [
+        {
+          "word": "złóty",
+          "form": "złóty",
+          "start": 0,
+          "end": 6
+        },
+        {
+          "word": "café",
+          "form": "café",
+          "start": 7,
+          "end": 11
+        },
+        {
+          "word": "naïve",
+          "form": "naïve",
+          "start": 12,
+          "end": 17
+        }
+      ]
+    }
+  ]
+}

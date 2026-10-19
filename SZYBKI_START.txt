@@ -1,0 +1,20 @@
+VizRS 2.0.0 – szybki start
+==========================
+
+LINUX:    ./start-linux.sh
+WINDOWS:  build-windows.bat (raz, wymaga Rust z https://rustup.rs), potem start-windows.bat
+MACOS:    ./build-macos-linux.sh, potem ./bin/native/vizrs --data ./vizrs-data
+
+Po uruchomieniu w przeglądarce:
+  http://localhost:8088/trio     – playout (operator)
+  http://localhost:8088/artist   – projektowanie szablonów
+  http://localhost:8088/output   – wyjście dla OBS
+
+OBS: Źródła -> + -> Przeglądarka -> URL http://localhost:8088/output, 1920 x 1080.
+
+Domyślnie startuje zestaw INFO24. Zestaw R7 NEWS: Trio -> „⇧ Import show” -> examples/R7_NEWS.show.json
+Fonty Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed i Montserrat są wbudowane (działają offline); inne ładują się z Google Fonts albo wgraj plik .ttf w Artist.
+Dostęp z innego komputera: vizrs --bind 0.0.0.0 --token HASLO  (patrz README – Bezpieczeństwo).
+Skróty Trio: F1 Take, F2 Continue, F3 Out, F4 Update, F6 Arm (preview), F8 Next (rundown).
+
+Pełna dokumentacja: README.md, zmiany: CHANGELOG.md, zrzuty i filmy: katalog media/.

@@ -1,0 +1,82 @@
+{
+  // Debugowanie serwera VizRS (wymaga rozszerzenia CodeLLDB: vadimcn.vscode-lldb).
+  // Przed startem zatrzymywany jest działający serwer, żeby zwolnić porty 8088/6100.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "VizRS: debug (UI z dysku)",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["build", "--bin=vizrs", "--manifest-path=${workspaceFolder}/source/Cargo.toml"],
+        "filter": { "name": "vizrs", "kind": "bin" }
+      },
+      // --web: HTML/JS czytane z source/web – zmiana w pliku = odśwież stronę, bez przebudowy
+      "args": ["--data", "./vizrs-data", "--web", "source/web"],
+      "cwd": "${workspaceFolder}",
+      "env": { "RUST_BACKTRACE": "1" },
+      "preLaunchTask": "VizRS: zatrzymaj serwer",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      "name": "VizRS: debug (UI wbudowane)",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["build", "--bin=vizrs", "--manifest-path=${workspaceFolder}/source/Cargo.toml"],
+        "filter": { "name": "vizrs", "kind": "bin" }
+      },
+      "args": ["--data", "./vizrs-data"],
+      "cwd": "${workspaceFolder}",
+      "env": { "RUST_BACKTRACE": "1" },
+      "preLaunchTask": "VizRS: zatrzymaj serwer",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      "name": "VizRS: release",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/source/target/release/vizrs",
+      "args": ["--data", "./vizrs-data", "--web", "source/web"],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "VizRS: build release",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      "name": "VizRS: testy (cargo test)",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["test", "--no-run", "--bin=vizrs", "--manifest-path=${workspaceFolder}/source/Cargo.toml"],
+        "filter": { "name": "vizrs", "kind": "bin" }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}/source",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      // debugger JS w Chrome dla strony Trio (breakpointy w source/web/*.js działają z --web)
+      "name": "Trio w Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8088/trio",
+      "webRoot": "${workspaceFolder}/source/web",
+      "pathMapping": { "/": "${workspaceFolder}/source/web/" }
+    },
+    {
+      "name": "Artist w Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8088/artist",
+      "webRoot": "${workspaceFolder}/source/web",
+      "pathMapping": { "/": "${workspaceFolder}/source/web/" }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "VizRS + Trio (Rust + JS)",
+      "configurations": ["VizRS: debug (UI z dysku)", "Trio w Chrome"],
+      "stopAll": true
+    }
+  ]
+}

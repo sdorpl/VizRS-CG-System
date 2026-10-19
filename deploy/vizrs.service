@@ -1,0 +1,24 @@
+# Usługa systemd dla VizRS (Linux). Instalacja:
+#   sudo useradd --system --home /var/lib/vizrs --create-home vizrs
+#   sudo install -m 755 vizrs /opt/vizrs/vizrs          (binarka z bin/linux-x86_64 albo własna kompilacja)
+#   sudo cp deploy/vizrs.service /etc/systemd/system/ && sudo systemctl edit vizrs   # ustaw Environment=VIZRS_TOKEN=...
+#   sudo systemctl enable --now vizrs
+# Dane (show.json, assets/, backups/, log.jsonl) są w /var/lib/vizrs. Dostęp z sieci: zmień --bind na 0.0.0.0 i ustaw token.
+[Unit]
+Description=VizRS – grafika CG na żywo dla OBS (Artist + Trio)
+After=network.target
+
+[Service]
+User=vizrs
+Environment=VIZRS_TOKEN=ZMIEN_MNIE
+ExecStart=/opt/vizrs/vizrs --bind 127.0.0.1 --port 8088 --tcp 6100 --data /var/lib/vizrs
+Restart=always
+RestartSec=2
+# twardnienie
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/vizrs
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

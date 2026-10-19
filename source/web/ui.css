@@ -1,0 +1,65 @@
+/* VizRS – wspólny styl interfejsów Artist / Trio */
+:root {
+  --bg: #121316;
+  --panel: #1a1c20;
+  --panel2: #22252b;
+  --line: #2e323a;
+  --text: #d9dde4;
+  --dim: #8a909c;
+  --acc: #f0a020;
+  --acc-d: #b97510;
+  --red: #e5322d;
+  --green: #2fb46a;
+  --blue: #3d8bfd;
+  --sel: #2b3c5a;
+  --mono: ui-monospace, "JetBrains Mono", "Roboto Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.35 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; cursor: pointer; white-space: nowrap;
+}
+button:hover { border-color: #4a505c; background: #2a2e35; }
+button:active { transform: translateY(1px); }
+button.acc { background: var(--acc); color: #1a1100; border-color: var(--acc); font-weight: 600; }
+button.acc:hover { background: #ffb53a; }
+button.danger:hover { border-color: var(--red); color: #ff8a86; }
+button.icon { padding: 2px 6px; min-width: 26px; }
+button:disabled { opacity: .45; cursor: default; }
+input, select, textarea {
+  background: #0e0f12; border: 1px solid var(--line); border-radius: 3px; padding: 3px 6px; outline: none; min-width: 0;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--acc-d); }
+input[type=color] { padding: 0; width: 28px; height: 24px; border: none; background: none; cursor: pointer; }
+input[type=checkbox] { accent-color: var(--acc); }
+textarea { resize: vertical; }
+label { color: var(--dim); }
+h3 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+.panel > header { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--line); background: #1d2024; min-height: 34px; }
+.panel > header h3 { flex: 1; }
+.scroll { overflow: auto; min-height: 0; flex: 1; }
+.row { display: flex; align-items: center; gap: 6px; }
+.grow { flex: 1; }
+.dim { color: var(--dim); }
+.mono { font-family: var(--mono); }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: #0b0c0e; border-bottom: 1px solid var(--line); }
+.brand { font-weight: 800; letter-spacing: .04em; }
+.brand b { color: var(--acc); }
+.topbar nav a { color: var(--dim); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
+.topbar nav a.on, .topbar nav a:hover { color: var(--text); background: var(--panel2); }
+.checker { background: repeating-conic-gradient(#26282d 0 25%, #1c1e22 0 50%) 0 0 / 20px 20px; }
+.pill { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); color: var(--dim); }
+.pill.on { background: var(--red); border-color: var(--red); color: #fff; }
+.pill.ok { background: #173d29; border-color: var(--green); color: #7fe0a8; }
+.list .item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #23262c; cursor: pointer; user-select: none; }
+.list .item:hover { background: #20242a; }
+.list .item.sel { background: var(--sel); }
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #2a2e35; border: 1px solid var(--line); padding: 8px 14px; border-radius: 6px; z-index: 1000; box-shadow: 0 6px 24px rgba(0,0,0,.5); transition: opacity .3s; }
+.toast.err { border-color: var(--red); color: #ffb3b0; }
+kbd { font-family: var(--mono); font-size: 11px; background: #0e0f12; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; color: var(--dim); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #33373f; border-radius: 5px; border: 2px solid var(--panel); }
+::-webkit-scrollbar-track { background: transparent; }

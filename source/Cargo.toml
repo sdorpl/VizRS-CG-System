@@ -1,0 +1,11 @@
+[package]
+name = "vizrs"
+version = "2.0.0"
+edition = "2021"
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

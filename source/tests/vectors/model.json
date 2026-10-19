@@ -1,0 +1,1379 @@
+{
+ "sanitize": [
+  {
+   "in": "Zwykły tekst",
+   "out": "Zwykły tekst"
+  },
+  {
+   "in": "<p>Jan <b>Kowalski</b></p><p><i>Prezydent</i> RP</p>",
+   "out": "<div>Jan <strong>Kowalski</strong></div><div><em>Prezydent</em> RP</div>"
+  },
+  {
+   "in": "<script>alert(1)</script><div onclick=\"x()\">A</div>",
+   "out": "<div>A</div>"
+  },
+  {
+   "in": "<span style=\"color:#FF0000; background:url(javascript:x); font-size: 30px; position:absolute\">x</span>",
+   "out": "<span style=\"color: #ff0000; font-size: 30px\">x</span>"
+  },
+  {
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "out": "<div style=\"text-align: center\"><span style=\"font-family: 'Bahnschrift', sans-serif; font-weight: 700\">Tytuł</span><br>druga</div>"
+  },
+  {
+   "in": "A &amp; B &lt; C &nbsp;&copy;",
+   "out": "A &amp; B &lt; C &nbsp;&copy;"
+  },
+  {
+   "in": "a < b i c > d",
+   "out": "a &lt; b i c &gt; d"
+  },
+  {
+   "in": "<font color=\"red\">stare</font><strike>skreślone</strike>",
+   "out": "stare<s>skreślone</s>"
+  },
+  {
+   "in": "<div><div>zagnieżdżone</div></div>",
+   "out": "<div><div>zagnieżdżone</div></div>"
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.7); display: inline-block; transform-origin: left center\"><strong>ŚCIŚNIĘTE</strong></span>",
+   "out": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.7); display: inline-block; transform-origin: left center\"><strong>ŚCIŚNIĘTE</strong></span>"
+  },
+  {
+   "in": "<!-- komentarz --><u>pod</u><s>kreślone</s>",
+   "out": "<u>pod</u><s>kreślone</s>"
+  },
+  {
+   "in": "<p>niedomknięte <b>pogrubione",
+   "out": "<div>niedomknięte <strong>pogrubione</strong></div>"
+  },
+  {
+   "in": "</div></span>zbędne zamknięcia",
+   "out": "zbędne zamknięcia"
+  },
+  {
+   "in": "<img src=x onerror=alert(1)>tekst",
+   "out": "tekst"
+  },
+  {
+   "in": "<span style=\"color: rgb(255,0, 0);letter-spacing:0.05em;text-transform:uppercase\">K</span>",
+   "out": "<span style=\"color: rgb(255, 0, 0); letter-spacing: 0.05em; text-transform: uppercase\">K</span>"
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": "<div>A</div>\n  <div>B &copy; &amp;lt;</div>",
+   "out": "<div>A</div>\n  <div>B &copy; &amp;lt;</div>"
+  },
+  {
+   "in": "<style>p{color:red}</style><p>po stylu</p>",
+   "out": "<div>po stylu</div>"
+  },
+  {
+   "in": "<a href=\"javascript:x\">link</a> <iframe src=x>ramka</iframe>ok",
+   "out": "link ok"
+  },
+  {
+   "in": "<div style=\"font-size:1e9px;color:expression(alert(1));font-weight:bold\">x</div>",
+   "out": "<div style=\"font-weight: bold\">x</div>"
+  },
+  {
+   "in": "<span style=\"font-family:Arial&quot;;}body{x:y\">f</span>",
+   "out": "<span style=\"font-family: Arial'\">f</span>"
+  },
+  {
+   "in": "Zażółć gęślą jaźń &#321;&#x142;&#0;&#xD800;",
+   "out": "Zażółć gęślą jaźń &#321;&#x142;&#0;&#xD800;"
+  },
+  {
+   "in": "<br><br>dwa<br>",
+   "out": "<br><br>dwa<br>"
+  },
+  {
+   "in": "<DIV STYLE=\"COLOR:RED\"><SPAN>Wielkie litery</SPAN></DIV>",
+   "out": "<div style=\"color: red\"><span>Wielkie litery</span></div>"
+  },
+  {
+   "in": "<span style=\"background-color:#3b82f6;display:inline-block;padding:0 4px;border-radius:2px\">hl</span>",
+   "out": "<span style=\"background-color: #3b82f6; display: inline-block; padding: 0 4px; border-radius: 2px\">hl</span>"
+  },
+  {
+   "in": "<span style=\"font-family: &quot;Roboto Condensed&quot;; font-size: 24px\">encje w atrybucie</span>",
+   "out": "<span style=\"font-family: 'Roboto Condensed'; font-size: 24px\">encje w atrybucie</span>"
+  },
+  {
+   "in": "<span style=\"background-color:#f00;padding:2px  8px 4px;border-radius:50%;display:inline-block\">pad</span><span style=\"padding:1vw;border-radius:5pt\">zle</span>",
+   "out": "<span style=\"background-color: #f00; padding: 2px 8px 4px; border-radius: 50%; display: inline-block\">pad</span><span>zle</span>"
+  },
+  {
+   "in": "<span style=\"background-color: rgb(59, 130, 246); display: inline-block; padding: 0 8px; border-radius: 4px\">hl2</span>",
+   "out": "<span style=\"background-color: rgb(59, 130, 246); display: inline-block; padding: 0 8px; border-radius: 4px\">hl2</span>"
+  },
+  {
+   "in": "<div style=\"line-height: 1.1\">Jan</div><div style=\"text-align: center; line-height: 1.4\">Ekspert</div><p style=\"line-height:0.9\">p</p>",
+   "out": "<div style=\"line-height: 1.1\">Jan</div><div style=\"text-align: center; line-height: 1.4\">Ekspert</div><div style=\"line-height: 0.9\">p</div>"
+  },
+  {
+   "in": "<div style=\"line-height: 1.1px\">px</div><div style=\"line-height: 9\">za duża</div><div style=\"line-height: 1.126\">zaokr</div>",
+   "out": "<div style=\"line-height: 1.1px\">px</div><div style=\"line-height: 9\">za duża</div><div style=\"line-height: 1.126\">zaokr</div>"
+  },
+  {
+   "in": "<div>a<span style=\"opacity: 0.5; transform: translate(0.1em, -0.2em) scale(1.5) rotate(15deg); display: inline-block\">B</span>c</div>",
+   "out": "<div>a<span style=\"opacity: 0.5; transform: translate(0.1em, -0.2em) scale(1.5) rotate(15deg); display: inline-block\">B</span>c</div>"
+  },
+  {
+   "in": "<span style=\"opacity:0.333;transform: rotate(-400deg) scale(9) translate(3em, 0em)\">x</span><span style=\"opacity: 1; transform: scale(1)\">bez</span>",
+   "out": "<span style=\"opacity: 0.333; transform: rotate(-400deg) scale(9) translate(3em, 0em)\">x</span><span style=\"opacity: 1; transform: scale(1)\">bez</span>"
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.8) rotate(5deg); display:inline-block\">sq</span><span style=\"transform: translate(1px, 2px) skew(10deg)\">zle</span><span style=\"opacity:2\">o</span>",
+   "out": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.8) rotate(5deg); display: inline-block\">sq</span><span>zle</span><span>o</span>"
+  }
+ ],
+ "sanitizeKeepP": [
+  {
+   "in": "Zwykły tekst",
+   "out": "Zwykły tekst"
+  },
+  {
+   "in": "<p>Jan <b>Kowalski</b></p><p><i>Prezydent</i> RP</p>",
+   "out": "<p>Jan <strong>Kowalski</strong></p><p><em>Prezydent</em> RP</p>"
+  },
+  {
+   "in": "<script>alert(1)</script><div onclick=\"x()\">A</div>",
+   "out": "<div>A</div>"
+  }
+ ],
+ "plain": [
+  {
+   "in": "Zwykły tekst",
+   "out": "Zwykły tekst"
+  },
+  {
+   "in": "<p>Jan <b>Kowalski</b></p><p><i>Prezydent</i> RP</p>",
+   "out": "Jan Kowalski\nPrezydent RP"
+  },
+  {
+   "in": "<script>alert(1)</script><div onclick=\"x()\">A</div>",
+   "out": "A"
+  },
+  {
+   "in": "<span style=\"color:#FF0000; background:url(javascript:x); font-size: 30px; position:absolute\">x</span>",
+   "out": "x"
+  },
+  {
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "out": "Tytuł\ndruga"
+  },
+  {
+   "in": "A &amp; B &lt; C &nbsp;&copy;",
+   "out": "A & B < C  ©"
+  },
+  {
+   "in": "a < b i c > d",
+   "out": "a < b i c > d"
+  },
+  {
+   "in": "<font color=\"red\">stare</font><strike>skreślone</strike>",
+   "out": "stareskreślone"
+  },
+  {
+   "in": "<div><div>zagnieżdżone</div></div>",
+   "out": "zagnieżdżone"
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.7); display: inline-block; transform-origin: left center\"><strong>ŚCIŚNIĘTE</strong></span>",
+   "out": "ŚCIŚNIĘTE"
+  },
+  {
+   "in": "<!-- komentarz --><u>pod</u><s>kreślone</s>",
+   "out": "podkreślone"
+  },
+  {
+   "in": "<p>niedomknięte <b>pogrubione",
+   "out": "niedomknięte pogrubione"
+  },
+  {
+   "in": "</div></span>zbędne zamknięcia",
+   "out": "zbędne zamknięcia"
+  },
+  {
+   "in": "<img src=x onerror=alert(1)>tekst",
+   "out": "tekst"
+  },
+  {
+   "in": "<span style=\"color: rgb(255,0, 0);letter-spacing:0.05em;text-transform:uppercase\">K</span>",
+   "out": "K"
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": "<div>A</div>\n  <div>B &copy; &amp;lt;</div>",
+   "out": "A\nB © &lt;"
+  },
+  {
+   "in": "<style>p{color:red}</style><p>po stylu</p>",
+   "out": "po stylu"
+  },
+  {
+   "in": "<a href=\"javascript:x\">link</a> <iframe src=x>ramka</iframe>ok",
+   "out": "link ok"
+  },
+  {
+   "in": "<div style=\"font-size:1e9px;color:expression(alert(1));font-weight:bold\">x</div>",
+   "out": "x"
+  },
+  {
+   "in": "<span style=\"font-family:Arial&quot;;}body{x:y\">f</span>",
+   "out": "f"
+  },
+  {
+   "in": "Zażółć gęślą jaźń &#321;&#x142;&#0;&#xD800;",
+   "out": "Zażółć gęślą jaźń Łł"
+  },
+  {
+   "in": "<br><br>dwa<br>",
+   "out": "\n\ndwa"
+  },
+  {
+   "in": "<DIV STYLE=\"COLOR:RED\"><SPAN>Wielkie litery</SPAN></DIV>",
+   "out": "Wielkie litery"
+  },
+  {
+   "in": "<span style=\"background-color:#3b82f6;display:inline-block;padding:0 4px;border-radius:2px\">hl</span>",
+   "out": "hl"
+  },
+  {
+   "in": "<span style=\"font-family: &quot;Roboto Condensed&quot;; font-size: 24px\">encje w atrybucie</span>",
+   "out": "encje w atrybucie"
+  },
+  {
+   "in": "<span style=\"background-color:#f00;padding:2px  8px 4px;border-radius:50%;display:inline-block\">pad</span><span style=\"padding:1vw;border-radius:5pt\">zle</span>",
+   "out": "padzle"
+  },
+  {
+   "in": "<span style=\"background-color: rgb(59, 130, 246); display: inline-block; padding: 0 8px; border-radius: 4px\">hl2</span>",
+   "out": "hl2"
+  },
+  {
+   "in": "<div style=\"line-height: 1.1\">Jan</div><div style=\"text-align: center; line-height: 1.4\">Ekspert</div><p style=\"line-height:0.9\">p</p>",
+   "out": "Jan\nEkspert\np"
+  },
+  {
+   "in": "<div style=\"line-height: 1.1px\">px</div><div style=\"line-height: 9\">za duża</div><div style=\"line-height: 1.126\">zaokr</div>",
+   "out": "px\nza duża\nzaokr"
+  },
+  {
+   "in": "<div>a<span style=\"opacity: 0.5; transform: translate(0.1em, -0.2em) scale(1.5) rotate(15deg); display: inline-block\">B</span>c</div>",
+   "out": "aBc"
+  },
+  {
+   "in": "<span style=\"opacity:0.333;transform: rotate(-400deg) scale(9) translate(3em, 0em)\">x</span><span style=\"opacity: 1; transform: scale(1)\">bez</span>",
+   "out": "xbez"
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.8) rotate(5deg); display:inline-block\">sq</span><span style=\"transform: translate(1px, 2px) skew(10deg)\">zle</span><span style=\"opacity:2\">o</span>",
+   "out": "sqzleo"
+  }
+ ],
+ "lines": [
+  {
+   "in": "Zwykły tekst",
+   "out": [
+    "Zwykły tekst"
+   ]
+  },
+  {
+   "in": "<p>Jan <b>Kowalski</b></p><p><i>Prezydent</i> RP</p>",
+   "out": [
+    "Jan Kowalski",
+    "Prezydent RP"
+   ]
+  },
+  {
+   "in": "<script>alert(1)</script><div onclick=\"x()\">A</div>",
+   "out": [
+    "A"
+   ]
+  },
+  {
+   "in": "<span style=\"color:#FF0000; background:url(javascript:x); font-size: 30px; position:absolute\">x</span>",
+   "out": [
+    "x"
+   ]
+  },
+  {
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "out": [
+    "Tytuł",
+    "druga"
+   ]
+  },
+  {
+   "in": "A &amp; B &lt; C &nbsp;&copy;",
+   "out": [
+    "A & B < C  ©"
+   ]
+  },
+  {
+   "in": "a < b i c > d",
+   "out": [
+    "a < b i c > d"
+   ]
+  },
+  {
+   "in": "<font color=\"red\">stare</font><strike>skreślone</strike>",
+   "out": [
+    "stareskreślone"
+   ]
+  },
+  {
+   "in": "<div><div>zagnieżdżone</div></div>",
+   "out": [
+    "zagnieżdżone"
+   ]
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.7); display: inline-block; transform-origin: left center\"><strong>ŚCIŚNIĘTE</strong></span>",
+   "out": [
+    "ŚCIŚNIĘTE"
+   ]
+  },
+  {
+   "in": "<!-- komentarz --><u>pod</u><s>kreślone</s>",
+   "out": [
+    "podkreślone"
+   ]
+  },
+  {
+   "in": "<p>niedomknięte <b>pogrubione",
+   "out": [
+    "niedomknięte pogrubione"
+   ]
+  },
+  {
+   "in": "</div></span>zbędne zamknięcia",
+   "out": [
+    "zbędne zamknięcia"
+   ]
+  },
+  {
+   "in": "<img src=x onerror=alert(1)>tekst",
+   "out": [
+    "tekst"
+   ]
+  },
+  {
+   "in": "<span style=\"color: rgb(255,0, 0);letter-spacing:0.05em;text-transform:uppercase\">K</span>",
+   "out": [
+    "K"
+   ]
+  },
+  {
+   "in": "",
+   "out": []
+  },
+  {
+   "in": "<div>A</div>\n  <div>B &copy; &amp;lt;</div>",
+   "out": [
+    "A",
+    "B © &lt;"
+   ]
+  },
+  {
+   "in": "<style>p{color:red}</style><p>po stylu</p>",
+   "out": [
+    "po stylu"
+   ]
+  },
+  {
+   "in": "<a href=\"javascript:x\">link</a> <iframe src=x>ramka</iframe>ok",
+   "out": [
+    "link ok"
+   ]
+  },
+  {
+   "in": "<div style=\"font-size:1e9px;color:expression(alert(1));font-weight:bold\">x</div>",
+   "out": [
+    "x"
+   ]
+  },
+  {
+   "in": "<span style=\"font-family:Arial&quot;;}body{x:y\">f</span>",
+   "out": [
+    "f"
+   ]
+  },
+  {
+   "in": "Zażółć gęślą jaźń &#321;&#x142;&#0;&#xD800;",
+   "out": [
+    "Zażółć gęślą jaźń Łł"
+   ]
+  },
+  {
+   "in": "<br><br>dwa<br>",
+   "out": [
+    "",
+    "",
+    "dwa"
+   ]
+  },
+  {
+   "in": "<DIV STYLE=\"COLOR:RED\"><SPAN>Wielkie litery</SPAN></DIV>",
+   "out": [
+    "Wielkie litery"
+   ]
+  },
+  {
+   "in": "<span style=\"background-color:#3b82f6;display:inline-block;padding:0 4px;border-radius:2px\">hl</span>",
+   "out": [
+    "hl"
+   ]
+  },
+  {
+   "in": "<span style=\"font-family: &quot;Roboto Condensed&quot;; font-size: 24px\">encje w atrybucie</span>",
+   "out": [
+    "encje w atrybucie"
+   ]
+  },
+  {
+   "in": "<span style=\"background-color:#f00;padding:2px  8px 4px;border-radius:50%;display:inline-block\">pad</span><span style=\"padding:1vw;border-radius:5pt\">zle</span>",
+   "out": [
+    "padzle"
+   ]
+  },
+  {
+   "in": "<span style=\"background-color: rgb(59, 130, 246); display: inline-block; padding: 0 8px; border-radius: 4px\">hl2</span>",
+   "out": [
+    "hl2"
+   ]
+  },
+  {
+   "in": "<div style=\"line-height: 1.1\">Jan</div><div style=\"text-align: center; line-height: 1.4\">Ekspert</div><p style=\"line-height:0.9\">p</p>",
+   "out": [
+    "Jan",
+    "Ekspert",
+    "p"
+   ]
+  },
+  {
+   "in": "<div style=\"line-height: 1.1px\">px</div><div style=\"line-height: 9\">za duża</div><div style=\"line-height: 1.126\">zaokr</div>",
+   "out": [
+    "px",
+    "za duża",
+    "zaokr"
+   ]
+  },
+  {
+   "in": "<div>a<span style=\"opacity: 0.5; transform: translate(0.1em, -0.2em) scale(1.5) rotate(15deg); display: inline-block\">B</span>c</div>",
+   "out": [
+    "aBc"
+   ]
+  },
+  {
+   "in": "<span style=\"opacity:0.333;transform: rotate(-400deg) scale(9) translate(3em, 0em)\">x</span><span style=\"opacity: 1; transform: scale(1)\">bez</span>",
+   "out": [
+    "xbez"
+   ]
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.8) rotate(5deg); display:inline-block\">sq</span><span style=\"transform: translate(1px, 2px) skew(10deg)\">zle</span><span style=\"opacity:2\">o</span>",
+   "out": [
+    "sqzleo"
+   ]
+  }
+ ],
+ "rich": [
+  {
+   "in": "Zwykły tekst",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Zwykły tekst"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<p>Jan <b>Kowalski</b></p><p><i>Prezydent</i> RP</p>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Jan "
+       },
+       {
+        "t": "Kowalski",
+        "m": {
+         "weight": 700
+        }
+       }
+      ]
+     },
+     {
+      "runs": [
+       {
+        "t": "Prezydent",
+        "m": {
+         "italic": true
+        }
+       },
+       {
+        "t": " RP"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<script>alert(1)</script><div onclick=\"x()\">A</div>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "A"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"color:#FF0000; background:url(javascript:x); font-size: 30px; position:absolute\">x</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "x",
+        "m": {
+         "color": "#ff0000",
+         "size": 30
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Tytuł",
+        "m": {
+         "family": "Bahnschrift",
+         "weight": 700
+        }
+       },
+       {
+        "br": true
+       },
+       {
+        "t": "druga"
+       }
+      ],
+      "align": "center"
+     }
+    ]
+   }
+  },
+  {
+   "in": "A &amp; B &lt; C &nbsp;&copy;",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "A & B < C  ©"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "a < b i c > d",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "a < b i c > d"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<font color=\"red\">stare</font><strike>skreślone</strike>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "stare"
+       },
+       {
+        "t": "skreślone",
+        "m": {
+         "strike": true
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<div><div>zagnieżdżone</div></div>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "zagnieżdżone"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.7); display: inline-block; transform-origin: left center\"><strong>ŚCIŚNIĘTE</strong></span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "ŚCIŚNIĘTE",
+        "m": {
+         "squash": 0.7,
+         "weight": 700
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<!-- komentarz --><u>pod</u><s>kreślone</s>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "pod",
+        "m": {
+         "underline": true
+        }
+       },
+       {
+        "t": "kreślone",
+        "m": {
+         "strike": true
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<p>niedomknięte <b>pogrubione",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "niedomknięte "
+       },
+       {
+        "t": "pogrubione",
+        "m": {
+         "weight": 700
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "</div></span>zbędne zamknięcia",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "zbędne zamknięcia"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<img src=x onerror=alert(1)>tekst",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "tekst"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"color: rgb(255,0, 0);letter-spacing:0.05em;text-transform:uppercase\">K</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "K",
+        "m": {
+         "color": "rgb(255, 0, 0)",
+         "tracking": 0.05,
+         "transform": "uppercase"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "",
+   "out": {
+    "v": 1,
+    "blocks": []
+   }
+  },
+  {
+   "in": "<div>A</div>\n  <div>B &copy; &amp;lt;</div>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "A"
+       }
+      ]
+     },
+     {
+      "runs": [
+       {
+        "t": "B © &lt;"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<style>p{color:red}</style><p>po stylu</p>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "po stylu"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<a href=\"javascript:x\">link</a> <iframe src=x>ramka</iframe>ok",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "link ok"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<div style=\"font-size:1e9px;color:expression(alert(1));font-weight:bold\">x</div>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "x",
+        "m": {
+         "weight": 700
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"font-family:Arial&quot;;}body{x:y\">f</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "f",
+        "m": {
+         "family": "Arial"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "Zażółć gęślą jaźń &#321;&#x142;&#0;&#xD800;",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Zażółć gęślą jaźń Łł"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<br><br>dwa<br>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "br": true
+       },
+       {
+        "br": true
+       },
+       {
+        "t": "dwa"
+       },
+       {
+        "br": true
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<DIV STYLE=\"COLOR:RED\"><SPAN>Wielkie litery</SPAN></DIV>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Wielkie litery",
+        "m": {
+         "color": "red"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"background-color:#3b82f6;display:inline-block;padding:0 4px;border-radius:2px\">hl</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "hl",
+        "m": {
+         "bg": "#3b82f6",
+         "padding": "0 4px",
+         "radius": "2px"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"font-family: &quot;Roboto Condensed&quot;; font-size: 24px\">encje w atrybucie</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "encje w atrybucie",
+        "m": {
+         "family": "Roboto Condensed",
+         "size": 24
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"background-color:#f00;padding:2px  8px 4px;border-radius:50%;display:inline-block\">pad</span><span style=\"padding:1vw;border-radius:5pt\">zle</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "pad",
+        "m": {
+         "bg": "#f00",
+         "padding": "2px 8px 4px",
+         "radius": "50%"
+        }
+       },
+       {
+        "t": "zle"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"background-color: rgb(59, 130, 246); display: inline-block; padding: 0 8px; border-radius: 4px\">hl2</span>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "hl2",
+        "m": {
+         "bg": "rgb(59, 130, 246)",
+         "padding": "0 8px",
+         "radius": "4px"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<div style=\"line-height: 1.1\">Jan</div><div style=\"text-align: center; line-height: 1.4\">Ekspert</div><p style=\"line-height:0.9\">p</p>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Jan"
+       }
+      ],
+      "lh": 1.1
+     },
+     {
+      "runs": [
+       {
+        "t": "Ekspert"
+       }
+      ],
+      "align": "center",
+      "lh": 1.4
+     },
+     {
+      "runs": [
+       {
+        "t": "p"
+       }
+      ],
+      "lh": 0.9
+     }
+    ]
+   }
+  },
+  {
+   "in": "<div style=\"line-height: 1.1px\">px</div><div style=\"line-height: 9\">za duża</div><div style=\"line-height: 1.126\">zaokr</div>",
+   "out": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "px"
+       }
+      ]
+     },
+     {
+      "runs": [
+       {
+        "t": "za duża"
+       }
+      ]
+     },
+     {
+      "runs": [
+       {
+        "t": "zaokr"
+       }
+      ],
+      "lh": 1.13
+     }
+    ]
+   }
+  },
+  {
+   "in": "<div>a<span style=\"opacity: 0.5; transform: translate(0.1em, -0.2em) scale(1.5) rotate(15deg); display: inline-block\">B</span>c</div>",
+   "out": {
+    "v": 1.1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "a"
+       },
+       {
+        "t": "B",
+        "m": {
+         "dx": 0.1,
+         "dy": -0.2,
+         "opacity": 0.5,
+         "rotate": 15,
+         "scale": 1.5
+        }
+       },
+       {
+        "t": "c"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span style=\"opacity:0.333;transform: rotate(-400deg) scale(9) translate(3em, 0em)\">x</span><span style=\"opacity: 1; transform: scale(1)\">bez</span>",
+   "out": {
+    "v": 1.1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "x",
+        "m": {
+         "dx": 2,
+         "opacity": 0.33,
+         "rotate": -360,
+         "scale": 4
+        }
+       },
+       {
+        "t": "bez"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "in": "<span class=\"cg-text-squash\" style=\"transform: scaleX(0.8) rotate(5deg); display:inline-block\">sq</span><span style=\"transform: translate(1px, 2px) skew(10deg)\">zle</span><span style=\"opacity:2\">o</span>",
+   "out": {
+    "v": 1.1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "sq",
+        "m": {
+         "rotate": 5,
+         "squash": 0.8
+        }
+       },
+       {
+        "t": "zleo"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "html": [
+  {
+   "rich": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "Jan "
+       },
+       {
+        "t": "Kowalski",
+        "m": {
+         "weight": 700,
+         "color": "#ffcc00",
+         "size": 48
+        }
+       }
+      ]
+     },
+     {
+      "align": "center",
+      "runs": [
+       {
+        "t": "Prezydent",
+        "m": {
+         "italic": true,
+         "family": "Roboto Condensed",
+         "tracking": 0.05
+        }
+       },
+       {
+        "br": true
+       },
+       {
+        "t": "RP <&>"
+       }
+      ]
+     }
+    ]
+   },
+   "out": "<div>Jan <span style=\"color: #ffcc00; font-size: 48px\"><strong>Kowalski</strong></span></div><div style=\"text-align: center\"><span style=\"font-family: 'Roboto Condensed'; letter-spacing: 0.05em\"><em>Prezydent</em></span><br>RP &lt;&amp;&gt;</div>"
+  },
+  {
+   "rich": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "PLAKIETKA",
+        "m": {
+         "bg": "#3b82f6",
+         "padding": "0 8px",
+         "radius": "4px"
+        }
+       },
+       {
+        "t": "zły",
+        "m": {
+         "padding": "url(x)",
+         "radius": "1vw"
+        }
+       },
+       {
+        "t": "ściśnięta",
+        "m": {
+         "squash": 0.8,
+         "padding": "0 4px"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "out": "<div><span style=\"background-color: #3b82f6; padding: 0 8px; border-radius: 4px; display: inline-block\">PLAKIETKA</span>zły<span class=\"cg-text-squash\" style=\"padding: 0 4px; transform: scaleX(0.8); display: inline-block; transform-origin: left center\">ściśnięta</span></div>"
+  },
+  {
+   "rich": {
+    "v": 1,
+    "blocks": [
+     {
+      "lh": 1.1,
+      "runs": [
+       {
+        "t": "Jan"
+       }
+      ]
+     },
+     {
+      "align": "right",
+      "lh": 1.4,
+      "runs": [
+       {
+        "t": "Ekspert"
+       }
+      ]
+     },
+     {
+      "lh": 9,
+      "runs": [
+       {
+        "t": "poza zakresem"
+       }
+      ]
+     }
+    ]
+   },
+   "out": "<div style=\"line-height: 1.1\">Jan</div><div style=\"text-align: right; line-height: 1.4\">Ekspert</div><div>poza zakresem</div>"
+  },
+  {
+   "rich": {
+    "v": 1.1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "V",
+        "m": {
+         "opacity": 0.4,
+         "dx": 0.05,
+         "dy": -0.1,
+         "scale": 1.25,
+         "rotate": -12.5
+        }
+       },
+       {
+        "t": "iz",
+        "m": {
+         "rotate": 90,
+         "squash": 0.9
+        }
+       },
+       {
+        "t": "alfa",
+        "m": {
+         "opacity": 0.25
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "out": "<div><span style=\"opacity: 0.4; transform: translate(0.05em, -0.1em) scale(1.25) rotate(-12.5deg); display: inline-block; transform-origin: center\">V</span><span class=\"cg-text-squash\" style=\"transform: rotate(90deg) scaleX(0.9); display: inline-block; transform-origin: left center\">iz</span><span style=\"opacity: 0.25\">alfa</span></div>"
+  },
+  {
+   "rich": {
+    "v": 1,
+    "blocks": []
+   },
+   "out": ""
+  },
+  {
+   "rich": {
+    "v": 1,
+    "blocks": [
+     {
+      "runs": [
+       {
+        "t": "ŚCIŚNIĘTE",
+        "m": {
+         "squash": 0.7,
+         "underline": true,
+         "strike": true,
+         "bg": "#112233",
+         "transform": "uppercase",
+         "weight": 300
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "out": "<div><span class=\"cg-text-squash\" style=\"background-color: #112233; font-weight: 300; text-transform: uppercase; transform: scaleX(0.7); display: inline-block; transform-origin: left center\"><s><u>ŚCIŚNIĘTE</u></s></span></div>"
+  }
+ ],
+ "typo": [
+  {
+   "in": "Jan i Maria w domu z psem",
+   "out": "Jan i Maria w domu z psem"
+  },
+  {
+   "in": "\"Cytat\" i \"drugi\" - tak...",
+   "out": "„Cytat” i „drugi” – tak…"
+  },
+  {
+   "in": "<div>w <b>Warszawie</b> a nie</div><div>\"x\"</div>",
+   "out": "<div>w <strong>Warszawie</strong> a nie</div><div>„x”</div>"
+  },
+  {
+   "in": "o 5 a 6",
+   "out": "o 5 a 6"
+  },
+  {
+   "in": "Ala i Ola",
+   "out": "Ala i Ola"
+  },
+  {
+   "in": "(w ogrodzie) \"a\" u mnie",
+   "out": "(w ogrodzie) „a” u mnie"
+  },
+  {
+   "in": "<span style=\"color:red\">w</span> <em>domu</em> i \"tam\"",
+   "out": "<span style=\"color: red\">w</span> <em>domu</em> i „tam”"
+  },
+  {
+   "in": "U Ani A teraz",
+   "out": "U Ani A teraz"
+  },
+  {
+   "in": "Zażółć i gęślą w jaźń",
+   "out": "Zażółć i gęślą w jaźń"
+  },
+  {
+   "in": "\"A\" i \"B\" i \"C\"",
+   "out": "„A” i „B” i „C”"
+  },
+  {
+   "in": "a",
+   "out": "a"
+  },
+  {
+   "in": "i ",
+   "out": "i "
+  }
+ ]
+}

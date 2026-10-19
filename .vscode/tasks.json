@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "VizRS: build debug",
+      "type": "shell",
+      "command": "cargo build",
+      "options": { "cwd": "${workspaceFolder}/source" },
+      "group": "build",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "VizRS: build release",
+      "type": "shell",
+      "command": "cargo build --release",
+      "options": { "cwd": "${workspaceFolder}/source" },
+      "group": { "kind": "build", "isDefault": true },
+      "dependsOn": "VizRS: zatrzymaj serwer",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "VizRS: zainstaluj binarkę (bin/linux-x86_64)",
+      "type": "shell",
+      // podmiana przez mv – działa także, gdy stara binarka jest uruchomiona
+      "command": "cp source/target/release/vizrs bin/linux-x86_64/vizrs.new && mv bin/linux-x86_64/vizrs.new bin/linux-x86_64/vizrs",
+      "options": { "cwd": "${workspaceFolder}" },
+      "dependsOn": "VizRS: build release",
+      "problemMatcher": []
+    },
+    {
+      "label": "VizRS: testy",
+      "type": "shell",
+      "command": "cargo test",
+      "options": { "cwd": "${workspaceFolder}/source" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "VizRS: zatrzymaj serwer",
+      "type": "shell",
+      "command": "pkill -x vizrs; for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -x vizrs >/dev/null || exit 0; sleep 0.3; done; pkill -9 -x vizrs; true",
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": []
+    },
+    {
+      "label": "VizRS: uruchom serwer (bin)",
+      "type": "shell",
+      "command": "./bin/linux-x86_64/vizrs --data ./vizrs-data",
+      "options": { "cwd": "${workspaceFolder}" },
+      "dependsOn": "VizRS: zatrzymaj serwer",
+      "isBackground": true,
+      "presentation": { "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "VizRS: restart serwera (przebuduj + uruchom)",
+      "dependsOrder": "sequence",
+      "dependsOn": ["VizRS: zainstaluj binarkę (bin/linux-x86_64)", "VizRS: uruchom serwer (bin)"],
+      "problemMatcher": []
+    }
+  ]
+}

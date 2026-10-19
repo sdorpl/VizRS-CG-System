@@ -1,0 +1,1278 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>VizRS Artist</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/ui.css">
+<style>
+  body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  #main { flex: 1; display: grid; grid-template-columns: 270px 1fr 350px; grid-template-rows: 1fr 260px; gap: 6px; padding: 6px; min-height: 0; }
+  #treeP { grid-area: 1 / 1 / 2 / 2; }
+  #canvasP { grid-area: 1 / 2 / 2 / 3; }
+  #propsP { grid-area: 1 / 3 / 3 / 4; }
+  #timeP { grid-area: 2 / 1 / 3 / 3; }
+  #box { position: relative; flex: 1; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; outline: 1px solid #3a3f48; }
+  #stage .vz-node { cursor: move; }
+  #sel { position: absolute; border: 1px solid var(--acc); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.6); display: none; z-index: 5; }
+  #sel .h { position: absolute; right: -6px; bottom: -6px; width: 11px; height: 11px; background: var(--acc); border: 1px solid #000; pointer-events: auto; cursor: nwse-resize; }
+  #sel .lbl { position: absolute; left: -1px; top: -18px; font-size: 10px; background: var(--acc); color: #000; padding: 1px 4px; white-space: nowrap; }
+  #safe { position: absolute; pointer-events: none; display: none; z-index: 4; }
+  #safe div { position: absolute; border: 1px dashed rgba(255,255,255,.3); }
+  #info { position: absolute; left: 8px; bottom: 6px; font-size: 11px; color: var(--dim); z-index: 6; pointer-events: none; }
+  #tree .item { padding-top: 4px; padding-bottom: 4px; }
+  #tree .ic { width: 16px; text-align: center; color: var(--acc); }
+  #tree .item.hid span:not(.eye) { opacity: .4; }
+  #tree .eye { opacity: .5; font-size: 11px; padding: 0 3px; }
+  #tree .eye:hover { opacity: 1; }
+  .pill.fld { background: #1b3157; border-color: var(--blue); color: #a9c8ff; }
+  #props .phead { display: flex; gap: 6px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); }
+  #props .phead .ic { color: var(--acc); font-size: 16px; }
+  .pgroup { padding: 8px 8px 3px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--acc); opacity: .8; }
+  .pr { display: grid; grid-template-columns: 100px 1fr 24px 24px; gap: 4px; align-items: center; padding: 2px 8px; }
+  .pr label { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pr label[data-scrub]:not([data-scrub=""]) { cursor: ew-resize; }
+  .pr .pin input:not([type=checkbox]):not([type=color]), .pr .pin select, .pr .pin textarea { width: 100%; }
+  .kbtn { color: #555b66; font-size: 11px; }
+  .kbtn.has { color: var(--acc); }
+  .kbtn.on { background: var(--acc); color: #1a1100; border-color: var(--acc); }
+  .fbtn { color: #555b66; font-size: 11px; }
+  .fbtn.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .sp { display: grid; grid-template-columns: 110px 1fr; gap: 6px; align-items: center; padding: 3px 10px; }
+  .sp input, .sp select { width: 100%; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { background: #3a1716; border: 1px solid var(--red); color: #ffb0ad; border-radius: 10px; padding: 0 4px 0 8px; font-size: 12px; display: inline-flex; gap: 4px; align-items: center; }
+  .chip button { padding: 0 4px; border: none; background: none; color: inherit; }
+  .help { padding: 10px; color: var(--dim); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); margin-top: 8px; }
+  .ftable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .ftable td { padding: 3px 6px; border-bottom: 1px solid #23262c; }
+  .ftable input { width: 100%; }
+  .rules { display: grid; grid-template-columns: 150px 1fr; gap: 4px 8px; padding: 6px 4px 8px; background: #17191d; border-radius: 4px; align-items: center; }
+  .rules .rchks { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .rules .rchk { display: flex; align-items: center; gap: 4px; color: var(--text); }
+  .rules input[type=checkbox] { width: auto; }
+  /* timeline */
+  #tl { position: relative; overflow: auto; flex: 1; user-select: none; }
+  .tl-in { position: relative; min-height: 100%; }
+  .tl-row { display: flex; height: 22px; border-bottom: 1px solid #22252a; }
+  .tl-row.sel { background: #1c2533; }
+  .tl-row.ruler { position: sticky; top: 0; z-index: 3; background: #1d2024; height: 24px; border-bottom: 1px solid var(--line); }
+  .tl-lbl { position: sticky; left: 0; z-index: 2; width: 190px; min-width: 190px; padding: 0 8px; display: flex; align-items: center; gap: 4px; background: var(--panel); border-right: 1px solid var(--line); font-size: 12px; overflow: hidden; white-space: nowrap; cursor: pointer; }
+  .tl-row.sel .tl-lbl { background: #1c2533; }
+  .tl-row.ruler .tl-lbl { background: #1d2024; cursor: default; z-index: 4; }
+  .tl-area { position: relative; flex: none; cursor: text; }
+  .tick { position: absolute; top: 14px; bottom: 0; border-left: 1px solid #3a3f48; font-size: 10px; color: var(--dim); }
+  .tick.maj { top: 4px; border-color: #59606d; padding-left: 3px; }
+  .mkm { position: absolute; top: 12px; transform: translateX(-4px); color: #5fd4a0; font-size: 9px; cursor: pointer; line-height: 1; white-space: nowrap; z-index: 2; }
+  .mkm span { font-size: 10px; margin-left: 2px; color: #9bdcc0; }
+  #band { position: absolute; border: 1px dashed var(--acc); background: rgba(240,160,32,.12); z-index: 6; pointer-events: none; }
+  #tree .item.dropinto { outline: 2px solid var(--acc); outline-offset: -2px; }
+  #tree .item.dropafter { box-shadow: 0 2px 0 var(--acc); }
+  .stopm { position: absolute; top: 2px; transform: translateX(-6px); color: var(--red); font-size: 12px; cursor: ew-resize; line-height: 1; }
+  .endm { position: absolute; top: 0; bottom: 0; border-left: 2px solid #59606d; }
+  .stopline { position: absolute; top: 24px; bottom: 0; border-left: 1px dashed rgba(229,50,45,.55); pointer-events: none; z-index: 1; }
+  .endline { position: absolute; top: 24px; bottom: 0; border-left: 1px solid #59606d; pointer-events: none; }
+  #playhead { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--acc); pointer-events: none; z-index: 5; }
+  .kf { position: absolute; top: 5px; width: 11px; height: 11px; margin-left: -5px; background: #c9ced8; transform: rotate(45deg); cursor: ew-resize; border: 1px solid #000; z-index: 2; }
+  .kf.sel { background: var(--acc); }
+  .seg { position: absolute; top: 9px; height: 3px; background: #4b5a74; border-radius: 2px; }
+  .seg.hold { background: #2f343c; }
+  #keyed { display: flex; gap: 6px; align-items: center; }
+  #keyed input { width: 80px; }
+  #tc { width: 76px; font-family: var(--mono); text-align: right; }
+  .sep { width: 1px; height: 20px; background: var(--line); margin: 0 2px; }
+  .dirty::after { content: ' ●'; color: var(--acc); }
+  .empty { padding: 30px; text-align: center; color: var(--dim); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Viz<b>RS</b> Artist</span>
+  <nav><a href="/artist" class="on">Artist</a><a href="/trio">Trio</a><a href="/output?checker=1&status=1" target="_blank">Wyjście ↗</a></nav>
+  <span class="sep"></span>
+  <label>Scena</label>
+  <select id="sceneSel" style="min-width:180px"></select>
+  <button id="bNew" title="Nowa scena">＋ Nowa</button>
+  <button id="bDup" title="Duplikuj scenę">⧉</button>
+  <button id="bDel" class="danger" title="Usuń scenę">🗑</button>
+  <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
+  <button id="bImp" title="Import sceny z pliku JSON">⇧ Import</button>
+    <button id="bImpBtb" title="Importuj element z BTB CG (.json eksport v3 lub .cgpack) jako scenę + stronę">⇧ BTB</button>
+    <button id="bExpBtb" title="Eksportuj bieżącą scenę jako element BTB CG (.json v3)">⇩ BTB</button>
+  <span class="grow"></span>
+  <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
+  <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
+  <button id="bSafe" title="Pokaż obszary bezpieczne">▢ Safe</button>
+  <button id="bSave" class="acc" title="Zapisz (Ctrl+S)">Zapisz</button>
+</div>
+
+<div id="main">
+  <section class="panel" id="treeP">
+    <header>
+      <h3>Drzewo sceny</h3>
+      <select id="addSel" title="Dodaj kontener"><option value="">＋ Dodaj…</option></select>
+    </header>
+    <div class="row" style="padding:4px 6px;gap:3px;border-bottom:1px solid var(--line)">
+      <button class="icon" id="tUp" title="W górę (pod spód)">↑</button>
+      <button class="icon" id="tDown" title="W dół (na wierzch)">↓</button>
+      <button class="icon" id="tOut" title="Wyjmij z grupy">⇤</button>
+      <button class="icon" id="tIn" title="Włóż do poprzedniej grupy">⇥</button>
+      <button class="icon" id="tDupN" title="Duplikuj (Ctrl+D)">⧉</button>
+      <span class="grow"></span>
+      <button class="icon danger" id="tDel" title="Usuń (Del)">🗑</button>
+    </div>
+    <div class="scroll list" id="tree"></div>
+    <div class="dim" style="font-size:11px;padding:5px 8px;border-top:1px solid var(--line)">Niżej na liście = wyżej na ekranie</div>
+  </section>
+
+  <section class="panel" id="canvasP">
+    <div id="box" class="checker">
+      <div id="stage"></div>
+      <div id="safe"><div style="inset:5%"></div><div style="inset:10%"></div></div>
+      <div id="sel"><span class="lbl"></span><div class="h"></div></div>
+      <div id="info"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="propsP">
+    <header><h3 id="propsTitle">Właściwości</h3></header>
+    <div class="scroll" id="props"></div>
+  </section>
+
+  <section class="panel" id="timeP">
+    <header>
+      <input id="tc" title="Czas (s)">
+      <button class="icon" id="pHome" title="Na początek (Home)">⏮</button>
+      <button id="pTake" title="Odtwórz IN: 0 → pierwszy stop">▶ Take</button>
+      <button id="pCont" title="Do następnego stopu">⏭ Continue</button>
+      <button id="pOut" title="Od ostatniego stopu do końca">⏏ Out</button>
+      <button class="icon" id="pPlay" title="Odtwórz całość (Spacja)">▶</button>
+      <button class="icon" id="pStop" title="Pauza">⏸</button>
+      <span class="sep"></span>
+      <button id="addStop" title="Dodaj stop point w bieżącym czasie">＋ Stop</button>
+      <label>Długość</label><input id="dur" type="number" step="0.1" min="0.1" style="width:64px">
+      <span class="sep"></span>
+      <span id="keyed"></span>
+      <span class="grow"></span>
+      <button id="markAdd" title="Dodaj marker w bieżącym czasie (M)">◆ Marker</button>
+      <button id="keyCopy" title="Kopiuj zaznaczone klucze (Ctrl+C na osi czasu)">⧉ Kopiuj</button>
+      <button id="keyPaste" title="Wklej klucze w bieżącym czasie na zaznaczony węzeł (Ctrl+V)">⎘ Wklej</button>
+      <label>Zoom</label><input id="zoom" type="range" min="40" max="1200" value="320" style="width:100px"><button id="zoomFit" title="Dopasuj do szerokości osi">↔</button>
+    </header>
+    <div id="tl"></div>
+  </section>
+</div>
+<datalist id="fontlist"></datalist>
+<datalist id="nodelist"></datalist>
+<datalist id="layerlist"><option>back</option><option>main</option><option>front</option></datalist>
+<input type="file" id="fileIn" hidden>
+
+<script type="module">
+import * as BTB from '/btb-io.js';
+import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor } from '/renderer.js';
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+async function api(method, url, body) {
+  const r = await fetch(url, { method, headers: body !== undefined ? { 'Content-Type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+let toastT;
+function toast(msg, err) {
+  let el = $('.toast'); if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.toggle('err', !!err); el.style.opacity = 1;
+  clearTimeout(toastT); toastT = setTimeout(() => (el.style.opacity = 0), 2600);
+}
+
+// ------------------------------------------------------------ stan
+let scenes = [], scene = null, selId = null, t = 0, player = null, dirty = false;
+let undo = [], redo = [], selKey = null, selKeys = [], clipKeys = null, pps = 320, assets = [], scale = 1, lastArea = 'canvas', pendingCP = false;
+const LBL = 190;
+const stage = $('#stage'), box = $('#box');
+
+$('#fontlist').innerHTML = FONTS.map((f) => `<option>${f}</option>`).join('');
+$('#addSel').innerHTML += Object.entries(TYPES).map(([k, v]) => `<option value="${k}">${v.icon} ${v.label}</option>`).join('');
+
+function setDirty(d) { dirty = d; $('#bSave').classList.toggle('dirty', d); }
+function checkpoint() {
+  undo.push(JSON.stringify(scene)); if (undo.length > 150) undo.shift();
+  redo = []; setDirty(true);
+}
+function restore(json) {
+  scene = JSON.parse(json);
+  if (selId && !locate(selId)) selId = null;
+  selKey = null; selKeys = [];
+  player.setScene(scene); player.seek(t);
+  renderAll(); setDirty(true);
+}
+function doUndo() { if (!undo.length) return; redo.push(JSON.stringify(scene)); restore(undo.pop()); }
+function doRedo() { if (!redo.length) return; undo.push(JSON.stringify(scene)); restore(redo.pop()); }
+
+function locate(id, nodes = scene.nodes, parent = null) {
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    if (n.id === id) return { node: n, list: nodes, index: i, parent };
+    if (n.children) { const r = locate(id, n.children, n); if (r) return r; }
+  }
+  return null;
+}
+const selNode = () => (selId ? locate(selId)?.node : null);
+
+// ------------------------------------------------------------ ładowanie
+async function loadAssets() { assets = await api('GET', '/api/assets').catch(() => []); updateFontList(); }
+function updateFontList() {
+  const af = assets.filter((a) => /\.(ttf|otf|woff2?)$/i.test(a.name)).map((a) => a.name);
+  $('#fontlist').innerHTML = [...FONTS, ...af].map((f) => `<option>${esc(f)}</option>`).join('');
+}
+async function load() {
+  const show = await api('GET', '/api/show');
+  scenes = show.scenes;
+  await loadAssets();
+  const want = new URLSearchParams(location.search).get('scene');
+  const s = scenes.find((s) => s.id === want) || scenes[0];
+  if (s) openScene(s); else newScene('Nowa scena');
+}
+function renderSceneSel() {
+  $('#sceneSel').innerHTML = scenes.map((s) => `<option value="${s.id}" ${scene && s.id === scene.id ? 'selected' : ''}>${esc(s.name)}  ·  ${esc(s.layer || 'main')}</option>`).join('');
+}
+let who = '';
+try { who = localStorage.getItem('vizrs.who') || ''; } catch { /* brak localStorage */ }
+if (!who) { who = 'Operator ' + Math.floor(10 + Math.random() * 90); try { localStorage.setItem('vizrs.who', who); } catch { /* ignoruj */ } }
+let lockedScene = null, lockedByOther = null;
+async function lockScene(id) {
+  if (lockedScene && lockedScene !== id) fetch(`/api/unlock/scenes/${encodeURIComponent(lockedScene)}?who=${encodeURIComponent(who)}`, { method: 'POST' }).catch(() => {});
+  lockedScene = id; lockedByOther = null;
+  try { await api('POST', `/api/lock/scenes/${encodeURIComponent(id)}?who=${encodeURIComponent(who)}`); }
+  catch (e) { if (/^konflikt/.test(e.message)) { lockedByOther = e.message.replace(/^konflikt: edytuje /, '').replace(/ \(.*$/, ''); toast(`Scena jest edytowana przez ${lockedByOther} – zapis może zostać odrzucony`, true); } }
+}
+setInterval(() => { if (lockedScene && !lockedByOther) api('POST', `/api/lock/scenes/${encodeURIComponent(lockedScene)}?who=${encodeURIComponent(who)}`).catch(() => {}); }, 15000);
+addEventListener('pagehide', () => { if (lockedScene && !lockedByOther) navigator.sendBeacon(`/api/unlock/scenes/${encodeURIComponent(lockedScene)}?who=${encodeURIComponent(who)}`); });
+function openScene(s) {
+  lockScene(s.id);
+  scene = structuredClone(s);
+  scene.nodes ||= []; scene.stops ||= []; scene.width ||= 1920; scene.height ||= 1080;
+  if (!(scene.duration > 0)) scene.duration = 1;
+  selId = null; selKey = null; t = 0; undo = []; redo = [];
+  setDirty(false);
+  player?.destroy();
+  player = new ScenePlayer(stage, scene, {}, { editor: true });
+  history.replaceState(null, '', '?scene=' + encodeURIComponent(s.id));
+  resize(); renderAll();
+  // jak w Viz: edycja zaczyna się w pierwszym stop poincie (grafika widoczna)
+  setTime([...scene.stops].sort((a, b) => a - b)[0] ?? 0);
+}
+async function confirmLeave() {
+  if (!dirty) return true;
+  if (confirm('Scena ma niezapisane zmiany. Zapisać przed przejściem?')) { await save(); return true; }
+  return confirm('Porzucić zmiany?');
+}
+async function save(force) {
+  try {
+    const body = force === true ? (({ rev, ...r }) => r)(scene) : scene; // bez rev = świadome nadpisanie
+    const saved = await api('PUT', '/api/scenes/' + encodeURIComponent(scene.id), body);
+    scene.rev = saved.rev;
+    const i = scenes.findIndex((s) => s.id === saved.id);
+    if (i >= 0) scenes[i] = saved; else scenes.push(saved);
+    setDirty(false); renderSceneSel(); toast('Zapisano scenę „' + scene.name + '”');
+  } catch (e) {
+    if (/^konflikt/.test(e.message)) {
+      if (confirm('Ta scena została zmieniona przez kogoś innego (lub w innym oknie).\n\nOK = nadpisz moją wersją, Anuluj = nie zapisuj.')) return save(true);
+      toast('Konflikt zapisu – scena nie zapisana', true);
+    } else toast('Błąd zapisu: ' + e.message, true);
+  }
+}
+async function newScene(name, base) {
+  const s = base || { name, layer: 'main', width: 1920, height: 1080, duration: 1, stops: [], nodes: [] };
+  s.id = '';
+  try {
+    const saved = await api('POST', '/api/scenes', s);
+    scenes.push(saved); renderSceneSel(); openScene(saved);
+  } catch (e) { toast(e.message, true); }
+}
+
+// ------------------------------------------------------------ renderowanie UI
+function renderAll() { renderSceneSel(); renderTree(); renderProps(); renderTimeline(); }
+
+function renderTree() {
+  let h = `<div class="item ${selId ? '' : 'sel'}" data-id=""><span class="ic">🎬</span><b class="grow">${esc(scene.name)}</b><span class="pill">${esc(scene.layer || 'main')}</span></div>`;
+  const rec = (nodes, d) => {
+    for (const n of nodes) {
+      const fl = Object.values(n.fields || {}).filter(Boolean);
+      h += `<div class="item ${n.id === selId ? 'sel' : ''} ${n.hidden ? 'hid' : ''}" data-id="${n.id}" draggable="true" style="padding-left:${10 + d * 16}px">
+        <span class="ic">${TYPES[n.type]?.icon || '?'}</span><span class="grow">${esc(n.name || n.type)}</span>
+        ${fl.map((f) => `<span class="pill fld" title="pole kontrolne">${esc(f)}</span>`).join('')}
+        ${Object.values(n.anim || {}).some((a) => a?.length) ? '<span class="dim" title="animowany">◆</span>' : ''}
+        <span class="eye" data-eye="${n.id}" title="pokaż/ukryj">${n.hidden ? '○' : '◉'}</span></div>`;
+      if (n.children) rec(n.children, d + 1);
+    }
+  };
+  rec(scene.nodes, 0);
+  if (!scene.nodes.length) h += `<div class="empty">Pusta scena.<br>Dodaj kontener: „＋ Dodaj…”</div>`;
+  $('#tree').innerHTML = h;
+  const names = []; walk(scene.nodes, (n) => { if (n.name) names.push(n.name); });
+  $('#nodelist').innerHTML = names.map((n) => `<option>${esc(n)}</option>`).join('');
+}
+
+function inputFor(p, d) {
+  switch (d.t) {
+    case 'num': return `<input type="number" data-p="${p}" step="${d.step || 1}" ${d.min != null ? `min="${d.min}"` : ''} ${d.max != null ? `max="${d.max}"` : ''}>`;
+    case 'color': return `<div class="row"><input type="color" data-pc="${p}"><input data-p="${p}" class="grow mono" placeholder="#rrggbbaa"></div>`;
+    case 'text': return `<textarea data-p="${p}" rows="2"></textarea>`;
+    case 'string': return `<input data-p="${p}">`;
+    case 'font': return `<input data-p="${p}" list="fontlist">`;
+    case 'node': return `<input data-p="${p}" list="nodelist" placeholder="nazwa węzła (kilka: a,b)">`;
+    case 'select': return `<select data-p="${p}">${d.opts.map((o) => `<option>${o}</option>`).join('')}</select>`;
+    case 'bool': return `<input type="checkbox" data-p="${p}">`;
+    case 'image': return `<div class="row"><select data-p="${p}" class="grow"><option value="">— brak —</option>${assets.filter((a) => !/\.(ttf|otf|woff2?)$/i.test(a.name)).map((a) => `<option>${esc(a.name)}</option>`).join('')}</select><button class="icon" data-upload="${p}" title="Wgraj plik (PNG/JPG/SVG/WEBM/MP4)">⤒</button></div>`;
+  }
+  return '';
+}
+
+function renderProps() {
+  const el = $('#props');
+  const n = selNode();
+  if (!n) { $('#propsTitle').textContent = 'Scena'; renderSceneProps(); return; }
+  const def = TYPES[n.type];
+  $('#propsTitle').textContent = 'Właściwości – ' + def.label;
+  let h = `<div class="phead"><span class="ic">${def.icon}</span><input id="pname" class="grow" value="${esc(n.name)}" title="Nazwa kontenera"></div>`;
+  let g = null;
+  for (const p of def.props) {
+    const d = PROPS[p];
+    if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
+    h += `<div class="pr" data-prop="${p}">
+      <label data-scrub="${d.t === 'num' ? p : ''}" title="${p}${d.t === 'num' ? ' – przeciągnij, aby zmienić' : ''}">${esc(d.label || p)}</label>
+      <div class="pin">${inputFor(p, d)}</div>
+      ${d.anim ? `<button class="icon kbtn" data-key="${p}" title="Klucz animacji w bieżącym czasie (dodaj/usuń)">◆</button>` : '<span></span>'}
+      <button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio">⛓</button>
+    </div>`;
+  }
+  const vf = variantFields(scene);
+  h += `<div class="pgroup">Wariant – widoczność</div>`;
+  if (vf.length) {
+    const si = n.showIf || {};
+    h += `<div class="pr" style="grid-template-columns:100px 1fr 1fr"><label>widoczny gdy</label>
+      <select data-si="field"><option value="">— zawsze —</option>${vf.map((f) => `<option value="${esc(f.id)}" ${si.field === f.id ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select>
+      <input data-si="value" list="si_vals" value="${esc(si.value || '')}" placeholder="wartość (a,b)" ${si.field ? '' : 'disabled'}>
+      <datalist id="si_vals">${(vf.find((f) => f.id === si.field)?.opts || []).map((o) => `<option>${esc(o)}</option>`).join('')}</datalist></div>`;
+  } else h += `<div class="dim" style="padding:2px 10px;font-size:12px">Zdefiniuj warianty w ustawieniach sceny (kliknij puste tło), aby pokazywać ten węzeł tylko w wybranym wariancie.</div>`;
+  h += `<div class="pgroup">Presety animacji</div>
+  <div class="pr" style="grid-template-columns:1fr auto auto"><select id="apSel"><option value="">— wybierz —</option>${animPresets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} (${x.duration}s)</option>`).join('')}</select><button data-ap="apply" title="Wstaw klucze presetu od bieżącego czasu">Zastosuj</button><button data-ap="save" title="Zapisz klucze tego węzła jako preset">＋ zapisz</button></div>
+  <div class="pr" style="grid-template-columns:1fr auto auto auto"><span class="dim" style="font-size:11px">preset = zestaw kluczy (czasy względne)</span><button data-ap="export" title="Pobierz preset do pliku">⇩</button><button data-ap="import" title="Wczytaj preset z pliku">⇧</button><button data-ap="del" class="danger">🗑</button></div>
+  <div class="help">◆ – klucz animacji w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy/aktualizuje klucz automatycznie.<br>⛓ – wystawia właściwość jako <b>pole kontrolne</b>: operator Trio wpisze tu wartość na stronie.<br><b>[[tekst]]</b> w tekście = wyróżnienie (kolor tła/tekstu w grupie Tekst).<br><b>Autofollow</b> – prostokąt dopasowuje szerokość/wysokość do tekstu (np. pasek nazwiska). <b>Punkt X/Y</b> = right/bottom sprawia, że element rośnie w lewo/w górę.</div>`;
+  el.innerHTML = h;
+  syncProps(true);
+}
+
+const hex6 = (c) => { const p = parseColor(c); if (!p) return '#000000'; return '#' + p.slice(0, 3).map((x) => Math.round(x).toString(16).padStart(2, '0')).join(''); };
+
+function syncProps(force) {
+  const n = selNode(); if (!n) return;
+  for (const inp of $$('[data-p]', $('#props'))) {
+    const p = inp.dataset.p;
+    if (!force && document.activeElement === inp) continue;
+    let v = propAt(n, p, t, null);
+    const d = PROPS[p];
+    if (inp.type === 'checkbox') inp.checked = !!v;
+    else if (d.t === 'num') inp.value = Math.round(v * 1000) / 1000;
+    else {
+      if (inp.tagName === 'SELECT' && v && ![...inp.options].some((o) => o.value === v)) inp.add(new Option(v, v));
+      inp.value = v ?? '';
+    }
+  }
+  for (const inp of $$('[data-pc]', $('#props'))) { const v = propAt(n, inp.dataset.pc, t, null); inp.value = hex6(v); }
+  for (const b of $$('[data-key]', $('#props'))) {
+    const tr = n.anim?.[b.dataset.key];
+    b.classList.toggle('has', !!tr?.length);
+    b.classList.toggle('on', !!tr?.some((k) => Math.abs(k.t - t) < 0.0005));
+  }
+  for (const b of $$('[data-field]', $('#props'))) {
+    const f = n.fields?.[b.dataset.field];
+    b.classList.toggle('on', !!f); b.title = f ? `Pole kontrolne: ${f} (kliknij, aby zmienić)` : 'Wystaw jako pole kontrolne (Control Object)';
+  }
+}
+
+const openRules = new Set();
+/** Formularz reguł pola kontrolnego (Control Text): egzekwowane w Trio przy wpisywaniu. */
+function rulesForm(f) {
+  const m = scene.fieldMeta?.[f.id] || {};
+  const id = esc(f.id);
+  const num = (k, label, ph) => `<label>${label}</label><input type="number" min="0" data-fr="${id}::${k}" value="${m[k] ?? ''}" placeholder="${ph || '—'}">`;
+  const chk = (k, label, def) => `<label class="rchk"><input type="checkbox" data-fr="${id}::${k}" ${(def ? m[k] !== false : !!m[k]) ? 'checked' : ''}> ${label}</label>`;
+  const isText = f.type === 'text';
+  return `<div class="rules">
+    ${isText ? num('maxChars', 'maks. znaków (twardy)') + num('softMax', 'próg ostrzeżenia (żółty)', 'domyślnie 85%') + num('maxLines', 'maks. linii', 'z węzła') : ''}
+    ${num('tab', 'kolejność Tab')}
+    <label>podpowiedź</label><input data-fr="${id}::help" value="${esc(m.help || '')}" placeholder="widoczna pod etykietą w Trio">
+    <div class="rchks">${isText ? chk('oneLine', 'jedna linia') + chk('upper', 'WERSALIKI') + chk('typo', 'polska typografia') + chk('rich', 'pasek formatowania', true) + chk('spell', 'sprawdzanie pisowni', true) : ''}${chk('readonly', 'tylko do odczytu')}</div>
+  </div>`;
+}
+
+function renderSceneProps() {
+  const fields = listFields(scene);
+  let h = `<div class="pgroup">Scena</div>
+  <div class="sp"><label>Nazwa</label><input data-sp="name" value="${esc(scene.name)}"></div>
+  <div class="sp"><label>Warstwa (layer)</label><input data-sp="layer" list="layerlist" value="${esc(scene.layer || 'main')}"></div>
+  <div class="sp"><label>Rozdzielczość</label><div class="row"><input data-sp="width" type="number" value="${scene.width}"> × <input data-sp="height" type="number" value="${scene.height}"></div></div>
+  <div class="sp"><label>Długość (s)</label><input data-sp="duration" type="number" step="0.1" value="${scene.duration}"></div>
+  <div class="sp"><label>Stop pointy</label><div class="chips">${scene.stops.map((s, i) => `<span class="chip">${(+s).toFixed(2)}s<button data-rmstop="${i}" title="usuń">×</button></span>`).join('') || '<span class="dim">brak – grafika gra do końca</span>'}</div></div>
+  <div class="sp"><label>Markery</label><div class="chips">${(scene.markers || []).map((m, i) => `<span class="chip mk">${esc(m.name)} ${(+m.t).toFixed(2)}s<button data-mkstop="${i}" title="Utwórz stop point z markera">⏹</button><button data-rmmk="${i}" title="usuń">×</button></span>`).join('') || '<span class="dim">M lub dwuklik na linijce = marker</span>'}</div></div>
+  <div class="pgroup">Powiązania (dock) – przesunięcie tej sceny, gdy inna grafika jest na wizji</div>
+  ${(scene.dock || []).length ? `<table class="ftable"><tr class="dim"><td>gdy na antenie</td><td>Δx</td><td>Δy</td><td>czas s</td><td></td></tr>${scene.dock.map((d, i) => `<tr><td><input data-dk="${i}::target" list="dklist" value="${esc(d.target || '')}" placeholder="layer:back · page:3001 · scene:Ticker"></td><td><input type="number" data-dk="${i}::dx" value="${d.dx ?? 0}"></td><td><input type="number" data-dk="${i}::dy" value="${d.dy ?? 0}"></td><td><input type="number" step="0.1" min="0" data-dk="${i}::dur" value="${d.dur ?? 0.6}"></td><td><button class="icon danger" data-dkdel="${i}">×</button></td></tr>`).join('')}</table>` : ''}
+  <datalist id="dklist">${[...new Set(scenes.map((x) => x.layer || 'main'))].map((l) => `<option value="layer:${esc(l)}">`).join('')}${scenes.map((x) => `<option value="scene:${esc(x.name)}">`).join('')}</datalist>
+  <div style="padding:4px 10px"><button id="dkAdd">＋ Powiązanie</button> <span class="dim" style="font-size:12px">np. belka unosi się o 90 px, gdy jest ticker (layer:back)</span></div>
+  <div class="pgroup">Warianty (pola wyboru, jak Variants/Concepts w Viz)</div>`;
+  const vfs = variantFields(scene);
+  h += vfs.length ? `<table class="ftable"><tr class="dim"><td>pole</td><td>opcje (po przecinku)</td><td>domyślna</td><td></td></tr>` + vfs.map((f) => `<tr><td class="mono">${esc(f.id)}</td><td><input data-vopt="${esc(f.id)}" value="${esc(f.opts.join(', '))}"></td><td><select data-vdef="${esc(f.id)}">${f.opts.map((o) => `<option ${o === f.default ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></td><td><button class="icon danger" data-vdel="${esc(f.id)}">×</button></td></tr>`).join('') + '</table>' : '';
+  h += `<div style="padding:4px 10px"><button id="addVar">＋ Wariant</button> <span class="dim" style="font-size:12px">np. styl = info, pilne</span></div>
+  <div class="pgroup">Pola kontrolne (Control Object)</div>`;
+  const pfields = fields.filter((f) => f.nodeType !== 'variant');
+  if (pfields.length) {
+    h += `<table class="ftable"><tr class="dim"><td>pole</td><td>etykieta w Trio</td><td>kontener</td><td></td></tr>` +
+      pfields.map((f) => {
+        const m = scene.fieldMeta?.[f.id] || {};
+        const has = ['maxChars', 'softMax', 'maxLines', 'tab', 'help', 'oneLine', 'upper', 'typo', 'readonly'].some((k) => m[k]) || m.rich === false || m.spell === false;
+        return `<tr><td class="mono">${esc(f.id)}</td><td><input data-fm="${esc(f.id)}" value="${esc(m.label || '')}" placeholder="${esc(f.id)}"></td><td class="dim">${esc(f.node)}.${esc(f.prop)}</td><td><button class="icon ${has ? 'acc' : ''}" data-frtoggle="${esc(f.id)}" title="Reguły pola (limity znaków, wersaliki, typografia, Tab…)">⚙</button></td></tr>` +
+          (openRules.has(f.id) ? `<tr><td colspan="4">${rulesForm(f)}</td></tr>` : '');
+      }).join('') + '</table>';
+  } else h += `<div class="dim" style="padding:4px 10px">Brak. Zaznacz kontener i kliknij ⛓ przy właściwości.</div>`;
+  h += `<div style="padding:10px" class="row"><button id="mkPage">＋ Utwórz stronę w Trio</button></div>
+  <div class="help"><b>Jak to działa (jak w Viz):</b><br>
+  • <b>Warstwa</b> – sceny na tej samej warstwie zastępują się (back / main / front lub dowolna nazwa).<br>
+  • <b>Stop pointy</b> – TAKE gra animację do pierwszego stopu, CONTINUE do kolejnego, OUT gra od ostatniego stopu do końca i zdejmuje grafikę.<br>
+  • Bez stopów: TAKE gra całość i grafika zostaje, OUT ją wycina.<br>
+  • Kliknij puste miejsce na podglądzie, aby wrócić do ustawień sceny.</div>`;
+  $('#props').innerHTML = h;
+}
+
+function renderTimeline() {
+  const dur = scene.duration || 1;
+  const W = Math.max(dur * pps + 80, $('#tl').clientWidth - LBL);
+  const rows = [];
+  walk(scene.nodes, (n) => { for (const p of Object.keys(n.anim || {})) if (n.anim[p]?.length) rows.push({ n, p }); });
+  rows.sort((a, b) => (a.n.id === selId) === (b.n.id === selId) ? 0 : a.n.id === selId ? -1 : 1);
+  let h = `<div class="tl-in" style="width:${LBL + W}px">`;
+  h += `<div class="tl-row ruler"><div class="tl-lbl">${rows.length ? '<span class="dim">ścieżki animacji</span>' : '<span class="dim">brak animacji – użyj ◆</span>'}</div><div class="tl-area" data-area="ruler" style="width:${W}px">`;
+  const step = pps > 500 ? 0.05 : pps > 160 ? 0.1 : 0.25;
+  const lab = pps > 500 ? 0.25 : 0.5;
+  for (let i = 0; i * step <= dur + 1e-9 + 2; i++) {
+    const s = i * step;
+    const major = Math.abs(s / lab - Math.round(s / lab)) < 1e-6;
+    h += `<div class="tick ${major ? 'maj' : ''}" style="left:${s * pps}px">${major ? s.toFixed(2).replace(/0$/, '') : ''}</div>`;
+  }
+ (scene.markers || []).forEach((m, i) => { h += `<div class="mkm" data-mk="${i}" style="left:${m.t * pps}px" title="Marker „${esc(m.name || '')}” ${(+m.t).toFixed(2)}s – klik: skocz, dwuklik: zmień nazwę / usuń">◆<span>${esc(m.name || '')}</span></div>`; });
+  scene.stops.forEach((s, i) => { h += `<div class="stopm" data-stop="${i}" style="left:${s * pps}px" title="Stop ${(+s).toFixed(2)}s – przeciągnij; dwuklik usuwa">▼</div>`; });
+  h += `<div class="endm" style="left:${dur * pps}px" title="koniec sceny"></div></div></div>`;
+  for (const r of rows) {
+    const tr = r.n.anim[r.p];
+    h += `<div class="tl-row ${r.n.id === selId ? 'sel' : ''}"><div class="tl-lbl" data-sel="${r.n.id}" title="${esc(r.n.name)}.${r.p}"><span class="dim">${esc(r.n.name)}</span>·${esc(PROPS[r.p]?.label || r.p)}</div><div class="tl-area" data-row="${r.n.id}|${r.p}" style="width:${W}px">`;
+    for (let i = 0; i < tr.length - 1; i++) {
+      const a = tr[i], b = tr[i + 1];
+      h += `<div class="seg ${a.v === b.v || a.e === 'hold' ? 'hold' : ''}" style="left:${a.t * pps}px;width:${(b.t - a.t) * pps}px"></div>`;
+    }
+    tr.forEach((k, i) => {
+      const sel = selKeys.some((x) => x.key === k) || (selKey && selKey.node === r.n && selKey.prop === r.p && selKey.key === k);
+      h += `<div class="kf ${sel ? 'sel' : ''}" data-k="${r.n.id}|${r.p}|${i}" style="left:${k.t * pps}px" title="${k.t.toFixed(2)}s = ${esc(k.v)} (${k.e || 'inout'})"></div>`;
+    });
+    h += `</div></div>`;
+  }
+  scene.stops.forEach((s) => { h += `<div class="stopline" style="left:${LBL + s * pps}px"></div>`; });
+  h += `<div class="endline" style="left:${LBL + dur * pps}px"></div>`;
+  h += `<div id="playhead" style="left:${LBL + t * pps}px"></div></div>`;
+  const sl = $('#tl').scrollLeft;
+  $('#tl').innerHTML = h;
+  $('#tl').scrollLeft = sl;
+  $('#dur').value = scene.duration;
+  renderKeyEd();
+}
+
+function renderKeyEd() {
+  const el = $('#keyed');
+  if (!selKey || !selKey.node.anim?.[selKey.prop]?.includes(selKey.key)) { selKey = null; el.innerHTML = '<span class="dim" style="font-size:12px">dwuklik na ścieżce = nowy klucz</span>'; return; }
+  const k = selKey.key, d = PROPS[selKey.prop];
+  el.innerHTML = `<b style="font-size:12px">${esc(selKey.node.name)}.${esc(d?.label || selKey.prop)}</b>
+    <label>t</label><input id="kt" type="number" step="0.01" value="${k.t}">
+    <label>wart.</label><input id="kv" ${d?.t === 'num' ? 'type="number" step="any"' : ''} value="${esc(k.v)}">
+    <select id="ke" title="krzywa do następnego klucza">${EASES.map((e) => `<option ${(k.e || 'inout') === e ? 'selected' : ''}>${e}</option>`).join('')}</select>
+    <button class="icon danger" id="kdel" title="Usuń klucz">🗑</button>`;
+}
+
+function updatePlayhead() {
+  const ph = $('#playhead'); if (ph) ph.style.left = LBL + t * pps + 'px';
+  $('#tc').value = t.toFixed(2);
+}
+
+function setTime(nt) {
+  t = Math.max(0, Math.min(scene.duration, Math.round(nt * 1000) / 1000));
+  player.seek(t);
+  updatePlayhead();
+  syncProps();
+}
+
+// ------------------------------------------------------------ edycja właściwości
+function setProp(n, p, v) {
+  const tr = n.anim?.[p];
+  if (tr?.length && PROPS[p]?.anim) setKey(n, p, t, v);
+  else { n.props ||= {}; n.props[p] = v; }
+}
+function setKey(n, p, at, v) {
+  n.anim ||= {};
+  const tr = (n.anim[p] ||= []);
+  const k = tr.find((k) => Math.abs(k.t - at) < 0.0005);
+  if (k) k.v = v; else tr.push({ t: Math.round(at * 1000) / 1000, v, e: 'inout' });
+  tr.sort((a, b) => a.t - b.t);
+}
+function toggleKey(n, p) {
+  n.anim ||= {};
+  const tr = n.anim[p] || [];
+  const i = tr.findIndex((k) => Math.abs(k.t - t) < 0.0005);
+  if (i >= 0) {
+    tr.splice(i, 1);
+    if (!tr.length) { n.props ||= {}; delete n.anim[p]; }
+  } else {
+    const v = propAt(n, p, t, null);
+    if (!tr.length) { n.props ||= {}; n.props[p] = v; }
+    setKey(n, p, t, v);
+  }
+}
+function refresh() { player.apply(t); }
+function parseVal(p, inp) {
+  const d = PROPS[p];
+  if (d.t === 'bool') return inp.checked;
+  if (d.t === 'num') { const v = parseFloat(inp.value); return isNaN(v) ? 0 : v; }
+  return inp.value;
+}
+
+$('#props').addEventListener('focusin', () => { pendingCP = true; lastArea = 'props'; });
+$('#props').addEventListener('input', onPropInput);
+$('#props').addEventListener('change', onPropInput);
+function cp() { if (pendingCP) { checkpoint(); pendingCP = false; } else setDirty(true); }
+function onPropInput(e) {
+  const inp = e.target;
+  if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') { pendingCP = true; return; }
+  const n = selNode();
+  if (inp.id === 'pname' && n) { cp(); n.name = inp.value; renderTree(); return; }
+  if (n && inp.dataset.p) {
+    cp(); setProp(n, inp.dataset.p, parseVal(inp.dataset.p, inp)); refresh();
+    if (n.anim?.[inp.dataset.p]?.length) renderTimeline();
+    syncProps(); return;
+  }
+  if (n && inp.dataset.pc) {
+    cp();
+    const p = inp.dataset.pc;
+    const cur = parseColor(propAt(n, p, t, null));
+    let v = inp.value;
+    if (cur && cur[3] < 1) v += Math.round(cur[3] * 255).toString(16).padStart(2, '0');
+    setProp(n, p, v); refresh(); syncProps(); return;
+  }
+  if (inp.dataset.sp) {
+    if (e.type === 'change' && inp.tagName !== 'SELECT') return;
+    cp();
+    const k = inp.dataset.sp;
+    const num = ['width', 'height', 'duration'].includes(k);
+    let v = num ? parseFloat(inp.value) : inp.value;
+    if (num && !(v > 0)) return;
+    scene[k] = v;
+    if (k === 'width' || k === 'height') { player.setScene(scene); resize(); }
+    if (k === 'duration') { if (t > v) setTime(v); renderTimeline(); }
+    if (k === 'name' || k === 'layer') { renderTree(); }
+    return;
+  }
+  if (inp.dataset.si) {
+    const n2 = selNode(); if (!n2) return;
+    cp();
+    n2.showIf ||= {};
+    n2.showIf[inp.dataset.si] = inp.value;
+    if (!n2.showIf.field) delete n2.showIf;
+    else if (inp.dataset.si === 'field') { const vf = variantFields(scene).find((f) => f.id === inp.value); n2.showIf.value = vf?.opts[0] || ''; renderProps(); }
+    refresh(); return;
+  }
+  if (inp.dataset.vopt || inp.dataset.vdef) {
+    cp();
+    const id = inp.dataset.vopt || inp.dataset.vdef, m = scene.fieldMeta[id];
+    if (inp.dataset.vopt) { m.options = inp.value.split(',').map((s) => s.trim()).filter(Boolean); if (!m.options.includes(m.default)) m.default = m.options[0]; }
+    else m.default = inp.value;
+    refresh(); return;
+  }
+  if (inp.dataset.dk) {
+    cp();
+    const [i, key] = inp.dataset.dk.split('::');
+    const d = scene.dock?.[+i]; if (!d) return;
+    d[key] = key === 'target' ? inp.value.trim() : (parseFloat(inp.value) || 0);
+    return;
+  }
+  if (inp.dataset.fr) {
+    cp();
+    const [fid, key] = inp.dataset.fr.split('::');
+    scene.fieldMeta ||= {};
+    const m = (scene.fieldMeta[fid] ||= {});
+    if (inp.type === 'checkbox') {
+      if (key === 'rich' || key === 'spell') { if (inp.checked) delete m[key]; else m[key] = false; } // domyślnie włączone
+      else if (inp.checked) m[key] = true; else delete m[key];
+    } else if (inp.type === 'number') {
+      const v = parseInt(inp.value);
+      if (v > 0 || (key === 'tab' && v === 0)) m[key] = v; else delete m[key];
+    } else if (inp.value.trim()) m[key] = inp.value; else delete m[key];
+    if (m.softMax && m.maxChars && m.softMax > m.maxChars) { m.softMax = m.maxChars; }
+    return;
+  }
+  if (inp.dataset.fm) {
+    cp();
+    scene.fieldMeta ||= {};
+    scene.fieldMeta[inp.dataset.fm] = { ...(scene.fieldMeta[inp.dataset.fm] || {}), label: inp.value };
+  }
+}
+$('#props').addEventListener('click', async (e) => {
+  const n = selNode();
+  const kb = e.target.closest('[data-key]');
+  if (kb && n) { checkpoint(); toggleKey(n, kb.dataset.key); refresh(); syncProps(); renderTimeline(); renderTree(); return; }
+  const fb = e.target.closest('[data-field]');
+  if (fb && n) {
+    const p = fb.dataset.field;
+    const cur = n.fields?.[p] || '';
+    const v = prompt(`Nazwa pola kontrolnego dla „${n.name}.${p}”\n(litery, cyfry, _ . -; puste = usuń)`, cur || n.name.replace(/[^\w.\-]/g, '_'));
+    if (v === null) return;
+    checkpoint();
+    n.fields ||= {};
+    const id = v.trim().replace(/[^\w.\-]/g, '_');
+    if (id) n.fields[p] = id; else delete n.fields[p];
+    renderTree(); syncProps(); return;
+  }
+  const ub = e.target.closest('[data-upload]');
+  if (ub && n) { const a = await uploadAsset(); if (a) { checkpoint(); setProp(n, ub.dataset.upload, a.name); renderProps(); refresh(); } return; }
+  if (e.target.id === 'dkAdd') { checkpoint(); (scene.dock ||= []).push({ target: 'layer:back', dx: 0, dy: -90, dur: 0.6 }); renderProps(); return; }
+  const dkd = e.target.closest('[data-dkdel]');
+  if (dkd) { checkpoint(); scene.dock.splice(+dkd.dataset.dkdel, 1); if (!scene.dock.length) delete scene.dock; renderProps(); return; }
+  const mks = e.target.closest('[data-mkstop]');
+  if (mks) { const m = scene.markers[+mks.dataset.mkstop]; if (scene.stops.some((x) => Math.abs(x - m.t) < 0.005)) return toast('Stop w tym miejscu już istnieje'); checkpoint(); scene.stops.push(+m.t.toFixed(3)); scene.stops.sort((a, b) => a - b); renderProps(); renderTimeline(); return; }
+  const mkr = e.target.closest('[data-rmmk]');
+  if (mkr) { checkpoint(); scene.markers.splice(+mkr.dataset.rmmk, 1); renderProps(); renderTimeline(); return; }
+  const ft = e.target.closest('[data-frtoggle]');
+  if (ft) { const id = ft.dataset.frtoggle; if (openRules.has(id)) openRules.delete(id); else openRules.add(id); renderProps(); return; }
+  const rs = e.target.closest('[data-rmstop]');
+  if (rs) { checkpoint(); scene.stops.splice(+rs.dataset.rmstop, 1); renderProps(); renderTimeline(); return; }
+  const vd = e.target.closest('[data-vdel]');
+  if (vd) { checkpoint(); delete scene.fieldMeta[vd.dataset.vdel]; walk(scene.nodes, (x) => { if (x.showIf?.field === vd.dataset.vdel) delete x.showIf; }); renderProps(); refresh(); return; }
+  if (e.target.id === 'addVar') {
+    const id = prompt('Nazwa pola wariantu (np. styl)', 'styl'); if (!id) return;
+    const opts = prompt('Opcje, po przecinku', 'info, pilne'); if (!opts) return;
+    checkpoint();
+    scene.fieldMeta ||= {};
+    const o = opts.split(',').map((s) => s.trim()).filter(Boolean);
+    scene.fieldMeta[id.replace(/[^\w.\-]/g, '_')] = { type: 'select', label: id, options: o, default: o[0] };
+    renderProps(); return;
+  }
+  if (e.target.id === 'mkPage') {
+    if (dirty) await save();
+    const values = {}; for (const f of listFields(scene)) values[f.id] = f.default;
+    try { const p = await api('POST', '/api/pages', { scene: scene.id, name: scene.name, values }); toast(`Utworzono stronę ${p.number} – otwórz Trio`); }
+    catch (err) { toast(err.message, true); }
+  }
+});
+// przeciąganie etykiety = zmiana wartości liczbowej
+$('#props').addEventListener('mousedown', (e) => {
+  const lb = e.target.closest('label[data-scrub]');
+  const n = selNode();
+  if (!lb || !lb.dataset.scrub || !n) return;
+  e.preventDefault();
+  const p = lb.dataset.scrub, d = PROPS[p];
+  const start = propAt(n, p, t, null), sx = e.clientX;
+  let moved = false;
+  const mv = (ev) => {
+    if (!moved) { checkpoint(); moved = true; }
+    let v = start + (ev.clientX - sx) * (d.step || 1) * (ev.shiftKey ? 10 : 1);
+    if (d.min != null) v = Math.max(d.min, v); if (d.max != null) v = Math.min(d.max, v);
+    setProp(n, p, Math.round(v * 1000) / 1000); refresh(); syncProps();
+  };
+  const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); if (moved && n.anim?.[p]) renderTimeline(); };
+  addEventListener('mousemove', mv); addEventListener('mouseup', up);
+});
+
+function uploadAsset() {
+  return new Promise((res) => {
+    const fi = $('#fileIn');
+    fi.accept = 'image/*,video/mp4,video/webm,.ttf,.otf,.woff,.woff2';
+    fi.value = '';
+    fi.onchange = async () => {
+      const f = fi.files[0]; if (!f) return res(null);
+      try {
+        const r = await fetch('/api/assets?name=' + encodeURIComponent(f.name), { method: 'POST', body: f });
+        const j = await r.json(); if (!r.ok) throw new Error(j.error);
+        await loadAssets(); toast('Wgrano ' + j.name); res(j);
+      } catch (e) { toast('Upload: ' + e.message, true); res(null); }
+    };
+    fi.click();
+  });
+}
+
+// ------------------------------------------------------------ drzewo
+function select(id) {
+  selId = id || null;
+  if (selKey && selKey.node.id !== selId) { selKey = null; selKeys = []; }
+  renderTree(); renderProps(); renderTimeline();
+}
+$('#tree').addEventListener('click', (e) => {
+  lastArea = 'tree';
+  const eye = e.target.closest('[data-eye]');
+  if (eye) { const n = locate(eye.dataset.eye)?.node; if (n) { checkpoint(); n.hidden = !n.hidden; refresh(); renderTree(); } return; }
+  const it = e.target.closest('.item'); if (it) select(it.dataset.id);
+});
+$('#tree').addEventListener('dblclick', (e) => {
+  const it = e.target.closest('.item'); if (!it?.dataset.id) return;
+  const n = locate(it.dataset.id).node;
+  const v = prompt('Nazwa kontenera', n.name); if (v === null) return;
+  checkpoint(); n.name = v; renderTree(); renderProps();
+});
+
+const DEFAULTS = {
+  group: { w: 600, h: 200 },
+  rect: { w: 400, h: 100, color: '#e30613' },
+  ellipse: { w: 200, h: 200, color: '#3d8bfd' },
+  text: { w: 800, h: 100, text: 'Nowy tekst', size: 64, color: '#ffffff', font: 'Inter' },
+  image: { w: 400, h: 300 },
+  clock: { w: 300, h: 80, size: 48, color: '#ffffff', font: 'Roboto Mono', align: 'center' },
+  ticker: { w: 1920, h: 70, text: 'Pierwsza wiadomość\nDruga wiadomość', size: 32, color: '#ffffff' },
+};
+function addNode(type) {
+  checkpoint();
+  let count = 0; walk(scene.nodes, (n) => { if (n.type === type) count++; });
+  const props = { ...DEFAULTS[type] };
+  const sel = selId ? locate(selId) : null;
+  const intoParent = sel && TYPES[sel.node.type].children;
+  if (intoParent) { props.x = 20; props.y = 20; }
+  else if (sel?.parent) { props.x = 20; props.y = 20; }
+  else { props.x = Math.round((scene.width - props.w) / 2); props.y = Math.round((scene.height - props.h) / 2); }
+  const n = { id: uid('n'), type, name: TYPES[type].label.toLowerCase().replace(/[^a-ząćęłńóśźż]/g, '') + (count + 1), props, anim: {}, fields: {} };
+  if (TYPES[type].children) n.children = [];
+  if (intoParent) sel.node.children.push(n);
+  else if (sel) sel.list.splice(sel.index + 1, 0, n);
+  else scene.nodes.push(n);
+  player.setScene(scene); player.seek(t);
+  select(n.id);
+}
+$('#addSel').addEventListener('change', (e) => { if (e.target.value) addNode(e.target.value); e.target.value = ''; });
+
+function cloneNode(n) {
+  const c = structuredClone(n);
+  const re = (x) => { x.id = uid('n'); (x.children || []).forEach(re); };
+  re(c); return c;
+}
+function treeOp(op) {
+  const L = selId && locate(selId); if (!L) return;
+  const { node: n, list, index: i, parent } = L;
+  checkpoint();
+  if (op === 'up' && i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]];
+  else if (op === 'down' && i < list.length - 1) [list[i + 1], list[i]] = [list[i], list[i + 1]];
+  else if (op === 'in' && i > 0 && TYPES[list[i - 1].type].children) {
+    const P = list[i - 1];
+    list.splice(i, 1); (P.children ||= []).push(n);
+    n.props.x = (n.props.x || 0) - (P.props?.x || 0); n.props.y = (n.props.y || 0) - (P.props?.y || 0);
+  } else if (op === 'out' && parent) {
+    const PL = locate(parent.id);
+    list.splice(i, 1); PL.list.splice(PL.index + 1, 0, n);
+    n.props.x = (n.props.x || 0) + (parent.props?.x || 0); n.props.y = (n.props.y || 0) + (parent.props?.y || 0);
+  } else if (op === 'dup') {
+    const c = cloneNode(n); c.name = n.name + '_kopia';
+    list.splice(i + 1, 0, c); selId = c.id;
+  } else if (op === 'del') {
+    list.splice(i, 1); selId = null; selKey = null;
+  } else { undo.pop(); return; }
+  player.setScene(scene); player.seek(t);
+  renderTree(); renderProps(); renderTimeline();
+}
+$('#tUp').onclick = () => treeOp('up');
+$('#tDown').onclick = () => treeOp('down');
+$('#tIn').onclick = () => treeOp('in');
+$('#tOut').onclick = () => treeOp('out');
+$('#tDupN').onclick = () => treeOp('dup');
+$('#tDel').onclick = () => treeOp('del');
+
+// ------------------------------------------------------------ podgląd / płótno
+function resize() { if (!scene) return; scale = fitStage(stage, box, scene.width, scene.height); placeSafe(); }
+addEventListener('resize', () => { resize(); renderTimeline(); });
+function placeSafe() {
+  const b = box.getBoundingClientRect(), r = stage.getBoundingClientRect(), s = $('#safe');
+  Object.assign(s.style, { left: r.left - b.left + 'px', top: r.top - b.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+}
+$('#bSafe').onclick = () => { const s = $('#safe'); s.style.display = s.style.display === 'block' ? 'none' : 'block'; placeSafe(); };
+
+function updateSel() {
+  const o = $('#sel');
+  const el = selId && stage.querySelector(`[data-id="${CSS.escape(selId)}"]`);
+  if (!el || el.style.display === 'none') { o.style.display = 'none'; return; }
+  const b = box.getBoundingClientRect(), r = el.getBoundingClientRect();
+  Object.assign(o.style, { display: 'block', left: r.left - b.left + 'px', top: r.top - b.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  const n = selNode();
+  o.querySelector('.lbl').textContent = n ? `${n.name}  ${Math.round(propAt(n, 'x', t))}, ${Math.round(propAt(n, 'y', t))}  ${Math.round(propAt(n, 'w', t))}×${Math.round(propAt(n, 'h', t))}` : '';
+}
+
+box.addEventListener('mousedown', (e) => {
+  lastArea = 'canvas';
+  const handle = e.target.closest('#sel .h');
+  const nodeEl = !handle && e.target.closest('.vz-node');
+  if (!handle && !nodeEl) { if (selId) select(null); return; }
+  e.preventDefault();
+  if (nodeEl && nodeEl.dataset.id !== selId) select(nodeEl.dataset.id);
+  const n = selNode(); if (!n) return;
+  const sx = e.clientX, sy = e.clientY;
+  const k = handle ? ['w', 'h'] : ['x', 'y'];
+  const v0 = k.map((p) => propAt(n, p, t, null));
+  let moved = false;
+  const mv = (ev) => {
+    let dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
+    if (!moved && Math.abs(dx) + Math.abs(dy) < 2) return;
+    if (!moved) { checkpoint(); moved = true; }
+    if (ev.shiftKey && !handle) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0; }
+    setProp(n, k[0], Math.round(v0[0] + dx));
+    setProp(n, k[1], Math.round(v0[1] + dy));
+    refresh(); syncProps();
+  };
+  const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); if (moved) renderTimeline(); };
+  addEventListener('mousemove', mv); addEventListener('mouseup', up);
+});
+box.addEventListener('mousemove', (e) => {
+  const r = stage.getBoundingClientRect();
+  const x = Math.round((e.clientX - r.left) / scale), y = Math.round((e.clientY - r.top) / scale);
+  $('#info').textContent = `${x}, ${y}   ·   ${scene?.width}×${scene?.height}   ·   ${Math.round(scale * 100)}%`;
+});
+
+// ------------------------------------------------------------ timeline
+$('#zoom').addEventListener('input', (e) => setZoom(+e.target.value));
+$('#tc').addEventListener('change', (e) => setTime(parseFloat(e.target.value) || 0));
+$('#dur').addEventListener('change', (e) => {
+  const v = parseFloat(e.target.value); if (!(v > 0)) return;
+  checkpoint(); scene.duration = v; if (t > v) setTime(v); renderTimeline(); if (!selId) renderProps();
+});
+const sortedStops = () => [...scene.stops].sort((a, b) => a - b);
+$('#pHome').onclick = () => setTime(0);
+$('#pTake').onclick = () => { const s = sortedStops(); player.playTo(s.length ? s[0] : scene.duration, 0); };
+$('#pCont').onclick = () => { const nx = sortedStops().find((s) => s > t + 1e-4); player.playTo(nx ?? scene.duration); };
+$('#pOut').onclick = () => { const s = sortedStops(); const ls = s.length ? s[s.length - 1] : 0; player.playTo(scene.duration, Math.max(t, ls)); };
+$('#pPlay').onclick = () => player.playTo(scene.duration, t >= scene.duration - 1e-3 ? 0 : t);
+$('#pStop').onclick = () => { player.playing = false; };
+$('#addStop').onclick = () => {
+  if (scene.stops.some((s) => Math.abs(s - t) < 0.005)) return toast('Stop w tym miejscu już istnieje');
+  checkpoint(); scene.stops.push(+t.toFixed(3)); scene.stops.sort((a, b) => a - b); renderTimeline(); if (!selId) renderProps();
+};
+
+function timeFromX(clientX) {
+  const a = $('#tl .tl-area[data-area="ruler"]').getBoundingClientRect();
+  return (clientX - a.left) / pps;
+}
+$('#tl').addEventListener('mousedown', (e) => {
+  lastArea = 'timeline';
+  const kf = e.target.closest('.kf');
+  const sm = e.target.closest('.stopm');
+  const lbl = e.target.closest('.tl-lbl[data-sel]');
+  if (lbl) { select(lbl.dataset.sel); return; }
+  if (kf) {
+    e.preventDefault();
+    const [nid, p, i] = kf.dataset.k.split('|');
+    const n = locate(nid).node; const key = n.anim[p][+i];
+    const entry = { node: n, prop: p, key };
+    if (e.shiftKey) {
+      const j = selKeys.findIndex((x) => x.key === key);
+      if (j >= 0) selKeys.splice(j, 1); else selKeys.push(entry);
+    } else if (!selKeys.some((x) => x.key === key) || selKeys.length < 2) selKeys = [entry];
+    selKey = entry;
+    if (selId !== nid) { selId = nid; renderTree(); renderProps(); }
+    renderTimeline();
+    const sx = e.clientX; let moved = false;
+    const starts = selKeys.map((x) => x.key.t);
+    const mv = (ev) => {
+      const dx = ev.clientX - sx; if (!moved && Math.abs(dx) < 3) return;
+      if (!moved) { checkpoint(); moved = true; }
+      const minT = Math.min(...starts);
+      let dt = Math.max(-minT, dx / pps);
+      dt = ev.shiftKey ? Math.round(dt * 20) / 20 : Math.round(dt * 100) / 100;
+      selKeys.forEach((x, idx) => { x.key.t = Math.max(0, starts[idx] + dt); });
+      new Set(selKeys.map((x) => x.node.anim[x.prop])).forEach((tr) => tr.sort((a, b) => a.t - b.t));
+      renderTimeline(); refresh(); syncProps();
+    };
+    const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); if (!moved && selKeys.length === 1) setTime(key.t); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+    return;
+  }
+  if (sm) {
+    e.preventDefault();
+    const i = +sm.dataset.stop, sx = e.clientX, t0 = scene.stops[i]; let moved = false;
+    const mv = (ev) => {
+      const dx = ev.clientX - sx; if (!moved && Math.abs(dx) < 3) return;
+      if (!moved) { checkpoint(); moved = true; }
+      scene.stops[i] = Math.max(0, Math.min(scene.duration, Math.round((t0 + dx / pps) * 100) / 100));
+      renderTimeline();
+    };
+    const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); scene.stops.sort((a, b) => a - b); if (!moved) setTime(t0); renderTimeline(); if (!selId) renderProps(); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+    return;
+  }
+  const mk = e.target.closest('.mkm');
+  if (mk) { e.preventDefault(); setTime(scene.markers[+mk.dataset.mk].t); return; }
+  if (e.shiftKey && e.target.closest('.tl-area[data-row]')) { // zaznaczanie ramką
+    e.preventDefault();
+    const host = $('#tl'), hr = host.getBoundingClientRect(), sx = e.clientX, sy = e.clientY;
+    const band = document.createElement('div'); band.id = 'band'; host.appendChild(band);
+    const mv = (ev) => {
+      const x1 = Math.min(sx, ev.clientX), x2 = Math.max(sx, ev.clientX), y1 = Math.min(sy, ev.clientY), y2 = Math.max(sy, ev.clientY);
+      Object.assign(band.style, { left: x1 - hr.left + host.scrollLeft + 'px', top: y1 - hr.top + host.scrollTop + 'px', width: x2 - x1 + 'px', height: y2 - y1 + 'px' });
+    };
+    const up = (ev) => {
+      removeEventListener('mousemove', mv); removeEventListener('mouseup', up); band.remove();
+      const x1 = Math.min(sx, ev.clientX), x2 = Math.max(sx, ev.clientX), y1 = Math.min(sy, ev.clientY), y2 = Math.max(sy, ev.clientY);
+      const picked = [];
+      for (const kfEl of $$('#tl .kf')) {
+        const r = kfEl.getBoundingClientRect();
+        if (r.right < x1 || r.left > x2 || r.bottom < y1 || r.top > y2) continue;
+        const [nid, p, i] = kfEl.dataset.k.split('|');
+        const n = locate(nid)?.node; if (n?.anim?.[p]?.[+i]) picked.push({ node: n, prop: p, key: n.anim[p][+i] });
+      }
+      selKeys = picked; selKey = picked[0] || null;
+      renderTimeline();
+    };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+    return;
+  }
+  if (e.target.closest('.tl-area')) {
+    e.preventDefault();
+    if (selKey || selKeys.length) { selKey = null; selKeys = []; renderKeyEd(); $$('.kf.sel').forEach((k) => k.classList.remove('sel')); }
+    player.playing = false;
+    setTime(timeFromX(e.clientX));
+    const mv = (ev) => setTime(timeFromX(ev.clientX));
+    const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+  }
+});
+$('#tl').addEventListener('dblclick', (e) => {
+  const mk = e.target.closest('.mkm');
+  if (mk) {
+    const m = scene.markers[+mk.dataset.mk];
+    const v = prompt('Nazwa markera (puste = usuń)', m.name || ''); if (v === null) return;
+    checkpoint(); if (v.trim()) m.name = v.trim(); else scene.markers.splice(+mk.dataset.mk, 1);
+    renderTimeline(); if (!selId) renderProps(); return;
+  }
+  if (e.target.closest('.tl-area[data-area="ruler"]') && !e.target.closest('.stopm')) { addMarker(Math.round(timeFromX(e.clientX) * 100) / 100); return; }
+  const sm = e.target.closest('.stopm');
+  if (sm) { checkpoint(); scene.stops.splice(+sm.dataset.stop, 1); renderTimeline(); if (!selId) renderProps(); return; }
+  const row = e.target.closest('.tl-area[data-row]');
+  if (!row || e.target.closest('.kf')) return;
+  const [nid, p] = row.dataset.row.split('|');
+  const n = locate(nid).node;
+  const at = Math.round(timeFromX(e.clientX) * 100) / 100;
+  checkpoint(); setKey(n, p, at, propAt(n, p, at, null));
+  setTime(at); renderTimeline();
+});
+$('#keyed').addEventListener('change', (e) => {
+  if (!selKey) return;
+  const k = selKey.key, tr = selKey.node.anim[selKey.prop];
+  checkpoint();
+  if (e.target.id === 'kt') { k.t = Math.max(0, parseFloat(e.target.value) || 0); tr.sort((a, b) => a.t - b.t); }
+  if (e.target.id === 'kv') k.v = PROPS[selKey.prop]?.t === 'num' ? parseFloat(e.target.value) || 0 : e.target.value;
+  if (e.target.id === 'ke') k.e = e.target.value;
+  refresh(); renderTimeline(); syncProps();
+});
+function deleteSelKey() {
+  if (!selKey && !selKeys.length) return;
+  checkpoint();
+  for (const x of (selKeys.length ? selKeys : [selKey])) {
+    const tr = x.node.anim?.[x.prop]; if (!tr) continue;
+    const i = tr.indexOf(x.key); if (i >= 0) tr.splice(i, 1);
+    if (!tr.length) delete x.node.anim[x.prop];
+  }
+  selKey = null; selKeys = []; refresh(); renderTimeline(); syncProps(); renderTree();
+}
+$('#keyed').addEventListener('click', (e) => { if (e.target.id === 'kdel') deleteSelKey(); });
+
+// ------------------------------------------------------------ markery, zoom, kopiuj/wklej klucze
+function addMarker(at, name) {
+  const v = name ?? prompt('Nazwa markera', 'marker' + ((scene.markers?.length || 0) + 1)); if (v === null || !v.trim()) return;
+  checkpoint(); (scene.markers ||= []).push({ t: Math.max(0, Math.min(scene.duration, +at.toFixed(3))), name: v.trim() });
+  scene.markers.sort((a, b) => a.t - b.t); renderTimeline(); if (!selId) renderProps();
+}
+$('#markAdd').onclick = () => addMarker(t);
+function setZoom(v, anchorClientX) {
+  const host = $('#tl'), old = pps;
+  const ar = host.getBoundingClientRect();
+  const cx = anchorClientX != null ? anchorClientX - ar.left : ar.width / 2;
+  const tAt = (host.scrollLeft + cx - LBL) / old;
+  pps = Math.max(40, Math.min(1200, v));
+  $('#zoom').value = pps;
+  renderTimeline();
+  host.scrollLeft = Math.max(0, tAt * pps + LBL - cx);
+}
+$('#tl').addEventListener('wheel', (e) => {
+  if (!e.ctrlKey && !e.metaKey) return; // bez Ctrl – zwykłe przewijanie
+  e.preventDefault();
+  setZoom(pps * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX);
+}, { passive: false });
+$('#zoomFit').onclick = () => { setZoom(($('#tl').clientWidth - LBL - 90) / Math.max(0.1, scene.duration)); $('#tl').scrollLeft = 0; };
+function copyKeys() {
+  const sel = selKeys.length ? selKeys : selKey ? [selKey] : [];
+  if (!sel.length) return toast('Zaznacz klucze (kliknij, Shift+klik lub Shift+przeciągnięcie ramką)', true);
+  const t0 = Math.min(...sel.map((x) => x.key.t));
+  clipKeys = sel.map((x) => ({ prop: x.prop, dt: x.key.t - t0, v: x.key.v, e: x.key.e }));
+  toast(`Skopiowano ${clipKeys.length} kluczy`);
+}
+function pasteKeys() {
+  const n = selNode();
+  if (!clipKeys) return toast('Schowek kluczy jest pusty', true);
+  if (!n) return toast('Zaznacz węzeł, na który wkleić klucze', true);
+  const ok = clipKeys.filter((c) => PROPS[c.prop]?.anim && TYPES[n.type].props.includes(c.prop));
+  if (!ok.length) return toast(`Węzeł „${n.name}” nie ma tych właściwości`, true);
+  checkpoint();
+  for (const c of ok) {
+    const at = Math.round(Math.max(0, Math.min(scene.duration, t + c.dt)) * 1000) / 1000;
+    setKey(n, c.prop, at, c.v);
+    const k = n.anim[c.prop].find((x) => Math.abs(x.t - at) < 0.0005); if (k && c.e) k.e = c.e;
+  }
+  refresh(); renderTimeline(); renderTree(); syncProps();
+  toast(`Wklejono ${ok.length} kluczy` + (ok.length < clipKeys.length ? ` (pominięto ${clipKeys.length - ok.length} – brak właściwości)` : ''));
+}
+$('#keyCopy').onclick = copyKeys;
+$('#keyPaste').onclick = pasteKeys;
+
+// ------------------------------------------------------------ drzewo: przeciąganie (zmiana rodzica / kolejności)
+const absPos = (id) => { let x = 0, y = 0, cur = locate(id); while (cur) { x += +cur.node.props?.x || 0; y += +cur.node.props?.y || 0; cur = cur.parent ? locate(cur.parent.id) : null; } return { x, y }; };
+const isDesc = (anc, id) => { let f = false; walk(anc.children || [], (n) => { if (n.id === id) f = true; }); return f; };
+function moveNode(srcId, dstId, mode) {
+  const S = locate(srcId), D = dstId ? locate(dstId) : null; if (!S) return;
+  if (D && (D.node.id === srcId || isDesc(S.node, D.node.id))) return toast('Nie można przenieść węzła do własnego potomka', true);
+  if (mode === 'into' && !(D && TYPES[D.node.type].children)) return;
+  checkpoint();
+  const abs = absPos(srcId);
+  S.list.splice(S.index, 1);
+  const L = D ? locate(D.node.id) : null;
+  let parent = null;
+  if (mode === 'into') { (L.node.children ||= []).push(S.node); parent = L.node; }
+  else if (L) { L.list.splice(L.index + 1, 0, S.node); parent = L.parent || null; }
+  else scene.nodes.push(S.node);
+  // zachowaj położenie na scenie: współrzędne względem nowego rodzica
+  const pa = parent ? absPos(parent.id) : { x: 0, y: 0 };
+  S.node.props ||= {}; S.node.props.x = Math.round(abs.x - pa.x); S.node.props.y = Math.round(abs.y - pa.y);
+  player.setScene(scene); player.seek(t); renderTree(); renderProps(); renderTimeline();
+}
+let dragNode = null;
+$('#tree').addEventListener('dragstart', (e) => { const it = e.target.closest('.item[data-id]'); if (!it || !it.dataset.id) { e.preventDefault(); return; } dragNode = it.dataset.id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragNode); } catch { /* ignoruj */ } });
+function dropMode(e, it) {
+  const r = it.getBoundingClientRect(), n = locate(it.dataset.id)?.node;
+  return n && TYPES[n.type].children && e.clientY > r.top + r.height * 0.25 && e.clientY < r.bottom - r.height * 0.25 ? 'into' : 'after';
+}
+$('#tree').addEventListener('dragover', (e) => {
+  const it = e.target.closest('.item'); if (!dragNode || !it) return;
+  e.preventDefault();
+  $$('#tree .dropinto, #tree .dropafter').forEach((x) => x.classList.remove('dropinto', 'dropafter'));
+  it.classList.add(it.dataset.id ? (dropMode(e, it) === 'into' ? 'dropinto' : 'dropafter') : 'dropafter');
+});
+$('#tree').addEventListener('dragend', () => { dragNode = null; $$('#tree .dropinto, #tree .dropafter').forEach((x) => x.classList.remove('dropinto', 'dropafter')); });
+$('#tree').addEventListener('drop', (e) => {
+  const it = e.target.closest('.item'); if (!dragNode || !it) return;
+  e.preventDefault();
+  const src = dragNode; dragNode = null;
+  $$('#tree .dropinto, #tree .dropafter').forEach((x) => x.classList.remove('dropinto', 'dropafter'));
+  if (!it.dataset.id) { moveNode(src, null, 'after'); return; } // upuszczenie na wiersz sceny = na koniec korzenia
+  moveNode(src, it.dataset.id, dropMode(e, it));
+});
+
+// ------------------------------------------------------------ biblioteka presetów animacji
+let animPresets = [];
+async function loadPresets() { animPresets = await api('GET', '/api/animpresets').catch(() => []); }
+async function savePresets() { animPresets = await api('PUT', '/api/animpresets', animPresets); }
+function presetFromNode(n, name) {
+  const tracks = {}; let t0 = Infinity, t1 = 0;
+  for (const [p, tr] of Object.entries(n.anim || {})) if (tr?.length) { tracks[p] = tr.map((k) => ({ ...k })); t0 = Math.min(t0, tr[0].t); t1 = Math.max(t1, tr[tr.length - 1].t); }
+  if (!Object.keys(tracks).length) return null;
+  for (const tr of Object.values(tracks)) tr.forEach((k) => { k.t = Math.round((k.t - t0) * 1000) / 1000; });
+  return { id: uid('ap'), name, duration: Math.round((t1 - t0) * 1000) / 1000, tracks };
+}
+function applyPreset(n, pr) {
+  let used = 0;
+  for (const [p, tr] of Object.entries(pr.tracks || {})) {
+    if (!PROPS[p]?.anim || !TYPES[n.type].props.includes(p)) continue;
+    n.anim ||= {};
+    const lo = t - 1e-4, hi = t + pr.duration + 1e-4;
+    n.anim[p] = (n.anim[p] || []).filter((k) => k.t < lo || k.t > hi).concat(tr.map((k) => ({ ...k, t: Math.round((k.t + t) * 1000) / 1000 })));
+    n.anim[p].sort((a, b) => a.t - b.t); used++;
+  }
+  return used;
+}
+$('#props').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-ap]'); if (!b) return;
+  const n = selNode(); if (!n) return;
+  const act = b.dataset.ap;
+  try {
+    if (act === 'save') {
+      const name = prompt('Nazwa presetu animacji', n.name + ' – animacja'); if (!name) return;
+      const pr = presetFromNode(n, name);
+      if (!pr) return toast('Węzeł nie ma kluczy animacji', true);
+      animPresets.push(pr); await savePresets(); renderProps(); toast(`Zapisano preset „${name}”`);
+    } else {
+      const sel = $('#apSel')?.value, pr = animPresets.find((x) => x.id === sel);
+      if (act === 'apply') {
+        if (!pr) return toast('Wybierz preset', true);
+        checkpoint(); const used = applyPreset(n, pr);
+        if (!used) { undo.pop(); return toast('Ten węzeł nie ma właściwości z presetu', true); }
+        player.setScene(scene); player.seek(t); renderTimeline(); renderTree(); syncProps(); toast(`Zastosowano preset „${pr.name}” od ${t.toFixed(2)}s`);
+      } else if (act === 'del') {
+        if (!pr || !confirm(`Usunąć preset „${pr.name}”?`)) return;
+        animPresets = animPresets.filter((x) => x.id !== pr.id); await savePresets(); renderProps();
+      } else if (act === 'export') {
+        if (!pr) return toast('Wybierz preset', true);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(pr, null, 2)], { type: 'application/json' }));
+        a.download = (pr.name || 'preset').replace(/[^\w.\-]+/g, '_') + '.animpreset.json'; a.click();
+      } else if (act === 'import') {
+        const fi = $('#fileIn'); fi.accept = '.json,application/json'; fi.value = '';
+        fi.onchange = async () => {
+          try { const x = JSON.parse(await fi.files[0].text()); if (!x.tracks) throw new Error('to nie jest preset animacji'); x.id = uid('ap'); animPresets.push(x); await savePresets(); renderProps(); toast('Zaimportowano preset'); }
+          catch (err) { toast('Import: ' + err.message, true); }
+        };
+        fi.click();
+      }
+    }
+  } catch (err) { toast(err.message, true); }
+});
+loadPresets();
+
+// ------------------------------------------------------------ górny pasek
+$('#sceneSel').addEventListener('change', async (e) => {
+  const s = scenes.find((s) => s.id === e.target.value);
+  if (await confirmLeave()) openScene(s); else renderSceneSel();
+});
+$('#bSave').onclick = save;
+$('#bUndo').onclick = doUndo;
+$('#bRedo').onclick = doRedo;
+$('#bNew').onclick = async () => {
+  if (!(await confirmLeave())) return;
+  const n = prompt('Nazwa nowej sceny', 'Scena' + (scenes.length + 1)); if (!n) return;
+  newScene(n);
+};
+$('#bDup').onclick = async () => {
+  if (!(await confirmLeave())) return;
+  const c = structuredClone(scene); c.name += ' kopia'; newScene(null, c);
+};
+$('#bDel').onclick = async () => {
+  if (!confirm(`Usunąć scenę „${scene.name}”?\nStrony w Trio korzystające z tego szablonu też zostaną usunięte.`)) return;
+  try {
+    await api('DELETE', '/api/scenes/' + encodeURIComponent(scene.id));
+    scenes = scenes.filter((s) => s.id !== scene.id); setDirty(false);
+    if (scenes.length) openScene(scenes[0]); else newScene('Nowa scena');
+  } catch (e) { toast(e.message, true); }
+};
+$('#bExp').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(scene, null, 2)], { type: 'application/json' }));
+  a.download = (scene.name || 'scena').replace(/[^\w.\-]+/g, '_') + '.vizrs.json'; a.click();
+};
+$('#bImp').onclick = () => {
+  const fi = $('#fileIn'); fi.accept = '.json,application/json'; fi.value = '';
+  fi.onchange = async () => {
+    const f = fi.files[0]; if (!f) return;
+    try { const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s); }
+    catch (e) { toast('Import: ' + e.message, true); }
+  };
+  fi.click();
+};
+
+// ------------------------------------------------------------ BTB CG: import / eksport elementów
+function showReport(title, lines) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center';
+  d.innerHTML = `<div style="width:min(720px,94vw);max-height:86vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px">
+    <b style="font-size:15px">${esc(title)}</b>
+    <ul id="rep" style="margin:10px 0;padding-left:18px;line-height:1.5">${lines.map((l) => `<li>${esc(l)}</li>`).join('') || '<li class="dim">Bez uwag – wszystko przeniesiono.</li>'}</ul>
+    <button id="repOk" class="acc">OK</button></div>`;
+  document.body.appendChild(d);
+  d.querySelector('#repOk').onclick = () => d.remove();
+  d.addEventListener('mousedown', (e) => { if (e.target === d) d.remove(); });
+}
+$('#bImpBtb').onclick = () => {
+  const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
+  fi.onchange = async () => {
+    const f = fi.files[0]; if (!f) return;
+    try {
+      if (!(await confirmLeave())) return;
+      const isZip = /\.cgpack$/i.test(f.name);
+      const { elements, files } = await BTB.readBtb(isZip ? new Uint8Array(await f.arrayBuffer()) : await f.text(), f.name);
+      const report = []; let made = 0, last = null;
+      for (const el of elements) {
+        const used = new Set();
+        const r = BTB.convertElement(el, {
+          knownFonts: [...FONTS, 'Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'],
+          assetName: (src) => { const k = Object.keys(files || {}).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
+        });
+        for (const k of used) {
+          const rr = await fetch('/api/assets?name=' + encodeURIComponent(k.split('/').pop()), { method: 'POST', body: files[k] });
+          if (!rr.ok) r.warnings.push(`plik ${k}: ${(await rr.json().catch(() => ({}))).error || rr.status}`);
+        }
+        const saved = await api('POST', '/api/scenes', r.scene);
+        scenes.push(saved);
+        await api('POST', '/api/pages', { scene: saved.id, name: r.page.name, values: r.page.values }).catch((e) => r.warnings.push('strona nie utworzona: ' + e.message));
+        r.warnings.forEach((w) => report.push(`${r.scene.name}: ${w}`));
+        made++; last = saved;
+      }
+      await loadAssets();
+      if (last) openScene(last);
+      showReport(`Zaimportowano ${made} ${made === 1 ? 'element' : 'elementy'} z BTB CG`, report);
+    } catch (e) { toast('Import BTB: ' + e.message, true); }
+  };
+  fi.click();
+};
+$('#bExpBtb').onclick = async () => {
+  try {
+    const show = await api('GET', '/api/show');
+    const page = show.pages.find((p) => p.scene === scene.id);
+    const r = BTB.exportScene(scene, page?.values || {});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(r.file, null, 2)], { type: 'application/json' }));
+    a.download = (scene.name || 'scena').replace(/[^\w.\-]+/g, '_') + '.btb.json'; a.click();
+    showReport(`Wyeksportowano „${scene.name}” jako element BTB CG`, r.warnings);
+  } catch (e) { toast('Eksport BTB: ' + e.message, true); }
+};
+
+// ------------------------------------------------------------ klawiatura
+addEventListener('keydown', (e) => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); return; }
+  if (typing) return;
+  if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); return; }
+  if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); doRedo(); return; }
+  if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); treeOp('dup'); return; }
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); if (lastArea === 'timeline' && selKey) deleteSelKey(); else treeOp('del'); return; }
+  if (e.key === ' ') { e.preventDefault(); if (player.playing) player.playing = false; else $('#pPlay').click(); return; }
+  if (mod && e.key.toLowerCase() === 'c' && lastArea === 'timeline') { e.preventDefault(); copyKeys(); return; }
+  if (mod && e.key.toLowerCase() === 'v' && lastArea === 'timeline') { e.preventDefault(); pasteKeys(); return; }
+  if (e.key.toLowerCase() === 'm' && !mod) { e.preventDefault(); addMarker(t); return; }
+  if (e.key === 'Home') { setTime(0); return; }
+  if (e.key === 'End') { setTime(scene.duration); return; }
+  const n = selNode();
+  const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (n && arrows[e.key]) {
+    e.preventDefault(); checkpoint();
+    const m = e.shiftKey ? 10 : 1, [dx, dy] = arrows[e.key];
+    setProp(n, 'x', propAt(n, 'x', t, null) + dx * m); setProp(n, 'y', propAt(n, 'y', t, null) + dy * m);
+    refresh(); syncProps();
+  }
+});
+addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// pętla UI: śledzenie odtwarzania i ramki zaznaczenia
+let lastSync = 0;
+(function frame(now) {
+  if (player) {
+    if (player.playing || Math.abs(player.t - t) > 1e-6) {
+      t = player.t; updatePlayhead();
+      if (now - lastSync > 80) { syncProps(); lastSync = now; }
+    }
+    updateSel();
+  }
+  requestAnimationFrame(frame);
+})(0);
+
+new ResizeObserver(() => resize()).observe(box);
+load().catch((e) => toast('Błąd: ' + e.message, true));
+</script>
+</body>
+</html>

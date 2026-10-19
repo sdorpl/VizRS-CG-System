@@ -1,0 +1,3656 @@
+{
+ "name": "R7 NEWS",
+ "scenes": [
+  {
+   "id": "r7_belka",
+   "name": "R7 Belka",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.53,
+   "stops": [
+    0.7
+   ],
+   "fieldMeta": {
+    "styl": {
+     "type": "select",
+     "label": "Styl",
+     "options": [
+      "info",
+      "pilne"
+     ],
+     "default": "info"
+    },
+    "label": {
+     "label": "Etykieta"
+    },
+    "headline": {
+     "label": "Treść belki"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rb_bar",
+     "type": "rect",
+     "name": "bar_info",
+     "props": {
+      "x": 214,
+      "y": 998,
+      "w": 1646,
+      "h": 96,
+      "anchorY": "bottom",
+      "color": "#0e3b43",
+      "color2": "#13707a",
+      "gradAngle": 90,
+      "shadow": 24,
+      "follow": "headline,headline_p",
+      "followAxis": "h",
+      "followPad": 26,
+      "followMin": 88
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.1,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 1.15,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.49,
+        "v": 100
+       }
+      ]
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "info"
+     }
+    },
+    {
+     "id": "rb_barp",
+     "type": "rect",
+     "name": "bar_pilne",
+     "props": {
+      "x": 214,
+      "y": 998,
+      "w": 1646,
+      "h": 96,
+      "anchorY": "bottom",
+      "color": "#f2a900",
+      "color2": "#ffc229",
+      "gradAngle": 90,
+      "shadow": 24,
+      "follow": "headline,headline_p",
+      "followAxis": "h",
+      "followPad": 26,
+      "followMin": 88
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.1,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 1.1,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.44,
+        "v": 100
+       }
+      ]
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "pilne"
+     }
+    },
+    {
+     "id": "rb_tab",
+     "type": "rect",
+     "name": "tab",
+     "props": {
+      "x": 60,
+      "y": 998,
+      "w": 170,
+      "h": 96,
+      "anchorY": "bottom",
+      "color": "#f2a900",
+      "skewX": -10,
+      "follow": "headline,headline_p",
+      "followAxis": "h",
+      "followPad": 26,
+      "followMin": 88
+     },
+     "anim": {
+      "clipT": [
+       {
+        "t": 0,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.3,
+        "v": 0
+       }
+      ],
+      "clipB": [
+       {
+        "t": 1.05,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.39,
+        "v": 100
+       }
+      ]
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "info"
+     }
+    },
+    {
+     "id": "rb_tabp",
+     "type": "rect",
+     "name": "tab_pilne",
+     "props": {
+      "x": 60,
+      "y": 998,
+      "w": 170,
+      "h": 96,
+      "anchorY": "bottom",
+      "color": "#0b2a30",
+      "skewX": -10,
+      "follow": "headline,headline_p",
+      "followAxis": "h",
+      "followPad": 26,
+      "followMin": 88
+     },
+     "anim": {
+      "clipT": [
+       {
+        "t": 0,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.3,
+        "v": 0
+       }
+      ],
+      "clipB": [
+       {
+        "t": 1.0,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.34,
+        "v": 100
+       }
+      ]
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "pilne"
+     }
+    },
+    {
+     "id": "rb_lab",
+     "type": "text",
+     "name": "label",
+     "props": {
+      "x": 60,
+      "y": 998,
+      "w": 160,
+      "h": 96,
+      "anchorY": "bottom",
+      "text": "INFO",
+      "font": "Barlow Condensed",
+      "size": 40,
+      "weight": "800",
+      "align": "center",
+      "upper": true,
+      "spacing": 1,
+      "color": "#0b2a30",
+      "textFit": "squeeze",
+      "padX": 12
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.2,
+        "v": 0
+       },
+       {
+        "t": 0.4,
+        "v": 1
+       },
+       {
+        "t": 0.84,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.1,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.84,
+        "v": 60,
+        "e": "in"
+       },
+       {
+        "t": 1.1,
+        "v": 86
+       }
+      ]
+     },
+     "fields": {
+      "text": "label"
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "info"
+     }
+    },
+    {
+     "id": "rb_labp",
+     "type": "text",
+     "name": "label_p",
+     "props": {
+      "x": 60,
+      "y": 998,
+      "w": 160,
+      "h": 96,
+      "anchorY": "bottom",
+      "text": "PILNE",
+      "font": "Barlow Condensed",
+      "size": 40,
+      "weight": "800",
+      "align": "center",
+      "upper": true,
+      "spacing": 1,
+      "color": "#f2a900",
+      "textFit": "squeeze",
+      "padX": 12
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.2,
+        "v": 0
+       },
+       {
+        "t": 0.4,
+        "v": 1
+       },
+       {
+        "t": 0.8,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.06,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.8,
+        "v": 60,
+        "e": "in"
+       },
+       {
+        "t": 1.06,
+        "v": 86
+       }
+      ]
+     },
+     "fields": {
+      "text": "label"
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "pilne"
+     }
+    },
+    {
+     "id": "rb_h",
+     "type": "text",
+     "name": "headline",
+     "props": {
+      "x": 250,
+      "y": 985,
+      "w": 1590,
+      "h": 300,
+      "anchorY": "bottom",
+      "valign": "bottom",
+      "text": "Treść belki",
+      "font": "Barlow Condensed",
+      "size": 66,
+      "weight": "700",
+      "upper": true,
+      "lineHeight": 1.02,
+      "maxLines": 2,
+      "textFit": "squeeze-lines",
+      "color": "#ffffff",
+      "hlColor": "#f2a900",
+      "hlText": "#0b2a30"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.3,
+        "v": 0
+       },
+       {
+        "t": 0.55,
+        "v": 1
+       },
+       {
+        "t": 0.76,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.3,
+        "v": 280,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 250
+       },
+       {
+        "t": 0.76,
+        "v": 250,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 276
+       }
+      ]
+     },
+     "fields": {
+      "text": "headline"
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "info"
+     }
+    },
+    {
+     "id": "rb_hp",
+     "type": "text",
+     "name": "headline_p",
+     "props": {
+      "x": 250,
+      "y": 985,
+      "w": 1590,
+      "h": 300,
+      "anchorY": "bottom",
+      "valign": "bottom",
+      "text": "Treść belki",
+      "font": "Barlow Condensed",
+      "size": 66,
+      "weight": "700",
+      "upper": true,
+      "lineHeight": 1.02,
+      "maxLines": 2,
+      "textFit": "squeeze-lines",
+      "color": "#0b2a30",
+      "hlColor": "#0b2a30",
+      "hlText": "#f2a900"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.3,
+        "v": 0
+       },
+       {
+        "t": 0.55,
+        "v": 1
+       },
+       {
+        "t": 0.72,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.3,
+        "v": 280,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 250
+       },
+       {
+        "t": 0.72,
+        "v": 250,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 276
+       }
+      ]
+     },
+     "fields": {
+      "text": "headline"
+     },
+     "showIf": {
+      "field": "styl",
+      "value": "pilne"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r7_podpis",
+   "name": "R7 Podpis",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.4,
+   "stops": [
+    0.7
+   ],
+   "fieldMeta": {
+    "name": {
+     "label": "Imię i nazwisko"
+    },
+    "title": {
+     "label": "Funkcja"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rp_nb",
+     "type": "rect",
+     "name": "namebox",
+     "props": {
+      "x": 60,
+      "y": 958,
+      "w": 600,
+      "h": 66,
+      "anchorY": "bottom",
+      "color": "#f4f4f1",
+      "shadow": 20,
+      "follow": "name",
+      "followAxis": "w",
+      "followPad": 60,
+      "followMin": 420
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.4,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 1.02,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.36,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rp_tb",
+     "type": "rect",
+     "name": "titlebox",
+     "props": {
+      "x": 60,
+      "y": 958,
+      "w": 500,
+      "h": 40,
+      "color": "#0e3b43",
+      "follow": "title",
+      "followAxis": "w",
+      "followPad": 60,
+      "followMin": 260
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.2,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.55,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 0.97,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.31,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rp_acc",
+     "type": "rect",
+     "name": "accent",
+     "props": {
+      "x": 60,
+      "y": 892,
+      "w": 10,
+      "h": 106,
+      "color": "#f2a900",
+      "skewX": -10
+     },
+     "anim": {
+      "clipB": [
+       {
+        "t": 0,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.25,
+        "v": 0
+       }
+      ],
+      "clipT": [
+       {
+        "t": 0.92,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.26,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rp_n",
+     "type": "text",
+     "name": "name",
+     "props": {
+      "x": 90,
+      "y": 892,
+      "w": 1500,
+      "h": 66,
+      "text": "Imię Nazwisko",
+      "font": "Barlow Condensed",
+      "size": 52,
+      "weight": "700",
+      "color": "#0e3b43",
+      "textFit": "squeeze"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.25,
+        "v": 0
+       },
+       {
+        "t": 0.5,
+        "v": 1
+       },
+       {
+        "t": 0.76,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.76,
+        "v": 90,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 116
+       }
+      ]
+     },
+     "fields": {
+      "text": "name"
+     }
+    },
+    {
+     "id": "rp_t",
+     "type": "text",
+     "name": "title",
+     "props": {
+      "x": 90,
+      "y": 958,
+      "w": 1500,
+      "h": 40,
+      "text": "Funkcja",
+      "font": "Barlow Condensed",
+      "size": 28,
+      "weight": "600",
+      "upper": true,
+      "spacing": 1,
+      "color": "#ffffff",
+      "textFit": "squeeze"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.4,
+        "v": 0
+       },
+       {
+        "t": 0.6,
+        "v": 1
+       },
+       {
+        "t": 0.72,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.72,
+        "v": 90,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 116
+       }
+      ]
+     },
+     "fields": {
+      "text": "title"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r7_autor",
+   "name": "R7 BelkaAutor",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.35,
+   "stops": [
+    0.7
+   ],
+   "fieldMeta": {
+    "author": {
+     "label": "Autor / źródło"
+    },
+    "headline": {
+     "label": "Treść belki"
+    }
+   },
+   "nodes": [
+    {
+     "id": "ra_bar",
+     "type": "rect",
+     "name": "bar",
+     "props": {
+      "x": 60,
+      "y": 998,
+      "w": 1800,
+      "h": 100,
+      "anchorY": "bottom",
+      "color": "#0e3b43",
+      "color2": "#13707a",
+      "gradAngle": 90,
+      "shadow": 24
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.1,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 0.97,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.31,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "ra_h",
+     "type": "text",
+     "name": "headline",
+     "props": {
+      "x": 96,
+      "y": 898,
+      "w": 1730,
+      "h": 100,
+      "text": "Treść belki",
+      "font": "Barlow Condensed",
+      "size": 82,
+      "weight": "700",
+      "upper": true,
+      "color": "#ffffff",
+      "textFit": "squeeze-lines",
+      "maxLines": 1
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.3,
+        "v": 0
+       },
+       {
+        "t": 0.55,
+        "v": 1
+       },
+       {
+        "t": 0.76,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.76,
+        "v": 96,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 122
+       }
+      ]
+     },
+     "fields": {
+      "text": "headline"
+     }
+    },
+    {
+     "id": "ra_tag",
+     "type": "rect",
+     "name": "tagbox",
+     "props": {
+      "x": 60,
+      "y": 898,
+      "w": 400,
+      "h": 40,
+      "anchorY": "bottom",
+      "color": "#f2a900",
+      "skewX": -10,
+      "follow": "author",
+      "followAxis": "w",
+      "followPad": 50,
+      "followMin": 200
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.35,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.6,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 0.92,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.26,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "ra_a",
+     "type": "text",
+     "name": "author",
+     "props": {
+      "x": 84,
+      "y": 858,
+      "w": 1200,
+      "h": 40,
+      "text": "Imię Nazwisko / R7 NEWS",
+      "font": "Barlow Condensed",
+      "size": 28,
+      "weight": "700",
+      "upper": true,
+      "spacing": 0.5,
+      "color": "#0b2a30",
+      "textFit": "squeeze"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 0.7,
+        "v": 1
+       },
+       {
+        "t": 0.72,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.72,
+        "v": 84,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 110
+       }
+      ]
+     },
+     "fields": {
+      "text": "author"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r7_ticker",
+   "name": "R7 Ticker",
+   "layer": "back",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.0,
+   "stops": [
+    0.45
+   ],
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości (jedna w linii)"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rt_g",
+     "type": "group",
+     "name": "ticker",
+     "props": {
+      "x": 0,
+      "y": 1012,
+      "w": 1920,
+      "h": 56
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1080,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 1012
+       },
+       {
+        "t": 0.6,
+        "v": 1012,
+        "e": "in"
+       },
+       {
+        "t": 1.0,
+        "v": 1080
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rt_bg",
+       "type": "rect",
+       "name": "bg",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 56,
+        "color": "#0b2a30"
+       }
+      },
+      {
+       "id": "rt_c",
+       "type": "ticker",
+       "name": "crawl",
+       "props": {
+        "x": 230,
+        "y": 0,
+        "w": 1480,
+        "h": 56,
+        "text": "Wiadomość\nWiadomość",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "600",
+        "upper": true,
+        "color": "#ffffff",
+        "speed": 150,
+        "sep": "   ▸   ",
+        "sepColor": "#f2a900"
+       },
+       "fields": {
+        "text": "items"
+       }
+      },
+      {
+       "id": "rt_lb",
+       "type": "rect",
+       "name": "logobox",
+       "props": {
+        "x": -20,
+        "y": 0,
+        "w": 240,
+        "h": 56,
+        "color": "#13707a",
+        "skewX": -12,
+        "shadow": 14
+       }
+      },
+      {
+       "id": "rt_l1",
+       "type": "text",
+       "name": "logo1",
+       "props": {
+        "x": 24,
+        "y": 0,
+        "w": 70,
+        "h": 56,
+        "text": "R7",
+        "font": "Barlow Condensed",
+        "size": 42,
+        "weight": "800",
+        "italic": true,
+        "color": "#f2a900"
+       }
+      },
+      {
+       "id": "rt_l2",
+       "type": "text",
+       "name": "logo2",
+       "props": {
+        "x": 90,
+        "y": 0,
+        "w": 110,
+        "h": 56,
+        "text": "NEWS",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "600",
+        "spacing": 2,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "rt_cb",
+       "type": "rect",
+       "name": "clockbox",
+       "props": {
+        "x": 1720,
+        "y": 0,
+        "w": 230,
+        "h": 56,
+        "color": "#f2a900",
+        "skewX": -12
+       }
+      },
+      {
+       "id": "rt_clk",
+       "type": "clock",
+       "name": "clock",
+       "props": {
+        "x": 1730,
+        "y": 0,
+        "w": 180,
+        "h": 56,
+        "format": "HH:mm",
+        "font": "Barlow Condensed",
+        "size": 38,
+        "weight": "700",
+        "align": "center",
+        "color": "#0b2a30"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7_bug",
+   "name": "R7 NaZywo",
+   "layer": "bug",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.25,
+   "stops": [
+    0.55
+   ],
+   "fieldMeta": {
+    "place": {
+     "label": "Miejsce"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rg_g",
+     "type": "group",
+     "name": "bug",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 1920,
+      "h": 200
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.3,
+        "v": 1
+       },
+       {
+        "t": 0.55,
+        "v": 1
+       }
+      ],
+      "x": [
+       {
+        "t": 0,
+        "v": 30,
+        "e": "out"
+       },
+       {
+        "t": 0.4,
+        "v": 0
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rg_pb",
+       "type": "rect",
+       "name": "placebox",
+       "props": {
+        "x": 1686,
+        "y": 58,
+        "w": 300,
+        "h": 50,
+        "anchorX": "right",
+        "color": "#0b2a30e8",
+        "follow": "place",
+        "followAxis": "w",
+        "followPad": 40,
+        "followMin": 120
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.87,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.21,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rg_p",
+       "type": "text",
+       "name": "place",
+       "props": {
+        "x": 1666,
+        "y": 58,
+        "w": 900,
+        "h": 50,
+        "anchorX": "right",
+        "align": "right",
+        "text": "Miejsce",
+        "font": "Barlow Condensed",
+        "size": 28,
+        "weight": "600",
+        "upper": true,
+        "spacing": 1,
+        "color": "#ffffff",
+        "textFit": "squeeze"
+       },
+       "fields": {
+        "text": "place"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.61,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.87,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.61,
+          "v": 1666,
+          "e": "in"
+         },
+         {
+          "t": 0.87,
+          "v": 1692
+         }
+        ]
+       }
+      },
+      {
+       "id": "rg_lb",
+       "type": "rect",
+       "name": "livebox",
+       "props": {
+        "x": 1686,
+        "y": 58,
+        "w": 180,
+        "h": 50,
+        "color": "#f2a900",
+        "skewX": -10
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.82,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.16,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rg_dot",
+       "type": "ellipse",
+       "name": "dot",
+       "props": {
+        "x": 1704,
+        "y": 76,
+        "w": 14,
+        "h": 14,
+        "color": "#0b2a30",
+        "blink": 1.2
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.77,
+          "v": 1
+         },
+         {
+          "t": 0.97,
+          "v": 0
+         }
+        ]
+       }
+      },
+      {
+       "id": "rg_lt",
+       "type": "text",
+       "name": "live",
+       "props": {
+        "x": 1726,
+        "y": 58,
+        "w": 130,
+        "h": 50,
+        "text": "NA ŻYWO",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "800",
+        "color": "#0b2a30"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.57,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.83,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.57,
+          "v": 1726,
+          "e": "in"
+         },
+         {
+          "t": 0.83,
+          "v": 1752
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r7_program",
+   "name": "R7 BelkaProgram",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.44,
+   "stops": [
+    0.7
+   ],
+   "fieldMeta": {
+    "program": {
+     "label": "Program"
+    },
+    "czas": {
+     "label": "Godzina"
+    },
+    "headline": {
+     "label": "Temat"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rr_pb",
+     "type": "rect",
+     "name": "progbox",
+     "props": {
+      "x": 60,
+      "y": 878,
+      "w": 230,
+      "h": 78,
+      "color": "#0e3b43",
+      "color2": "#13707a",
+      "gradAngle": 135,
+      "skewX": -8,
+      "shadow": 18
+     },
+     "anim": {
+      "clipB": [
+       {
+        "t": 0,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.3,
+        "v": 0
+       }
+      ],
+      "clipT": [
+       {
+        "t": 1.06,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.4,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rr_pt",
+     "type": "text",
+     "name": "program",
+     "props": {
+      "x": 60,
+      "y": 878,
+      "w": 230,
+      "h": 78,
+      "text": "Program",
+      "font": "Barlow Condensed",
+      "size": 40,
+      "weight": "800",
+      "italic": true,
+      "upper": true,
+      "align": "center",
+      "color": "#f2a900",
+      "padX": 14,
+      "textFit": "squeeze"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.2,
+        "v": 0
+       },
+       {
+        "t": 0.4,
+        "v": 1
+       },
+       {
+        "t": 0.8,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.06,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.8,
+        "v": 60,
+        "e": "in"
+       },
+       {
+        "t": 1.06,
+        "v": 86
+       }
+      ]
+     },
+     "fields": {
+      "text": "program"
+     }
+    },
+    {
+     "id": "rr_tb",
+     "type": "rect",
+     "name": "timebox",
+     "props": {
+      "x": 60,
+      "y": 956,
+      "w": 230,
+      "h": 42,
+      "color": "#f2a900",
+      "skewX": -8
+     },
+     "anim": {
+      "clipT": [
+       {
+        "t": 0.15,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.35,
+        "v": 0
+       }
+      ],
+      "clipB": [
+       {
+        "t": 1.01,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.35,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rr_t",
+     "type": "text",
+     "name": "czas",
+     "props": {
+      "x": 60,
+      "y": 956,
+      "w": 230,
+      "h": 42,
+      "text": "7:10",
+      "font": "Barlow Condensed",
+      "size": 30,
+      "weight": "700",
+      "align": "center",
+      "color": "#0b2a30"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.3,
+        "v": 0
+       },
+       {
+        "t": 0.5,
+        "v": 1
+       },
+       {
+        "t": 0.76,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.76,
+        "v": 60,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 86
+       }
+      ]
+     },
+     "fields": {
+      "text": "czas"
+     }
+    },
+    {
+     "id": "rr_bar",
+     "type": "rect",
+     "name": "bar",
+     "props": {
+      "x": 300,
+      "y": 998,
+      "w": 1560,
+      "h": 78,
+      "anchorY": "bottom",
+      "color": "#f4f4f1",
+      "shadow": 20
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.2,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.55,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 0.96,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.3,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rr_h",
+     "type": "text",
+     "name": "headline",
+     "props": {
+      "x": 328,
+      "y": 920,
+      "w": 1510,
+      "h": 78,
+      "text": "Temat",
+      "font": "Barlow Condensed",
+      "size": 54,
+      "weight": "700",
+      "upper": true,
+      "color": "#0e3b43",
+      "textFit": "squeeze-lines",
+      "maxLines": 1
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.4,
+        "v": 0
+       },
+       {
+        "t": 0.65,
+        "v": 1
+       },
+       {
+        "t": 0.72,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.72,
+        "v": 328,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 354
+       }
+      ]
+     },
+     "fields": {
+      "text": "headline"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r7_count",
+   "name": "R7 Odliczanie",
+   "layer": "count",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.15,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "label": {
+     "label": "Opis"
+    },
+    "target": {
+     "label": "Data docelowa"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rc_g",
+     "type": "group",
+     "name": "countdown",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 1920,
+      "h": 320
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.35,
+        "v": 1
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rc_box",
+       "type": "rect",
+       "name": "box",
+       "props": {
+        "x": 1860,
+        "y": 122,
+        "w": 300,
+        "h": 78,
+        "anchorX": "right",
+        "color": "#0b2a30e8",
+        "follow": "count,clabel",
+        "followAxis": "w",
+        "followPad": 40,
+        "followMin": 230
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.77,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.11,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rc_acc",
+       "type": "rect",
+       "name": "acc",
+       "props": {
+        "x": 1860,
+        "y": 122,
+        "w": 8,
+        "h": 78,
+        "anchorX": "right",
+        "color": "#f2a900"
+       },
+       "anim": {
+        "clipB": [
+         {
+          "t": 0.72,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.06,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rc_l",
+       "type": "text",
+       "name": "clabel",
+       "props": {
+        "x": 1836,
+        "y": 128,
+        "w": 700,
+        "h": 26,
+        "anchorX": "right",
+        "align": "right",
+        "text": "Do Nowego Roku",
+        "font": "Barlow Condensed",
+        "size": 22,
+        "weight": "700",
+        "upper": true,
+        "spacing": 1.5,
+        "color": "#f2a900"
+       },
+       "fields": {
+        "text": "label"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.56,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.82,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.56,
+          "v": 1836,
+          "e": "in"
+         },
+         {
+          "t": 0.82,
+          "v": 1862
+         }
+        ]
+       }
+      },
+      {
+       "id": "rc_c",
+       "type": "clock",
+       "name": "count",
+       "props": {
+        "x": 1836,
+        "y": 152,
+        "w": 700,
+        "h": 44,
+        "anchorX": "right",
+        "align": "right",
+        "mode": "target",
+        "target": "2027-01-01 00:00:00",
+        "format": "Dn HH:mm:ss",
+        "font": "Barlow Condensed",
+        "size": 38,
+        "weight": "700",
+        "color": "#ffffff"
+       },
+       "fields": {
+        "target": "target"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.52,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.78,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.52,
+          "v": 1836,
+          "e": "in"
+         },
+         {
+          "t": 0.78,
+          "v": 1862
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rx_qr",
+   "name": "R7 KodQR",
+   "layer": "qr",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.33,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "strona": {
+     "type": "select",
+     "label": "Strona",
+     "options": [
+      "lewa",
+      "prawa"
+     ],
+     "default": "lewa"
+    },
+    "url": {
+     "label": "Adres w kodzie QR"
+    },
+    "caption": {
+     "label": "Podpis pod kodem"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rq_lewa",
+     "type": "group",
+     "name": "kafel_lewa",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.35,
+        "v": 1
+       }
+      ],
+      "y": [
+       {
+        "t": 0,
+        "v": 24,
+        "e": "out"
+       },
+       {
+        "t": 0.4,
+        "v": 0
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rq_lewa_box",
+       "type": "rect",
+       "name": "box",
+       "props": {
+        "x": 60,
+        "y": 560,
+        "w": 200,
+        "h": 262,
+        "color": "#0b2a30e8",
+        "radius": 2,
+        "shadow": 22
+       },
+       "anim": {
+        "clipB": [
+         {
+          "t": 0.95,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.29,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rq_lewa_acc",
+       "type": "rect",
+       "name": "acc",
+       "props": {
+        "x": 60,
+        "y": 560,
+        "w": 200,
+        "h": 6,
+        "color": "#f2a900"
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.9,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.24,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rq_lewa_qr",
+       "type": "qr",
+       "name": "qr",
+       "props": {
+        "x": 76,
+        "y": 580,
+        "w": 168,
+        "h": 168,
+        "text": "https://example.com",
+        "color": "#101014",
+        "qrBg": "#ffffff",
+        "radius": 4
+       },
+       "fields": {
+        "text": "url"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.64,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.9,
+          "v": 0
+         }
+        ],
+        "scale": [
+         {
+          "t": 0.64,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.9,
+          "v": 0.85
+         }
+        ]
+       }
+      },
+      {
+       "id": "rq_lewa_cap",
+       "type": "text",
+       "name": "caption",
+       "props": {
+        "x": 68,
+        "y": 754,
+        "w": 184,
+        "h": 60,
+        "text": "Wesprzyj nas",
+        "font": "Barlow Condensed",
+        "size": 24,
+        "weight": "700",
+        "upper": true,
+        "align": "center",
+        "lineHeight": 1.0,
+        "maxLines": 2,
+        "textFit": "squeeze-lines",
+        "color": "#f2a900"
+       },
+       "fields": {
+        "text": "caption"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.6,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.86,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.6,
+          "v": 68,
+          "e": "in"
+         },
+         {
+          "t": 0.86,
+          "v": 94
+         }
+        ]
+       }
+      }
+     ],
+     "showIf": {
+      "field": "strona",
+      "value": "lewa"
+     }
+    },
+    {
+     "id": "rq_prawa",
+     "type": "group",
+     "name": "kafel_prawa",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.35,
+        "v": 1
+       }
+      ],
+      "y": [
+       {
+        "t": 0,
+        "v": 24,
+        "e": "out"
+       },
+       {
+        "t": 0.4,
+        "v": 0
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rq_prawa_box",
+       "type": "rect",
+       "name": "box",
+       "props": {
+        "x": 1660,
+        "y": 560,
+        "w": 200,
+        "h": 262,
+        "color": "#0b2a30e8",
+        "radius": 2,
+        "shadow": 22
+       },
+       "anim": {
+        "clipB": [
+         {
+          "t": 0.85,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.19,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rq_prawa_acc",
+       "type": "rect",
+       "name": "acc",
+       "props": {
+        "x": 1660,
+        "y": 560,
+        "w": 200,
+        "h": 6,
+        "color": "#f2a900"
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.8,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.14,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rq_prawa_qr",
+       "type": "qr",
+       "name": "qr",
+       "props": {
+        "x": 1676,
+        "y": 580,
+        "w": 168,
+        "h": 168,
+        "text": "https://example.com",
+        "color": "#101014",
+        "qrBg": "#ffffff",
+        "radius": 4
+       },
+       "fields": {
+        "text": "url"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.56,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.82,
+          "v": 0
+         }
+        ],
+        "scale": [
+         {
+          "t": 0.56,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.82,
+          "v": 0.85
+         }
+        ]
+       }
+      },
+      {
+       "id": "rq_prawa_cap",
+       "type": "text",
+       "name": "caption",
+       "props": {
+        "x": 1668,
+        "y": 754,
+        "w": 184,
+        "h": 60,
+        "text": "Wesprzyj nas",
+        "font": "Barlow Condensed",
+        "size": 24,
+        "weight": "700",
+        "upper": true,
+        "align": "center",
+        "lineHeight": 1.0,
+        "maxLines": 2,
+        "textFit": "squeeze-lines",
+        "color": "#f2a900"
+       },
+       "fields": {
+        "text": "caption"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.52,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.78,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.52,
+          "v": 1668,
+          "e": "in"
+         },
+         {
+          "t": 0.78,
+          "v": 1694
+         }
+        ]
+       }
+      }
+     ],
+     "showIf": {
+      "field": "strona",
+      "value": "prawa"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rx_hash",
+   "name": "R7 Hashtag",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.49,
+   "stops": [
+    0.7
+   ],
+   "fieldMeta": {
+    "hashtag": {
+     "label": "Hashtag / hasło"
+    },
+    "badge": {
+     "label": "Plakietka"
+    },
+    "tlo": {
+     "label": "Tło (obraz/wideo)"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rh_img",
+     "type": "image",
+     "name": "tlo",
+     "props": {
+      "x": 250,
+      "y": 896,
+      "w": 1610,
+      "h": 102,
+      "src": "tlo_hashtag2.jpg",
+      "fitMode": "cover"
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.15,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 1.11,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.45,
+        "v": 100
+       }
+      ]
+     },
+     "fields": {
+      "src": "tlo"
+     }
+    },
+    {
+     "id": "rh_ov",
+     "type": "rect",
+     "name": "overlay",
+     "props": {
+      "x": 250,
+      "y": 896,
+      "w": 1610,
+      "h": 102,
+      "color": "#0b2a30f2",
+      "color2": "#0b2a3010",
+      "gradAngle": 90
+     },
+     "anim": {
+      "clipR": [
+       {
+        "t": 0.15,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       }
+      ],
+      "clipL": [
+       {
+        "t": 1.06,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.4,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rh_logo",
+     "type": "rect",
+     "name": "logobox",
+     "props": {
+      "x": 60,
+      "y": 896,
+      "w": 190,
+      "h": 102,
+      "color": "#f2a900",
+      "color2": "#ffc229",
+      "gradAngle": 135,
+      "skewX": -10,
+      "shadow": 18
+     },
+     "anim": {
+      "clipB": [
+       {
+        "t": 0,
+        "v": 100,
+        "e": "out"
+       },
+       {
+        "t": 0.3,
+        "v": 0
+       }
+      ],
+      "clipT": [
+       {
+        "t": 1.01,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.35,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rh_lt",
+     "type": "text",
+     "name": "logo",
+     "props": {
+      "x": 60,
+      "y": 896,
+      "w": 190,
+      "h": 102,
+      "text": "R7",
+      "font": "Barlow Condensed",
+      "size": 52,
+      "weight": "800",
+      "italic": true,
+      "align": "center",
+      "color": "#0b2a30",
+      "padX": 12,
+      "textFit": "squeeze"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.2,
+        "v": 0
+       },
+       {
+        "t": 0.4,
+        "v": 1
+       },
+       {
+        "t": 0.8,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.06,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.8,
+        "v": 60,
+        "e": "in"
+       },
+       {
+        "t": 1.06,
+        "v": 86
+       }
+      ]
+     }
+    },
+    {
+     "id": "rh_txt",
+     "type": "text",
+     "name": "hashtag",
+     "props": {
+      "x": 284,
+      "y": 896,
+      "w": 1300,
+      "h": 102,
+      "text": "#HASHTAG",
+      "font": "Barlow Condensed",
+      "size": 88,
+      "weight": "800",
+      "upper": true,
+      "color": "#ffffff",
+      "textFit": "squeeze-lines",
+      "maxLines": 1,
+      "shadow": 10
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.35,
+        "v": 0
+       },
+       {
+        "t": 0.6,
+        "v": 1
+       },
+       {
+        "t": 0.76,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.35,
+        "v": 320,
+        "e": "out"
+       },
+       {
+        "t": 0.7,
+        "v": 284
+       },
+       {
+        "t": 0.76,
+        "v": 284,
+        "e": "in"
+       },
+       {
+        "t": 1.02,
+        "v": 310
+       }
+      ]
+     },
+     "fields": {
+      "text": "hashtag"
+     }
+    },
+    {
+     "id": "rh_bb",
+     "type": "rect",
+     "name": "badgebox",
+     "props": {
+      "x": 1836,
+      "y": 922,
+      "w": 200,
+      "h": 50,
+      "anchorX": "right",
+      "color": "#f4f4f1",
+      "radius": 0,
+      "skewX": -10,
+      "follow": "badge",
+      "followAxis": "w",
+      "followPad": 40,
+      "followMin": 120
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 0.7,
+        "v": 1
+       }
+      ],
+      "scale": [
+       {
+        "t": 0.5,
+        "v": 0.6,
+        "e": "back"
+       }
+      ],
+      "clipL": [
+       {
+        "t": 0.96,
+        "v": 0,
+        "e": "in"
+       },
+       {
+        "t": 1.3,
+        "v": 100
+       }
+      ]
+     }
+    },
+    {
+     "id": "rh_b",
+     "type": "text",
+     "name": "badge",
+     "props": {
+      "x": 1816,
+      "y": 922,
+      "w": 500,
+      "h": 50,
+      "anchorX": "right",
+      "align": "right",
+      "text": "PROGRAM",
+      "font": "Barlow Condensed",
+      "size": 28,
+      "weight": "800",
+      "upper": true,
+      "spacing": 1,
+      "color": "#0e3b43",
+      "textFit": "squeeze"
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0.55,
+        "v": 0
+       },
+       {
+        "t": 0.72,
+        "v": 1,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 0
+       }
+      ],
+      "x": [
+       {
+        "t": 0.72,
+        "v": 1816,
+        "e": "in"
+       },
+       {
+        "t": 0.98,
+        "v": 1842
+       }
+      ]
+     },
+     "fields": {
+      "text": "badge"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rx_bug2",
+   "name": "R7 NaZywo2",
+   "layer": "bug",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.25,
+   "stops": [
+    0.55
+   ],
+   "fieldMeta": {
+    "place": {
+     "label": "Miejsce (Enter = 2. wiersz)"
+    },
+    "live": {
+     "label": "Napis"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rb_g",
+     "type": "group",
+     "name": "bug",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 1920,
+      "h": 200
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.3,
+        "v": 1
+       },
+       {
+        "t": 0.55,
+        "v": 1
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rb_lb",
+       "type": "rect",
+       "name": "livebox",
+       "props": {
+        "x": 1860,
+        "y": 56,
+        "w": 168,
+        "h": 56,
+        "anchorX": "right",
+        "color": "#f2a900",
+        "skewX": -10,
+        "radius": 0
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.87,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.21,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rb_dot",
+       "type": "ellipse",
+       "name": "dot",
+       "props": {
+        "x": 1708,
+        "y": 77,
+        "w": 14,
+        "h": 14,
+        "color": "#0b2a30",
+        "blink": 1.3
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.82,
+          "v": 1
+         },
+         {
+          "t": 1.02,
+          "v": 0
+         }
+        ]
+       }
+      },
+      {
+       "id": "rb_lt",
+       "type": "text",
+       "name": "live",
+       "props": {
+        "x": 1728,
+        "y": 56,
+        "w": 126,
+        "h": 56,
+        "text": "NA ŻYWO",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "800",
+        "upper": true,
+        "color": "#0b2a30",
+        "textFit": "squeeze"
+       },
+       "fields": {
+        "text": "live"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.61,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.87,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.61,
+          "v": 1728,
+          "e": "in"
+         },
+         {
+          "t": 0.87,
+          "v": 1754
+         }
+        ]
+       }
+      },
+      {
+       "id": "rb_pb",
+       "type": "rect",
+       "name": "placebox",
+       "props": {
+        "x": 1692,
+        "y": 56,
+        "w": 300,
+        "h": 56,
+        "anchorX": "right",
+        "color": "#0b2a30e8",
+        "radius": 0,
+        "follow": "place",
+        "followAxis": "w",
+        "followPad": 32,
+        "followMin": 140
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.1,
+          "v": 100,
+          "e": "out"
+         },
+         {
+          "t": 0.45,
+          "v": 0
+         }
+        ],
+        "clipR": [
+         {
+          "t": 0.77,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.11,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rb_pt",
+       "type": "text",
+       "name": "place",
+       "props": {
+        "x": 1676,
+        "y": 56,
+        "w": 700,
+        "h": 56,
+        "anchorX": "right",
+        "align": "right",
+        "text": "Miasto\nMiejsce",
+        "font": "Barlow Condensed",
+        "size": 21,
+        "weight": "700",
+        "upper": true,
+        "lineHeight": 1.02,
+        "maxLines": 2,
+        "textFit": "squeeze-lines",
+        "color": "#ffffff"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.2,
+          "v": 0
+         },
+         {
+          "t": 0.45,
+          "v": 1
+         },
+         {
+          "t": 0.57,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.83,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.57,
+          "v": 1676,
+          "e": "in"
+         },
+         {
+          "t": 0.83,
+          "v": 1702
+         }
+        ]
+       },
+       "fields": {
+        "text": "place"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rx_rot",
+   "name": "R7 KafelProgramu",
+   "layer": "prog",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.24,
+   "stops": [
+    0.5
+   ],
+   "fieldMeta": {
+    "programs": {
+     "label": "Programy (jeden w linii)"
+    },
+    "times": {
+     "label": "Godziny (w tej samej kolejności)"
+    },
+    "next": {
+     "label": "Nagłówek"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rr_g",
+     "type": "group",
+     "name": "tile",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 1920,
+      "h": 1080
+     },
+     "anim": {
+      "opacity": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.3,
+        "v": 1
+       }
+      ],
+      "x": [
+       {
+        "t": 0,
+        "v": -30,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 0
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rr_hb",
+       "type": "rect",
+       "name": "headbox",
+       "props": {
+        "x": 60,
+        "y": 690,
+        "w": 230,
+        "h": 30,
+        "color": "#f2a900",
+        "skewX": -10
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.86,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.2,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rr_ht",
+       "type": "text",
+       "name": "next",
+       "props": {
+        "x": 60,
+        "y": 690,
+        "w": 230,
+        "h": 30,
+        "text": "ZA CHWILĘ",
+        "font": "Barlow Condensed",
+        "size": 20,
+        "weight": "800",
+        "upper": true,
+        "spacing": 2,
+        "align": "center",
+        "color": "#0b2a30"
+       },
+       "fields": {
+        "text": "next"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.6,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.86,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.6,
+          "v": 60,
+          "e": "in"
+         },
+         {
+          "t": 0.86,
+          "v": 86
+         }
+        ]
+       }
+      },
+      {
+       "id": "rr_pb",
+       "type": "rect",
+       "name": "progbox",
+       "props": {
+        "x": 60,
+        "y": 720,
+        "w": 230,
+        "h": 80,
+        "color": "#0b2a30",
+        "color2": "#13707a",
+        "gradAngle": 135,
+        "skewX": -10,
+        "shadow": 18
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.81,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.15,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rr_pt",
+       "type": "text",
+       "name": "program",
+       "props": {
+        "x": 60,
+        "y": 720,
+        "w": 230,
+        "h": 80,
+        "text": "Program 1\nProgram 2",
+        "cycle": 4,
+        "font": "Barlow Condensed",
+        "size": 38,
+        "weight": "800",
+        "italic": true,
+        "upper": true,
+        "align": "center",
+        "color": "#ffffff",
+        "padX": 14,
+        "textFit": "squeeze",
+        "lineHeight": 1.0
+       },
+       "fields": {
+        "text": "programs"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.56,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.82,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.56,
+          "v": 60,
+          "e": "in"
+         },
+         {
+          "t": 0.82,
+          "v": 86
+         }
+        ]
+       }
+      },
+      {
+       "id": "rr_tb",
+       "type": "rect",
+       "name": "timebox",
+       "props": {
+        "x": 60,
+        "y": 800,
+        "w": 230,
+        "h": 40,
+        "color": "#f4f4f1",
+        "skewX": -10
+       },
+       "anim": {
+        "clipL": [
+         {
+          "t": 0.76,
+          "v": 0,
+          "e": "in"
+         },
+         {
+          "t": 1.1,
+          "v": 100
+         }
+        ]
+       }
+      },
+      {
+       "id": "rr_tt",
+       "type": "text",
+       "name": "time",
+       "props": {
+        "x": 60,
+        "y": 800,
+        "w": 230,
+        "h": 40,
+        "text": "7:10\n7:55",
+        "cycle": 4,
+        "font": "Barlow Condensed",
+        "size": 30,
+        "weight": "700",
+        "align": "center",
+        "color": "#0e3b43"
+       },
+       "fields": {
+        "text": "times"
+       },
+       "anim": {
+        "opacity": [
+         {
+          "t": 0.52,
+          "v": 1,
+          "e": "in"
+         },
+         {
+          "t": 0.78,
+          "v": 0
+         }
+        ],
+        "x": [
+         {
+          "t": 0.52,
+          "v": 60,
+          "e": "in"
+         },
+         {
+          "t": 0.78,
+          "v": 86
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tr_roll",
+   "name": "R7 TickerRoll",
+   "layer": "back",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.0,
+   "stops": [
+    0.45
+   ],
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości: KATEGORIA|treść (kolor: KATEGORIA#hex|treść)"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rt_g_roll",
+     "type": "group",
+     "name": "ticker",
+     "props": {
+      "x": 0,
+      "y": 1012,
+      "w": 1920,
+      "h": 56
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1080,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 1012
+       },
+       {
+        "t": 0.6,
+        "v": 1012,
+        "e": "in"
+       },
+       {
+        "t": 1.0,
+        "v": 1080
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rt_bg_roll",
+       "type": "rect",
+       "name": "bg",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 56,
+        "color": "#0b2a30"
+       }
+      },
+      {
+       "id": "rt_c_roll",
+       "type": "ticker",
+       "name": "crawl",
+       "props": {
+        "x": 230,
+        "y": 0,
+        "w": 1480,
+        "h": 56,
+        "text": "Wiadomość\nWiadomość",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "600",
+        "upper": true,
+        "color": "#ffffff",
+        "speed": 150,
+        "sep": "   ▸   ",
+        "sepColor": "#f2a900",
+        "tickerMode": "roll",
+        "hold": 4.5,
+        "catW": 170,
+        "catBg": "#13707a",
+        "catFg": "#ffffff"
+       },
+       "fields": {
+        "text": "items"
+       }
+      },
+      {
+       "id": "rt_lb_roll",
+       "type": "rect",
+       "name": "logobox",
+       "props": {
+        "x": -20,
+        "y": 0,
+        "w": 240,
+        "h": 56,
+        "color": "#13707a",
+        "skewX": -12,
+        "shadow": 14
+       }
+      },
+      {
+       "id": "rt_l1_roll",
+       "type": "text",
+       "name": "logo1",
+       "props": {
+        "x": 24,
+        "y": 0,
+        "w": 70,
+        "h": 56,
+        "text": "R7",
+        "font": "Barlow Condensed",
+        "size": 42,
+        "weight": "800",
+        "italic": true,
+        "color": "#f2a900"
+       }
+      },
+      {
+       "id": "rt_l2_roll",
+       "type": "text",
+       "name": "logo2",
+       "props": {
+        "x": 90,
+        "y": 0,
+        "w": 110,
+        "h": 56,
+        "text": "NEWS",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "600",
+        "spacing": 2,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "rt_cb_roll",
+       "type": "rect",
+       "name": "clockbox",
+       "props": {
+        "x": 1720,
+        "y": 0,
+        "w": 230,
+        "h": 56,
+        "color": "#f2a900",
+        "skewX": -12
+       }
+      },
+      {
+       "id": "rt_clk_roll",
+       "type": "clock",
+       "name": "clock",
+       "props": {
+        "x": 1730,
+        "y": 0,
+        "w": 180,
+        "h": 56,
+        "format": "HH:mm",
+        "font": "Barlow Condensed",
+        "size": 38,
+        "weight": "700",
+        "align": "center",
+        "color": "#0b2a30"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tr_wipe",
+   "name": "R7 TickerWipe",
+   "layer": "back",
+   "width": 1920,
+   "height": 1080,
+   "duration": 1.0,
+   "stops": [
+    0.45
+   ],
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości: KATEGORIA|treść (kolor: KATEGORIA#hex|treść)"
+    }
+   },
+   "nodes": [
+    {
+     "id": "rt_g_wipe",
+     "type": "group",
+     "name": "ticker",
+     "props": {
+      "x": 0,
+      "y": 1012,
+      "w": 1920,
+      "h": 56
+     },
+     "anim": {
+      "y": [
+       {
+        "t": 0,
+        "v": 1080,
+        "e": "out"
+       },
+       {
+        "t": 0.45,
+        "v": 1012
+       },
+       {
+        "t": 0.6,
+        "v": 1012,
+        "e": "in"
+       },
+       {
+        "t": 1.0,
+        "v": 1080
+       }
+      ]
+     },
+     "children": [
+      {
+       "id": "rt_bg_wipe",
+       "type": "rect",
+       "name": "bg",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 56,
+        "color": "#0b2a30"
+       }
+      },
+      {
+       "id": "rt_c_wipe",
+       "type": "ticker",
+       "name": "crawl",
+       "props": {
+        "x": 230,
+        "y": 0,
+        "w": 1480,
+        "h": 56,
+        "text": "Wiadomość\nWiadomość",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "600",
+        "upper": true,
+        "color": "#ffffff",
+        "speed": 150,
+        "sep": "   ▸   ",
+        "sepColor": "#f2a900",
+        "tickerMode": "wipe",
+        "hold": 4.5,
+        "catW": 170,
+        "catBg": "#13707a",
+        "catFg": "#ffffff"
+       },
+       "fields": {
+        "text": "items"
+       }
+      },
+      {
+       "id": "rt_lb_wipe",
+       "type": "rect",
+       "name": "logobox",
+       "props": {
+        "x": -20,
+        "y": 0,
+        "w": 240,
+        "h": 56,
+        "color": "#13707a",
+        "skewX": -12,
+        "shadow": 14
+       }
+      },
+      {
+       "id": "rt_l1_wipe",
+       "type": "text",
+       "name": "logo1",
+       "props": {
+        "x": 24,
+        "y": 0,
+        "w": 70,
+        "h": 56,
+        "text": "R7",
+        "font": "Barlow Condensed",
+        "size": 42,
+        "weight": "800",
+        "italic": true,
+        "color": "#f2a900"
+       }
+      },
+      {
+       "id": "rt_l2_wipe",
+       "type": "text",
+       "name": "logo2",
+       "props": {
+        "x": 90,
+        "y": 0,
+        "w": 110,
+        "h": 56,
+        "text": "NEWS",
+        "font": "Barlow Condensed",
+        "size": 32,
+        "weight": "600",
+        "spacing": 2,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "rt_cb_wipe",
+       "type": "rect",
+       "name": "clockbox",
+       "props": {
+        "x": 1720,
+        "y": 0,
+        "w": 230,
+        "h": 56,
+        "color": "#f2a900",
+        "skewX": -12
+       }
+      },
+      {
+       "id": "rt_clk_wipe",
+       "type": "clock",
+       "name": "clock",
+       "props": {
+        "x": 1730,
+        "y": 0,
+        "w": 180,
+        "h": 56,
+        "format": "HH:mm",
+        "font": "Barlow Condensed",
+        "size": 38,
+        "weight": "700",
+        "align": "center",
+        "color": "#0b2a30"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "id": "q1",
+   "number": 7001,
+   "name": "R7 Belka info",
+   "scene": "r7_belka",
+   "values": {
+    "styl": "info",
+    "label": "INFO",
+    "headline": "Nowa linia tramwajowa połączy dworzec z lotniskiem. Pierwsze kursy już w czerwcu"
+   }
+  },
+  {
+   "id": "q2",
+   "number": 7002,
+   "name": "R7 Belka pilne",
+   "scene": "r7_belka",
+   "values": {
+    "styl": "pilne",
+    "label": "PILNE",
+    "headline": "Silny wiatr w górach\nOstrzeżenia trzeciego stopnia w trzech województwach"
+   }
+  },
+  {
+   "id": "q3",
+   "number": 7003,
+   "name": "R7 Belka z wyróżnieniem",
+   "scene": "r7_belka",
+   "values": {
+    "styl": "info",
+    "label": "INFO",
+    "headline": "Zbiórka dla schroniska: [[600 700 800]] – wpłaty do niedzieli"
+   }
+  },
+  {
+   "id": "q4",
+   "number": 7101,
+   "name": "R7 Podpis",
+   "scene": "r7_podpis",
+   "values": {
+    "name": "Marta Zielińska",
+    "title": "Reporterka R7 NEWS, Gdańsk"
+   }
+  },
+  {
+   "id": "q5",
+   "number": 7102,
+   "name": "R7 Belka z autorem",
+   "scene": "r7_autor",
+   "values": {
+    "author": "Piotr Lis / R7 NEWS",
+    "headline": "Jutro o nowym rozkładzie jazdy"
+   }
+  },
+  {
+   "id": "q6",
+   "number": 7201,
+   "name": "R7 Na żywo",
+   "scene": "r7_bug",
+   "values": {
+    "place": "Port w Gdyni"
+   }
+  },
+  {
+   "id": "q7",
+   "number": 7202,
+   "name": "R7 Odliczanie",
+   "scene": "r7_count",
+   "values": {
+    "label": "Do Nowego Roku",
+    "target": "2027-01-01 00:00:00"
+   }
+  },
+  {
+   "id": "q8",
+   "number": 7301,
+   "name": "R7 Ticker",
+   "scene": "r7_ticker",
+   "values": {
+    "items": "Nowa linia tramwajowa od czerwca\nKurs EUR/PLN bez większych zmian\nJutro słonecznie, do 19 stopni\nFinał pucharu kraju w sobotę o 18:00"
+   }
+  },
+  {
+   "id": "q9",
+   "number": 7401,
+   "name": "R7 Program",
+   "scene": "r7_program",
+   "values": {
+    "program": "Dzień Dobry",
+    "czas": "7:10",
+    "headline": "Przegląd prasy"
+   }
+  },
+  {
+   "id": "rpg1",
+   "number": 7501,
+   "name": "QR lewy – wsparcie",
+   "scene": "rx_qr",
+   "values": {
+    "strona": "lewa",
+    "url": "https://r7news.example/wesprzyj",
+    "caption": "Wesprzyj nas!"
+   }
+  },
+  {
+   "id": "rpg2",
+   "number": 7502,
+   "name": "QR prawy – aplikacja",
+   "scene": "rx_qr",
+   "values": {
+    "strona": "prawa",
+    "url": "https://r7news.example/aplikacja",
+    "caption": "Pobierz aplikację R7 NEWS"
+   }
+  },
+  {
+   "id": "rpg3",
+   "number": 7503,
+   "name": "Hashtag",
+   "scene": "rx_hash",
+   "values": {
+    "hashtag": "#DROGAPRZEZPOLSKĘ",
+    "badge": "Reportaż",
+    "tlo": "tlo_hashtag2.jpg"
+   }
+  },
+  {
+   "id": "rpg4",
+   "number": 7504,
+   "name": "Na żywo – 2 wiersze",
+   "scene": "rx_bug2",
+   "values": {
+    "place": "Gdańsk, Polska\nWodowanie nowego promu",
+    "live": "Na żywo"
+   }
+  },
+  {
+   "id": "rpg5",
+   "number": 7505,
+   "name": "Kafel programu (rotacja)",
+   "scene": "rx_rot",
+   "values": {
+    "next": "Za chwilę",
+    "programs": "Dzień Dobry\nPogoda\nSerwis",
+    "times": "7:10\n7:55\n9:00"
+   }
+  },
+  {
+   "id": "tr_pg_roll",
+   "number": 7302,
+   "name": "Ticker góra-dół z kategoriami",
+   "scene": "tr_roll",
+   "values": {
+    "items": "KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem\nŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów\nŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach\nGOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny\nSPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00\nPOGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju"
+   }
+  },
+  {
+   "id": "tr_pg_wipe",
+   "number": 7303,
+   "name": "Ticker wipe z kategoriami",
+   "scene": "tr_wipe",
+   "values": {
+    "items": "KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem\nŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów\nŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach\nGOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny\nSPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00\nPOGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju"
+   }
+  },
+  {
+   "id": "tr_pg_crawlcat",
+   "number": 7304,
+   "name": "Ticker przewijany z kategoriami",
+   "scene": "r7_ticker",
+   "values": {
+    "items": "KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem\nŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów\nŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach\nGOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny\nSPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00\nPOGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju"
+   }
+  }
+ ],
+ "playlists": [
+  {
+   "id": "ql1",
+   "name": "R7 belki",
+   "loop": true,
+   "items": [
+    {
+     "page": "q1",
+     "duration": 7
+    },
+    {
+     "page": "q2",
+     "duration": 7
+    },
+    {
+     "page": "q3",
+     "duration": 7
+    }
+   ]
+  }
+ ]
+}

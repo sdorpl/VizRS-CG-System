@@ -1,0 +1,81 @@
+{
+  "comment": "Reguły pola przy zapisie: CGText.fieldRules (text-model.js) i text::field_rules (btb-cgeditor/src/text.rs). Zmiana = oba języki + node test-field-rules.js --update + kopia do btb-cgeditor/tests/text/.",
+  "cases": [
+    {
+      "name": "bez reguł — bez zmian",
+      "html": "<div>Jan <b>Kowalski</b></div>",
+      "rules": {},
+      "expect": "<div>Jan <b>Kowalski</b></div>"
+    },
+    {
+      "name": "wersaliki z polskimi znakami",
+      "html": "<div>Zażółć <strong>gęślą</strong></div><div>jaźń</div>",
+      "rules": {
+        "upperCase": true
+      },
+      "expect": "<div>ZAŻÓŁĆ <strong>GĘŚLĄ</strong></div><div>JAŹŃ</div>"
+    },
+    {
+      "name": "wersaliki nie psują encji",
+      "html": "<div>a &amp; b &lt; c</div>",
+      "rules": {
+        "upperCase": true
+      },
+      "expect": "<div>A &amp; B &lt; C</div>"
+    },
+    {
+      "name": "rozmiar przycięty do max i min",
+      "html": "<div><span style=\"font-size: 120px\">duży</span> <span style=\"font-size: 10px\">mały</span> <span style=\"font-size: 40px\">ok</span></div>",
+      "rules": {
+        "size": {
+          "min": 24,
+          "max": 72
+        }
+      },
+      "expect": "<div><span style=\"font-size: 72px\">duży</span> <span style=\"font-size: 24px\">mały</span> <span style=\"font-size: 40px\">ok</span></div>"
+    },
+    {
+      "name": "odstęp liter przycięty",
+      "html": "<div><span style=\"letter-spacing: 0.5em\">szeroko</span><span style=\"letter-spacing: -0.2em\">ciasno</span></div>",
+      "rules": {
+        "letterSpacing": {
+          "min": -0.05,
+          "max": 0.2
+        }
+      },
+      "expect": "<div><span style=\"letter-spacing: 0.2em\">szeroko</span><span style=\"letter-spacing: -0.05em\">ciasno</span></div>"
+    },
+    {
+      "name": "interlinia bloku przycięta",
+      "html": "<div style=\"line-height: 2.5\">a</div><div style=\"line-height: 0.6\">b</div>",
+      "rules": {
+        "lineHeight": {
+          "min": 0.9,
+          "max": 1.4
+        }
+      },
+      "expect": "<div style=\"line-height: 1.4\">a</div><div style=\"line-height: 0.9\">b</div>"
+    },
+    {
+      "name": "zakres tylko z min",
+      "html": "<div><span style=\"font-size: 8px\">x</span></div>",
+      "rules": {
+        "size": {
+          "min": 20
+        }
+      },
+      "expect": "<div><span style=\"font-size: 20px\">x</span></div>"
+    },
+    {
+      "name": "zły zakres (min > max) ignorowany",
+      "html": "<div><span style=\"font-size: 8px\">x</span></div>",
+      "rules": {
+        "size": {
+          "min": 80,
+          "max": 20
+        }
+      },
+      "expect": "<div><span style=\"font-size: 8px\">x</span></div>"
+    }
+  ]
+}
