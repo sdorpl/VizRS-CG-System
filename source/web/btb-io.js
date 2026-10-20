@@ -4,6 +4,7 @@
 // Format: docs w BTB-CG `docs/edytor-kontrakt.md` (scene = { version, detached, frame:{w,h}, layers[] }).
 
 import { serializeTickerItems, parseTickerItems } from './ticker-model.js';
+import * as MO from './motion.js';
 
 const EASES = { 'ease-in': 'in', 'ease-out': 'out', 'ease-in-out': 'inout', ease: 'inout', linear: 'linear' };
 const round3 = (n) => Math.round(n * 1000) / 1000;
@@ -107,47 +108,64 @@ export function normalizeElements(j) {
   throw new Error('to nie jest plik elementu BTB CG (oczekiwano eksportu v3, elementu albo .cgpack)');
 }
 
-// ---------------------------------------------------------------- animacje (presety BTB → klucze VizRS)
-/** Opis ruchu: lista {prop, a, b} (wartość na początku i na końcu odcinka) albo null (nieobsługiwany). */
-function motionTracks(kind, m, box, rest, warn, where) {
-  const type = m.type;
-  const dir = m.direction || 'bottom';
-  const inn = kind === 'in';
-  const tr = [];
-  const slide = () => {
-    const dist = { top: ['y', -(box.h || 100)], bottom: ['y', box.h || 100], left: ['x', -(box.w || 100)], right: ['x', box.w || 100] }[dir] || ['y', box.h || 100];
-    const [p, off] = dist;
-    tr.push(inn ? { prop: p, a: rest[p] + off, b: rest[p] } : { prop: p, a: rest[p], b: rest[p] + off });
-  };
-  const fade = () => tr.push(inn ? { prop: 'opacity', a: 0, b: rest.opacity } : { prop: 'opacity', a: rest.opacity, b: 0 });
-  const clip = () => {
-    const prop = { left: 'clipR', right: 'clipL', top: 'clipB', bottom: 'clipT' }[dir] || 'clipR';
-    tr.push(inn ? { prop, a: 100, b: 0 } : { prop, a: 0, b: 100 });
-  };
-  switch (type) {
-    case 'slide': slide(); break;
-    case 'fade': fade(); break;
-    case 'zoom': tr.push(inn ? { prop: 'scale', a: 0.85, b: rest.scale } : { prop: 'scale', a: rest.scale, b: 0.85 }); fade(); break;
-    case 'pop': tr.push(inn ? { prop: 'scale', a: 0.6, b: rest.scale, e: 'back' } : { prop: 'scale', a: rest.scale, b: 0.6 }); fade(); break;
-    case 'blur': tr.push(inn ? { prop: 'blur', a: 14, b: 0 } : { prop: 'blur', a: 0, b: 14 }); fade(); break;
-    case 'wipe': case 'clip': clip(); break;
-    case 'none': case undefined: case null: case '': return [];
-    default: warn(`${where}: animacja „${type}” nie ma odpowiednika – użyto przenikania`); fade();
-  }
-  return tr;
+// ---------------------------------------------------------------- animacje (ruch BTB → node.motion)
+/** Krzywa BTB (CSS albo GSAP) → nazwa GSAP rozumiana przez web/motion.js (jak CGMotion.normalizeEase). */
+const CSS_EASE = {
+  'ease-in-sine': 'sine.in', 'ease-out-sine': 'sine.out', 'ease-in-out-sine': 'sine.inOut', 'ease-in-quad': 'quad.in', 'ease-out-quad': 'quad.out',
+  'ease-in-out-quad': 'quad.inOut', 'ease-in-cubic': 'cubic.in', 'ease-out-cubic': 'cubic.out', 'ease-in-out-cubic': 'cubic.inOut', 'bounce-in': 'bounce.in',
+  'bounce-in-out': 'bounce.out', 'elastic-in': 'elastic.in', 'elastic-in-out': 'elastic.out', 'back-in-out': 'back.inOut', ease: 'power2.inOut',
+};
+export function motionEase(e) {
+  const s = String(e ?? '').trim();
+  if (!s) return undefined;
+  const v = CSS_EASE[s] || s;
+  return v.length <= 60 && /^[A-Za-z0-9.(),\- ]+$/.test(v) ? v : undefined;
 }
-
-function textTracks(kind, t, warn, where) {
-  if (!t || !t.type || t.type === 'none') return [];
-  const inn = kind === 'in';
-  const mk = (prop) => [inn ? { prop, a: 100, b: 0 } : { prop, a: 0, b: 100 }];
-  if (t.type === 'reveal') return mk('clipR');
-  if (t.type === 'clip-up') return mk('clipT');
-  if (t.type === 'clip-down') return mk('clipB');
-  if (t.type === 'clip-left') return mk('clipR');
-  if (t.type === 'clip-right') return mk('clipL');
-  warn(`${where}: efekt tekstu „${t.type}” nie ma odpowiednika – użyto przenikania`);
-  return [inn ? { prop: 'opacity', a: 0, b: 1 } : { prop: 'opacity', a: 1, b: 0 }];
+const BTB_TEXT_ALIAS = { blurIn: 'blur', blurOut: 'blur', slideReveal: 'slide-up', slideHide: 'hide' };
+const rnd = (v) => Math.round(v * 1000) / 1000;
+/** Preset IN/OUT warstwy/elementu BTB → motion.in/out; nieznany typ → `fallback` z BTB albo przenikanie. */
+export function motionSpec(m, warn, where) {
+  if (!m || !m.type) return null;
+  let type = m.type;
+  if (!MO.ANIM_TYPES.includes(type)) {
+    const fb = m.fallback;
+    if (MO.ANIM_TYPES.includes(fb)) { warn(`${where}: animacja „${type}” zastąpiona „${fb}”`); type = fb; }
+    else { warn(`${where}: animacja „${type}” nie ma odpowiednika – użyto przenikania`); type = 'fade'; }
+  }
+  const o = { type };
+  if (MO.DIRECTIONS.includes(m.direction)) o.dir = m.direction;
+  o.dur = rnd(Math.min(60, Math.max(0, num(m.duration, 0.5))));
+  if (num(m.delay) > 0) o.delay = rnd(Math.min(60, num(m.delay)));
+  const e = motionEase(m.ease);
+  if (e) o.ease = e;
+  return o;
+}
+/** Efekt tekstu BTB (`motion.text` / `textOut`) → motion.textIn/textOut. */
+export function textSpec(t, kind, warn, where) {
+  if (!t || !t.type || t.type === 'none') return null;
+  const list = kind === 'in' ? MO.TEXT_IN : MO.TEXT_OUT;
+  let type = BTB_TEXT_ALIAS[t.type] || t.type;
+  if (!list.includes(type)) {
+    const fb = BTB_TEXT_ALIAS[t.fallback] || t.fallback;
+    if (list.includes(fb)) type = fb;
+    else { warn(`${where}: efekt tekstu „${t.type}” nie ma odpowiednika – użyto przenikania`); type = 'fade'; }
+  }
+  const o = { type, dur: rnd(Math.min(60, Math.max(0, num(t.duration, 0.5)))) };
+  if (num(t.delay) > 0) o.delay = rnd(Math.min(60, num(t.delay)));
+  if (num(t.stagger) > 0) o.stagger = rnd(Math.min(60, num(t.stagger)));
+  if (MO.STAGGER_FROM.includes(t.from)) o.from = t.from;
+  const e = motionEase(t.ease);
+  if (e) o.ease = e;
+  return o;
+}
+/** Pętla uwagi BTB → motion.loop. */
+export function loopSpec(l) {
+  if (!l || !l.type || l.type === 'none' || !MO.LOOP_TYPES.includes(l.type)) return null;
+  const o = { type: l.type };
+  if (num(l.duration) > 0) o.dur = rnd(Math.min(60, num(l.duration)));
+  if (l.amplitude !== undefined && l.amplitude !== '' && num(l.amplitude, -1) >= 0) o.amp = rnd(Math.min(1000, num(l.amplitude)));
+  if (typeof l.color === 'string' && l.color.length <= 60) o.color = l.color;
+  return o;
 }
 
 // ---------------------------------------------------------------- tickery (import z BTB)
@@ -250,7 +268,6 @@ export function convertElement(el, opts = {}) {
   }
 
   // --- warstwy
-  const rest = {};
   let freeText = 0; // warstwy tekstu bez pola BTB → pola tekst1, tekst2…
   const layerById = new Map(sc.layers.map((l) => [l.id, l]));
   const toNode = (l) => {
@@ -273,7 +290,6 @@ export function convertElement(el, opts = {}) {
         if (wf.weight && weightOf(wf.weight) !== p.weight) p.labelWeight = weightOf(wf.weight);
         if (tkPlan.wText.field) { const lf = String(tkPlan.wText.field).toLowerCase().replace(/[^\w.\-]/g, '_'); node.fields.label = lf; if (!(lf in fields)) fields[lf] = p.label || ''; fieldMeta[lf] ||= { label: 'Etykieta' }; }
       }
-      rest[l.id] = { x: p.x, y: p.y, opacity: p.opacity ?? 1, scale: p.scale ?? 1 };
       idMap.set(l.id, node);
       return node;
     }
@@ -387,7 +403,6 @@ export function convertElement(el, opts = {}) {
       }
       default: warn(`nieznany typ warstwy „${l.type}” (${name}) – pominięta`); return null;
     }
-    rest[l.id] = { x: p.x, y: p.y, opacity: p.opacity ?? 1, scale: p.scale ?? 1 };
     idMap.set(l.id, node);
     return node;
   };
@@ -410,58 +425,56 @@ export function convertElement(el, opts = {}) {
   }
   for (const l of sc.layers) { if (tkPlan?.drop.has(l.id)) continue; const n = toNode(l); if (n) nodes.push(n); }
 
-  // --- animacje
-  const ins = [], outs = []; // { node, tracks, delay, dur, ease }
-  const addSpec = (list, node, tracks, m) => { if (tracks.length) list.push({ node, tracks, delay: num(m.delay), dur: Math.max(0.01, num(m.duration, 0.4)), ease: mapEase(m.ease) }); };
+  // --- animacje: ruch BTB (presety IN/OUT, efekty tekstu, pętle, „po warstwie”) → node.motion 1:1 (web/motion.js)
   const group = { id: 'grp_' + (el.id || 'el').slice(0, 8), type: 'group', name: String(el.name || 'element').slice(0, 60), props: { x: gx, y: gy, w: W, h: H }, anim: {}, fields: {}, children: nodes };
   if (scale !== 1) group.props.scale = scale;
-  const groupRest = { x: gx, y: gy, opacity: 1, scale };
   const an = el.animation || {};
-  if (an.in?.type && an.in.type !== 'none') addSpec(ins, group, motionTracks('in', an.in, { w: W, h: H }, groupRest, warn, 'element'), an.in);
-  if (an.out?.type && an.out.type !== 'none') addSpec(outs, group, motionTracks('out', an.out, { w: W, h: H }, groupRest, warn, 'element'), an.out);
-  if (an.loop?.type && an.loop.type !== 'none') warn(`pętla uwagi „${an.loop.type}” nie jest przenoszona`);
+  const setMotion = (node, k, v) => { if (v) (node.motion ||= {})[k] = v; };
+  setMotion(group, 'in', motionSpec(an.in, warn, 'element'));
+  setMotion(group, 'out', motionSpec(an.out, warn, 'element'));
+  setMotion(group, 'loop', loopSpec(an.loop));
+  const textLayers = sc.layers.filter((l) => l.type === 'text' && idMap.get(l.id));
+  const afterIds = new Map(); // węzeł → id warstwy BTB, po której startuje (dla wejścia)
   for (const l of sc.layers) {
     const n = idMap.get(l.id); if (!n) continue;
     const m = l.motion || {};
-    const r = rest[l.id], box = { w: n.props.w, h: n.props.h };
-    if (m.in?.type && m.in.type !== 'none') addSpec(ins, n, motionTracks('in', m.in, box, r, warn, `warstwa „${n.name}”`), m.in);
-    if (m.out?.type && m.out.type !== 'none') addSpec(outs, n, motionTracks('out', m.out, box, r, warn, `warstwa „${n.name}”`), m.out);
+    const where = `warstwa „${n.name}”`;
+    setMotion(n, 'in', motionSpec(m.in, warn, where));
+    setMotion(n, 'out', motionSpec(m.out, warn, where));
+    setMotion(n, 'loop', loopSpec(m.loop));
     if (l.type === 'text') {
-      if (m.text) addSpec(ins, n, textTracks('in', m.text, warn, `tekst „${n.name}”`), { delay: m.text.delay, duration: m.text.duration, ease: m.text.ease });
-      if (m.textOut) addSpec(outs, n, textTracks('out', m.textOut, warn, `tekst „${n.name}”`), { delay: m.textOut.delay, duration: m.textOut.duration, ease: m.textOut.ease });
+      setMotion(n, 'textIn', textSpec(m.text, 'in', warn, `tekst „${n.name}”`));
+      setMotion(n, 'textOut', textSpec(m.textOut, 'out', warn, `tekst „${n.name}”`));
     }
+    const af = m.in?.after || m.text?.after;
+    if (af) afterIds.set(n, af);
+    if (m.out?.after || m.textOut?.after) warn(`${where}: „po warstwie” przy wyjściu zamienione na równoczesny start`);
   }
-  // tekstowe animacje elementu (an.text / an.textOut) – dla wszystkich warstw tekstowych
-  if (an.text?.type && an.text.type !== 'none') for (const l of sc.layers) if (l.type === 'text' && idMap.get(l.id)) addSpec(ins, idMap.get(l.id), textTracks('in', an.text, warn, 'tekst elementu'), an.text);
-  if (an.textOut?.type && an.textOut.type !== 'none') for (const l of sc.layers) if (l.type === 'text' && idMap.get(l.id)) addSpec(outs, idMap.get(l.id), textTracks('out', an.textOut, warn, 'tekst elementu'), an.textOut);
-
-  const stop = ins.reduce((mx, s) => Math.max(mx, s.delay + s.dur), 0);
-  let end = stop;
-  const keysFor = (node) => node.anim;
-  const push = (node, prop, k) => { (keysFor(node)[prop] ||= []).push(k); };
-  for (const s of ins) for (const t of s.tracks) {
-    push(s.node, t.prop, { t: round3(s.delay), v: round3(t.a), e: t.e || s.ease });
-    push(s.node, t.prop, { t: round3(s.delay + s.dur), v: round3(t.b) });
+  // efekt tekstu elementu (an.text / an.textOut) – dla warstw tekstu bez własnego
+  for (const l of textLayers) {
+    const n = idMap.get(l.id);
+    if (!n.motion?.textIn) setMotion(n, 'textIn', textSpec(an.text, 'in', warn, 'tekst elementu'));
+    if (!n.motion?.textOut) setMotion(n, 'textOut', textSpec(an.textOut, 'out', warn, 'tekst elementu'));
   }
-  for (const s of outs) {
-    const st = stop + s.delay, en = st + s.dur;
-    end = Math.max(end, en);
-    for (const t of s.tracks) {
-      push(s.node, t.prop, { t: round3(st), v: round3(t.a), e: t.e || s.ease });
-      push(s.node, t.prop, { t: round3(en), v: round3(t.b) });
-    }
-  }
+  for (const [n, id] of afterIds) { const tg = idMap.get(id); if (tg && tg !== n) n.motion.after = tg.id; }
+  // wejście elementu: warstwy startują po nim (w BTB faza elementu i warstw biegnie razem – zostawiamy równolegle)
   const all = [group, ...nodes];
-  for (const n of all) for (const [prop, tr] of Object.entries(n.anim)) {
-    tr.sort((a, b) => a.t - b.t);
-    // dwa klucze w tym samym czasie (koniec IN = początek OUT bez przerwy) → zostaw ostatni
-    n.anim[prop] = tr.filter((k, i) => !(i < tr.length - 1 && Math.abs(tr[i + 1].t - k.t) < 0.0005));
+  const shifts = MO.sequenceShifts([group]);
+  let stop = 0, outL = 0;
+  for (const n of all) {
+    if (!n.motion) continue;
+    const tx = n.type === 'text' ? fields[n.fields?.text] ?? n.props.text : undefined;
+    stop = Math.max(stop, MO.inEnd(n.motion, shifts.get(n.id) || 0, tx));
+    outL = Math.max(outL, MO.outLen(n.motion, tx));
   }
+  const hasMotion = all.some((n) => n.motion);
+  if (hasMotion && stop <= 0) stop = 0.04; // stop jest potrzebny, by zagrało wyjście i pętle
+  const end = stop + outL;
+  for (const n of all) if (!Object.keys(n.anim).length) delete n.anim;
   const scene = {
     name: String(el.name || 'Element BTB').slice(0, 100), layer: 'main', width: 1920, height: 1080,
-    duration: round3(Math.max(end, 0.05)), stops: stop > 0 ? [round3(stop)] : [], fieldMeta, nodes: [group],
+    duration: round3(Math.max(end, stop + 0.01, 0.05)), stops: stop > 0 ? [round3(stop)] : [], fieldMeta, nodes: [group],
   };
-  if (!ins.length && !outs.length) { scene.duration = 0.05; }
   const values = {};
   for (const [id, v] of Object.entries(fields)) values[id] = typeof v === 'string' ? v : String(v ?? '');
   if (el.title && values.title !== undefined && !values.title) values.title = el.title;

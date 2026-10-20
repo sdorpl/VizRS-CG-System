@@ -25,7 +25,8 @@ const FX = path.join(__dirname, '../fixtures/btb');
   check('belka: położenie grupy z layout.x/y', g.props.x === Math.round(elements[0].layout.x * 1000) / 1000, g.props);
   check('belka: gradient kształtu (color2 + kąt)', g.children[0].type === 'rect' && g.children[0].props.color2 && g.children[0].props.gradAngle === 160, g.children[0].props);
   check('belka: kolory rgb() zamienione na hex', /^#/.test(g.children[0].props.color));
-  check('belka: animacja IN (zoom) → klucze scale i opacity na grupie', g.anim.scale && g.anim.opacity && g.anim.scale[0].v === 0.85, g.anim);
+  check('belka: animacja IN (zoom) → ruch grupy 1:1 (typ, kierunek, czas, krzywa)', g.motion?.in?.type === 'zoom' && g.motion.in.dir === 'top' && g.motion.in.dur === 0.25 && g.motion.in.ease === 'ease-in' && !g.anim, g.motion);
+  check('belka: OUT (zoom) → motion.out, pusta krzywa pominięta', g.motion?.out?.type === 'zoom' && g.motion.out.dur === 0.2 && !('ease' in g.motion.out), g.motion);
   check('belka: stop point na końcu wejścia', r.scene.stops.length === 1 && Math.abs(r.scene.stops[0] - 0.25) < 1e-6, r.scene.stops);
   check('belka: OUT (zoom) po stopie → duration > stop', r.scene.duration > r.scene.stops[0]);
   check('belka: ostrzeżenie o foncie Bahnschrift', r.warnings.some((w) => /Bahnschrift/.test(w)), r.warnings);
@@ -42,7 +43,21 @@ const FX = path.join(__dirname, '../fixtures/btb');
   const sh = nz.scene.nodes[0].children[0];
   check('na żywo: fitText → autofollow kształtu za tekstem', sh.props.follow === t.id && sh.props.followAxis === 'w' && sh.props.followPad >= 0, sh.props);
   check('na żywo: autoW bez squash → squeeze w maxW, granica 0,5', t.props.textFit === 'squeeze' && t.props.squeezeMin === 0.5 && t.props.w > 122, t.props);
-  check('na żywo: slide/zoom IN + fade OUT zamienione na klucze', Object.keys(nz.scene.nodes[0].anim).length >= 2);
+  check('na żywo: zoom IN + fade OUT jako ruch elementu', nz.scene.nodes[0].motion?.in?.type === 'zoom' && nz.scene.nodes[0].motion?.out?.type === 'fade', nz.scene.nodes[0].motion);
+  check('na żywo: długość = stop + wyjście', Math.abs(nz.scene.stops[0] - 0.9) < 1e-6 && Math.abs(nz.scene.duration - 1.7) < 1e-6, [nz.scene.stops, nz.scene.duration]);
+
+  // ruch warstw: presety spoza listy, efekty tekstu, pętle, „po warstwie”
+  const rich = io.convertElement({ id: 'x1', name: 'Ruch', layout: { x: 0, y: 0 }, scene: { frame: { w: 800, h: 100 }, layers: [
+    { id: 'a', type: 'shape', x: 0, y: 0, w: 800, h: 100, fill: { type: 'solid', color: '#000' }, motion: { in: { type: 'mask-diag', direction: 'right', duration: 0.5, ease: 'spring' }, out: { type: 'teleport', fallback: 'clip', duration: 0.3 } } },
+    { id: 'b', type: 'text', x: 10, y: 0, w: 700, h: 100, text: 'Ala ma kota', font: { size: 40 }, motion: { in: { type: 'fade', duration: 0.2, after: 'a' }, text: { type: 'blurIn', duration: 0.4, stagger: 0.05, from: 'center' }, textOut: { type: 'words-up', duration: 0.3 } } },
+  ] }, animation: { loop: { type: 'pulse', duration: 1, amplitude: 6 } } });
+  const ra = rich.scene.nodes[0].children[0], rb = rich.scene.nodes[0].children[1];
+  check('ruch: maska ukośna z kierunkiem i krzywą spring', ra.motion.in.type === 'mask-diag' && ra.motion.in.dir === 'right' && ra.motion.in.ease === 'spring', ra.motion);
+  check('ruch: nieznany typ → fallback BTB z ostrzeżeniem', ra.motion.out.type === 'clip' && rich.warnings.some((w) => /teleport/.test(w)), [ra.motion, rich.warnings]);
+  check('ruch: efekt tekstu (alias blurIn → blur) z odstępem i kolejnością', rb.motion.textIn.type === 'blur' && rb.motion.textIn.stagger === 0.05 && rb.motion.textIn.from === 'center' && rb.motion.textOut.type === 'words-up', rb.motion);
+  check('ruch: „po warstwie” → motion.after', rb.motion.after === 'a', rb.motion);
+  check('ruch: pętla elementu z siłą', rich.scene.nodes[0].motion.loop.type === 'pulse' && rich.scene.nodes[0].motion.loop.amp === 6, rich.scene.nodes[0].motion);
+  check('ruch: stop po sekwencji (0,5 + max(0,2; 0,4)) i długość z wyjściem tekstu', Math.abs(rich.scene.stops[0] - 0.9) < 1e-6 && rich.scene.duration > rich.scene.stops[0] + 0.3, [rich.scene.stops, rich.scene.duration]);
 
   const tk = io.convertElement((await load('ticker_pelny.json')).elements[0]);
   const tn = tk.scene.nodes[0].children.find((c) => c.type === 'ticker');

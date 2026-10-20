@@ -461,10 +461,10 @@ Pełna lista: [API.md](API.md). W skrócie:
 VizRS **importuje** grafiki z BTB CG; eksportu w drugą stronę nie ma.
 
 - Artist → **⇧ BTB**: element `.json` (eksport v3) albo `.cgpack` → scena + strona, z raportem konwersji (ostrzeżenia o tym, czego nie przeniesiono).
-- Przenoszone: układ, teksty z regułami, animacje (presety → klucze), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
+- Przenoszone: układ, teksty z regułami, **ruch 1:1** (presety IN/OUT warstw i elementu z kierunkiem, czasem, opóźnieniem i krzywą, efekty tekstu, pętle uwagi, „po warstwie” przy wejściu → `node.motion`, §4.4a; stop point po wejściu, długość = stop + wyjście), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
 - Ściskanie: warstwa z `squash` → `textFit: squeeze` z granicą `minSquash` (0 i brak granicy → bez granicy, w VizRS 0,3 – jak migracja BTB `upgrade-minsquash`); BADGE (BTB ściska wg długości, min. 50%) → ściskanie do wnętrza tła z granicą 0,5; tekst z auto-szerokością (`autoW`) → `squeeze` w szerokości `maxW` z granicą 0,5.
 - Warstwy tekstu bez pola (w BTB edytowane w WYSIWYG) dostają pola `tekst1`, `tekst2`… (etykiety „Tekst 1”, „Tekst 2”), a przy wyrównaniu do lewej szerokość do krawędzi tła.
-- Nieprzenoszone (ostrzeżenia): część efektów tekstu, pętle uwagi, maski, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, poświata `glow`.
+- Nieprzenoszone (ostrzeżenia): maski warstw, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, poświata `glow` tekstu, „po warstwie” przy wyjściu (start równoczesny). Typ ruchu spoza listy → `fallback` z BTB albo przenikanie. Skala/obrót całego elementu działają względem środka grupy (w BTB – lewego górnego rogu).
 - Paczka wzorców: [examples/BTB_CG](../examples/BTB_CG/README.md) – 31 elementów, strony 8001–8402, warstwy `main`/`badge`/`ticker`/`clock`/`logo`.
 
 ## 13. Uruchamianie, opcje, bezpieczeństwo
