@@ -19,7 +19,7 @@
 <div id="box"><div id="stage"></div></div>
 <div id="status">brak połączenia z VizRS</div>
 <script type="module">
-  import { LayerHost, ScenePlayer, connectEvents, fitStage } from '/renderer.js';
+  import { LayerHost, ScenePlayer, connectEvents, fitStage, ensureFont } from '/renderer.js';
   // Parametry URL:
   //   ?layers=main,front   – renderuj tylko wybrane warstwy (osobne źródła w OBS)
   //   ?w=1920&h=1080       – rozdzielczość kanału
@@ -60,6 +60,12 @@
   if (q.get('bus') !== 'preview') ScenePlayer.onOverflow = (e) => ScenePlayer.onError({ scene: e.scene, node: e.node, message: `tekst nie mieści się (ściśnięcie poniżej ${Math.round(e.min * 100)}%): „${e.text.slice(0, 80)}”` });
   const resize = () => fitStage(stage, box, W, H);
   addEventListener('resize', resize); resize();
+  // czcionki z assets (np. z paczki belek .cgpack) ładowane z serwera zawczasu – komputer z OBS nie musi ich mieć,
+  // a pierwszy TAKE nie czeka na pobranie fontu; nowe pliki (import paczki w trakcie pracy) dochodzą co 30 s
+  const preloadFonts = () => fetch('/api/assets').then((r) => (r.ok ? r.json() : [])).then((list) => {
+    for (const a of list) if (/\.(ttf|otf|woff2?)$/i.test(a.name)) ensureFont(a.name);
+  }).catch(() => {});
+  preloadFonts(); setInterval(preloadFonts, 30000);
   const status = document.getElementById('status');
   connectEvents((ev) => host.handle(ev), (ok) => {
     // wskaźnik tylko w trybie podglądu – nigdy na antenie

@@ -55,3 +55,4 @@ jobs:
       - run: npm install --no-save playwright && npx playwright install --with-deps chromium
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/run.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/artist.js target/release/vizrs
+      - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/pack.js target/release/vizrs

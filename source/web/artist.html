@@ -104,7 +104,8 @@
   <button id="bDup" title="Duplikuj scenę">⧉</button>
   <button id="bDel" class="danger" title="Usuń scenę">🗑</button>
   <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
-  <button id="bImp" title="Import sceny z pliku JSON">⇧ Import</button>
+  <button id="bPack" title="Paczka belek .cgpack: wybrane sceny + strony + grafiki + czcionki w jednym pliku">⇩ Paczka</button>
+  <button id="bImp" title="Import sceny (.json) albo paczki belek (.cgpack)">⇧ Import</button>
     <button id="bImpBtb" title="Importuj element z BTB CG (.json eksport v3 lub .cgpack) jako scenę + stronę">⇧ BTB</button>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
@@ -176,6 +177,7 @@
 
 <script type="module">
 import * as BTB from '/btb-io.js';
+import * as PACK from '/cgpack.js';
 import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
@@ -474,6 +476,12 @@ function renderSceneProps() {
           (openRules.has(f.id) ? `<tr><td colspan="4">${rulesForm(f)}</td></tr>` : '');
       }).join('') + '</table>';
   } else h += `<div class="dim" style="padding:4px 10px">Brak. Zaznacz kontener i kliknij ⛓ przy właściwości.</div>`;
+  const known = assets.map((a) => a.name), used = PACK.sceneAssets({ ...scene, packAssets: undefined }, known), att = scene.packAssets || [];
+  const chip = (n, rm) => `<span class="chip" title="${PACK.FONT_RE.test(n) ? 'czcionka – na /output ładowana z serwera' : 'grafika'}">${PACK.FONT_RE.test(n) ? '🅰' : '🖼'} ${esc(n)}${known.includes(n) ? '' : ' <b style="color:#e55">brak!</b>'}${rm ? `<button data-pkrm="${esc(n)}" title="odłącz od paczki">×</button>` : ''}</span>`;
+  h += `<div class="pgroup">Zasoby paczki (.cgpack) – grafiki i czcionki</div>
+  <div class="sp"><label>Używane</label><div class="chips">${used.map((n) => chip(n, false)).join('') || '<span class="dim">brak</span>'}</div></div>
+  <div class="sp"><label>Dołączone</label><div class="chips">${att.map((n) => chip(n, true)).join('') || '<span class="dim">np. czcionka używana w znacznikach tekstu albo grafika podmieniana przez operatora</span>'}</div></div>
+  <div style="padding:4px 10px" class="row"><button id="pkAdd" title="Wgraj plik (grafika, wideo, czcionka TTF/OTF/WOFF) i dołącz do paczki tej sceny">＋ Wgraj i dołącz</button><select id="pkPick" class="grow"><option value="">dołącz z assets…</option>${known.filter((n) => !att.includes(n) && !used.includes(n)).map((n) => `<option>${esc(n)}</option>`).join('')}</select></div>`;
   h += `<div style="padding:10px" class="row"><button id="mkPage">＋ Utwórz stronę w Trio</button></div>
   <div class="help"><b>Jak to działa (jak w Viz):</b><br>
   • <b>Warstwa</b> – sceny na tej samej warstwie zastępują się (back / main / front lub dowolna nazwa).<br>
@@ -603,6 +611,7 @@ function onPropInput(e) {
   const inp = e.target;
   if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') { pendingCP = true; return; }
   const n = selNode();
+  if (inp.id === 'pkPick') { if (inp.value && e.type === 'change') { checkpoint(); scene.packAssets = [...new Set([...(scene.packAssets || []), inp.value])]; renderProps(); } return; }
   if (inp.id === 'pname' && n) { cp(); n.name = inp.value; renderTree(); return; }
   if (n && inp.dataset.p) {
     cp(); setProp(n, inp.dataset.p, parseVal(inp.dataset.p, inp)); refresh();
@@ -696,6 +705,9 @@ $('#props').addEventListener('click', async (e) => {
   }
   const ub = e.target.closest('[data-upload]');
   if (ub && n) { const a = await uploadAsset(); if (a) { checkpoint(); setProp(n, ub.dataset.upload, a.name); renderProps(); refresh(); } return; }
+  if (e.target.id === 'pkAdd') { const a = await uploadAsset(); if (a) { checkpoint(); scene.packAssets = [...new Set([...(scene.packAssets || []), a.name])]; renderProps(); refresh(); } return; }
+  const pkr = e.target.closest('[data-pkrm]');
+  if (pkr) { checkpoint(); scene.packAssets = (scene.packAssets || []).filter((x) => x !== pkr.dataset.pkrm); if (!scene.packAssets.length) delete scene.packAssets; renderProps(); return; }
   if (e.target.id === 'dkAdd') { checkpoint(); (scene.dock ||= []).push({ target: 'layer:back', dx: 0, dy: -90, dur: 0.6 }); renderProps(); return; }
   const dkd = e.target.closest('[data-dkdel]');
   if (dkd) { checkpoint(); scene.dock.splice(+dkd.dataset.dkdel, 1); if (!scene.dock.length) delete scene.dock; renderProps(); return; }
@@ -1251,14 +1263,109 @@ $('#bExp').onclick = () => {
   a.download = (scene.name || 'scena').replace(/[^\w.\-]+/g, '_') + '.vizrs.json'; a.click();
 };
 $('#bImp').onclick = () => {
-  const fi = $('#fileIn'); fi.accept = '.json,application/json'; fi.value = '';
+  const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
   fi.onchange = async () => {
     const f = fi.files[0]; if (!f) return;
-    try { const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s); }
-    catch (e) { toast('Import: ' + e.message, true); }
+    try {
+      if (/\.cgpack$/i.test(f.name)) {
+        const u8 = new Uint8Array(await f.arrayBuffer());
+        const kind = await PACK.packKind(u8);
+        if (kind === 'btb') return importBtbFile(f);
+        if (!kind) throw new Error('to nie jest paczka .cgpack');
+        return importPack(u8);
+      }
+      const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s);
+    } catch (e) { toast('Import: ' + e.message, true); }
   };
   fi.click();
 };
+
+// ------------------------------------------------------------ paczka belek (.cgpack)
+const fetchAssetBytes = async (name) => {
+  const r = await fetch('/assets/' + encodeURIComponent(name));
+  if (!r.ok) throw new Error(String(r.status));
+  return new Uint8Array(await r.arrayBuffer());
+};
+async function uploadBytes(name, data) {
+  const r = await fetch('/api/assets?name=' + encodeURIComponent(name), { method: 'POST', body: data });
+  if (!r.ok) throw new Error(`${name}: ${(await r.json().catch(() => ({}))).error || r.status}`);
+}
+$('#bPack').onclick = async () => {
+  let show;
+  try { show = await api('GET', '/api/show'); } catch (e) { return toast(e.message, true); }
+  await loadAssets();
+  const known = assets.map((a) => a.name);
+  const list = show.scenes.map((s) => (scene && s.id === scene.id ? scene : s)); // bieżąca scena w wersji z edytora
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center';
+  d.innerHTML = `<div style="width:min(720px,94vw);max-height:86vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px">
+    <b style="font-size:15px">Paczka belek (.cgpack)</b>
+    <div class="dim" style="margin:4px 0 10px;font-size:12px">Sceny razem z grafikami i czcionkami, których używają (oraz dołączonymi w „Zasoby paczki”). Czcionki z paczki serwer wysyła na /output – komputer z OBS nie musi ich mieć.</div>
+    <div class="row" style="gap:6px;margin-bottom:6px"><button data-pk="all">zaznacz wszystkie</button><button data-pk="none">żadna</button><span class="grow"></span><label><input type="checkbox" id="pkPages" checked> dołącz strony z Trio</label></div>
+    <div id="pkList" style="max-height:38vh;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px 8px">${list.map((s) => `<label style="display:flex;gap:8px;align-items:center;padding:2px 0"><input type="checkbox" value="${esc(s.id)}" ${scene && s.id === scene.id ? 'checked' : ''}><span class="grow">${esc(s.name)}</span><span class="dim" style="font-size:11px">${PACK.sceneAssets(s, known).length} plik(ów)</span></label>`).join('')}</div>
+    <div id="pkSum" class="dim" style="margin:8px 0;font-size:12px"></div>
+    ${dirty ? '<div style="color:var(--warn,#e8b04b);font-size:12px;margin-bottom:6px">Bieżąca scena ma niezapisane zmiany – trafią do paczki w wersji z edytora.</div>' : ''}
+    <div class="row" style="gap:6px"><button id="pkGo" class="acc">⇩ Pobierz .cgpack</button><button id="pkNo">Anuluj</button></div></div>`;
+  document.body.appendChild(d);
+  const chosen = () => $$('#pkList input:checked', d).map((i) => list.find((s) => s.id === i.value)).filter(Boolean);
+  const sum = () => {
+    const sc = chosen(), files = new Set(); sc.forEach((s) => PACK.sceneAssets(s, known).forEach((n) => files.add(n)));
+    const fonts = [...files].filter((n) => PACK.FONT_RE.test(n));
+    $('#pkSum', d).innerHTML = `${sc.length} scen · ${files.size - fonts.length} grafik · ${fonts.length} czcionek${fonts.length ? ': ' + fonts.map(esc).join(', ') : ''}`;
+  };
+  sum();
+  d.addEventListener('change', sum);
+  d.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-pk]');
+    if (b) { $$('#pkList input', d).forEach((i) => (i.checked = b.dataset.pk === 'all')); sum(); return; }
+    if (e.target.id === 'pkNo' || e.target === d) { d.remove(); return; }
+    if (e.target.id !== 'pkGo') return;
+    const sc = chosen(); if (!sc.length) return toast('Zaznacz co najmniej jedną scenę', true);
+    e.target.disabled = true;
+    try {
+      const { blob, missing, assets: packed } = await PACK.buildPack({
+        scenes: sc, pages: $('#pkPages', d).checked ? show.pages : [], known, fetchAsset: fetchAssetBytes, generator: 'VizRS Artist',
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (sc.length === 1 ? sc[0].name || 'scena' : 'belki').replace(/[^\w.\-]+/g, '_') + '.cgpack'; a.click();
+      d.remove();
+      toast(`Paczka: ${sc.length} scen, ${packed.length} plików (${(blob.size / 1024).toFixed(0)} KB)`);
+      if (missing.length) showReport('Paczka utworzona – brakujące pliki', missing.map((n) => `nie udało się odczytać ${n}`));
+    } catch (err) { toast('Paczka: ' + err.message, true); e.target.disabled = false; }
+  });
+};
+async function importPack(u8) {
+  const pk = await PACK.readPack(u8);
+  if (!(await confirmLeave())) return;
+  await loadAssets();
+  const report = [];
+  const { map, uploaded, skipped } = await PACK.installAssets(pk.assets, { existing: assets.map((a) => a.name), fetchAsset: fetchAssetBytes, upload: uploadBytes });
+  for (const [a, b] of map) report.push(`plik ${a} istniał z inną treścią – zapisano jako ${b}`);
+  const scenesIn = PACK.renameAssets(pk.scenes, map), pagesIn = PACK.renameAssets(pk.pages, map);
+  const ids = new Map(); let last = null;
+  for (const s of scenesIn) {
+    const { id, rev, ...body } = s; // eslint-disable-line no-unused-vars
+    if (scenes.some((x) => x.name === body.name)) report.push(`scena „${body.name}” już istnieje – dodano jako kopię`);
+    try { const saved = await api('POST', '/api/scenes', body); scenes.push(saved); ids.set(id, saved.id); last = saved; }
+    catch (e) { report.push(`scena „${body.name}”: ${e.message}`); }
+  }
+  let pages = 0;
+  for (const p of pagesIn) {
+    const sid = ids.get(p.scene); if (!sid) continue;
+    const { id, rev, ...body } = p; // eslint-disable-line no-unused-vars
+    body.scene = sid;
+    try { await api('POST', '/api/pages', body); pages++; }
+    catch (e) {
+      if (/zajęty/.test(e.message)) { delete body.number; try { await api('POST', '/api/pages', body); pages++; report.push(`strona ${p.number} „${p.name || ''}”: numer zajęty – nadano nowy`); } catch (e2) { report.push(`strona ${p.number}: ${e2.message}`); } }
+      else report.push(`strona ${p.number}: ${e.message}`);
+    }
+  }
+  await loadAssets();
+  if (last) openScene(last);
+  const fonts = uploaded.filter((n) => PACK.FONT_RE.test(n));
+  showReport(`Zaimportowano paczkę: ${ids.size} scen, ${pages} stron, ${uploaded.length} nowych plików${fonts.length ? ` (czcionki: ${fonts.join(', ')})` : ''}${skipped.length ? `, ${skipped.length} plików już było` : ''}`, report);
+}
 
 // ------------------------------------------------------------ BTB CG: import elementów
 function showReport(title, lines) {
@@ -1274,36 +1381,36 @@ function showReport(title, lines) {
 }
 $('#bImpBtb').onclick = () => {
   const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
-  fi.onchange = async () => {
-    const f = fi.files[0]; if (!f) return;
-    try {
-      if (!(await confirmLeave())) return;
-      const isZip = /\.cgpack$/i.test(f.name);
-      const { elements, files } = await BTB.readBtb(isZip ? new Uint8Array(await f.arrayBuffer()) : await f.text(), f.name);
-      const report = []; let made = 0, last = null;
-      for (const el of elements) {
-        const used = new Set();
-        const r = BTB.convertElement(el, {
-          knownFonts: [...FONTS, 'Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'],
-          assetName: (src) => { const k = Object.keys(files || {}).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
-        });
-        for (const k of used) {
-          const rr = await fetch('/api/assets?name=' + encodeURIComponent(k.split('/').pop()), { method: 'POST', body: files[k] });
-          if (!rr.ok) r.warnings.push(`plik ${k}: ${(await rr.json().catch(() => ({}))).error || rr.status}`);
-        }
-        const saved = await api('POST', '/api/scenes', r.scene);
-        scenes.push(saved);
-        await api('POST', '/api/pages', { scene: saved.id, name: r.page.name, values: r.page.values }).catch((e) => r.warnings.push('strona nie utworzona: ' + e.message));
-        r.warnings.forEach((w) => report.push(`${r.scene.name}: ${w}`));
-        made++; last = saved;
-      }
-      await loadAssets();
-      if (last) openScene(last);
-      showReport(`Zaimportowano ${made} ${made === 1 ? 'element' : 'elementy'} z BTB CG`, report);
-    } catch (e) { toast('Import BTB: ' + e.message, true); }
-  };
+  fi.onchange = () => { if (fi.files[0]) importBtbFile(fi.files[0]); };
   fi.click();
 };
+async function importBtbFile(f) {
+  try {
+    if (!(await confirmLeave())) return;
+    const isZip = /\.cgpack$/i.test(f.name);
+    const { elements, files } = await BTB.readBtb(isZip ? new Uint8Array(await f.arrayBuffer()) : await f.text(), f.name);
+    const report = []; let made = 0, last = null;
+    for (const el of elements) {
+      const used = new Set();
+      const r = BTB.convertElement(el, {
+        knownFonts: [...FONTS, 'Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'],
+        assetName: (src) => { const k = Object.keys(files || {}).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
+      });
+      for (const k of used) {
+        const rr = await fetch('/api/assets?name=' + encodeURIComponent(k.split('/').pop()), { method: 'POST', body: files[k] });
+        if (!rr.ok) r.warnings.push(`plik ${k}: ${(await rr.json().catch(() => ({}))).error || rr.status}`);
+      }
+      const saved = await api('POST', '/api/scenes', r.scene);
+      scenes.push(saved);
+      await api('POST', '/api/pages', { scene: saved.id, name: r.page.name, values: r.page.values }).catch((e) => r.warnings.push('strona nie utworzona: ' + e.message));
+      r.warnings.forEach((w) => report.push(`${r.scene.name}: ${w}`));
+      made++; last = saved;
+    }
+    await loadAssets();
+    if (last) openScene(last);
+    showReport(`Zaimportowano ${made} ${made === 1 ? 'element' : 'elementy'} z BTB CG`, report);
+  } catch (e) { toast('Import BTB: ' + e.message, true); }
+}
 
 // ------------------------------------------------------------ klawiatura
 addEventListener('keydown', (e) => {

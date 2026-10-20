@@ -95,7 +95,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 
 | Obiekt | Pola | Uwagi |
 |---|---|---|
-| **scena** | `id`, `name`, `layer`, `width`, `height`, `duration`, `stops[]`, `markers[]`, `dock[]`, `fieldMeta{}`, `nodes[]`, `rev` | warstwa: litery, cyfry, `-`, `_` (maks. 50) |
+| **scena** | `id`, `name`, `layer`, `width`, `height`, `duration`, `stops[]`, `markers[]`, `dock[]`, `packAssets[]` (pliki dołączone do paczki .cgpack), `fieldMeta{}`, `nodes[]`, `rev` | warstwa: litery, cyfry, `-`, `_` (maks. 50) |
 | **strona** | `id`, `number` (całkowita), `name`, `scene` (id sceny), `values{}`, `hotkey`, `note`, `rev` | `values` tylko wartości proste (tekst, liczba, tak/nie) |
 | **playlista** | `id`, `name`, `loop`, `items[{page, duration}]` | karuzela odtwarzana przez serwer |
 | **rundown** | `id`, `name`, `items[{id, page, note}]` | kursor i „odegrane” żyją w pamięci serwera (do restartu) |
@@ -190,6 +190,7 @@ Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warst
 - Fonty systemowe (Arial, Verdana…) – bez ładowania.
 - Inne nazwy z Google Fonts ładują się z internetu (na antenie lepiej tego unikać).
 - Własny font: wgraj `.ttf/.otf/.woff/.woff2` do assets i wpisz w polu „font” nazwę pliku, np. `MojFont.ttf`. Font wgrany, gdy Trio lub wyjście są już otwarte, wczyta się sam w ciągu kilkunastu sekund (bez odświeżania strony).
+- **Font jedzie z serwerem, nie z komputerem OBS:** wyjście `/output` pobiera wszystkie fonty z assets z serwera VizRS zaraz po otwarciu (i sprawdza nowe co 30 s), więc komputer renderujący nie musi mieć fontu zainstalowanego, a pierwszy TAKE nie czeka na pobranie. Fonty przenosi między stanowiskami paczka belek `.cgpack` (§8.6).
 
 ## 5. Pola kontrolne i reguły pól
 
@@ -295,7 +296,7 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 | Obszar | Zawartość |
 |---|---|
-| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, 🗑 usuń, ⇩ Eksport / ⇧ Import (JSON sceny), ⇧ BTB (import z BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz** |
+| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, 🗑 usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.6), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ BTB (import z BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz** |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, 🗑; przeciąganie zmienia rodzica z zachowaniem położenia |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny |
 | Właściwości (prawo) | grupy: Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker; „widoczny gdy”; presety animacji |
@@ -303,7 +304,7 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 ### 8.2 Ustawienia sceny (kliknij puste tło kanwy)
 
-Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery (⏹ = stop point z markera), **powiązania (dock)**, **warianty** (＋ Wariant), **pola kontrolne** (etykieta w Trio + ⚙ reguły) i **＋ Utwórz stronę w Trio**.
+Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery (⏹ = stop point z markera), **powiązania (dock)**, **warianty** (＋ Wariant), **pola kontrolne** (etykieta w Trio + ⚙ reguły), **zasoby paczki** (grafiki i czcionki, §8.6) i **＋ Utwórz stronę w Trio**.
 
 ### 8.3 Klucze animacji
 
@@ -331,6 +332,18 @@ Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery
 ### 8.5 Zmiana szablonu, który jest na antenie
 
 Zapis sceny nie zmienia grafiki na antenie: warstwa dostaje znacznik **⏳ nowa wersja** w Trio, a operator wybiera moment **Wdróż teraz** (`/api/deploy/<warstwa>` – podmiana bez ponownej animacji). Kolejny TAKE używa już nowej wersji.
+
+### 8.6 Paczka belek (.cgpack)
+
+Paczka przenosi belki między stanowiskami i serwerami jednym plikiem – razem z grafikami i czcionkami.
+
+- **⇩ Paczka** otwiera listę scen (bieżąca zaznaczona), opcję „dołącz strony z Trio” i podsumowanie (ile scen, grafik, czcionek). **Pobierz .cgpack** zapisuje plik. Niezapisane zmiany bieżącej sceny trafiają do paczki w wersji z edytora.
+- Do paczki trafiają pliki z assets, których scena używa (obrazy i wideo w `src`, fonty w `font`, odnośniki `/assets/…` w tekstach, wartości stron) oraz **dołączone** ręcznie.
+- **Zasoby paczki** w ustawieniach sceny: lista „Używane” (wykryte) i „Dołączone” (`scene.packAssets`, × odłącza). **＋ Wgraj i dołącz** wgrywa nowy plik (grafika, wideo, czcionka TTF/OTF/WOFF/WOFF2) do assets i dołącza go do sceny; lista „dołącz z assets…” dołącza plik już wgrany. Dołączaj pliki, których scena nie wskazuje wprost – np. czcionkę dla znaczników tekstu albo grafiki, które operator wybiera w Trio. „brak!” = pliku nie ma w assets.
+- **⇧ Import** przyjmuje `.cgpack`: pliki trafiają do assets (ten sam plik o tej samej treści jest pomijany, inna treść pod tą samą nazwą → `nazwa_2.ext` i przepisane odnośniki), sceny są dodawane jako nowe (istniejące nie są nadpisywane), strony dostają swój numer albo nowy, gdy numer jest zajęty. Raport pokazuje, co się zmieniło. Paczka elementu BTB CG wczytana przez ⇧ Import trafia do importu BTB (§12).
+- Czcionki z paczki serwuje serwer (`/assets/<plik>`); wyjście `/output` ładuje je zawczasu (§4.7).
+
+Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista scen i plików z sumą CRC-32), `scenes.json` (`{ scenes, pages }` jak w show), `assets/<nazwa>`. Odczyt sprawdza ścieżki, typy plików, sumy i limity (200 plików, 256 MB). To format VizRS – nie jest eksportem do BTB CG.
 
 ## 9. Trio – playout
 
@@ -480,6 +493,7 @@ cargo test                                           # silnik, API, JSON, walida
 node tests/vectors/run.js && node tests/vectors/btb.js   # wspólne wektory z BTB, konwersja
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
+node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
 node tests/e2e/btb-visual.js target/release/vizrs <katalog>  # porównanie z BTB CG
 ```

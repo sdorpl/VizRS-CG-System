@@ -1,6 +1,9 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Paczka belek `.cgpack`** (Artist → ⇩ Paczka / ⇧ Import, `web/cgpack.js`): wybrane sceny, ich strony z Trio, grafiki i czcionki w jednym pliku ZIP (`manifest.json` + `scenes.json` + `assets/`). Import dodaje sceny jako nowe, pomija pliki już obecne, rozwiązuje kolizje nazw (`nazwa_2.ext` z przepisaniem odnośników) i numerów stron, pokazuje raport. Paczka BTB CG podana do ⇧ Import trafia do importu BTB.
+- **Zasoby paczki w scenie:** sekcja w ustawieniach sceny – pliki używane (wykryte) i dołączone ręcznie (`scene.packAssets`, walidacja w `validate.rs`); ＋ Wgraj i dołącz (grafika, wideo, czcionka).
+- **Czcionki z serwera na /output:** wyjście ładuje wszystkie czcionki z assets zaraz po otwarciu (i nowe co 30 s) – komputer z OBS nie potrzebuje zainstalowanej czcionki, pierwszy TAKE nie czeka na font.
 - **Łamanie wierszy „wypełniaj”** (`lineBreak: fill`, próg `fillSqueeze`, domyślnie 0,9) w `squeeze-lines`/`squeeze-each`: wiersz bierze kolejne słowa do progu ściśnięcia, reszta przechodzi niżej, każdy wiersz ściskany osobno – jak belki TVP. Domyślnie bez zmian (`balance`, wiersze równej szerokości). Walidacja obu właściwości.
 - Przykład `examples/BTB_PILNE.show.json` (strony 8501–8506): „Belka - PILNE” z paczki BTB_CG jako belka 1–3-wierszowa z łamaniem `fill`, teksty z belek TVP i TV Republika.
 - `source/tools/gallery.js`: galeria wszystkich stron zestawów przykładowych (zrzuty, arkusze, `index.html`, poza repo).

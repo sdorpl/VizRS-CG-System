@@ -54,6 +54,12 @@ Za pierwszym razem startuje przykładowy zestaw **INFO24** (belki, ticker, zegar
 5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
 
+### Własna czcionka i grafiki – paczka belek
+1. W ustawieniach sceny (puste tło) w sekcji **Zasoby paczki** kliknij **＋ Wgraj i dołącz** i wybierz plik czcionki (`.ttf`, `.otf`, `.woff2`) albo grafikę.
+2. Czcionka pojawi się na liście fontów pod nazwą pliku (np. `MojFont.ttf`) – wybierz ją w polu **font** tekstu.
+3. **⇩ Paczka** → zaznacz sceny → **Pobierz .cgpack**. Na innym stanowisku: **⇧ Import** i wskaż plik – sceny, strony, grafiki i czcionki wgrają się razem.
+4. Komputer z OBS nie musi mieć czcionki – wyjście pobiera ją z serwera VizRS.
+
 ### Tło dopasowane do tekstu (autofollow)
 
 Zaznacz prostokąt i w grupie **Autofollow** wpisz w polu „śledź węzeł(y)” nazwę węzła tekstu. Prostokąt dopasuje szerokość (oś `w`) albo wysokość (`h`) do treści, z marginesem `margines`.
@@ -141,7 +147,7 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
 | Czerwone „⚠ zapis show nieudany” | brak miejsca lub praw zapisu do `vizrs-data/`; antena działa, edycje nie są zapisywane. |
 | „⚠ błędy scen: N” | ⚙ Stan → lista błędów; wadliwy element jest ukryty, reszta gra. Popraw scenę w Artist. „tekst nie mieści się” = tekst na antenie wystaje poza belkę – skróć go i daj UPDATE. |
 | Tekst za długi / ściśnięty | pod polem widać `ściśnięcie: 72%` albo `w1: 72%` – pomarańczowe = ściśnięte, czerwone = bardzo ściśnięte; **⚠ nie mieści się** = tekst wystaje poza belkę: skróć go albo podziel na wiersze (Enter). |
-| Inny font na antenie niż w Artist | używaj fontów wbudowanych (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat) albo wgraj plik fontu do assets. |
+| Inny font na antenie niż w Artist | używaj fontów wbudowanych (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat) albo wgraj plik fontu do assets (Zasoby paczki → ＋ Wgraj i dołącz) i wybierz go w polu font; OBS pobiera go z serwera. |
 | „🔒 edytuje …” przy stronie | stronę edytuje inny operator; zapis wymaga potwierdzenia, blokada wygasa po 45 s. |
 | Trzeba wrócić do wcześniejszej wersji show | ⚙ Stan → **Kopie zapasowe show** → Przywróć. |
 | Zdjąć wszystko natychmiast | **Shift+Esc** (CLEAR ALL). |

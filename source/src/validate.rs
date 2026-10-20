@@ -195,6 +195,21 @@ pub fn scene(s: &Json) -> R {
         }
         Some(_) => return Err("scena.markers: oczekiwano listy".into()),
     }
+    match opt(s, "packAssets") {
+        None => {}
+        Some(Json::Arr(list)) => {
+            if list.len() > 200 {
+                return Err("scena.packAssets: maks. 200 plików".into());
+            }
+            for v in list {
+                match v {
+                    Json::Str(n) if !n.is_empty() && n.len() <= 200 && !n.contains(['/', '\\', '\0']) => {}
+                    _ => return Err("scena.packAssets: oczekiwano nazw plików z assets".into()),
+                }
+            }
+        }
+        Some(_) => return Err("scena.packAssets: oczekiwano listy".into()),
+    }
     match opt(s, "dock") {
         None => {}
         Some(Json::Arr(list)) => {
@@ -535,6 +550,10 @@ mod tests {
         assert!(scene(&p(r#"{"duration":99999}"#)).is_err());
         assert!(scene(&p(r#"{"width":0}"#)).is_err());
         assert!(scene(&p(r#"{"layer":"a b"}"#)).is_err());
+        assert!(scene(&p(r#"{"packAssets":["logo.png","Font.ttf"]}"#)).is_ok());
+        assert!(scene(&p(r#"{"packAssets":["../show.json"]}"#)).is_err());
+        assert!(scene(&p(r#"{"packAssets":[1]}"#)).is_err());
+        assert!(scene(&p(r#"{"packAssets":"x"}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"rect","props":5}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"props":{}}]}"#)).is_err());
         let mut deep = String::from(r#"{"nodes":["#);
