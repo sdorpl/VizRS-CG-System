@@ -22,7 +22,7 @@ cargo build --release
 | http://localhost:8088/trio | **Trio** – playout |
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
-Galeria wszystkich grafik zestawów INFO24 i R7 oraz szablonów BTB CG (`source/tests/fixtures/btb`, import przez `btb-io.js`): [media/galeria/index.html](media/galeria/index.html) (arkusze: [INFO24](media/galeria/INFO24-arkusz.png), [R7](media/galeria/R7-arkusz.png), [BTB](media/galeria/BTB-arkusz.png)); odświeżanie: `node source/tools/gallery.js [ścieżka-do-vizrs]`.
+Galeria wszystkich grafik zestawów INFO24 i R7, szablonów BTB CG (`source/tests/fixtures/btb`, import przez `btb-io.js`) i belki BTB wielowierszowej: [media/galeria/index.html](media/galeria/index.html) (arkusze: [INFO24](media/galeria/INFO24-arkusz.png), [R7](media/galeria/R7-arkusz.png), [BTB](media/galeria/BTB-arkusz.png), [BTB-PILNE](media/galeria/BTB-PILNE-arkusz.png)); odświeżanie: `node source/tools/gallery.js [ścieżka-do-vizrs]`.
 
 Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token HASŁO` (lub `VIZRS_TOKEN`), `--osc PORT`, `--webhook URL`, `--data katalog`, `--web katalog`, `--version`
 (serwuje pliki UI z dysku zamiast wbudowanych – wygodne przy własnych modyfikacjach `web/`).
@@ -136,6 +136,14 @@ uruchom z pustym katalogiem (`--data nowy-katalog`) albo usuń `show.json`.
 Kompletna oprawa w innej stylistyce (petrol + bursztyn, ścięte krawędzie): belka info/pilne 1–2 wiersze,
 belka z wyróżnieniem, podpis, belka z autorem, ticker z logo i zegarem, bug NA ŻYWO, odliczanie, belka programu.
 Wczytaj w Trio: „⇧ Import show” albo uruchom `vizrs --data katalog` z tym plikiem jako `show.json`. Strony 7001–7401.
+
+## Belka BTB wielowierszowa (`examples/BTB_PILNE.show.json`)
+
+Szablon BTB „Belka - PILNE” (`source/tests/fixtures/btb/belka_pilne.cgpack`) po imporcie, przerobiony na 1–3 wiersze
+w układzie belek TVP: tekst `squeeze-lines` z łamaniem **„wypełniaj”** (`lineBreak: fill`) – wiersz bierze kolejne słowa,
+dopóki mieści się po ściśnięciu najwyżej do „ściśnięcia przy wypełnianiu” (`fillSqueeze`, 0,9), reszta przechodzi niżej;
+każdy wiersz ma własny stopień ściśnięcia, a belka rośnie w górę za tekstem. Strony 1001–1006 (teksty z belek TVP i TV Republika).
+Domyślne łamanie `balance` dzieli tekst na wiersze o zbliżonej szerokości.
 
 ## Elementy dodatkowe (w obu zestawach)
 

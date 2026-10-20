@@ -22,6 +22,7 @@ const SETS = [
   ['INFO24', path.join(ROOT, 'examples/INFO24.show.json')],
   ['R7', path.join(ROOT, 'examples/R7_NEWS.show.json')],
   ['BTB', path.join(ROOT, 'source/tests/fixtures/btb')],
+  ['BTB-PILNE', path.join(ROOT, 'examples/BTB_PILNE.show.json')],
 ];
 const KNOWN_FONTS = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
@@ -130,7 +131,7 @@ details{margin-top:6px;font-size:12px}pre{white-space:pre-wrap;margin:4px 0 0;co
 #lb{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center}#lb img{max-width:96vw;max-height:94vh}
 </style></head><body>
 <header><h1>VizRS – wszystkie elementy grafiki</h1>
-<div class="muted">Zestawy INFO24 i R7 oraz szablony BTB CG zaimportowane do VizRS (tests/fixtures/btb).</div>
+<div class="muted">Zestawy INFO24 i R7, szablony BTB CG zaimportowane do VizRS (tests/fixtures/btb) oraz belka BTB w wersji wielowierszowej (examples/BTB_PILNE.show.json).</div>
 <div class="muted">Każda strona zestawu pokazana osobno po animacji wejścia (wyjście 1920×1080, zrzut 960×540). Wygenerowano: <code>node source/tools/gallery.js</code>.</div></header>
 ${sections.map((s) => `<h2>${s.setName} <span class="muted">(${s.cards.length} stron · ${esc(s.file)} · <a style="color:#7fb3ff" href="${s.setName}-arkusz.png">arkusz</a>)</span></h2>
 <div class="grid">${s.cards.map((c) => `<div class="card"><img loading="lazy" src="${c.file}" alt="${esc(c.name)}">

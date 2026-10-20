@@ -11,7 +11,7 @@ details{margin-top:6px;font-size:12px}pre{white-space:pre-wrap;margin:4px 0 0;co
 #lb{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center}#lb img{max-width:96vw;max-height:94vh}
 </style></head><body>
 <header><h1>VizRS – wszystkie elementy grafiki</h1>
-<div class="muted">Zestawy INFO24 i R7 oraz szablony BTB CG zaimportowane do VizRS (tests/fixtures/btb).</div>
+<div class="muted">Zestawy INFO24 i R7, szablony BTB CG zaimportowane do VizRS (tests/fixtures/btb) oraz belka BTB w wersji wielowierszowej (examples/BTB_PILNE.show.json).</div>
 <div class="muted">Każda strona zestawu pokazana osobno po animacji wejścia (wyjście 1920×1080, zrzut 960×540). Wygenerowano: <code>node source/tools/gallery.js</code>.</div></header>
 <h2>INFO24 <span class="muted">(22 stron · examples/INFO24.show.json · <a style="color:#7fb3ff" href="INFO24-arkusz.png">arkusz</a>)</span></h2>
 <div class="grid"><div class="card"><img loading="lazy" src="INFO24-1001.png" alt="Belka – budżet">
@@ -338,6 +338,37 @@ font „Bahnschrift” niedostępny w VizRS – wgraj plik fontu w Artist albo z
 <div class="tags">scena: TICKER PEŁNY EKRAN · warstwa: main<br>węzły: group · rect · ticker</div>
 <details><summary>raport konwersji BTB (0)</summary><pre>plik: ticker_pelny.json</pre></details>
 
+</div></div></div><h2>BTB-PILNE <span class="muted">(6 stron · examples/BTB_PILNE.show.json · <a style="color:#7fb3ff" href="BTB-PILNE-arkusz.png">arkusz</a>)</span></h2>
+<div class="grid"><div class="card"><img loading="lazy" src="BTB-PILNE-1001.png" alt="TVP – 2 linie">
+<div class="meta"><span class="num">1001</span>TVP – 2 linie
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: PREZYDENT ANDRZEJ DUDA ZABRAŁ GŁOS WS. UCHWAŁY DOTYCZĄCEJ ZMIAN W MEDIACH PUBLICZNYCH</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1002.png" alt="TVP – Zakopane">
+<div class="meta"><span class="num">1002</span>TVP – Zakopane
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: TELEWIZJA POLSKA I MIASTO ZAKOPANE ZAPRASZAJĄ NA „SYLWESTRA MARZEŃ”</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1003.png" alt="TVP – 1 linia">
+<div class="meta"><span class="num">1003</span>TVP – 1 linia
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: ODLICZANIE DO „SYLWESTRA MARZEŃ Z DWÓJKĄ”</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1004.png" alt="Republika – Trybunał">
+<div class="meta"><span class="num">1004</span>Republika – Trybunał
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: POLACY NIE ULEGNĄ PRESJI RZĄDZĄCYCH WS. TRYBUNAŁU</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1005.png" alt="Republika – zima">
+<div class="meta"><span class="num">1005</span>Republika – zima
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: NADCHODZI NAJDROŻSZA ZIMA W HISTORII</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1006.png" alt="3 linie">
+<div class="meta"><span class="num">1006</span>3 linie
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: MAZOWSZE: KIEROWCA CIĘŻARÓWKI ŚMIERTELNIE POTRĄCONY NA TRASIE S17, GDY PRÓBOWAŁ WYMIENIĆ OPONĘ. POLICJA USTALA OKOLICZNOŚCI ZDARZENIA, TRASA W KIERUNKU WARSZAWY JEST ZABLOKOWANA</pre></details>
 </div></div></div>
 <div id="lb" onclick="this.style.display='none'"><img></div>
 <script>document.querySelectorAll('.card img').forEach(i=>i.onclick=()=>{const l=document.getElementById('lb');l.firstChild.src=i.src;l.style.display='flex'})</script>

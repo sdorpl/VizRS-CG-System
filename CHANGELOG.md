@@ -1,5 +1,10 @@
 # VizRS – historia zmian
 
+## Niewydane
+- **Tekst**: łamanie wierszy `lineBreak: fill` („wypełniaj”, jak belki TVP) z progiem `fillSqueeze` w trybie `squeeze-lines`; każdy wiersz ściskany osobno.
+- **Poprawka**: automatyczne łamanie w `squeeze-lines` nie dzieli już tekstu na twardej spacji (polska typografia „i\u00a0w\u00a0z…” – bez „sierot” na końcu wiersza).
+- **Przykład** `examples/BTB_PILNE.show.json`: belka BTB „Belka - PILNE” w wersji wielowierszowej; galeria `media/galeria` (`source/tools/gallery.js`).
+
 ## 2.0.0 (2026-10-19) – „Studio”
 - **Powiązania (dock)**: reguły `layer:`/`page:`/`scene:` przesuwają scenę, gdy wskazana grafika jest na antenie; nadpisanie operatora (przycisk ⇅ w Trio); stan odtwarzany po odświeżeniu wyjścia.
 - **Artist**: markery na osi (M, dwuklik; → stop point), zaznaczanie kluczy (Shift, ramka), kopiuj/wklej klucze (Ctrl+C/V), zoom Ctrl+kółko i „dopasuj”, przeciąganie w drzewie (zmiana rodzica z zachowaniem położenia), biblioteka presetów animacji (zapis, zastosowanie, import/eksport).
