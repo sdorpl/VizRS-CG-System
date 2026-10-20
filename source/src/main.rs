@@ -5,6 +5,9 @@
 
 mod audit;
 mod backup;
+mod client;
+mod config;
+mod datalock;
 mod engine;
 mod fonts;
 mod fonts_data;
@@ -18,7 +21,7 @@ mod validate;
 
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -84,96 +87,65 @@ impl Drop for ConnSlot {
     }
 }
 
-struct Config {
-    port: u16,
-    tcp_port: u16,
-    bind: String,
-    token: Option<String>,
-    osc_port: u16,
-    webhook: Option<String>,
-    data: PathBuf,
-    web_dir: Option<PathBuf>,
-}
-
-fn parse_args() -> Config {
-    let mut c = Config { port: 8088, tcp_port: 6100, bind: "127.0.0.1".into(), token: None, osc_port: 0, webhook: None, data: PathBuf::from("vizrs-data"), web_dir: None };
-    let args: Vec<String> = std::env::args().collect();
-    let mut i = 1;
-    while i < args.len() {
-        let v = args.get(i + 1).cloned().unwrap_or_default();
-        match args[i].as_str() {
-            "--port" | "-p" => {
-                c.port = v.parse().unwrap_or(c.port);
-                i += 1;
-            }
-            "--tcp" => {
-                c.tcp_port = v.parse().unwrap_or(c.tcp_port);
-                i += 1;
-            }
-            "--osc" => {
-                c.osc_port = v.parse().unwrap_or(0);
-                i += 1;
-            }
-            "--webhook" => {
-                if let Err(e) = hook::parse_url(&v) {
-                    eprintln!("{e}");
-                    std::process::exit(2);
-                }
-                c.webhook = Some(v);
-                i += 1;
-            }
-            "--bind" => {
-                c.bind = v;
-                i += 1;
-            }
-            "--token" => {
-                if !guard::token_valid(&v) {
-                    eprintln!("--token: dozwolone znaki A-Z a-z 0-9 - _ . (max 128)");
-                    std::process::exit(2);
-                }
-                c.token = Some(v);
-                i += 1;
-            }
-            "--version" | "-V" => {
-                println!("VizRS {} ({})", env!("CARGO_PKG_VERSION"), env!("VIZRS_GIT"));
-                std::process::exit(0);
-            }
-            "--data" | "-d" => {
-                c.data = PathBuf::from(v);
-                i += 1;
-            }
-            "--web" => {
-                c.web_dir = Some(PathBuf::from(v));
-                i += 1;
-            }
-            "--help" | "-h" => {
-                println!(
-                    "VizRS {}\n\nUżycie: vizrs [--port 8088] [--tcp 6100] [--bind 127.0.0.1] [--token HASŁO] [--data vizrs-data] [--web katalog]\n\n  --port   port HTTP (UI + wyjście OBS)\n  --tcp    port komend tekstowych (0 = wyłączony)\n  --bind   adres nasłuchu (domyślnie 127.0.0.1; 0.0.0.0 = dostęp z sieci – ustaw też --token)\n  --osc    port UDP OSC (0 = wyłączony; /vizrs/take 1001, przy --token: /vizrs/<token>/take)\n  --webhook adres http://host:port/ścieżka dla zdarzeń onAir/offAir/error\n  --token  wymagaj tokenu (albo zmienna środowiskowa VIZRS_TOKEN) (UI: otwórz raz z ?token=…, API: nagłówek Authorization: Bearer / X-Token / ?token=, TCP: pierwsza linia AUTH …)\n  --data   katalog z show.json i assets/\n  --web    serwuj pliki UI z dysku zamiast wbudowanych (do własnych modyfikacji)",
-                    env!("CARGO_PKG_VERSION")
-                );
-                std::process::exit(0);
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    // token z zmiennej środowiskowej (nie widać go w `ps`; wygodne dla usług systemd/launchd)
-    if c.token.is_none() {
-        if let Ok(t) = std::env::var("VIZRS_TOKEN") {
-            if !t.is_empty() {
-                if !guard::token_valid(&t) {
-                    eprintln!("VIZRS_TOKEN: dozwolone znaki A-Z a-z 0-9 - _ . (max 128)");
-                    std::process::exit(2);
-                }
-                c.token = Some(t);
-            }
-        }
-    }
-    c
-}
+use config::{Cli, Config, Mode};
 
 fn main() {
-    let cfg = Arc::new(parse_args());
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let cfg = match config::parse(&args, &|k| std::env::var(k).ok()) {
+        Ok(Cli::Run(c)) => c,
+        Ok(Cli::Help) => {
+            println!("{}", config::help());
+            return;
+        }
+        Ok(Cli::Version) => {
+            println!("VizRS {} ({})", env!("CARGO_PKG_VERSION"), env!("VIZRS_GIT"));
+            return;
+        }
+        Err(e) => {
+            eprintln!("{e}\n(vizrs --help – lista opcji)");
+            std::process::exit(2);
+        }
+    };
+    match cfg.mode {
+        Mode::Healthcheck => std::process::exit(healthcheck(&cfg)),
+        Mode::Serve => serve(cfg),
+    }
+}
+
+/// `--healthcheck`: 0 = serwer odpowiada `status: ok`, 1 = nie (Docker HEALTHCHECK, monitoring).
+fn healthcheck(cfg: &Config) -> i32 {
+    let addr = cfg.local_addr();
+    match client::get(&addr, "/health", cfg.token.as_deref(), Duration::from_secs(3)) {
+        Ok((200, body)) if Json::parse(&body).map(|h| h.str("status") == Some("ok")).unwrap_or(false) => {
+            println!("ok {addr}");
+            0
+        }
+        Ok((code, body)) => {
+            eprintln!("{addr}: HTTP {code} {}", body.trim());
+            1
+        }
+        Err(e) => {
+            eprintln!("{e}");
+            1
+        }
+    }
+}
+
+fn serve(mut cfg: Config) {
+    let lock = match datalock::acquire(&cfg.data, &cfg.local_addr(), cfg.token.as_deref()) {
+        Ok(l) => l,
+        Err(o) => {
+            eprintln!(
+                "Katalog danych {} jest używany przez inny serwer VizRS (pid {}, http://{}).\nDwa serwery na jednym show.json nadpisywałyby sobie zmiany – użyj działającego albo wskaż inny --data.",
+                cfg.data.display(),
+                o.pid,
+                o.addr
+            );
+            std::process::exit(3);
+        }
+    };
+    cfg.instance = lock.instance.clone();
+    let cfg = Arc::new(cfg);
     let engine = Engine::new(cfg.data.clone(), DEMO_SHOW);
     for (name, bytes) in DEMO_ASSETS {
         let p = cfg.data.join("assets").join(name);
@@ -197,10 +169,14 @@ fn main() {
         hook::spawn(Arc::clone(&engine), t);
     }
     let addr = format!("{}:{}", cfg.bind, cfg.port);
-    let listener = TcpListener::bind(&addr).unwrap_or_else(|e| {
-        eprintln!("Nie mogę otworzyć portu {addr}: {e}");
-        std::process::exit(1);
-    });
+    let listener = match TcpListener::bind(&addr) {
+        Ok(l) => l,
+        Err(e) => {
+            eprintln!("Nie mogę otworzyć portu {addr}: {e}");
+            drop(lock);
+            std::process::exit(1);
+        }
+    };
     println!("┌──────────────────────────────────────────────────────────┐");
     println!("│ VizRS {:<51}│", env!("CARGO_PKG_VERSION"));
     println!("│  Artist (projektowanie):  http://localhost:{:<14}│", format!("{}/artist", cfg.port));
@@ -431,7 +407,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
     }
 
     if s == ["health"] && m == "GET" {
-        return Response::json(&engine.health());
+        return Response::json(&engine.health().with("instance", cfg.instance.as_str()));
     }
     if s.first() != Some(&"api") {
         return Response::err(404, "nie znaleziono");
@@ -582,7 +558,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             engine.clear_errors();
             Response::ok()
         }
-        ("GET", ["health"]) => Response::json(&engine.health()),
+        ("GET", ["health"]) => Response::json(&engine.health().with("instance", cfg.instance.as_str())),
         ("GET", ["locks"]) => Response::json(&engine.locks_json()),
         ("POST" | "PUT", ["lock", kind, id]) => res(engine.lock(kind, id, req.q("who").unwrap_or("")), |j| Response::json(&j)),
         ("DELETE" | "POST", ["unlock", kind, id]) => Response::json(&engine.unlock(kind, id, req.q("who").unwrap_or(""), req.q("force") == Some("1"))),
@@ -764,12 +740,13 @@ fn tcp_client(stream: TcpStream, engine: Arc<Engine>, token: Option<String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     fn setup(name: &str) -> (Arc<Engine>, Config, PathBuf) {
         let d = std::env::temp_dir().join(format!("vizrs-main-{}-{}", std::process::id(), name));
         std::fs::remove_dir_all(&d).ok();
         let e = Engine::new(d.clone(), DEMO_SHOW);
-        let cfg = Config { port: 0, tcp_port: 0, bind: "127.0.0.1".into(), token: None, osc_port: 0, webhook: None, data: d.clone(), web_dir: None };
+        let cfg = Config { port: 0, tcp_port: 0, data: d.clone(), ..Config::default() };
         (e, cfg, d)
     }
 

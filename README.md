@@ -24,7 +24,7 @@ cargo build --release
 | http://localhost:8088/trio | **Trio** – playout |
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
-Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token HASŁO` (lub `VIZRS_TOKEN`), `--osc PORT`, `--webhook URL`, `--data katalog`, `--web katalog`, `--version`
+Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token HASŁO`, `--insecure`, `--osc PORT`, `--webhook URL`, `--data katalog`, `--web katalog`, `--healthcheck`, `--version` – każdą można też ustawić zmienną `VIZRS_*` (np. `VIZRS_PORT`, `VIZRS_TOKEN`; pełna lista: `vizrs --help`)
 (serwuje pliki UI z dysku zamiast wbudowanych – wygodne przy własnych modyfikacjach `web/`).
 
 
@@ -59,7 +59,7 @@ uruchom z `--bind 0.0.0.0 --token TWOJE_HASŁO` (dozwolone znaki: `A-Z a-z 0-9 -
 
 Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site`, `Origin`) – strona otwarta w przeglądarce
 operatora nie może wywołać TAKE/CLEAR ani nadpisać show. Nagłówki CORS zostały usunięte (UI jest serwowany z tego samego adresu).
-Bez `--token` w sieci (`--bind 0.0.0.0`) każdy w sieci może sterować anteną – nie rób tak w produkcji.
+Bez tokenu serwer nie wystartuje na adresie sieciowym (`--bind 0.0.0.0`) – chyba że świadomie dodasz `--insecure` (wtedy każdy w sieci może sterować anteną; nie rób tak w produkcji).
 
 ## Kopie zapasowe show
 

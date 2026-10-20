@@ -1,5 +1,11 @@
 # VizRS – historia zmian
 
+## Niewydane – „Okna i serwer” (plan: `PLAN-natywne-i-serwer.md`)
+- **Konfiguracja przez zmienne środowiskowe** `VIZRS_PORT`, `VIZRS_TCP`, `VIZRS_OSC`, `VIZRS_BIND`, `VIZRS_DATA`, `VIZRS_WEB`, `VIZRS_WEBHOOK`, `VIZRS_INSECURE` (obok `VIZRS_TOKEN`); flaga ma pierwszeństwo. Komenda `serve` (domyślna) i składnia `--opcja=wartość`.
+- **`vizrs --healthcheck`**: sprawdza `/health` działającego serwera (kod 0/1) – dla Dockera bez curla i monitoringu.
+- **Jeden serwer na katalog danych** (`<data>/.vizrs.lock`): drugi serwer na tym samym `--data` odmawia startu i podaje adres działającego; martwy plik po awarii jest zastępowany. `/health` zwraca `instance`.
+- **Zmiana zachowania:** nasłuch na adresie innym niż lokalny bez tokenu kończy start z błędem (świadomie: `--insecure`); nieznana opcja lub zła wartość portu to błąd (kod 2) zamiast cichego pominięcia.
+
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
 - **Ruch jak w BTB CG – efekty wizualne bez kluczy** (`node.motion`, `web/motion.js`): 22 presety wejścia/wyjścia (m.in. przesłony, maska ukośna, żaluzja, odwrócenia 3D, glitch, rozdzielenie RGB, rosnący pasek, spadanie), 31 efektów tekstu (całość, słowa, znaki, linie, maszyna do pisania z kursorem, szyfrowanie, licznik liczby), 11 pętli uwagi (pulsowanie, bicie serca, połysk, poświata, podkreślenie…), krzywe GSAP (`back.out(1.7)`, `bounce.out`, `elastic.out`, `cubic-bezier`, aliasy `spring`/`overshoot`/`broadcast`). Ten sam renderer w Artist, Trio i OBS; składanie z kluczami jak w BTB.
 - Przykład `examples/BTB_PILNE.show.json` przebudowany na nowej scenie z paczki BTB_CG (ruch `node.motion`: zoom elementu z lewego górnego rogu, odsłonięcie tekstu, świecenie paska) z zachowanym układem 1–3 wierszy (`squeeze-lines`, `fill`).

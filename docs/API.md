@@ -11,7 +11,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna �
 | `POST /<rodzaj>`, `PUT /<rodzaj>/<id>`, `DELETE /<rodzaj>/<id>` | rodzaje: `scenes`, `pages`, `playlists`, `rundowns`, `macros`; `rev` w ciele = wykrywanie konfliktu (409) |
 | `GET /state` | stan anteny (warstwy, `pending`, `hasDock`/`dockOff`), preview, rundowny (kursor, odegrane), `errors`, `saveError`, `locks`, `rev` |
 | `GET /variables` | płaski słownik zmiennych dla Companion (`layer_main`, `layer_main_name`, `layers_on_air`, `rundown_<id>_next`…) |
-| `GET /health`, `GET /api/health` | zdrowie systemu: status, wersja, uptime, wyjścia, błędy scen, ostatnie zdarzenie, kopie |
+| `GET /health`, `GET /api/health` | zdrowie systemu: status, wersja, uptime, wyjścia, błędy scen, ostatnie zdarzenie, kopie, `instance` (identyfikator procesu serwera z blokady katalogu danych) |
 
 ## Playout
 | Ścieżka | Opis |

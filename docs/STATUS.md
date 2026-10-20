@@ -7,6 +7,15 @@
 ## Bieżący etap
 **Wydanie 2.0.0 „Studio”** – wdrożone wszystkie etapy planu F0–F4 (patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
+**Gałąź testowa `test/natywne-serwer`** – [../PLAN-natywne-i-serwer.md](../PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker.
+
+| Etap | Stan |
+|---|---|
+| N0 fundament CLI (`VIZRS_*`, `serve`, `--healthcheck`, blokada katalogu danych, token wymagany w sieci) | zrobione |
+| N1 Docker i VPS | – |
+| N2 bezpieczeństwo sieciowe | – |
+| N3 okna aplikacji | – |
+
 ## Zrobione (wg planu)
 | Etap | Kroki | Gdzie |
 |---|---|---|

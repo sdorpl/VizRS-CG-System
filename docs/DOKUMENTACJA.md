@@ -494,17 +494,25 @@ build-windows.bat → start-windows.bat  # Windows (wymaga Rust)
 ./build-macos-linux.sh                 # macOS / inne: bin/native/vizrs
 ```
 
-| Opcja | Domyślnie | Opis |
-|---|---|---|
-| `--port` | 8088 | port HTTP (UI + wyjście) |
-| `--tcp` | 6100 | port komend tekstowych (0 = wyłączony) |
-| `--bind` | 127.0.0.1 | adres nasłuchu (`0.0.0.0` = sieć – ustaw też `--token`) |
-| `--token` / `VIZRS_TOKEN` | – | wymagany token (znaki `A-Z a-z 0-9 - _ .`) |
-| `--osc` | 0 | port UDP OSC |
-| `--webhook` | – | adres `http://` dla zdarzeń |
-| `--data` | `vizrs-data` | katalog z `show.json` i `assets/` |
-| `--web` | – | serwuj UI z dysku zamiast wbudowanego |
-| `--version` | | wersja i skrót commita |
+Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vizrs --healthcheck` – sprawdza `/health` działającego serwera (kod wyjścia 0 = ok, 1 = błąd; dla Dockera i monitoringu).
+
+| Opcja | Zmienna | Domyślnie | Opis |
+|---|---|---|---|
+| `--port` | `VIZRS_PORT` | 8088 | port HTTP (UI + wyjście) |
+| `--tcp` | `VIZRS_TCP` | 6100 | port komend tekstowych (0 = wyłączony) |
+| `--bind` | `VIZRS_BIND` | 127.0.0.1 | adres nasłuchu; adres inny niż lokalny (`0.0.0.0`, IP w sieci) **wymaga tokenu** |
+| `--token` | `VIZRS_TOKEN` | – | wymagany token (znaki `A-Z a-z 0-9 - _ .`) |
+| `--insecure` | `VIZRS_INSECURE=1` | – | świadoma zgoda na nasłuch w sieci bez tokenu (tylko sieć zaufana) |
+| `--osc` | `VIZRS_OSC` | 0 | port UDP OSC |
+| `--webhook` | `VIZRS_WEBHOOK` | – | adres `http://` dla zdarzeń |
+| `--data` | `VIZRS_DATA` | `vizrs-data` | katalog z `show.json` i `assets/` |
+| `--web` | `VIZRS_WEB` | – | serwuj UI z dysku zamiast wbudowanego |
+| `--healthcheck` | | | sprawdź `/health` serwera pod `--bind`/`--port` (z `--token`) i zakończ |
+| `--version` | | | wersja i skrót commita |
+
+Flaga ma pierwszeństwo przed zmienną; pusta zmienna = nieustawiona. Opcje można też pisać jako `--port=8099`. Nieznana opcja albo zła wartość (np. port spoza 0–65535) kończy start z błędem (kod 2) – literówka nie przejdzie po cichu.
+
+**Jeden serwer na katalog danych:** serwer zakłada `<data>/.vizrs.lock` (pid, adres, identyfikator instancji – ten sam co pole `instance` w `/health`). Drugi serwer na tym samym `--data` nie wystartuje (kod 3) i poda adres działającego. Plik po awarii (`kill -9`, zanik zasilania) jest rozpoznawany jako martwy i zastępowany przy następnym starcie. Gdy pliku nie da się zapisać, serwer działa dalej bez blokady (ostrzeżenie).
 
 Token: przeglądarka – raz `?token=…` (zapisuje ciasteczko); API – `Authorization: Bearer`, `X-Token` albo `?token=`; TCP – pierwsza linia `AUTH …`.
 Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site`, `Origin`). Brak TLS – w sieciach współdzielonych użyj reverse proxy z HTTPS.

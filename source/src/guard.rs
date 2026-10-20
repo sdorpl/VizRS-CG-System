@@ -72,6 +72,35 @@ pub fn check(req: &Request, token: &Option<String>) -> Verdict {
     Verdict::Deny(401, "wymagany token (?token=…, nagłówek Authorization: Bearer lub X-Token)")
 }
 
+/// Losowy ciąg szesnastkowy (`bytes` bajtów): token sesji okna, identyfikator instancji.
+/// Unix: `/dev/urandom`; inaczej SipHash z kluczami losowanymi przez system (`RandomState`).
+pub fn random_token(bytes: usize) -> String {
+    use std::hash::{BuildHasher, Hasher};
+    let mut buf = vec![0u8; bytes];
+    if !urandom(&mut buf) {
+        let t = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+        for (i, chunk) in buf.chunks_mut(8).enumerate() {
+            let mut h = std::collections::hash_map::RandomState::new().build_hasher();
+            h.write_u128(t);
+            h.write_usize(i);
+            h.write_u32(std::process::id());
+            let v = h.finish().to_le_bytes();
+            chunk.copy_from_slice(&v[..chunk.len()]);
+        }
+    }
+    buf.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[cfg(unix)]
+fn urandom(buf: &mut [u8]) -> bool {
+    use std::io::Read;
+    std::fs::File::open("/dev/urandom").and_then(|mut f| f.read_exact(buf)).is_ok()
+}
+#[cfg(not(unix))]
+fn urandom(_: &mut [u8]) -> bool {
+    false
+}
+
 pub fn cookie_header(token: &str) -> String {
     format!("vizrs_token={token}; Path=/; SameSite=Strict; HttpOnly; Max-Age=31536000")
 }
@@ -127,6 +156,16 @@ mod tests {
         assert_eq!(code(check(&req("/api/take/1", &[], &[("token", "sekret-1")]), &t)), 200);
         assert!(matches!(check(&req("/trio", &[], &[("token", "sekret-1")]), &t), Verdict::AllowSetCookie(_)));
         assert_eq!(code(check(&req("/trio", &[], &[("token", "sekret-2")]), &t)), 401);
+    }
+
+    #[test]
+    fn random_tokens_differ_and_are_valid() {
+        let a = random_token(16);
+        let b = random_token(16);
+        assert_eq!(a.len(), 32);
+        assert_ne!(a, b);
+        assert!(token_valid(&a));
+        assert_eq!(random_token(3).len(), 6);
     }
 
     #[test]
