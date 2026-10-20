@@ -153,7 +153,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 
 **Wygląd:** `color`, `color2` + `gradAngle` (gradient), `radius`, `borderColor`, `borderWidth`, `shadow`.
 
-**Tekst** (`text`, `clock`; częściowo `ticker`): `font`, `size`, `weight` (300–900), `italic`, `upper`, `spacing`, `lineHeight`, `align`, `valign`, `textFit`, `maxLines`, `squeezeMin`, `padX`, `hlColor`/`hlText` (kolory `[[wyróżnienia]]`), `cycle` (rotacja wierszy co N s z przenikaniem).
+**Tekst** (`text`, `clock`; częściowo `ticker`): `font`, `size`, `weight` (300–900), `italic`, `upper`, `spacing`, `lineHeight`, `align`, `valign`, `textFit`, `maxLines`, `squeezeMin`, `lineBreak`, `fillSqueeze`, `padX`, `hlColor`/`hlText` (kolory `[[wyróżnienia]]`), `cycle` (rotacja wierszy co N s z przenikaniem).
 
 **Obraz:** `src` (plik z assets albo adres `http(s)://`), `fitMode` `contain`/`cover`/`fill`, `loop` (wideo `.mp4`/`.webm`/`.mov`).
 
@@ -228,6 +228,15 @@ Kolejność pól w Trio: najpierw warianty, potem w kolejności drzewa (albo wg 
 | `none` | bez dopasowania |
 
 `squeezeMin` (0,3–1) to najmocniejsze dozwolone ściśnięcie: 0,6 = litery zwężone najwyżej do 60% szerokości.
+
+**Łamanie wierszy** (`lineBreak`, tryby `squeeze-lines` i `squeeze-each`) – jak tekst dzieli się sam, gdy nie mieści się w wierszu:
+
+| Wartość | Działanie |
+|---|---|
+| `balance` (domyślnie) | wiersze o możliwie równej szerokości |
+| `fill` („wypełniaj”, jak belki TVP) | wiersz bierze kolejne słowa, dopóki mieści się po ściśnięciu najwyżej do `fillSqueeze` (domyślnie 0,9); reszta przechodzi niżej, każdy wiersz ma własne ściśnięcie. Gdy tekst nie mieści się w `maxLines` wierszach, próg spada stopniowo do `squeezeMin` |
+
+Twarda spacja (reguła „polska typografia”: „i w z…”) nigdy nie jest miejscem podziału – jednoliterowy spójnik nie zostaje sam na końcu wiersza.
 
 Trio pokazuje pod polem ściśnięcie tekstu: `ściśnięcie: 72%` (tryby `squeeze`, `squeeze-shrink`) albo każdego wiersza `w1: 100%  w2: 72%` (`squeeze-lines`, `squeeze-each`); pomarańczowe < 100%, czerwone < 70%. W trybach `squeeze` i `squeeze-each` po przekroczeniu granicy pojawia się czerwone **⚠ nie mieści się – skróć tekst**.
 

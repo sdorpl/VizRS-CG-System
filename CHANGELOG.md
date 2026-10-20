@@ -1,6 +1,8 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Łamanie wierszy „wypełniaj”** (`lineBreak: fill`, próg `fillSqueeze`, domyślnie 0,9) w `squeeze-lines`/`squeeze-each`: wiersz bierze kolejne słowa do progu ściśnięcia, reszta przechodzi niżej, każdy wiersz ściskany osobno – jak belki TVP. Domyślnie bez zmian (`balance`, wiersze równej szerokości). Walidacja obu właściwości.
+- Poprawka: automatyczne łamanie wierszy nie dzieli tekstu na twardej spacji (polska typografia „i\u00a0w\u00a0z…”) – wcześniej jednoliterowy spójnik mógł zostać sam na końcu wiersza.
 - **Przepełnienie tekstu widoczne wszędzie** (zamknięta luka #17): Artist pokazuje ściśnięcie zaznaczonego tekstu pod „min. ściśnięcie” i czerwoną ramkę przepełnionego tekstu na kanwie (`data-over`, jak `data-cg-overflow` w BTB); wyjście programu zgłasza przepełnienie do `/api/errors` („⚠ błędy scen” w Trio).
 - **Tryb dopasowania `squeeze-each`:** wiersze wpisuje operator (Enter, do `maxLines`), każdy wiersz ściskany osobno do `squeezeMin` bez zmiany fontu – belka dwuwierszowa z różną szerokością liter i tą samą wysokością; wskaźnik `w1/w2` i ostrzeżenie w Trio.
 - Paczka `examples/BTB_CG`: `Belka_-_PILNE.json` i `.cgpack` dostawały to samo id sceny (strony 8003 i 8004 wskazywały jedną scenę) – scena z `.json` ma teraz id `btb_belka_-_pilne_json`; `build-btb-pack.mjs` dopisuje rozszerzenie przy kolizji.

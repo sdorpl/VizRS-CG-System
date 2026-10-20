@@ -266,6 +266,7 @@ async function waitUp() {
       nodes: [
         { id: 'tt', type: 'text', name: 'titleNode', fields: { text: 'title' }, props: { x: 100, y: 100, w: 1200, h: 100, size: 60, color: '#ffffff', font: 'Barlow Condensed', text: 'Tytul', textFit: 'squeeze-lines', maxLines: 2 } },
         { id: 'st', type: 'text', name: 'subNode', fields: { text: 'sub' }, props: { x: 100, y: 300, w: 1200, h: 100, size: 50, color: '#ffffff', font: 'Barlow Condensed', text: 'Sub', textFit: 'squeeze-lines', maxLines: 2 } },
+        { id: 'fl', type: 'text', name: 'fillNode', fields: { text: 'fill' }, props: { x: 800, y: 700, w: 1000, h: 300, size: 60, color: '#ffffff', font: 'Barlow Condensed', text: 'Fill', textFit: 'squeeze-lines', maxLines: 3, lineBreak: 'fill', fillSqueeze: 0.9 } },
         { id: 'ea', type: 'text', name: 'eachNode', fields: { text: 'each' }, props: { x: 100, y: 700, w: 600, h: 140, size: 50, color: '#ffffff', font: 'Barlow Condensed', text: 'Each', textFit: 'squeeze-each', maxLines: 2, squeezeMin: 0.6 } },
         { id: 'rt', type: 'text', name: 'roNode', fields: { text: 'ro' }, props: { x: 100, y: 500, w: 600, h: 60, size: 40, color: '#ffffff', font: 'Barlow Condensed', text: 'stały' } },
       ] });
@@ -291,6 +292,19 @@ async function waitUp() {
     await sleep(1200);
     const carry = await out.evaluate(() => [...document.querySelector('[data-id="st"] > span').children].map((l) => (l.querySelector('span') ? getComputedStyle(l.querySelector('span')).fontWeight : 'brak')));
     ok(carry.length === 2 && carry.every((w) => Number(w) >= 800), 'znacznik {b}…{/b} przenosi się na oba wiersze', carry);
+    // twarda spacja (typografia „i\u00a0słowo”) nie jest miejscem podziału przy automatycznym łamaniu
+    const nbText = Array.from({ length: 14 }, (_, i) => `I\u00a0SŁOWO${i}`).join(' ');
+    await api('/api/take/9200?sub=' + encodeURIComponent(nbText));
+    await sleep(1200);
+    const nb = await out.evaluate(() => [...document.querySelector('[data-id="st"] > span').children].map((l) => l.textContent));
+    ok(nb.length === 2 && nb.every((l) => l.startsWith('I\u00a0SŁOWO') && !/ I$/.test(l)), 'łamanie wierszy nie rozdziela „I\u00a0SŁOWO” (twarda spacja)', nb);
+    // lineBreak: fill – pierwszy wiersz wypełniony (ściśnięty najwyżej do fillSqueeze), każdy wiersz z własnym ściśnięciem
+    const flText = 'PREZYDENT ANDRZEJ DUDA ZABRAŁ GŁOS WS. UCHWAŁY DOTYCZĄCEJ ZMIAN W MEDIACH PUBLICZNYCH ORAZ W SPRAWIE FINANSOWANIA';
+    await api('/api/take/9200?fill=' + encodeURIComponent(flText));
+    await sleep(1200);
+    const fl = await out.evaluate(() => [...document.querySelector('[data-id="fl"] > span').children].map((l) => ({ t: l.textContent, s: +((l.style.transform.match(/scaleX\(([\d.]+)\)/) || [0, 1])[1]) })));
+    ok(fl.length >= 2 && fl.length <= 3 && fl.map((l) => l.t).join(' ') === flText && fl[0].s >= 0.9 - 1e-6 && fl.every((l) => l.s >= 0.6 - 1e-6),
+      'lineBreak fill: wiersze wypełniane, ściśnięcie pierwszego ≥ fillSqueeze', fl);
     // squeeze-each: wiersze operatora, każdy ściśnięty osobno, font (wysokość) bez zmian
     const eachLines = () => out.evaluate(() => [...document.querySelector('[data-id="ea"] > span').children].map((l) => ({ t: l.textContent, tf: l.style.transform, fs: l.style.fontSize })));
     const sx = (tf) => +(/scaleX\(([\d.]+)\)/.exec(tf)?.[1] ?? 1);
@@ -312,7 +326,7 @@ async function waitUp() {
     await trio.fill('#filter', '9200'); await sleep(200);
     await trio.click('#pages .item'); await sleep(500);
     const order = await trio.evaluate(() => [...document.querySelectorAll('#fields [data-f]')].map((e) => e.dataset.f));
-    ok(order.join() === 'sub,title,ro,each', 'kolejność Tab wg reguły tab (sub, title, ro, each)', order);
+    ok(order.join() === 'sub,title,ro,each,fill', 'kolejność Tab wg reguły tab (sub, title, ro, each; pole bez reguły na końcu)', order);
     ok(await trio.evaluate(() => document.querySelector('#fields').innerText.includes('wpisz tytuł')), 'podpowiedź pola widoczna');
     ok(await trio.evaluate(() => document.querySelector('[data-f="ro"]').readOnly), 'pole readonly');
     const tf = trio.locator('[data-f="title"]');

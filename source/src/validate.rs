@@ -26,6 +26,8 @@ fn text_ok(v: &Json, what: &str, max: usize) -> R {
 
 /// Tryby dopasowania tekstu do ramki (`props.textFit`).
 const TEXT_FIT: [&str; 6] = ["squeeze", "squeeze-shrink", "squeeze-lines", "squeeze-each", "shrink", "none"];
+/// Automatyczne łamanie wierszy w `squeeze-lines`/`squeeze-each` (`props.lineBreak`).
+const LINE_BREAK: [&str; 2] = ["balance", "fill"];
 
 fn num_in(v: &Json, what: &str, lo: f64, hi: f64) -> R {
     match v {
@@ -102,6 +104,14 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
         }
         if let Some(v) = opt(p, "squeezeMin") {
             num_in(v, "props.squeezeMin", 0.0, 1.0)?;
+        }
+        match opt(p, "lineBreak") {
+            None => {}
+            Some(Json::Str(b)) if LINE_BREAK.contains(&b.as_str()) => {}
+            Some(_) => return Err(format!("props.lineBreak: dozwolone {}", LINE_BREAK.join(", "))),
+        }
+        if let Some(v) = opt(p, "fillSqueeze") {
+            num_in(v, "props.fillSqueeze", 0.0, 1.0)?;
         }
     }
     if n.str("type") == Some("ticker") {
@@ -596,6 +606,9 @@ mod tests {
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":3}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":1.5}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":"0.5"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"squeeze-lines","lineBreak":"fill","fillSqueeze":0.9}}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"lineBreak":"wrap"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"fillSqueeze":2}}]}"#)).is_err());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":20,"cats":["PILNE","SPORT"]}}}"#)).is_ok());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"cats":"PILNE"}}}"#)).is_err());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":0}}}"#)).is_err());

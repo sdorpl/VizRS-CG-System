@@ -51,6 +51,8 @@ export const PROPS = {
   valign: { t: 'select', d: 'middle', g: 'Tekst', opts: ['top', 'middle', 'bottom'], label: 'w pionie' },
   textFit: { t: 'select', d: 'shrink', g: 'Tekst', opts: ['squeeze', 'squeeze-shrink', 'squeeze-lines', 'squeeze-each', 'shrink', 'none'], label: 'dopasowanie' },
   squeezeMin: { t: 'num', d: 0.6, g: 'Tekst', min: 0.3, max: 1, step: 0.05, label: 'min. ściśnięcie' },
+  lineBreak: { t: 'select', d: 'balance', g: 'Tekst', opts: ['balance', 'fill'], label: 'łamanie wierszy' },
+  fillSqueeze: { t: 'num', d: 0.9, g: 'Tekst', min: 0.3, max: 1, step: 0.05, label: 'ściśnięcie przy wypełnianiu' },
   maxLines: { t: 'num', d: 1, g: 'Tekst', min: 1, label: 'maks. linii' },
   padX: { t: 'num', d: 0, g: 'Tekst', anim: 1, min: 0, label: 'margines X' },
   hlColor: { t: 'color', d: '#e30613', g: 'Tekst', label: 'tło [[wyróżnienia]]' },
@@ -86,7 +88,7 @@ export const PROPS = {
 
 const COMMON = ['x', 'y', 'w', 'h', 'anchorX', 'anchorY', 'rotation', 'scale', 'opacity', 'clipL', 'clipR', 'clipT', 'clipB', 'blur', 'skewX', 'blink'];
 const FOLLOW = ['follow', 'followAxis', 'followPad', 'followMin'];
-const TEXT_STYLE = ['font', 'size', 'weight', 'italic', 'upper', 'spacing', 'lineHeight', 'align', 'valign', 'textFit', 'maxLines', 'squeezeMin', 'padX', 'color', 'shadow'];
+const TEXT_STYLE = ['font', 'size', 'weight', 'italic', 'upper', 'spacing', 'lineHeight', 'align', 'valign', 'textFit', 'maxLines', 'squeezeMin', 'lineBreak', 'fillSqueeze', 'padX', 'color', 'shadow'];
 
 export const TYPES = {
   group: { label: 'Grupa', icon: '▣', props: [...COMMON, ...FOLLOW], children: true },
@@ -317,9 +319,12 @@ function setRich(span, text, hlBg, hlFg) {
   }
 }
 
-/** Dzieli wiersz na k wierszy o możliwie równej szerokości (słowa i [[wyróżnienia]] są niepodzielne). */
+/** Słowa wiersza do łamania: [[wyróżnienia]] są niepodzielne, twarda spacja (typografia: „i w z…”) nie jest miejscem podziału. */
+const breakTokens = (line) => line.match(/\[\[[\s\S]*?\]\]|[^ \t\r\n]+/g) || [line];
+
+/** Dzieli wiersz na k wierszy o możliwie równej szerokości. */
 function balanceLines(line, k, W) {
-  const toks = line.match(/\[\[[\s\S]*?\]\]|\S+/g) || [line];
+  const toks = breakTokens(line);
   k = Math.min(k, toks.length);
   if (k <= 1) return [line];
   const sw = W(' '), tw = toks.map(W), n = toks.length;
@@ -346,7 +351,31 @@ function balanceLines(line, k, W) {
 }
 
 /**
+ * Łamanie "fill" (jak w belkach TVP): wiersz bierze kolejne słowa, dopóki mieści się po ściśnięciu do `tol`,
+ * reszta przechodzi do następnego (najwyżej k wierszy). Gdy ostatni wiersz i tak by się nie zmieścił,
+ * próg jest obniżany (do `min`), aż tekst rozłoży się na dostępne wiersze.
+ */
+function fillLines(line, k, W, avail, tol, min) {
+  const toks = breakTokens(line);
+  const sw = W(' '), tw = toks.map(W);
+  const greedy = (lim) => {
+    const out = [];
+    let a = 0, cw = tw[0];
+    for (let i = 1; i < toks.length; i++) {
+      if (cw + sw + tw[i] > lim && out.length < k - 1) { out.push([a, i, cw]); a = i; cw = tw[i]; } else cw += sw + tw[i];
+    }
+    out.push([a, toks.length, cw]);
+    return out;
+  };
+  let t = Math.max(min, tol), ls = greedy(avail / t);
+  while (t > min + 1e-6 && ls[ls.length - 1][2] > avail / t) { t = Math.max(min, t - 0.01); ls = greedy(avail / t); }
+  return ls.map(([a, b]) => toks.slice(a, b).join(' '));
+}
+
+/**
  * Tryby "squeeze-lines" i "squeeze-each" – każdy wiersz jest ściskany poziomo NIEZALEŻNIE.
+ * Automatyczny podział (`lineBreak`): `balance` – wiersze o zbliżonej szerokości, `fill` – wypełnianie kolejnych
+ * wierszy, każdy ściśnięty najwyżej do `fillSqueeze` (fillLines).
  * squeeze-lines: wiersze ręczne (Enter) albo automatyczny, zrównoważony podział, gdy tekst nie mieści się w jednym;
  *   gdy wiersz wymagałby ściśnięcia poniżej minimum, zmniejszany jest font tylko tego wiersza.
  * squeeze-each: wiersze operatora (Enter) zostają, każdy ściskany do `squeezeMin`; font (wysokość) się nie zmienia.
@@ -358,7 +387,8 @@ function fitLines(sp, text, o) {
   const avail = Math.max(1, o.avail);
   const MIN = squeezeFloor(o.minSqueeze);
   const each = o.mode === 'squeeze-each';
-  const room = each ? avail / MIN : avail; // szerokość, powyżej której wiersz jest dzielony
+  const fill = o.lineBreak === 'fill';
+  const room = fill ? avail : each ? avail / MIN : avail; // szerokość, powyżej której wiersz jest dzielony
   const origin = o.align === 'right' ? '100% 50%' : o.align === 'center' ? '50% 50%' : '0 50%';
   Object.assign(ss, { transform: '', whiteSpace: 'pre', maxWidth: 'none', display: 'flex', flexDirection: 'column', fontSize: o.size + 'px',
     alignItems: o.align === 'right' ? 'flex-end' : o.align === 'center' ? 'center' : 'flex-start' });
@@ -378,7 +408,9 @@ function fitLines(sp, text, o) {
       const ws = lines.map(W);
       const i = ws.indexOf(Math.max(...ws));
       if (ws[i] > room) {
-        const parts = balanceLines(lines[i], Math.min(L - lines.length + 1, Math.ceil(ws[i] / room)), W);
+        const parts = fill
+          ? fillLines(lines[i], L - lines.length + 1, W, avail, squeezeFloor(o.fillSqueeze || 0.9), MIN)
+          : balanceLines(lines[i], Math.min(L - lines.length + 1, Math.ceil(ws[i] / room)), W);
         if (parts.length > 1) { lines.splice(i, 1, ...parts); changed = true; }
       }
     }
@@ -1074,8 +1106,8 @@ export class ScenePlayer {
           const align = p('align'), valign = p('valign');
           const hlBg = p('hlColor'), hlFg = p('hlText');
           const fitMode = p('textFit'), maxLines = p('maxLines'), lh = p('lineHeight');
-          const sqMin = p('squeezeMin');
-          const key = [text, font, size, p('weight'), p('italic'), p('spacing'), fitMode, maxLines, sqMin, w, padX, lh, align, hlBg, hlFg, fe].join('|');
+          const sqMin = p('squeezeMin'), lineBreak = p('lineBreak'), fillSqueeze = p('fillSqueeze');
+          const key = [text, font, size, p('weight'), p('italic'), p('spacing'), fitMode, maxLines, sqMin, lineBreak, fillSqueeze, w, padX, lh, align, hlBg, hlFg, fe].join('|');
           const sp = it.span, ss = sp.style;
           st.justifyContent = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start';
           st.alignItems = valign === 'top' ? 'flex-start' : valign === 'bottom' ? 'flex-end' : 'center';
@@ -1094,7 +1126,7 @@ export class ScenePlayer {
             ss.letterSpacing = p('spacing') + 'px';
             ss.lineHeight = lh;
             ss.fontVariantNumeric = 'tabular-nums';
-            const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, hlBg, hlFg };
+            const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, lineBreak, fillSqueeze, hlBg, hlFg };
             const m = perLine ? fitLines(sp, text, fo) : fitText(sp, fo);
             it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;
             // przepełnienie (jak `data-cg-overflow` / `cg-text-overflow` w BTB): Artist rysuje ramkę, wyjście zgłasza do /api/errors
