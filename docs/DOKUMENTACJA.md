@@ -337,6 +337,21 @@ Właściwości węzła mają grupę **Ruch (jak w BTB CG)**: wejście, wyjście,
 - Marker: **M** albo dwuklik na linijce; klik = skok, dwuklik = zmiana nazwy / usunięcie.
 - Zoom osi: suwak, Ctrl+kółko, ↔ dopasuj.
 
+### 8.3a Tryb sekwencji (prosty, jak „Ruch” w BTB CG Editor)
+
+Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu bez kluczy (§4.4a). Wybór jest pamiętany na stanowisku.
+
+- **Wiersz na element** (z wcięciem wg drzewa): niebieski pasek – wejście, pomarańczowy – wyjście (za ostatnim stop pointem), cienkie paski pod nimi – efekt tekstu IN/OUT, kreskowane tło – pętla uwagi (od końca wejścia do wyjścia). Etykieta pokazuje „↳ węzeł” (wchodzi po nim) i ◆N (węzeł ma też klucze).
+- **Przeciągnij pasek** – zmienia opóźnienie; **przeciągnij krawędź** – czas trwania (Shift = co 0,05 s). Klik w pasek zaznacza element i ustawia głowicę na jego starcie; klik w puste miejsce przewija czas.
+- Narzędzia (działają na dzieciach zaznaczonej grupy, rodzeństwie zaznaczonego elementu albo całej scenie – przy jednej grupie głównej na jej dzieciach):
+  - **⇶ Kaskada** – wejścia jedno po drugim co **krok** s (wyjścia w odwrotnej kolejności); elementy bez ruchu dostają przenikanie.
+  - **↳ Po kolei** – każdy element wchodzi po zakończeniu wejścia poprzedniego (`motion.after`); przesunięcie liczy się samo, także gdy zmienisz czas poprzednika.
+  - **⧉ Kopiuj** – ruch zaznaczonego elementu na jego rodzeństwo (efekty tekstu tylko na tekstach).
+  - **◆ Klucze** – presety wejścia/wyjścia zaznaczonego elementu zamienione na edytowalne klucze (jak „Presety na klucze” w BTB): typy liniowe z krzywą `power2.*`/`linear`/`back.out` dają dwa klucze, pozostałe – klucze co 1/30 s; odwrócenia 3D, przesłony, maska ukośna, żaluzja, rosnący pasek, RGB i glitch zostają presetami (raport). Pętle i efekty tekstu zostają. Węzeł z kluczami na tych samych właściwościach – odmowa.
+  - **✕** – usuwa ruch z zaznaczonego elementu (bez zaznaczenia – z całej grupy).
+  - **⟲ Dopasuj** – stop point po najdłuższym wejściu, długość = stop + najdłuższe wyjście.
+- W panelu **Ruch** węzła pole **po węźle** ustawia sekwencję ręcznie.
+
 ### 8.4 Skróty Artist
 
 | Skrót | Działanie |

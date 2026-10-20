@@ -471,3 +471,58 @@ export function textFxActive(m, t, outStart, shift = 0) {
   if (active(m.textOut) && t > outStart + specDelay(m.textOut) - 1e-6) return true;
   return false;
 }
+
+// ---------------------------------------------------------------- presety → klucze (jak „Presety na klucze” w BTB CG Editor)
+/** Krzywa GSAP → krzywa kluczy VizRS (EASES w renderer.js), gdy przebieg jest identyczny; inaczej null (próbkowanie). */
+const KEY_EASE = { 'power2.out': 'out', 'cubic.out': 'out', 'ease-out': 'out', '': 'out', 'power2.in': 'in', 'cubic.in': 'in', 'ease-in': 'in', 'power2.inOut': 'inout', 'cubic.inOut': 'inout', 'ease-in-out': 'inout', linear: 'linear', none: 'linear', 'back.out': 'back', 'back-out': 'back' };
+/** Typy, w których każda wartość zależy liniowo od krzywej głównej – wystarczą dwa klucze z tą samą krzywą. */
+const LINEAR_TYPES = new Set(['fade', 'zoom', 'zoom-in', 'clip', 'blur', 'slide', 'skew', 'split-reveal']);
+/** Typy, których nie da się zapisać kluczami VizRS (osobna skala X/Y z punktem odniesienia, 3D, maski specjalne, RGB). */
+const UNKEYABLE = new Set(['wipe', 'wipe-y', 'flip', 'flip-x', 'rotate', 'mask-diag', 'shutter', 'bar-grow', 'rgb-split', 'glitch']);
+
+/**
+ * Zamienia presety wejścia/wyjścia węzła na klucze. `rest` – wartości spoczynkowe właściwości (x, y, opacity, scale, rotation, skewX,
+ * blur, clipL…), `outStart` – ostatni stop, `shift` – przesunięcie sekwencji. Zwraca { anim: {prop: [klucze]}, done: ['in','out'], skipped: [opisy] }.
+ * Pętle i efekty tekstu zostają presetami (jak w BTB).
+ */
+export function motionToKeys(m, { rest, outStart, shift = 0 }) {
+  const anim = {}, done = [], skipped = [];
+  const phases = [];
+  if (m?.in?.type && m.in.type !== 'none') phases.push(['in', m.in, shift + specDelay(m.in)]);
+  if (m?.out?.type && m.out.type !== 'none') {
+    if (Number.isFinite(outStart)) phases.push(['out', m.out, outStart + specDelay(m.out)]);
+    else skipped.push('wyjście: brak stop pointu');
+  }
+  const r3 = (v) => Math.round(v * 1000) / 1000;
+  const map = (s) => {
+    if (Math.abs(s.sx - s.sy) > 1e-6) return null;
+    const o = { x: rest.x + s.tx, y: rest.y + s.ty, opacity: rest.opacity * s.opacity, scale: rest.scale * s.sx, skewX: rest.skewX + s.skew, blur: rest.blur + s.blur };
+    const c = s.clip || [0, 0, 1, 1];
+    o.clipL = Math.max(rest.clipL, c[0] * 100); o.clipT = Math.max(rest.clipT, c[1] * 100); o.clipR = Math.max(rest.clipR, 100 - c[2] * 100); o.clipB = Math.max(rest.clipB, 100 - c[3] * 100);
+    return o;
+  };
+  for (const [kind, spec, t0] of phases) {
+    if (UNKEYABLE.has(spec.type)) { skipped.push(`${kind === 'in' ? 'wejście' : 'wyjście'} „${ANIM_LABELS[spec.type] || spec.type}” nie ma odpowiednika w kluczach`); continue; }
+    const dur = specDur(spec);
+    const st = (p) => (kind === 'in' ? stateIn : stateOut)(spec.type, spec.dir, spec.ease, p);
+    const ke = KEY_EASE[spec.ease ?? ''] ?? null;
+    const nS = Math.max(2, Math.ceil(dur * 30) + 1);
+    const ps = LINEAR_TYPES.has(spec.type) && ke ? [0, 1] : Array.from({ length: nS }, (_, i) => i / (nS - 1));
+    const e = ps.length === 2 ? ke : 'linear';
+    const samples = ps.map((p) => [r3(t0 + p * dur), map(st(p))]);
+    if (samples.some(([, v]) => !v)) { skipped.push(`${kind}: różna skala X/Y`); continue; }
+    for (const prop of Object.keys(samples[0][1])) {
+      const vals = samples.map(([, v]) => r3(v[prop]));
+      if (vals.every((v) => Math.abs(v - rest[prop]) < 1e-6)) continue; // właściwość bez zmian w tej fazie
+      const tr = (anim[prop] ||= []);
+      samples.forEach(([t], i) => tr.push({ t, v: vals[i], e }));
+    }
+    done.push(kind);
+  }
+  // spoczynek między fazami: klucze IN kończą się na wartości spoczynkowej, OUT zaczyna od niej – sortowanie i usunięcie dubli czasu
+  for (const tr of Object.values(anim)) {
+    tr.sort((a, b) => a.t - b.t);
+    for (let i = tr.length - 2; i >= 0; i--) if (Math.abs(tr[i + 1].t - tr[i].t) < 0.0005) tr.splice(i, 1);
+  }
+  return { anim, done, skipped };
+}

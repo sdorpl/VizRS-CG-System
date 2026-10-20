@@ -82,6 +82,12 @@ Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości �
 4. **pętla** – np. *pulsowanie* plakietki „NA ŻYWO” albo *połysk* paska; gra, gdy grafika stoi na wizji.
 5. Kliknij **⟲ Dopasuj stop i długość** – stop point stanie po wejściu, a scena wydłuży się o wyjście. Sprawdź **▶ Take** i **⏏ Out**.
 
+### Sekwencja wielu elementów
+1. Na osi czasu kliknij **≣ Sekwencja** – zamiast kluczy zobaczysz paski wejścia (niebieskie) i wyjścia (pomarańczowe) każdego elementu.
+2. Zaznacz grupę belki i kliknij **⇶ Kaskada** – elementy wejdą jeden po drugim co „krok” (np. 0,1 s), a zejdą w odwrotnej kolejności. **↳ Po kolei** – każdy wchodzi, gdy skończy się poprzedni.
+3. Przeciągnij pasek, aby przesunąć start; przeciągnij jego prawą krawędź, aby wydłużyć ruch.
+4. Chcesz dopracować ruch ręcznie? Zaznacz element i kliknij **◆ Klucze** – preset zamieni się na zwykłe klucze.
+
 ## 6. Wyświetlenie w OBS
 
 1. OBS → Źródła → **+** → **Przeglądarka**.

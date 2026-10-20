@@ -85,6 +85,18 @@ const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
   ok(near(MO.loopState({ type: 'pulse', amp: 10 }, 0.8).sx, 1.1), 'pulse: siła = % skali');
   ok(MO.loopState({ type: 'shine', dur: 1 }, 0.5).shine > 0 && MO.loopState({ type: 'shine', dur: 1 }, 2).shine === -1, 'shine: przejazd i przerwa');
 
+  // presety → klucze
+  const rest = { x: 100, y: 50, opacity: 1, scale: 1, skewX: 0, blur: 0, clipL: 0, clipT: 0, clipR: 0, clipB: 0 };
+  const k1 = MO.motionToKeys({ in: { type: 'slide', dir: 'left', dur: 0.5, ease: 'power2.out' }, out: { type: 'fade', dur: 0.4, delay: 0.1, ease: 'power2.in' } }, { rest, outStart: 2 });
+  ok(k1.anim.x.length === 2 && k1.anim.x[0].v === 100 - 1920 && k1.anim.x[0].e === 'out' && k1.anim.x[1].t === 0.5 && k1.anim.x[1].v === 100, 'na klucze: wjazd = dwa klucze z krzywą out', k1.anim.x);
+  ok(k1.anim.opacity.map((k) => [k.t, k.v]).join() === [[0, 0], [0.5, 1], [2.1, 1], [2.5, 0]].join(), 'na klucze: krycie IN i OUT na jednej ścieżce', k1.anim.opacity);
+  const k2 = MO.motionToKeys({ in: { type: 'pop', dur: 0.4 } }, { rest, outStart: Infinity });
+  ok(k2.anim.scale.length > 5 && k2.anim.scale.some((k) => k.v > 1) && k2.anim.scale.at(-1).v === 1, 'na klucze: wyskok próbkowany (przeskok > 1)', k2.anim.scale.length);
+  const k3 = MO.motionToKeys({ in: { type: 'flip', dur: 0.4 }, out: { type: 'fade' } }, { rest, outStart: Infinity });
+  ok(k3.done.length === 0 && k3.skipped.length === 2, 'na klucze: odwrócenie 3D i wyjście bez stopu pominięte', k3.skipped);
+  const k4 = MO.motionToKeys({ in: { type: 'clip', dir: 'left', dur: 0.3, ease: 'linear' } }, { rest, outStart: 1, shift: 0.5 });
+  ok(k4.anim.clipR?.[0].t === 0.5 && k4.anim.clipR[0].v === 100 && k4.anim.clipR[1].v === 0 && !k4.anim.x, 'na klucze: przycięcie z przesunięciem sekwencji', k4.anim);
+
   console.log(failures ? `\n${failures} FAIL / ${checks}` : `Ruch zgodny (${checks} sprawdzeń)`);
   process.exit(failures ? 1 : 0);
 })();

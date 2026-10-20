@@ -86,6 +86,19 @@
   .kf.sel { background: var(--acc); }
   .seg { position: absolute; top: 9px; height: 3px; background: #4b5a74; border-radius: 2px; }
   .seg.hold { background: #2f343c; }
+  .tl-row.seq { height: 26px; }
+  .mb { position: absolute; top: 3px; height: 12px; border-radius: 3px; background: #2f6fd6; color: #fff; font-size: 9px; line-height: 12px; padding: 0 4px; overflow: hidden; white-space: nowrap; cursor: grab; z-index: 2; box-sizing: border-box; min-width: 4px; }
+  .mb.out { background: #b4532a; }
+  .mb.tin, .mb.tout { top: 16px; height: 7px; font-size: 0; background: #6d8fd8; }
+  .mb.tout { background: #d08a5f; }
+  .mb.loop { top: 3px; height: 20px; background: repeating-linear-gradient(135deg, rgba(232,176,75,.22) 0 6px, transparent 6px 12px); color: #e8b04b; cursor: default; z-index: 1; line-height: 20px; }
+  .mb .mbh { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: ew-resize; background: rgba(255,255,255,.35); }
+  .mb.sel { outline: 1px solid #fff; }
+  #seqMode.on { background: var(--acc); color: #000; }
+  #seqTools { display: none; gap: 4px; align-items: center; }
+  #timeP header > input, #timeP header > button { flex: none; }
+  body.seq #seqTools { display: inline-flex; }
+  body.seq #keyed, body.seq #keyCopy, body.seq #keyPaste { display: none; }
   #keyed { display: flex; gap: 6px; align-items: center; }
   #keyed input { width: 80px; }
   #tc { width: 76px; font-family: var(--mono); text-align: right; }
@@ -167,6 +180,16 @@
       <span class="sep"></span>
       <span id="keyed"></span>
       <span class="grow"></span>
+      <span id="seqTools">
+        <label title="Odstęp kaskady">krok</label><input id="seqStep" type="number" step="0.05" min="0" value="0.1" style="width:52px">
+        <button data-seq="stagger" title="Kaskada: wejścia elementów jedno po drugim co „krok” (wyjścia w odwrotnej kolejności). Dotyczy dzieci zaznaczonej grupy, rodzeństwa zaznaczonego elementu albo całej sceny">⇶ Kaskada</button>
+        <button data-seq="chain" title="Po kolei: każdy element wchodzi po zakończeniu wejścia poprzedniego (powiązanie „po węźle”)">↳ Po kolei</button>
+        <button data-seq="copy" title="Kopiuj ruch zaznaczonego elementu na jego rodzeństwo">⧉ Kopiuj</button>
+        <button data-seq="keys" title="Zamień presety wejścia/wyjścia zaznaczonego elementu na klucze (pętle i efekty tekstu zostają)">◆ Klucze</button>
+        <button data-seq="clear" class="danger" title="Usuń ruch (presety) z zaznaczonego elementu albo całej grupy">✕</button>
+        <button data-seq="fit" title="Stop point po wejściu, długość = stop + wyjście">⟲ Dopasuj</button>
+      </span>
+      <button id="seqMode" title="Prosty tryb sekwencji (jak „Ruch” w BTB CG Editor): paski wejścia, efektu tekstu, pętli i wyjścia każdego elementu – przeciągnij, aby zmienić opóźnienie, krawędź – czas">≣ Sekwencja</button>
       <button id="markAdd" title="Dodaj marker w bieżącym czasie (M)">◆ Marker</button>
       <button id="keyCopy" title="Kopiuj zaznaczone klucze (Ctrl+C na osi czasu)">⧉ Kopiuj</button>
       <button id="keyPaste" title="Wklej klucze w bieżącym czasie na zaznaczony węzeł (Ctrl+V)">⎘ Wklej</button>
@@ -434,6 +457,8 @@ function motionForm(n) {
   if (lpOn) h += `<div class="sub"><label>okres s${numIn('loop.dur', lp.dur, 'auto')}</label><label>siła${numIn('loop.amp', lp.amp, 'auto', 0.5)}</label>
     <label>kolor<input data-mo="loop.color" value="${esc(lp.color || '')}" placeholder="auto" ${['glow', 'shine', 'underline-sweep'].includes(lp.type) ? '' : 'disabled'}></label></div>`;
   h += '</div>';
+  const others = []; walk(scene.nodes, (x) => { if (x.id !== n.id) others.push(x); });
+  h += `<div class="mo"><label title="Sekwencja: wejście zaczyna się, gdy skończy się wejście wskazanego węzła">po węźle</label><select data-moafter style="grid-column:2/4"><option value="">— od początku sceny —</option>${others.map((x) => `<option value="${esc(x.id)}" ${m.after === x.id ? 'selected' : ''}>${esc(x.name || x.id)}</option>`).join('')}</select></div>`;
   const hasOut = m.out?.type || (m.textOut?.type && m.textOut.type !== 'none');
   const st = sortedStops();
   if ((m.in?.type || hasOut || lpOn || (m.textIn?.type && m.textIn.type !== 'none')) && (!st.length || (hasOut && scene.duration < st[st.length - 1] + MO.outLen(m, n.props?.text) - 1e-3))) {
@@ -555,7 +580,14 @@ function renderSceneProps() {
   $('#props').innerHTML = h;
 }
 
+let seqMode = false;
+try { seqMode = localStorage.getItem('vizrs.seq') === '1'; } catch { /* brak localStorage */ }
+document.body.classList.toggle('seq', seqMode);
+const outStartOf = () => { const st = sortedStops(); const ls = st.length ? st[st.length - 1] : null; return ls !== null && scene.duration > ls + 1e-3 ? ls : Infinity; };
 function renderTimeline() {
+  $('#seqMode').classList.toggle('on', seqMode);
+  document.body.classList.toggle('seq', seqMode);
+  if (seqMode) return renderSeqTimeline();
   const dur = scene.duration || 1;
   const W = Math.max(dur * pps + 80, $('#tl').clientWidth - LBL);
   const rows = [];
@@ -594,6 +626,129 @@ function renderTimeline() {
   $('#tl').scrollLeft = sl;
   $('#dur').value = scene.duration;
   renderKeyEd();
+}
+
+/** Oś w trybie sekwencji: wiersz na element, paski ruchu (presety) zamiast kluczy. */
+function renderSeqTimeline() {
+  const dur = scene.duration || 1;
+  const W = Math.max(dur * pps + 80, $('#tl').clientWidth - LBL);
+  const sh = MO.sequenceShifts(scene.nodes), oS = outStartOf();
+  const rows = [];
+  const visit = (list, depth) => { for (const n of list || []) { rows.push({ n, depth }); visit(n.children, depth + 1); } };
+  visit(scene.nodes, 0);
+  let h = `<div class="tl-in" style="width:${LBL + W}px">`;
+  h += `<div class="tl-row ruler"><div class="tl-lbl"><span class="dim">sekwencja – ruch bez kluczy</span></div><div class="tl-area" data-area="ruler" style="width:${W}px">`;
+  const step = pps > 500 ? 0.05 : pps > 160 ? 0.1 : 0.25, lab = pps > 500 ? 0.25 : 0.5;
+  for (let i = 0; i * step <= dur + 1e-9 + 2; i++) {
+    const s = i * step, major = Math.abs(s / lab - Math.round(s / lab)) < 1e-6;
+    h += `<div class="tick ${major ? 'maj' : ''}" style="left:${s * pps}px">${major ? s.toFixed(2).replace(/0$/, '') : ''}</div>`;
+  }
+  scene.stops.forEach((s, i) => { h += `<div class="stopm" data-stop="${i}" style="left:${s * pps}px" title="Stop ${(+s).toFixed(2)}s – przeciągnij; dwuklik usuwa">▼</div>`; });
+  h += `<div class="endm" style="left:${dur * pps}px" title="koniec sceny"></div></div></div>`;
+  const bar = (id, sec, cls, a, b, label, title, handle = true) => `<div class="mb ${cls}" data-mb="${id}|${sec}" style="left:${a * pps}px;width:${Math.max(4, (b - a) * pps)}px" title="${esc(title)}">${esc(label)}${handle ? `<i class="mbh" data-mbh="${id}|${sec}"></i>` : ''}</div>`;
+  for (const { n, depth } of rows) {
+    const m = n.motion || {}, s0 = sh.get(n.id) || 0, tx = n.props?.text;
+    const after = m.after && locate(m.after)?.node;
+    const nk = Object.values(n.anim || {}).filter((tr) => tr?.length).length;
+    h += `<div class="tl-row seq ${n.id === selId ? 'sel' : ''}"><div class="tl-lbl" data-sel="${n.id}" style="padding-left:${8 + depth * 12}px" title="${esc(n.name)}${after ? ` – wchodzi po „${esc(after.name)}”` : ''}">${TYPES[n.type]?.icon || ''} ${esc(n.name)}${after ? ` <span class="dim">↳ ${esc(after.name)}</span>` : ''}${nk ? ` <span class="dim" title="węzeł ma też klucze">◆${nk}</span>` : ''}</div><div class="tl-area" data-seqrow="${n.id}" style="width:${W}px">`;
+    if (m.loop?.type && m.loop.type !== 'none') {
+      const a = MO.inEnd(m, s0, tx), b = Number.isFinite(oS) ? oS : dur;
+      if (b > a) h += bar(n.id, 'loop', 'loop', a, b, 'pętla: ' + (MO.LOOP_LABELS[m.loop.type] || m.loop.type), 'pętla uwagi – gra, gdy grafika stoi', false);
+    }
+    if (m.in?.type) {
+      const a = s0 + MO.specDelay(m.in), d = m.in.type === 'none' ? 0 : MO.specDur(m.in);
+      h += bar(n.id, 'in', 'in', a, a + d, MO.ANIM_LABELS[m.in.type] || m.in.type, `wejście: ${MO.ANIM_LABELS[m.in.type] || m.in.type} · start ${a.toFixed(2)} s · czas ${d.toFixed(2)} s – przeciągnij: opóźnienie, krawędź: czas`);
+    }
+    if (m.textIn?.type && m.textIn.type !== 'none') {
+      const a = s0 + MO.specDelay(m.textIn), d = MO.specDur(m.textIn) + MO.textSpread(m.textIn, tx);
+      h += bar(n.id, 'textIn', 'tin', a, a + d, '', `tekst IN: ${MO.textLabel(m.textIn.type)} · ${a.toFixed(2)}–${(a + d).toFixed(2)} s`);
+    }
+    if (Number.isFinite(oS)) {
+      if (m.out?.type) {
+        const a = oS + MO.specDelay(m.out), d = m.out.type === 'none' ? 0 : MO.specDur(m.out);
+        h += bar(n.id, 'out', 'out', a, a + d, MO.ANIM_LABELS[m.out.type] || m.out.type, `wyjście: ${MO.ANIM_LABELS[m.out.type] || m.out.type} · start ${a.toFixed(2)} s · czas ${d.toFixed(2)} s`);
+      }
+      if (m.textOut?.type && m.textOut.type !== 'none') {
+        const a = oS + MO.specDelay(m.textOut), d = MO.specDur(m.textOut) + MO.textSpread(m.textOut, tx);
+        h += bar(n.id, 'textOut', 'tout', a, a + d, '', `tekst OUT: ${MO.textLabel(m.textOut.type)} · ${a.toFixed(2)}–${(a + d).toFixed(2)} s`);
+      }
+    }
+    h += `</div></div>`;
+  }
+  scene.stops.forEach((s) => { h += `<div class="stopline" style="left:${LBL + s * pps}px"></div>`; });
+  h += `<div class="endline" style="left:${LBL + dur * pps}px"></div>`;
+  h += `<div id="playhead" style="left:${LBL + t * pps}px"></div></div>`;
+  const sl = $('#tl').scrollLeft;
+  $('#tl').innerHTML = h;
+  $('#tl').scrollLeft = sl;
+  $('#dur').value = scene.duration;
+}
+
+/** Elementy, których dotyczą narzędzia sekwencji: dzieci zaznaczonej grupy, rodzeństwo zaznaczonego elementu albo scena. */
+function seqTargets() {
+  const n = selNode();
+  if (n?.children?.length) return n.children;
+  if (n) return locate(n.id).list;
+  if (scene.nodes.length === 1 && scene.nodes[0].children?.length) return scene.nodes[0].children;
+  return scene.nodes;
+}
+const r2 = (v) => Math.round(v * 100) / 100;
+function seqTool(act) {
+  const n = selNode();
+  if (act === 'fit') return fitMotionTiming();
+  if (act === 'stagger') {
+    const step = Math.max(0, parseFloat($('#seqStep').value) || 0);
+    let list = seqTargets();
+    if (!list.length) return;
+    checkpoint();
+    const withIn = list.filter((x) => x.motion?.in?.type);
+    if (!withIn.length) for (const x of list) (x.motion ||= {}).in = { type: 'fade', dur: 0.4, ease: 'power2.out' };
+    list = list.filter((x) => x.motion?.in?.type);
+    const base = MO.specDelay(list[0].motion.in);
+    list.forEach((x, i) => { delete x.motion.after; x.motion.in.delay = r2(base + i * step); if (!x.motion.in.delay) delete x.motion.in.delay; });
+    const outs = list.filter((x) => x.motion.out?.type);
+    outs.forEach((x, i) => { const d = r2((outs.length - 1 - i) * step); if (d) x.motion.out.delay = d; else delete x.motion.out.delay; });
+    toast(`Kaskada: ${list.length} elementów co ${step} s${outs.length ? ' (wyjścia odwrotnie)' : ''}`);
+  } else if (act === 'chain') {
+    const list = seqTargets().filter((x) => x.motion?.in?.type || x.motion?.textIn?.type);
+    if (list.length < 2) return toast('Po kolei: potrzeba co najmniej dwóch elementów z ruchem wejścia', true);
+    checkpoint();
+    list.forEach((x, i) => { if (i) x.motion.after = list[i - 1].id; else delete x.motion.after; });
+    toast(`Po kolei: ${list.length} elementów`);
+  } else if (act === 'copy') {
+    if (!n?.motion) return toast('Zaznacz element z ruchem do skopiowania', true);
+    const list = locate(n.id).list.filter((x) => x !== n);
+    if (!list.length || !confirm(`Skopiować ruch „${n.name}” na ${list.length} element(y) obok?`)) return;
+    checkpoint();
+    for (const x of list) {
+      const m = structuredClone(n.motion); delete m.after;
+      if (x.type !== 'text' && x.type !== 'clock') { delete m.textIn; delete m.textOut; }
+      if (Object.keys(m).length) x.motion = m; else delete x.motion;
+    }
+    toast(`Skopiowano ruch na ${list.length} element(y)`);
+  } else if (act === 'keys') {
+    if (!n?.motion?.in && !n?.motion?.out) return toast('Zaznacz element z presetem wejścia lub wyjścia', true);
+    const rest = {};
+    for (const p of ['x', 'y', 'opacity', 'scale', 'skewX', 'blur', 'clipL', 'clipT', 'clipR', 'clipB']) rest[p] = +(n.props?.[p] ?? PROPS[p].d) || 0;
+    const r = MO.motionToKeys(n.motion, { rest, outStart: outStartOf(), shift: MO.sequenceShifts(scene.nodes).get(n.id) || 0 });
+    const clash = Object.keys(r.anim).filter((p) => n.anim?.[p]?.length);
+    if (clash.length) return toast(`Na klucze: węzeł ma już klucze (${clash.join(', ')}) – usuń je albo zostań przy presecie`, true);
+    if (!r.done.length) return showReport('Na klucze – nic nie zamieniono', r.skipped);
+    checkpoint();
+    n.anim = { ...(n.anim || {}), ...r.anim };
+    for (const k of r.done) delete n.motion[k];
+    if (!n.motion.textIn && !n.motion.textOut) delete n.motion.after;
+    if (!Object.keys(n.motion).length) delete n.motion;
+    seqMode = false; try { localStorage.setItem('vizrs.seq', '0'); } catch { /* ignoruj */ }
+    if (r.skipped.length) showReport('Na klucze – część pominięta', r.skipped); else toast('Presety zamienione na klucze – widok kluczy');
+  } else if (act === 'clear') {
+    const list = n ? [n] : seqTargets();
+    const withM = list.filter((x) => x.motion);
+    if (!withM.length || !confirm(`Usunąć ruch (presety, pętle, efekty tekstu) z ${withM.length} element(ów)?`)) return;
+    checkpoint();
+    for (const x of withM) delete x.motion;
+  }
+  renderTimeline(); renderProps(); refresh();
 }
 
 function renderKeyEd() {
@@ -675,6 +830,12 @@ function onPropInput(e) {
   const inp = e.target;
   if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') { pendingCP = true; return; }
   const n = selNode();
+  if (n && inp.dataset.moafter !== undefined) {
+    if (e.type !== 'change') return;
+    checkpoint();
+    if (inp.value) (n.motion ||= {}).after = inp.value; else if (n.motion) { delete n.motion.after; if (!Object.keys(n.motion).length) delete n.motion; }
+    refresh(); renderTimeline(); return;
+  }
   if (n && inp.dataset.mo) {
     if (e.type === 'input' && inp.tagName === 'SELECT') return; // wybór obsługuje 'change'
     cp();
@@ -1043,8 +1204,36 @@ function timeFromX(clientX) {
   const a = $('#tl .tl-area[data-area="ruler"]').getBoundingClientRect();
   return (clientX - a.left) / pps;
 }
+$('#seqMode').onclick = () => { seqMode = !seqMode; try { localStorage.setItem('vizrs.seq', seqMode ? '1' : '0'); } catch { /* ignoruj */ } renderTimeline(); };
+$('#seqTools').addEventListener('click', (e) => { const b = e.target.closest('[data-seq]'); if (b) seqTool(b.dataset.seq); });
 $('#tl').addEventListener('mousedown', (e) => {
   lastArea = 'timeline';
+  const mb = e.target.closest('.mb[data-mb]');
+  if (mb && !mb.classList.contains('loop')) {
+    // pasek ruchu: przeciągnięcie = opóźnienie, krawędź = czas trwania
+    e.preventDefault();
+    const [nid, sec] = mb.dataset.mb.split('|');
+    const n = locate(nid)?.node; if (!n?.motion?.[sec]) return;
+    const spec = n.motion[sec], resize = !!e.target.closest('.mbh');
+    const d0 = MO.specDelay(spec), u0 = MO.specDur(spec), sx = e.clientX;
+    let moved = false;
+    if (selId !== nid) { selId = nid; renderTree(); renderProps(); }
+    const mv = (ev) => {
+      const dx = ev.clientX - sx; if (!moved && Math.abs(dx) < 3) return;
+      if (!moved) { checkpoint(); moved = true; }
+      const q = (v) => (ev.shiftKey ? Math.round(v * 20) / 20 : r2(v));
+      if (resize) spec.dur = Math.max(0.02, q(u0 + dx / pps));
+      else { const d = Math.max(0, q(d0 + dx / pps)); if (d) spec.delay = d; else delete spec.delay; }
+      renderTimeline(); refresh();
+    };
+    const up = () => {
+      removeEventListener('mousemove', mv); removeEventListener('mouseup', up);
+      if (!moved) { const st = sec === 'out' || sec === 'textOut' ? outStartOf() + d0 : (MO.sequenceShifts(scene.nodes).get(nid) || 0) + d0; setTime(Number.isFinite(st) ? st : 0); }
+      renderTimeline(); renderProps();
+    };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+    return;
+  }
   const kf = e.target.closest('.kf');
   const sm = e.target.closest('.stopm');
   const lbl = e.target.closest('.tl-lbl[data-sel]');
