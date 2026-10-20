@@ -3,6 +3,7 @@
 //!
 //! Zero zależności zewnętrznych: własny HTTP/1.1, SSE i JSON.
 
+mod app;
 mod audit;
 mod backup;
 mod client;
@@ -72,6 +73,22 @@ const MAX_ASSETS_TOTAL: u64 = 2 * 1024 * 1024 * 1024;
 const ASSET_EXT: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "svg", "mp4", "webm", "ttf", "otf", "woff", "woff2"];
 
 static ACTIVE: AtomicUsize = AtomicUsize::new(0);
+/// Otwarte strumienie zdarzeń (okna Trio/Artist, wyjścia) – po zamknięciu okna aplikacji serwer
+/// działa dalej, dopóki ktoś z niego korzysta.
+static SSE_OPEN: AtomicUsize = AtomicUsize::new(0);
+
+struct SseSlot;
+impl SseSlot {
+    fn new() -> SseSlot {
+        SSE_OPEN.fetch_add(1, Ordering::SeqCst);
+        SseSlot
+    }
+}
+impl Drop for SseSlot {
+    fn drop(&mut self) {
+        SSE_OPEN.fetch_sub(1, Ordering::SeqCst);
+    }
+}
 
 /// Licznik połączeń zwalniany przy zakończeniu wątku (także po panice).
 struct ConnSlot;
@@ -132,7 +149,7 @@ use config::{Cli, Config, Mode};
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cfg = match config::parse(&args, &|k| std::env::var(k).ok()) {
-        Ok(Cli::Run(c)) => c,
+        Ok(Cli::Run(c)) => *c,
         Ok(Cli::Help) => {
             println!("{}", config::help());
             return;
@@ -149,7 +166,87 @@ fn main() {
     match cfg.mode {
         Mode::Healthcheck => std::process::exit(healthcheck(&cfg)),
         Mode::Serve => serve(cfg),
+        Mode::App(w) => app_window(cfg, w),
     }
+}
+
+/// Działający serwer (wątek nasłuchu w tle).
+struct Running {
+    cfg: Arc<Config>,
+    lock: Arc<datalock::DataLock>,
+}
+
+fn serve(cfg: Config) {
+    let _running = start(cfg);
+    loop {
+        std::thread::park();
+    }
+}
+
+/// Otwiera okno; błąd tylko wypisuje (adres bez tokenu).
+fn open_window(url: &str, w: app::Window, opts: &app::WindowOpts) -> Option<app::Opened> {
+    match app::open(url, w, opts) {
+        Ok(o) => {
+            println!("Okno {}: {} – {}", w.name(), audit::scrub(url), o.how);
+            Some(o)
+        }
+        Err(e) => {
+            eprintln!("{e}");
+            None
+        }
+    }
+}
+
+/// `vizrs artist|trio|output`: okno aplikacji z serwerem w tym procesie, dołączone do działającego
+/// serwera na tym samym katalogu danych albo do serwera zdalnego (`--connect`).
+fn app_window(cfg: Config, w: app::Window) {
+    let (query, token) = (cfg.window.query.clone(), cfg.token.clone());
+    let url_for = |base: &str| app::window_url(base, w, query.as_deref(), token.as_deref());
+    if let Some(base) = &cfg.connect {
+        if open_window(&url_for(base), w, &cfg.window).is_none() {
+            std::process::exit(1);
+        }
+        return;
+    }
+    if let Some(o) = datalock::owner(&cfg.data, cfg.token.as_deref()) {
+        println!("Serwer VizRS dla {} już działa (pid {}, http://{}) – otwieram okno {}.", cfg.data.display(), o.pid, o.addr, w.name());
+        if open_window(&url_for(&format!("http://{}", o.addr)), w, &cfg.window).is_none() {
+            std::process::exit(1);
+        }
+        return;
+    }
+    let (linger_s, opts) = (cfg.linger_s, cfg.window.clone());
+    let running = start(cfg);
+    let opened = open_window(&url_for(&format!("http://{}", running.cfg.local_addr())), w, &opts);
+    let Some(mut opened) = opened else {
+        eprintln!("Serwer działa dalej – otwórz adres ręcznie w przeglądarce.");
+        loop {
+            std::thread::park();
+        }
+    };
+    // czekaj na zamknięcie okna; potem serwer działa, dopóki ktokolwiek korzysta (inne okna, OBS)
+    let started = std::time::Instant::now();
+    if let Some(ch) = opened.child.as_mut() {
+        ch.wait().ok();
+        println!("Okno zamknięte. Serwer kończy pracę, gdy przez {linger_s} s nie będzie podłączone żadne okno ani wyjście (OBS) – Ctrl+C kończy od razu.");
+    }
+    let (mut seen, mut idle) = (false, 0);
+    loop {
+        if SSE_OPEN.load(Ordering::SeqCst) > 0 {
+            seen = true;
+            idle = 0;
+        } else if seen || started.elapsed() > Duration::from_secs(30) {
+            // okno przekazane do już działającej przeglądarki mogło jeszcze nie zdążyć się połączyć
+            idle += 1;
+            if idle > linger_s {
+                break;
+            }
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    println!("Brak podłączonych okien i wyjść – serwer kończy pracę.");
+    running.lock.release();
+    std::process::exit(0);
 }
 
 /// `--healthcheck`: 0 = serwer odpowiada `status: ok`, 1 = nie (Docker HEALTHCHECK, monitoring).
@@ -171,7 +268,8 @@ fn healthcheck(cfg: &Config) -> i32 {
     }
 }
 
-fn serve(mut cfg: Config) {
+/// Uruchamia serwer: blokada danych, silnik, porty; nasłuch HTTP w wątku w tle.
+fn start(mut cfg: Config) -> Running {
     let lock = match datalock::acquire(&cfg.data, &cfg.local_addr(), cfg.token.as_deref()) {
         Ok(l) => l,
         Err(o) => {
@@ -253,6 +351,12 @@ fn serve(mut cfg: Config) {
         });
     }
 
+    let c = Arc::clone(&cfg);
+    std::thread::spawn(move || accept_loop(listener, engine, c));
+    Running { cfg, lock }
+}
+
+fn accept_loop(listener: TcpListener, engine: Arc<Engine>, cfg: Arc<Config>) {
     for stream in listener.incoming().flatten() {
         let Some(slot) = ConnSlot::acquire() else {
             let mut s = stream;
@@ -331,6 +435,7 @@ fn sse(mut stream: TcpStream, engine: Arc<Engine>) {
     if stream.write_all(head.as_bytes()).is_err() {
         return;
     }
+    let _open = SseSlot::new();
     let rx = engine.subscribe();
     loop {
         let msg = match rx.recv_timeout(Duration::from_secs(10)) {

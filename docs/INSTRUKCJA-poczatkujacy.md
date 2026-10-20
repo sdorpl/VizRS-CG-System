@@ -17,11 +17,16 @@
 
 | System | Polecenie |
 |---|---|
-| Linux | `./start-linux.sh` |
-| Windows | raz `build-windows.bat` (wymaga Rust z https://rustup.rs), potem `start-windows.bat` |
-| macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data` |
+| Linux | `./start-linux.sh trio` (okno Trio) albo `./start-linux.sh artist` (okno Artist); `./start-linux.sh` = sam serwer |
+| Windows | raz `build-windows.bat` (wymaga Rust z https://rustup.rs), potem `start-windows.bat` (okno Trio) albo `start-windows.bat artist` |
+| macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data trio` |
 
-W przeglądarce otwórz:
+**Okna aplikacji:** Artist i Trio otwierają się we własnych oknach (Edge/Chrome/Chromium bez pasków przeglądarki). Drugie okno dołącza do już działającego serwera. Zamknięcie okna nie zdejmuje grafiki z anteny – serwer pracuje, dopóki OBS albo inne okno jest podłączone.
+Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli). Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
+
+Sterowanie serwerem na VPS z własnego komputera: `vizrs trio --connect https://twoj-serwer.pl --token TOKEN`.
+
+Możesz też otworzyć strony w zwykłej przeglądarce:
 
 - `http://localhost:8088/trio` – playout (operator),
 - `http://localhost:8088/artist` – projektowanie szablonów,

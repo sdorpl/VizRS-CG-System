@@ -72,6 +72,12 @@ fn alive(lock: &Json, token: Option<&str>) -> bool {
     }
 }
 
+/// Działający serwer, który trzyma katalog danych (bez zakładania blokady) – okno dołącza do niego.
+pub fn owner(data: &Path, token: Option<&str>) -> Option<Owner> {
+    let lock = read(&data.join(FILE))?;
+    alive(&lock, token).then(|| Owner { pid: lock.num("pid").unwrap_or(0.0) as u32, addr: lock.str("addr").unwrap_or("").to_string() })
+}
+
 /// Zakłada blokadę dla serwera słuchającego pod `addr`. Błąd = katalog zajęty przez działający serwer.
 pub fn acquire(data: &Path, addr: &str, token: Option<&str>) -> Result<DataLock, Owner> {
     let instance = crate::guard::random_token(12);
@@ -150,6 +156,7 @@ mod tests {
         let d = dir("fresh");
         let l = acquire(&d, "127.0.0.1:1", None).unwrap();
         assert!(d.join(FILE).exists());
+        assert!(owner(&d, None).is_none(), "nikt nie odpowiada pod 127.0.0.1:1 → plik martwy");
         drop(l);
         assert!(!d.join(FILE).exists());
         std::fs::remove_dir_all(d).ok();
@@ -178,6 +185,7 @@ mod tests {
         std::fs::write(d.join(FILE), format!(r#"{{"pid":0,"addr":"{addr}","instance":"inst-A"}}"#)).unwrap();
         let o = acquire(&d, "127.0.0.1:2", None).err().expect("katalog zajęty");
         assert_eq!(o.addr, addr);
+        assert_eq!(owner(&d, None).map(|o| o.addr), Some(addr.clone()));
         // pod tym adresem inny serwer (inna instancja) → plik martwy
         std::fs::write(d.join(FILE), format!(r#"{{"pid":0,"addr":"{addr}","instance":"inst-B"}}"#)).unwrap();
         assert!(acquire(&d, "127.0.0.1:2", None).is_ok());

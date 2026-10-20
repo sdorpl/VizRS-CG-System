@@ -14,8 +14,12 @@ OBS pobiera przez źródło **Przeglądarka (Browser Source)**.
 
 ```bash
 cargo build --release
-./target/release/vizrs            # Windows: target\release\vizrs.exe
+./target/release/vizrs            # serwer; Windows: target\release\vizrs.exe
+./target/release/vizrs trio       # okno aplikacji Trio (Edge/Chrome/Chromium bez pasków) + serwer
+./target/release/vizrs artist     # okno Artist (dołącza do działającego serwera)
+./target/release/vizrs trio --connect https://cg.example.pl --token …   # okno dla serwera na VPS
 ```
+Okna aplikacji, skróty w menu (Linux/Windows), wyjście na drugi monitor: [DOKUMENTACJA §13.1](docs/DOKUMENTACJA.md#131-okna-aplikacji-artist-trio-output).
 
 | Adres | Co to jest |
 |---|---|

@@ -38,6 +38,8 @@ jobs:
           path: |
             source/target/release/vizrs
             source/target/release/vizrs.exe
+            source/target/release/vizrs-app
+            source/target/release/vizrs-app.exe
 
   e2e:
     needs: test
@@ -57,6 +59,7 @@ jobs:
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/artist.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/pack.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/motion.js target/release/vizrs
+      - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/app.js target/release/vizrs
 
   docker:
     needs: test

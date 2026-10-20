@@ -318,7 +318,7 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 | Obszar | Zawartość |
 |---|---|
-| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, 🗑 usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.6), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ BTB (import z BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz** |
+| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, 🗑 usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.6), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ BTB (import z BTB CG), wskaźnik połączenia z serwerem, ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz** |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, 🗑; przeciąganie zmienia rodzica z zachowaniem położenia |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny |
 | Właściwości (prawo) | grupy: Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker; „widoczny gdy”; presety animacji |
@@ -494,7 +494,7 @@ build-windows.bat → start-windows.bat  # Windows (wymaga Rust)
 ./build-macos-linux.sh                 # macOS / inne: bin/native/vizrs
 ```
 
-Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vizrs --healthcheck` – sprawdza `/health` działającego serwera (kod wyjścia 0 = ok, 1 = błąd; dla Dockera i monitoringu).
+Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vizrs artist`, `vizrs trio`, `vizrs output` – okno aplikacji (§13.1); `vizrs --healthcheck` – sprawdza `/health` działającego serwera (kod wyjścia 0 = ok, 1 = błąd; dla Dockera i monitoringu).
 
 | Opcja | Zmienna | Domyślnie | Opis |
 |---|---|---|---|
@@ -527,6 +527,36 @@ Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site
 Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 
 **Docker / VPS:** `docker build -t vizrs .` (statyczna binarka musl na pustym obrazie, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`, dane w wolumenie `/data`, port komend TCP domyślnie wyłączony). Serwer z HTTPS: `deploy/docker-compose.yml` (VizRS + Caddy, Let's Encrypt), przykład nginx: `deploy/nginx-vizrs.conf`. Instrukcja krok po kroku: [RUNBOOK.md](RUNBOOK.md#vps-i-docker).
+
+### 13.1 Okna aplikacji (Artist, Trio, Output)
+
+`vizrs artist` / `vizrs trio` otwiera Artist albo Trio w **osobnym oknie aplikacji** – bez pasków adresu i kart, z własną pozycją w pasku zadań – i uruchamia serwer w tym samym procesie. Okno to przeglądarka z silnikiem **Chromium** (Edge, Chrome, Chromium, Brave, Vivaldi) w trybie `--app` z osobnym profilem (`~/.config/vizrs/browser`, Windows `%APPDATA%\VizRS\browser`, macOS `~/Library/Application Support/VizRS/browser`). Chromium dlatego, że wyjście w OBS i vMix też rysuje Chromium – Artist pokazuje dokładnie to, co antena (pomiar tekstu, ściskanie, łamanie wierszy). Bez Chromium okno otwiera się w przeglądarce systemowej (z paskami).
+
+| Sytuacja | Co się dzieje |
+|---|---|
+| pierwsze okno na danym `--data` | start serwera (port z `--port`, domyślnie 8088 – adres wyjścia dla OBS bez zmian) + okno |
+| kolejne okno (np. `vizrs trio` przy otwartym Artist) | wykrywa działający serwer na tym katalogu danych (`.vizrs.lock`), otwiera tylko okno i kończy się |
+| zamknięcie okna, z którym wystartował serwer | serwer **działa dalej, dopóki podłączone jest jakiekolwiek okno lub wyjście (OBS)** – zamknięcie Artist nie zdejmuje grafiki z anteny; po `--linger` s (domyślnie 10) bez nikogo serwer kończy pracę. Ctrl+C / SIGTERM kończy od razu |
+| `--connect https://cg.example.pl` | tylko okno dla serwera zdalnego (VPS), bez serwera lokalnego; token z `--token`/`VIZRS_TOKEN` trafia do adresu okna |
+
+`vizrs output` – okno wyjścia 1920×1080, np. na drugi monitor albo wyjście HDMI do miksera: `vizrs output --fullscreen --position 1920,0` (pełny ekran bez ramek, zamknięcie: Alt+F4); Key/Fill przez `--query mode=key` / `--query mode=fill`. Wyjście ma osobny profil przeglądarki (pełny ekran i pozycja działają niezależnie od okien Artist/Trio). Wszystkie okna mają wyłączone usypianie animacji w tle i autoodtwarzanie wideo bez kliknięcia.
+
+| Opcja okna | Zmienna | Opis |
+|---|---|---|
+| `--connect URL` | `VIZRS_CONNECT` | serwer zdalny (`http://` / `https://`) |
+| `--browser CMD` | `VIZRS_BROWSER` | przeglądarka: ścieżka (`/usr/bin/chromium`, `C:\…\msedge.exe`) albo polecenie z argumentami (`flatpak run org.chromium.Chromium`) |
+| `--fullscreen` | | pełny ekran bez ramek (`--kiosk`) |
+| `--position X,Y` | | pozycja okna (drugi monitor: `1920,0`) |
+| `--query PARAM` | | parametry adresu okna, np. `mode=key`, `bg=black` |
+| `--linger N` | | sekundy bez okien i wyjść przed zakończeniem serwera okna (domyślnie 10) |
+
+Wyszukiwanie przeglądarki: Linux – `chromium`, `chromium-browser`, `google-chrome(-stable)`, `microsoft-edge(-stable)`, `brave-browser`, `vivaldi` w `PATH`, potem Flatpak i Snap; Windows – Edge, Chrome, Brave, Chromium w `Program Files` i `%LOCALAPPDATA%` (Edge jest w każdym Windows 10/11); macOS – `/Applications` i `~/Applications`.
+
+**Skróty systemowe:**
+- Linux: `deploy/install-desktop-linux.sh [vizrs] [katalog-danych]` – „VizRS Artist” i „VizRS Trio” w menu aplikacji (pliki `.desktop`, ikona `deploy/vizrs.svg`).
+- Windows: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1` – skróty w menu Start uruchamiają `vizrs-app.exe` (to samo co `vizrs.exe`, ale **bez okna konsoli**; błąd startu pokazuje w okienku systemowym) oraz „VizRS Serwer” (konsola). `start-windows.bat [artist|trio|serve]` – domyślnie okno Trio.
+
+Artist i Trio pokazują w pasku górnym wskaźnik **połączono / brak połączenia** z serwerem – przy pracy zdalnej (`--connect`) widać zerwanie łącza.
 
 ## 14. Dane na dysku i kopie zapasowe
 

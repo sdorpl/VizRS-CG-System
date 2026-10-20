@@ -5,7 +5,8 @@
 
 use std::path::PathBuf;
 
-use crate::{guard, hook};
+use crate::app::{Window, WindowOpts};
+use crate::{app, guard, hook};
 
 /// Co ma zrobić binarka.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -14,6 +15,8 @@ pub enum Mode {
     Serve,
     /// Sprawdź `/health` działającego serwera (kod wyjścia 0/1) – dla Dockera i monitoringu.
     Healthcheck,
+    /// Okno aplikacji (Artist, Trio, Output) z serwerem w tym samym procesie albo zdalnym (`--connect`).
+    App(Window),
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +38,12 @@ pub struct Config {
     pub trust_proxy: bool,
     /// Log audytowy także na standardowe wyjście (JSON w linii) – `docker logs`.
     pub log_stdout: bool,
+    /// Serwer zdalny dla okna (`--connect https://…`): bez serwera lokalnego.
+    pub connect: Option<String>,
+    /// Ustawienia okna aplikacji.
+    pub window: WindowOpts,
+    /// Ile sekund bez żadnego okna/wyjścia, zanim serwer okna aplikacji zakończy pracę.
+    pub linger_s: u64,
     /// Identyfikator tej instancji serwera (z blokady katalogu danych), widoczny w `/health`.
     pub instance: String,
 }
@@ -55,6 +64,9 @@ impl Default for Config {
             insecure: false,
             trust_proxy: false,
             log_stdout: false,
+            connect: None,
+            window: WindowOpts::default(),
+            linger_s: 10,
             instance: String::new(),
         }
     }
@@ -81,7 +93,7 @@ impl Config {
 }
 
 pub enum Cli {
-    Run(Config),
+    Run(Box<Config>),
     Help,
     Version,
 }
@@ -147,6 +159,12 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
     if let Some(v) = env("VIZRS_WEB") {
         c.web_dir = Some(PathBuf::from(v));
     }
+    if let Some(v) = env("VIZRS_CONNECT") {
+        c.connect = Some(app::check_connect(&v)?);
+    }
+    if let Some(v) = env("VIZRS_BROWSER") {
+        c.window.browser = Some(v);
+    }
     if let Some(v) = env("VIZRS_INSECURE") {
         c.insecure = flag_true(&v);
     }
@@ -182,12 +200,33 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
             "--web" => c.web_dir = Some(PathBuf::from(val()?)),
             "--insecure" => c.insecure = true,
             "--healthcheck" => c.mode = Mode::Healthcheck,
+            "--connect" => c.connect = Some(app::check_connect(&val()?)?),
+            "--browser" => c.window.browser = Some(val()?),
+            "--fullscreen" => c.window.fullscreen = true,
+            "--position" => {
+                let v = val()?;
+                let ok = v.split_once(',').map(|(x, y)| x.trim().parse::<i32>().is_ok() && y.trim().parse::<i32>().is_ok()).unwrap_or(false);
+                if !ok {
+                    return Err(format!("--position: podaj X,Y (np. 1920,0), nie „{v}”"));
+                }
+                c.window.position = Some(v.replace(' ', ""));
+            }
+            "--query" => c.window.query = Some(val()?),
+            "--linger" => c.linger_s = val()?.trim().parse().map_err(|_| "--linger: liczba sekund".to_string())?,
             "--version" | "-V" => return Ok(Cli::Version),
             "--help" | "-h" => return Ok(Cli::Help),
             "serve" if !mode_set => mode_set = true,
+            "artist" | "trio" | "output" if !mode_set => {
+                mode_set = true;
+                c.mode = Mode::App(match a {
+                    "artist" => Window::Artist,
+                    "trio" => Window::Trio,
+                    _ => Window::Output,
+                });
+            }
             "help" if !mode_set => return Ok(Cli::Help),
             _ if a.starts_with('-') => return Err(format!("nieznana opcja {a}")),
-            _ if !mode_set => return Err(format!("nieznana komenda „{a}” (dostępne: serve)")),
+            _ if !mode_set => return Err(format!("nieznana komenda „{a}” (dostępne: serve, artist, trio, output)")),
             _ => return Err(format!("nadmiarowy argument „{a}”")),
         }
         i += 1;
@@ -199,13 +238,22 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
     if c.output_token.is_some() && c.output_token == c.token {
         return Err("token wyjścia musi być inny niż token operatora".into());
     }
-    if c.mode == Mode::Serve && c.token.is_none() && !is_loopback(&c.bind) && !c.insecure {
+    let window_opts = c.window.fullscreen || c.window.position.is_some() || c.window.query.is_some() || c.connect.is_some();
+    if window_opts && !matches!(c.mode, Mode::App(_)) {
+        return Err("--connect, --fullscreen, --position i --query dotyczą okna: vizrs artist|trio|output …".into());
+    }
+    let local_server = match c.mode {
+        Mode::Serve => true,
+        Mode::App(_) => c.connect.is_none(),
+        Mode::Healthcheck => false,
+    };
+    if local_server && c.token.is_none() && !is_loopback(&c.bind) && !c.insecure {
         return Err(format!(
             "nasłuch na {} bez tokenu: każdy w sieci mógłby sterować anteną.\nUstaw --token (albo VIZRS_TOKEN); świadomie bez tokenu: --insecure",
             c.bind
         ));
     }
-    Ok(Cli::Run(c))
+    Ok(Cli::Run(Box::new(c)))
 }
 
 pub fn help() -> String {
@@ -213,10 +261,23 @@ pub fn help() -> String {
         "VizRS {}
 
 Użycie: vizrs [serve] [opcje]
+        vizrs artist|trio|output [opcje] [--connect https://serwer]
         vizrs --healthcheck [--port …] [--token …]
 
 Komendy:
   serve          serwer bez GUI (domyślnie): UI w przeglądarce, wyjście OBS, API
+  artist, trio   okno aplikacji (Edge/Chrome/Chromium w trybie --app, bez pasków) + serwer w tym samym
+                 procesie; jeśli serwer na tym --data już działa – tylko nowe okno. Po zamknięciu okna serwer
+                 działa dalej, dopóki podłączone jest jakiekolwiek okno lub wyjście (OBS)
+  output         okno wyjścia 1920×1080 (np. na drugi monitor / HDMI: --fullscreen --position 1920,0)
+
+Okna:
+  --connect URL  okno dla serwera zdalnego, np. https://cg.example.pl (VIZRS_CONNECT); bez serwera lokalnego
+  --browser CMD  przeglądarka z Chromium (VIZRS_BROWSER), np. /usr/bin/chromium; domyślnie wyszukiwana
+  --fullscreen   pełny ekran bez ramek (wyjście: Alt+F4)
+  --position X,Y pozycja okna (np. 1920,0 = drugi monitor po prawej)
+  --query PARAM  parametry adresu okna, np. mode=key albo bg=black (wyjście)
+  --linger N     sekundy bez okien i wyjść przed zakończeniem serwera okna (domyślnie 10)
 
 Opcje (w nawiasie zmienna środowiskowa; flaga ma pierwszeństwo):
   --port N       port HTTP – UI + wyjście OBS (VIZRS_PORT, domyślnie 8088)
@@ -247,7 +308,7 @@ mod tests {
         let a: Vec<String> = args.iter().map(|s| s.to_string()).collect();
         let e: Vec<(String, String)> = env.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
         match parse(&a, &|k| e.iter().find(|(n, _)| n == k).map(|(_, v)| v.clone()))? {
-            Cli::Run(c) => Ok(c),
+            Cli::Run(c) => Ok(*c),
             _ => Err("help/version".into()),
         }
     }
@@ -309,6 +370,28 @@ mod tests {
         assert!(c.output_token.is_some() && c.trust_proxy && c.log_stdout);
         assert!(run(&["--output-token", "out"], &[]).is_err(), "bez tokenu operatora");
         assert!(run(&["--token", "x", "--output-token", "x"], &[]).is_err(), "taki sam token");
+    }
+
+    #[test]
+    fn window_modes() {
+        let c = run(&["--data", "x", "trio"], &[]).unwrap();
+        assert_eq!(c.mode, Mode::App(Window::Trio));
+        let c = run(&["output", "--fullscreen", "--position", "1920, 0", "--query", "mode=key"], &[]).unwrap();
+        assert_eq!(c.mode, Mode::App(Window::Output));
+        assert!(c.window.fullscreen);
+        assert_eq!(c.window.position.as_deref(), Some("1920,0"));
+        assert!(run(&["output", "--position", "lewo"], &[]).is_err());
+        let c = run(&["artist", "--connect", "https://cg.example.pl/"], &[]).unwrap();
+        assert_eq!(c.connect.as_deref(), Some("https://cg.example.pl"));
+        assert!(run(&["artist", "--connect", "cg.example.pl"], &[]).is_err());
+        // opcje okna bez okna – błąd
+        assert!(run(&["--fullscreen"], &[]).is_err());
+        assert!(run(&["serve", "--connect", "https://x.pl"], &[]).is_err());
+        // okno zdalne nie nasłuchuje – nie wymaga tokenu przy bind z sieci; lokalne – wymaga
+        assert!(run(&["trio", "--connect", "https://x.pl"], &[("VIZRS_BIND", "0.0.0.0")]).is_ok());
+        assert!(run(&["trio"], &[("VIZRS_BIND", "0.0.0.0")]).is_err());
+        assert_eq!(run(&["trio", "--linger", "3"], &[]).unwrap().linger_s, 3);
+        assert!(run(&["trio", "artist"], &[]).is_err(), "jedno okno na wywołanie");
     }
 
     #[test]

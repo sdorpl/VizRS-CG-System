@@ -27,4 +27,6 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 13 | Brak dedykowanego modułu Companion (jest generyczny HTTP/OSC + zmienne) | |
 | 14 | Parenting przez drzewo (zmiana rodzica); brak „pick whip” jak w AE | |
 | 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | propozycje G, H, K z btb-cgeditor |
+| 17 | Okna aplikacji: brak listy zapisanych połączeń zdalnych i ekranu wyboru (jest `--connect URL`); brak globalnych skrótów, menu systemowego i zasobnika | PLAN-natywne-i-serwer.md N3/N4; skróty sprzętowe – Companion przez HTTP/OSC |
+| 18 | Okna aplikacji na Windows/macOS sprawdzone tylko kompilacją (Linux: test E2E i prawdziwy Chrome) | uruchomić `vizrs trio` i skróty z `install-windows-shortcuts.ps1` na Windows |
 | 16 | Ticker: brak źródła zewnętrznego (URL z JSON/RSS i odświeżanie) | PLAN-ticker.md T5.2 (opcja); dziś: `TICKER …` / `/api/ticker` z zewnętrznego skryptu |

@@ -125,6 +125,7 @@
   <button id="bPack" title="Paczka belek .cgpack: wybrane sceny + strony + grafiki + czcionki w jednym pliku">⇩ Paczka</button>
   <button id="bImp" title="Import sceny (.json) albo paczki belek (.cgpack)">⇧ Import</button>
     <button id="bImpBtb" title="Importuj element z BTB CG (.json eksport v3 lub .cgpack) jako scenę + stronę">⇧ BTB</button>
+  <span id="conn" class="pill" title="Połączenie z serwerem VizRS">łączenie…</span>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
   <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
@@ -207,7 +208,7 @@
 import * as BTB from '/btb-io.js';
 import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
-import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor } from '/renderer.js';
+import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -1739,6 +1740,13 @@ let lastSync = 0;
 
 new ResizeObserver(() => resize()).observe(box);
 load().catch((e) => toast('Błąd: ' + e.message, true));
+
+// ------------------------------------------------------------ połączenie z serwerem
+// tylko wskaźnik (edycja sceny nie jest nadpisywana zdarzeniami); okno aplikacji `vizrs artist` wie dzięki temu, że Artist jest otwarty
+connectEvents(() => {}, (ok) => {
+  $('#conn').textContent = ok ? 'połączono' : 'brak połączenia';
+  $('#conn').className = 'pill ' + (ok ? 'ok' : 'on');
+});
 </script>
 </body>
 </html>

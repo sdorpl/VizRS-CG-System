@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Ikona VizRS: pasek belki CG na ciemnym tle (skróty w menu aplikacji) -->
+  <rect width="256" height="256" rx="48" fill="#15171c"/>
+  <rect x="36" y="150" width="184" height="44" rx="6" fill="#f5a524"/>
+  <rect x="36" y="118" width="120" height="32" rx="4" fill="#e8eaed"/>
+  <path d="M60 52 L92 104 L124 52" fill="none" stroke="#e8eaed" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="176" cy="74" r="20" fill="#e5484d"/>
+</svg>

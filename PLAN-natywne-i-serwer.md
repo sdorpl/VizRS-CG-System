@@ -1,6 +1,14 @@
 # PLAN: VizRS w oknie systemowym (Artist, Trio) i jako serwer bez GUI (VPS, Docker)
 
-> Status: **propozycja do decyzji** (2026-10-20). Nic z tego nie jest jeszcze zaimplementowane.
+> Status (2026-10-20): **N0–N3 zrealizowane na gałęzi `test/natywne-serwer`**; N4 i N5 czekają na decyzję. Stan: [docs/STATUS.md](docs/STATUS.md).
+
+### Realizacja i odstępstwa od planu
+- Decyzje z §9 przyjęte wg rekomendacji: wariant A (Chromium `--app`, zero zależności), najpierw serwer (N0–N2), potem okna (N3), obraz `scratch`, Caddy w compose, dwie role tokenów (operator / wyjście), kanał = kontener.
+- §9 pkt 2 (zamknięcie okna) rozstrzygnięty bez pytania w UI: **serwer działa dalej, dopóki podłączone jest jakiekolwiek okno lub wyjście (OBS)**, potem kończy pracę po `--linger` s. Zamknięcie Artist nigdy nie zdejmuje anteny.
+- Okno lokalne **nie dostaje losowego tokenu sesji** (§4 pkt 3): serwer okna słucha na `127.0.0.1` jak dotąd bez tokenu (chroni go kontrola Origin/Sec-Fetch); token działa, jeśli ustawiony (`--token`/`VIZRS_TOKEN`). Dzięki temu drugie okno i OBS łączą się bez dodatkowej konfiguracji.
+- Lista połączeń z ekranem wyboru (§4 pkt 6) – niezrobiona (jest `--connect` / `VIZRS_CONNECT`); wpis w LUKI #17.
+- Windows/macOS: kod okien, sygnałów i `vizrs-app` sprawdzony kompilacją (`cargo clippy --target …`); uruchomienie – do sprawdzenia na tych systemach (LUKI #18). Obraz Docker sprawdza job CI `docker` (lokalnie brak Dockera).
+- Dodatkowo: Artist subskrybuje `/events` (wskaźnik połączenia) – serwer okna wie, że Artist jest otwarty.
 > Powiązane: [PLAN-rozbudowy.md](PLAN-rozbudowy.md), [docs/LUKI.md](docs/LUKI.md) (G1 #1 TLS, #2 wątki), [deploy/](deploy/), [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## 0. Streszczenie

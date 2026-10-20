@@ -55,6 +55,7 @@ node tests/vectors/run.js && node tests/vectors/btb.js && node tests/motion.js
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
 node tests/e2e/artist.js target/release/vizrs     # Artist
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
+node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana przeglądarka)
 node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch jak w BTB
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
 ```
@@ -66,11 +67,15 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 
 | Ścieżka | Rola |
 |---|---|
-| `source/src/main.rs` | CLI, serwer HTTP, routing `/api/*`, pliki statyczne (`STATIC`), port TCP |
+| `source/src/main.rs` | serwer HTTP, routing `/api/*`, pliki statyczne (`STATIC`), port TCP, tryb okna (`app_window`) |
+| `source/src/config.rs` | opcje CLI i zmienne `VIZRS_*` (czysty parser), komendy `serve`/`artist`/`trio`/`output`, `--healthcheck` |
+| `source/src/app.rs` | okna aplikacji: wyszukiwanie Chromium/Edge, argumenty `--app`, profil, `--connect` |
+| `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
+| `source/src/bin/vizrs-app.rs` | uruchamianie okien bez konsoli (Windows) |
 | `source/src/engine.rs` | show, warstwy on-air, TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, dock, karuzela, rundown, makra, blokady, SSE |
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |
 | `source/src/ticker.rs` | zapis wiadomości tickera (`KAT|treść`), komendy `TICKER` |
-| `source/src/guard.rs` | token, ochrona przed obcymi witrynami (CSRF) |
+| `source/src/guard.rs` | tokeny (operator, wyjście tylko do odczytu), ochrona przed obcymi witrynami (CSRF), spowalnianie złych prób |
 | `source/src/backup.rs`, `audit.rs` | kopie zapasowe show, log audytowy |
 | `source/src/osc.rs`, `hook.rs` | OSC (UDP), webhook |
 | `source/src/http.rs`, `json.rs` | własny parser HTTP/1.1 i JSON |
@@ -88,7 +93,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
 | `source/tools/` | `sync-btb.sh`, `build-btb-pack.mjs`, `out_choreo.py`, `render_video.py`, `gallery.js` (galeria zrzutów stron) |
 | `examples/` | `R7_NEWS.show.json`, `INFO24.show.json`, paczka `BTB_CG/` (31 wzorców z BTB), `BTB_PILNE.show.json` (belka BTB wielowierszowa) |
-| `deploy/` | systemd, launchd, Windows (NSSM) |
+| `deploy/` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, skróty okien (Linux `.desktop`, Windows `.ps1`) |
+| `Dockerfile` | obraz `scratch` ze statyczną binarką musl |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |
 | `vizrs-data/` | dane użytkownika (`show.json`, `assets/`, `backups/`, `log.jsonl`) — w `.gitignore`; przy pustym katalogu serwer wczytuje demo |
 
