@@ -6,9 +6,7 @@
   "scene": "btb_belka_-_pilne-new-wasm",
   "page": 8001,
   "layer": "main",
-  "warnings": [
-   "efekt „glow” (warstwa „rep-top-bar”) pominięty"
-  ]
+  "warnings": []
  },
  {
   "file": "Belka_-_PILNE-new.json",
@@ -17,9 +15,7 @@
   "scene": "btb_belka_-_pilne-new",
   "page": 8002,
   "layer": "main",
-  "warnings": [
-   "efekt „glow” (warstwa „rep-top-bar”) pominięty"
-  ]
+  "warnings": []
  },
  {
   "file": "Belka_-_PILNE.cgpack",
@@ -28,9 +24,7 @@
   "scene": "btb_belka_-_pilne",
   "page": 8003,
   "layer": "main",
-  "warnings": [
-   "efekt „glow” (warstwa „rep-top-bar”) pominięty"
-  ]
+  "warnings": []
  },
  {
   "file": "Belka_-_PILNE.json",
@@ -39,9 +33,7 @@
   "scene": "btb_belka_-_pilne_json",
   "page": 8004,
   "layer": "main",
-  "warnings": [
-   "efekt „glow” (warstwa „rep-top-bar”) pominięty"
-  ]
+  "warnings": []
  },
  {
   "file": "belka_exp__18_26_40_.json",

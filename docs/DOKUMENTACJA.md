@@ -185,9 +185,11 @@ Obok kluczy węzeł może mieć **ruch opisany presetami** – tak jak zakładka
 | `textIn` / `textOut` – efekt tekstu | `type`, `dur`, `delay`, `stagger` (odstęp jednostek, puste = auto: znaki 0,04 s, słowa 0,09 s), `from` (start/end/center/edges) | jak wejście / wyjście |
 | `loop` – pętla uwagi | `type`, `dur` (okres), `amp` (siła), `color` | zegar ścienny, gdy grafika stoi (po wejściu, przed wyjściem) |
 | `after` | id węzła | wejście zaczyna się po wejściu wskazanego węzła (sekwencja) |
+| `origin` | `[x, y]` (0–1) | punkt odniesienia skali/obrotu ruchu, gdy preset go nie ustala (Artist: „punkt ruchu”); import BTB: `[0, 0]` dla ruchu całego elementu |
+| `bg` | `shimmer`, `pulse`, `glow`, `scanline` | stały efekt tła kształtu jak `effect` warstwy BTB (Artist: „efekt tła”) – gra od wejścia na wizję, także w trakcie IN/OUT |
 
 - **Presety IN/OUT (22):** wjazd, przenikanie, zoom, zoom z bliska, wyskok, przesłony pozioma i pionowa, przycięcie, rozmycie, odwrócenia X/Y (3D), obrót, skos, spadanie, glitch, wjazd z przeskokiem, rozsunięcie, maska ukośna, żaluzja, rosnący pasek, rozdzielenie RGB.
-- **Efekty tekstu (31):** całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
+- **Efekty tekstu (31):** wartości jak `cgmotion.js` na antenie BTB (maski `inset`, rozmycie 20 px całości i 14 px jednostek, przesunięcia 50/40 px): całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
 - **Pętle uwagi (11):** pulsowanie, oddychanie, bicie serca, unoszenie, podskakiwanie, chwianie, drżenie, błyski, poświata, połysk, przesuwane podkreślenie. Wchodzą płynnie po wejściu i schodzą przed wyjściem; siła: pulsowanie/bicie serca – % skali, chwianie – stopnie, oddychanie – % krycia, unoszenie/podskakiwanie/drżenie – px.
 - **Krzywe (nazwy GSAP):** `power2.out` (domyślna), `power2.in`, `power2.inOut`, `power3.out`, `power4.out`, `expo.out`, `sine.inOut`, `linear`, `back.out`, `back.in`, `bounce.out`, `elastic.out` oraz aliasy BTB `spring`, `overshoot`, `broadcast`; przyjmowane są też `back.out(2)` i `cubic-bezier(…)`.
 - **Składanie z kluczami** (jak w BTB): przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą, maski dają część wspólną.
@@ -479,7 +481,9 @@ VizRS **importuje** grafiki z BTB CG; eksportu w drugą stronę nie ma.
 - Przenoszone: układ, teksty z regułami, **ruch 1:1** (presety IN/OUT warstw i elementu z kierunkiem, czasem, opóźnieniem i krzywą, efekty tekstu, pętle uwagi, „po warstwie” przy wejściu → `node.motion`, §4.4a; stop point po wejściu, długość = stop + wyjście), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
 - Ściskanie: warstwa z `squash` → `textFit: squeeze` z granicą `minSquash` (0 i brak granicy → bez granicy, w VizRS 0,3 – jak migracja BTB `upgrade-minsquash`); BADGE (BTB ściska wg długości, min. 50%) → ściskanie do wnętrza tła z granicą 0,5; tekst z auto-szerokością (`autoW`) → `squeeze` w szerokości `maxW` z granicą 0,5.
 - Warstwy tekstu bez pola (w BTB edytowane w WYSIWYG) dostają pola `tekst1`, `tekst2`… (etykiety „Tekst 1”, „Tekst 2”), a przy wyrównaniu do lewej szerokość do krawędzi tła.
-- Nieprzenoszone (ostrzeżenia): maski warstw, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, poświata `glow` tekstu, „po warstwie” przy wyjściu (start równoczesny). Typ ruchu spoza listy → `fallback` z BTB albo przenikanie. Skala/obrót całego elementu działają względem środka grupy (w BTB – lewego górnego rogu).
+- Ruch całego elementu jak w BTB: punkt odniesienia w lewym górnym rogu (`motion.origin`), a przy skali layoutu ≠ 1 ruch w wewnętrznej grupie „ruch elementu” (przesunięcia skalowane jak `.cg-scene` w BTB). Efekty tła kształtów (`shimmer`, `pulse`, `glow`, `scanline`) → `motion.bg`. Efekt tekstu bez czasu/opóźnienia dostaje domyślne BTB (IN 1 s po 0,2 s, OUT 0,5 s).
+- Nieprzenoszone (ostrzeżenia): maski warstw, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, „po warstwie” przy wyjściu (start równoczesny). Typ ruchu spoza listy → `fallback` z BTB albo przenikanie.
+- Zgodność sprawdza `tests/e2e/btb-visual.js` (stan po wejściu), z `--frames` także klatki 25/50/75% wejścia przy wspólnym zegarze obu stron.
 - Paczka wzorców: [examples/BTB_CG](../examples/BTB_CG/README.md) – 31 elementów, strony 8001–8402, warstwy `main`/`badge`/`ticker`/`clock`/`logo`.
 
 ## 13. Uruchamianie, opcje, bezpieczeństwo
@@ -534,7 +538,7 @@ node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (ekspo
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja
 node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
-node tests/e2e/btb-visual.js target/release/vizrs <katalog>  # porównanie z BTB CG
+node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porównanie z BTB CG (--frames: klatki wejścia)
 ```
 
 | Narzędzie | Do czego |

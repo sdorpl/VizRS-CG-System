@@ -57,7 +57,8 @@ const FX = path.join(__dirname, '../fixtures/btb');
   check('ruch: efekt tekstu (alias blurIn → blur) z odstępem i kolejnością', rb.motion.textIn.type === 'blur' && rb.motion.textIn.stagger === 0.05 && rb.motion.textIn.from === 'center' && rb.motion.textOut.type === 'words-up', rb.motion);
   check('ruch: „po warstwie” → motion.after', rb.motion.after === 'a', rb.motion);
   check('ruch: pętla elementu z siłą', rich.scene.nodes[0].motion.loop.type === 'pulse' && rich.scene.nodes[0].motion.loop.amp === 6, rich.scene.nodes[0].motion);
-  check('ruch: stop po sekwencji (0,5 + max(0,2; 0,4)) i długość z wyjściem tekstu', Math.abs(rich.scene.stops[0] - 0.9) < 1e-6 && rich.scene.duration > rich.scene.stops[0] + 0.3, [rich.scene.stops, rich.scene.duration]);
+  check('ruch: efekt tekstu bez opóźnienia – domyślne 0,2 s jak w cgmotion', rb.motion.textIn.delay === 0.2 && !rb.motion.textOut.delay, rb.motion);
+  check('ruch: stop po sekwencji (0,5 + max(0,2; 0,2 + 0,4)) i długość z wyjściem tekstu', Math.abs(rich.scene.stops[0] - 1.1) < 1e-6 && rich.scene.duration > rich.scene.stops[0] + 0.3, [rich.scene.stops, rich.scene.duration]);
 
   const tk = io.convertElement((await load('ticker_pelny.json')).elements[0]);
   const tn = tk.scene.nodes[0].children.find((c) => c.type === 'ticker');

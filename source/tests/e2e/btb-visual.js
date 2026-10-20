@@ -3,6 +3,8 @@
 // Wynik: strona VizRS po TAKE na /output. Oba zrzuty w stanie po wejściu (stop point), to samo tło i ta sama godzina.
 // Różnica = piksele różniące się o > 60/255 (suma RGB) względem pikseli z treścią; tickery w ruchu oceniane łagodniej.
 // Test lokalny (jak golden.js): wymaga BTB CG System (BTB_CG_DIR) z node_modules (playwright, gsap, handlebars).
+// --frames: dodatkowo klatki w trakcie wejścia (25%, 50%, 75% czasu do stop pointu) – zegar obu stron zatrzymany i przesuwany razem,
+//           więc GSAP w BTB i renderer VizRS pokazują tę samą chwilę; próg łagodniejszy (ruch = krawędzie w innym miejscu o ułamek px).
 const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
@@ -11,12 +13,13 @@ const path = require('path');
 const BTB = path.resolve(process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'));
 const SRC = path.resolve(process.env.BTB_ELEMENTS || path.join(os.homedir(), 'Nextcloud/GitHub/btb-cgeditor/CG elements converted'));
 const PACK = path.resolve(__dirname, '../../../examples/BTB_CG');
-const args = process.argv.slice(2);
+const FRAMES = process.argv.includes('--frames');
+const args = process.argv.slice(2).filter((a) => a !== '--frames');
 const BIN = path.resolve(args[0] || path.join(__dirname, '../../target/release/vizrs'));
 const SHOTS = args[1] ? path.resolve(args[1]) : null;
 const BG = '#303036';
 const NOW = new Date('2026-10-19T12:34:56');
-const LIMIT = 0.12, LIMIT_MOVING = 0.6;
+const LIMIT = 0.12, LIMIT_MOVING = 0.6, LIMIT_FRAME = 0.25;
 // znane różnice sprawdzone na zestawieniach – wyższy próg z uzasadnieniem (plik → [próg, powód])
 const KNOWN = {
   'MIASTO_prawa_—_Warszawa_(odzyskana).json': [0.2, 'BADGE: BTB ściska tekst wg długości (0,50), VizRS do szerokości tła (0,51) – ten sam napis, litery przesunięte o ułamki px'],
@@ -49,7 +52,7 @@ const MIME = { js: 'text/javascript', css: 'text/css', ttf: 'font/ttf', woff2: '
 
     // --- BTB: strona z rendererem wyjścia, pliki serwowane z katalogu BTB CG
     const btb = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-    await btb.clock.setFixedTime(NOW);
+    if (FRAMES) await btb.clock.install({ time: NOW }); else await btb.clock.setFixedTime(NOW);
     btb.on('pageerror', (e) => console.log('  [BTB pageerror]', String(e.message).slice(0, 160)));
     await btb.route('http://btb.test/**', (route) => {
       const rel = decodeURIComponent(new URL(route.request().url()).pathname).replace(/^\/+/, '');
@@ -67,27 +70,12 @@ const MIME = { js: 'text/javascript', css: 'text/css', ttf: 'font/ttf', woff2: '
 
     // --- VizRS: wyjście
     const viz = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-    await viz.clock.setFixedTime(NOW);
+    if (FRAMES) await viz.clock.install({ time: NOW }); else await viz.clock.setFixedTime(NOW);
     viz.on('pageerror', (e) => console.log('  [VizRS pageerror]', String(e.message).slice(0, 160)));
     await viz.goto(`${V}/output?bg=${encodeURIComponent(BG)}`);
     await sleep(600);
 
-    for (const r of report) {
-      const scene = show.scenes.find((s) => s.id === r.scene);
-      const wait = Math.round(((scene.stops[0] ?? scene.duration) + 1.2) * 1000);
-      const buf = fs.readFileSync(path.join(SRC, r.file));
-      const { elements } = await io.readBtb(/\.cgpack$/i.test(r.file) ? new Uint8Array(buf) : buf.toString('utf8'), r.file);
-      const el = { ...elements[0], visible: true };
-
-      await btb.evaluate((el) => { const st = document.getElementById('stage'); window.__cgRenderer.renderPreview(st, [], {}, {}); st.innerHTML = ''; window.__cgRenderer.renderPreview(st, [el], {}, {}); }, el);
-      await fetch(V + '/api/clear', { method: 'POST' });
-      await sleep(200);
-      await fetch(`${V}/api/take/${r.page}`, { method: 'POST' });
-      await sleep(wait);
-      await btb.evaluate(() => document.fonts.ready);
-      const [a, b] = await Promise.all([btb.screenshot(), viz.screenshot()]);
-      const moving = r.type === 'TICKER';
-      const res = await viz.evaluate(async ([a, b, bg, save]) => {
+    const compareFn = async ([a, b, bg, save, label]) => {
         const load = (s) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = 'data:image/png;base64,' + s; });
         const [ia, ib] = await Promise.all([load(a), load(b)]);
         const W = 1920, H = 1080;
@@ -110,7 +98,7 @@ const MIME = { js: 'text/javascript', css: 'text/css', ttf: 'font/ttf', woff2: '
           const c = new OffscreenCanvas(w, (h + lab) * 3); const x = c.getContext('2d');
           x.fillStyle = '#111'; x.fillRect(0, 0, c.width, c.height);
           x.font = 'bold 18px sans-serif'; x.fillStyle = '#fff';
-          x.fillText('BTB CG (oryginał)', 6, 19); x.drawImage(ia, x0, y0, w, h, 0, lab, w, h);
+          x.fillText('BTB CG (oryginał) – ' + label, 6, 19); x.drawImage(ia, x0, y0, w, h, 0, lab, w, h);
           x.fillText('VizRS (konwersja)', 6, h + lab + 19); x.drawImage(ib, x0, y0, w, h, 0, h + 2 * lab, w, h);
           x.fillText('różnice', 6, 2 * h + 2 * lab + 19);
           x.globalAlpha = 0.35; x.drawImage(ia, x0, y0, w, h, 0, 2 * h + 3 * lab, w, h); x.globalAlpha = 1;
@@ -122,7 +110,51 @@ const MIME = { js: 'text/javascript', css: 'text/css', ttf: 'font/ttf', woff2: '
           sheet = btoa(s);
         }
         return { ratio: content ? n / content : n ? 1 : 0, content, sheet };
-      }, [a.toString('base64'), b.toString('base64'), BG, !!SHOTS]);
+};
+    const compare = (a, b, save, label) => viz.evaluate(compareFn, [a.toString('base64'), b.toString('base64'), BG, save, label]);
+    let clockT = 0; // przesunięcie zegara (ms) w trybie --frames
+    for (const r of report) {
+      const scene = show.scenes.find((s) => s.id === r.scene);
+      const wait = Math.round(((scene.stops[0] ?? scene.duration) + 1.2) * 1000);
+      const buf = fs.readFileSync(path.join(SRC, r.file));
+      const { elements } = await io.readBtb(/\.cgpack$/i.test(r.file) ? new Uint8Array(buf) : buf.toString('utf8'), r.file);
+      const el = { ...elements[0], visible: true };
+
+      if (FRAMES) {
+        // zegar stoi: wyczyść, wystartuj obie strony w tej samej chwili, potem przesuwaj zegar razem
+        await fetch(V + '/api/clear', { method: 'POST' });
+        await sleep(150);
+        clockT += 60000;
+        await Promise.all([btb.clock.pauseAt(new Date(NOW.getTime() + clockT)), viz.clock.pauseAt(new Date(NOW.getTime() + clockT))]);
+        await fetch(`${V}/api/take/${r.page}`, { method: 'POST' });
+        for (let i = 0; i < 60 && !(await viz.evaluate(() => !!document.querySelector('.vz-scene'))); i++) await sleep(50);
+        await btb.evaluate((el) => { const st = document.getElementById('stage'); window.__cgRenderer.renderPreview(st, [], {}, {}); st.innerHTML = ''; window.__cgRenderer.renderPreview(st, [el], {}, {}); }, el);
+        const stopMs = Math.round((scene.stops[0] ?? scene.duration) * 1000);
+        let at = 0;
+        for (const f of [0.25, 0.5, 0.75]) {
+          const target = Math.round(stopMs * f);
+          await Promise.all([btb.clock.runFor(target - at), viz.clock.runFor(target - at)]);
+          at = target;
+          const [fa, fb] = await Promise.all([btb.screenshot(), viz.screenshot()]);
+          const fr = await compare(fa, fb, !!SHOTS, `${Math.round(f * 100)}% wejścia (${(target / 1000).toFixed(2)} s)`);
+          const ok = r.type === 'TICKER' || fr.ratio <= LIMIT_FRAME;
+          if (!ok) failures++;
+          if (SHOTS && fr.sheet) fs.writeFileSync(path.join(SHOTS, `${r.page}_${r.scene}_f${Math.round(f * 100)}.png`), Buffer.from(fr.sheet, 'base64'));
+          console.log(`  ${ok ? 'pass' : 'FAIL'} ${r.page} klatka ${Math.round(f * 100)}%: różnica ${(fr.ratio * 100).toFixed(1)}%`);
+        }
+        await Promise.all([btb.clock.runFor(wait - at), viz.clock.runFor(wait - at)]);
+        clockT += wait;
+      } else {
+        await btb.evaluate((el) => { const st = document.getElementById('stage'); window.__cgRenderer.renderPreview(st, [], {}, {}); st.innerHTML = ''; window.__cgRenderer.renderPreview(st, [el], {}, {}); }, el);
+        await fetch(V + '/api/clear', { method: 'POST' });
+        await sleep(200);
+        await fetch(`${V}/api/take/${r.page}`, { method: 'POST' });
+        await sleep(wait);
+      }
+      await btb.evaluate(() => document.fonts.ready);
+      const [a, b] = await Promise.all([btb.screenshot(), viz.screenshot()]);
+      const moving = r.type === 'TICKER';
+      const res = await compare(a, b, !!SHOTS, 'po wejściu');
       const known = KNOWN[r.file];
       const good = res.content > 0 && res.ratio <= (known ? known[0] : moving ? LIMIT_MOVING : LIMIT);
       if (!good) failures++;

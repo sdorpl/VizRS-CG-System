@@ -7,7 +7,9 @@
 //     textIn:  { type, dur, delay, stagger, from },      // efekt tekstu przy wejściu (od początku sceny)
 //     textOut: { type, dur, delay, stagger, from },      // efekt tekstu przy wyjściu (od ostatniego stopu)
 //     loop:    { type, dur, amp, color },                 // pętla uwagi – gra na wizji, gdy grafika stoi (zegar ścienny)
-//     after:   'id węzła'                                 // sekwencja: wejście zaczyna się po wejściu wskazanego węzła
+//     after:   'id węzła',                                // sekwencja: wejście zaczyna się po wejściu wskazanego węzła
+//     origin:  [x, y],                                    // punkt odniesienia skali/obrotu (ułamki pola), gdy preset go nie ustala
+//     bg:      'shimmer' | 'pulse' | 'glow' | 'scanline'  // stały efekt tła kształtu (gra cały czas, jak w BTB)
 //   }
 // Semantyka jak w BTB CG (`cgmotion.js`, btb-cgeditor `src/anim.rs`): źródła ruchu składają się z kluczami –
 // przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą.
@@ -298,8 +300,8 @@ function staggerOrder(from, i, n) {
   if (from === 'edges') return Math.max(0, last / 2 - Math.abs(i - last / 2));
   return i;
 }
-/** Neutralny stan jednostki tekstu: revealX/revealY = widoczna część (1 = całość), clipY = przesunięcie w masce (0..1 wysokości). */
-export const unitIdentity = () => ({ opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, revealX: 1, revealY: 1, clipY: 0, hidden: false });
+/** Neutralny stan jednostki tekstu: `clip` = przycięcie [góra, prawo, dół, lewo] w ułamkach (jak `clip-path: inset()` w cgmotion). */
+export const unitIdentity = () => ({ opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null, hidden: false });
 
 function unitProgress(spec, i, n, t) {
   const split = splitOf(spec.type);
@@ -309,57 +311,63 @@ function unitProgress(spec, i, n, t) {
   const dur = specDur(spec);
   return dur <= 0 ? (local >= 0 ? 1 : 0) : clamp01(local / dur);
 }
-/** Stan jednostki i z n przy efekcie IN; t = s od startu efektu (po opóźnieniu może być ujemne). */
+/** Efekty „treściowe” (szyfrowanie, maszyna z kursorem): znak i jest gotowy, gdy i < ⌊postęp × n⌋ całego tekstu (jak w cgmotion). */
+function contentDone(spec, i, n, t) {
+  const dur = specDur(spec);
+  const p = ease(spec.ease || 'power2.out', dur <= 0 ? (t >= 0 ? 1 : 0) : clamp01(t / dur));
+  return i < Math.floor(p * n) || p >= 1;
+}
+/** Stan jednostki i z n przy efekcie IN; t = s od startu efektu (po opóźnieniu może być ujemne). Wartości jak `applyTextEffect` w cgmotion. */
 export function textInFx(spec, i, n, t) {
   const fx = unitIdentity(), type = spec.type;
   const p = unitProgress(spec, i, n, t), m = ease(spec.ease || 'power2.out', p);
   const variant = type.split('-')[1] || '';
   switch (type) {
-    case 'reveal': case 'typewriter': fx.revealX = m; break;
-    case 'typewriter-caret': fx.hidden = p <= 0; break;
-    case 'clip-up': fx.clipY = 1 - m; break;
+    case 'reveal': case 'typewriter': fx.clip = [0, 1 - m, 0, 0]; break;
+    case 'typewriter-caret': fx.hidden = !contentDone(spec, i, n, t); break;
+    case 'clip-up': fx.clip = [1 - m, 0, 0, 0]; break;
     case 'fade': fx.opacity = m; break;
-    case 'blur': fx.opacity = m; fx.blur = 10 * (1 - m); break;
+    case 'blur': fx.opacity = m; fx.blur = 20 * (1 - m); break;
     case 'scale': fx.opacity = m; fx.scale = 0.5 + 0.5 * m; break;
     case 'slide-up': fx.opacity = m; fx.dy = 50 * (1 - m); break;
     case 'slide-down': fx.opacity = m; fx.dy = -50 * (1 - m); break;
     case 'slide-left': fx.opacity = m; fx.dx = 50 * (1 - m); break;
     case 'slide-right': fx.opacity = m; fx.dx = -50 * (1 - m); break;
-    case 'scramble': fx.scramble = p < 1; break;
-    case 'counter': fx.count = m; break;
+    case 'scramble': fx.scramble = !contentDone(spec, i, n, t); break;
+    case 'counter': fx.count = ease(spec.ease || 'power2.out', specDur(spec) <= 0 ? 1 : clamp01(t / specDur(spec))); break;
     default:
       if (splitOf(type) === 'whole') break;
       if (variant === 'up') { fx.opacity = m; fx.dy = 40 * (1 - m); }
       else if (variant === 'down') { fx.opacity = m; fx.dy = -40 * (1 - m); }
       else if (variant === 'scale') { fx.opacity = m; fx.scale = 0.3 + 0.7 * m; }
-      else if (variant === 'clip') fx.clipY = 1 - m;
-      else if (variant === 'blur') { fx.opacity = m; fx.blur = 8 * (1 - m); }
+      else if (variant === 'clip') fx.clip = [1 - m, 0, 0, 0];
+      else if (variant === 'blur') { fx.opacity = m; fx.blur = 14 * (1 - m); }
       else fx.opacity = m;
   }
   return fx;
 }
-/** Stan jednostki przy efekcie OUT; t = s od startu efektu. */
+/** Stan jednostki przy efekcie OUT; t = s od startu efektu. Wartości jak `applyTextOutEffect` w cgmotion. */
 export function textOutFx(spec, i, n, t) {
   const fx = unitIdentity(), type = spec.type;
   const p = unitProgress(spec, i, n, t), m = ease(spec.ease || 'power2.in', p);
   const variant = type.split('-')[1] || '';
   switch (type) {
     case 'fade': fx.opacity = 1 - m; break;
-    case 'blur': fx.opacity = 1 - m; fx.blur = 10 * m; break;
+    case 'blur': fx.opacity = 1 - m; fx.blur = 20 * m; break;
     case 'scale': fx.opacity = 1 - m; fx.scale = 1 - 0.5 * m; break;
-    case 'hide': fx.revealX = 1 - m; break;
+    case 'hide': fx.clip = [0, 0, 0, m]; break;
     case 'slide-up': fx.opacity = 1 - m; fx.dy = -50 * m; break;
     case 'slide-down': fx.opacity = 1 - m; fx.dy = 50 * m; break;
     case 'slide-left': fx.opacity = 1 - m; fx.dx = -50 * m; break;
     case 'slide-right': fx.opacity = 1 - m; fx.dx = 50 * m; break;
-    case 'clip-down': fx.clipY = m; break;
+    case 'clip-down': fx.clip = [m, 0, 0, 0]; break;
     default:
       if (splitOf(type) === 'whole') break;
       if (variant === 'up') { fx.opacity = 1 - m; fx.dy = -40 * m; }
       else if (variant === 'down') { fx.opacity = 1 - m; fx.dy = 40 * m; }
       else if (variant === 'scale') { fx.opacity = 1 - m; fx.scale = 1 - 0.7 * m; }
-      else if (variant === 'clip') fx.clipY = -m;
-      else if (variant === 'blur') { fx.opacity = 1 - m; fx.blur = 8 * m; }
+      else if (variant === 'clip') fx.clip = [0, 0, m, 0];
+      else if (variant === 'blur') { fx.opacity = 1 - m; fx.blur = 14 * m; }
       else fx.opacity = 1 - m;
   }
   return fx;
@@ -525,4 +533,25 @@ export function motionToKeys(m, { rest, outStart, shift = 0 }) {
     for (let i = tr.length - 2; i >= 0; i--) if (Math.abs(tr[i + 1].t - tr[i].t) < 0.0005) tr.splice(i, 1);
   }
   return { anim, done, skipped };
+}
+
+// ---------------------------------------------------------------- stałe efekty tła kształtu (BTB `layer.effect`: shimmer, pulse, glow, scanline)
+export const BG_TYPES = ['none', 'shimmer', 'pulse', 'glow', 'scanline'];
+export const BG_LABELS = { none: 'brak', shimmer: 'połysk tła (ciągły)', pulse: 'pulsowanie krycia', glow: 'świecenie (cień w kolorze)', scanline: 'linie skanowania' };
+const CSS_EASE_FN = 'cubic-bezier(0.25,0.1,0.25,1)', CSS_EASE_IO = 'cubic-bezier(0.42,0,0.58,1)';
+/** Klatka kluczowa CSS 0% → 50% → 100% z krzywą ease-in-out (jak `animation: … ease-in-out infinite`). */
+const yoyoCss = (t, d) => { const ph = (t % d) / d; return ph < 0.5 ? ease(CSS_EASE_IO, ph * 2) : 1 - ease(CSS_EASE_IO, (ph - 0.5) * 2); };
+/**
+ * Stan efektu tła w chwili t (s od wejścia na wizję; gra cały czas, także w trakcie IN/OUT – jak animacja CSS w BTB).
+ * Zwraca { opacity (mnożnik), glow (px rozmycia cienia lub 0), shimmer (pozycja lewej krawędzi w % lub null), scan (przesunięcie px lub null) }.
+ */
+export function bgState(type, t, baseOpacity = 1) {
+  const o = { opacity: 1, glow: 0, shimmer: null, scan: null };
+  switch (type) {
+    case 'shimmer': { const ph = (t % 3) / 3; o.shimmer = ph < 0.6 ? -120 + 280 * ease(CSS_EASE_FN, ph / 0.6) : 160; break; }
+    case 'pulse': { const op = baseOpacity || 1, lo = Math.max(0.35, op * 0.55); o.opacity = (op + (lo - op) * yoyoCss(t, 1.6)) / op; break; }
+    case 'glow': o.glow = 6 + 20 * yoyoCss(t, 2); break;
+    case 'scanline': o.scan = ((t % 1) / 1) * 3; break;
+  }
+  return o;
 }

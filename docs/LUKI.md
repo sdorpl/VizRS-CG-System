@@ -16,7 +16,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 |---|---|---|
 | 6 | `OUT` zdejmuje warstwę w silniku od razu; animację OUT gra tylko klient | kolejny TAKE w czasie OUT może ją ściąć |
 | 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | BTB ma osie i krawędzie (`layout.dock`) |
-| 8 | Konwerter BTB: maski warstw, `layout.dock`, auto-szerokość `follow`, „po warstwie” przy wyjściu → ostrzeżenia, nie przenoszone; skala elementu względem środka (BTB: lewy górny róg) | ruch (presety, efekty tekstu, pętle) przenoszony 1:1 do `node.motion` |
+| 8 | Konwerter BTB: maski warstw, `layout.dock`, auto-szerokość `follow`, „po warstwie” przy wyjściu → ostrzeżenia, nie przenoszone | ruch, efekty tekstu, pętle i efekty tła przenoszone 1:1; zgodność klatek wejścia z BTB sprawdza `btb-visual.js --frames` |
 | 10 | Pisownia: natywna przeglądarki (lang=pl); brak własnego słownika (sjp.pl/Hunspell) | w CEF (OBS dock) zależy od przeglądarki |
 | 11 | Znaczniki tekstu: rozmiar `{sz=}` w % (BTB używa px) – przy imporcie z BTB pomijany | |
 

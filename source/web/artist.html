@@ -457,6 +457,10 @@ function motionForm(n) {
   if (lpOn) h += `<div class="sub"><label>okres s${numIn('loop.dur', lp.dur, 'auto')}</label><label>siła${numIn('loop.amp', lp.amp, 'auto', 0.5)}</label>
     <label>kolor<input data-mo="loop.color" value="${esc(lp.color || '')}" placeholder="auto" ${['glow', 'shine', 'underline-sweep'].includes(lp.type) ? '' : 'disabled'}></label></div>`;
   h += '</div>';
+  if (n.type === 'rect' || n.type === 'ellipse') h += `<div class="mo"><label title="Stały efekt tła (jak „efekt” kształtu w BTB) – gra cały czas, także w trakcie wejścia">efekt tła</label><select data-mobg style="grid-column:2/4">${opt(MO.BG_TYPES, m.bg || 'none', (x) => MO.BG_LABELS[x])}</select></div>`;
+  const ORG = { '': 'środek', '0,0': 'lewy górny róg', '0.5,0': 'góra', '1,0': 'prawy górny róg', '0,0.5': 'lewa krawędź', '1,0.5': 'prawa krawędź', '0,1': 'lewy dolny róg', '0.5,1': 'dół', '1,1': 'prawy dolny róg' };
+  const org = Array.isArray(m.origin) ? m.origin.join(',') : '';
+  h += `<div class="mo"><label title="Punkt odniesienia skali i obrotu ruchu (presety przesłon, obrotu i odwróceń mają własny)">punkt ruchu</label><select data-moorg style="grid-column:2/4">${Object.entries(ORG).map(([k, v]) => `<option value="${k}" ${k === org ? 'selected' : ''}>${v}</option>`).join('')}${org && !ORG[org] ? `<option value="${org}" selected>${org}</option>` : ''}</select></div>`;
   const others = []; walk(scene.nodes, (x) => { if (x.id !== n.id) others.push(x); });
   h += `<div class="mo"><label title="Sekwencja: wejście zaczyna się, gdy skończy się wejście wskazanego węzła">po węźle</label><select data-moafter style="grid-column:2/4"><option value="">— od początku sceny —</option>${others.map((x) => `<option value="${esc(x.id)}" ${m.after === x.id ? 'selected' : ''}>${esc(x.name || x.id)}</option>`).join('')}</select></div>`;
   const hasOut = m.out?.type || (m.textOut?.type && m.textOut.type !== 'none');
@@ -830,6 +834,14 @@ function onPropInput(e) {
   const inp = e.target;
   if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') { pendingCP = true; return; }
   const n = selNode();
+  if (n && (inp.dataset.mobg !== undefined || inp.dataset.moorg !== undefined)) {
+    if (e.type !== 'change') return;
+    checkpoint();
+    const key = inp.dataset.mobg !== undefined ? 'bg' : 'origin';
+    const v = key === 'bg' ? (inp.value === 'none' ? '' : inp.value) : inp.value ? inp.value.split(',').map(Number) : '';
+    if (v) (n.motion ||= {})[key] = v; else if (n.motion) { delete n.motion[key]; if (!Object.keys(n.motion).length) delete n.motion; }
+    refresh(); renderTimeline(); return;
+  }
   if (n && inp.dataset.moafter !== undefined) {
     if (e.type !== 'change') return;
     checkpoint();

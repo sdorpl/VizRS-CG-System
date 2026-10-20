@@ -59,14 +59,14 @@ const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
   for (const type of MO.TEXT_IN.filter((x) => x !== 'none')) {
     const s = { type, dur: 0.5 };
     const end = MO.textInFx(s, 0, 5, 5), start = MO.textInFx(s, 0, 5, -0.01);
-    ok(near(end.opacity, 1) && near(end.dx, 0) && near(end.dy, 0) && near(end.scale, 1) && near(end.revealX, 1) && near(end.clipY, 0) && !end.hidden && !end.scramble, `tekst IN ${type}: koniec neutralny`, end);
-    ok(start.opacity < 0.01 || start.revealX < 0.01 || Math.abs(start.clipY) > 0.99 || start.hidden || start.scramble || start.count === 0, `tekst IN ${type}: początek ukryty`, start);
+    ok(near(end.opacity, 1) && near(end.dx, 0) && near(end.dy, 0) && near(end.scale, 1) && (!end.clip || end.clip.every((v) => near(v, 0))) && !end.hidden && !end.scramble, `tekst IN ${type}: koniec neutralny`, end);
+    ok(start.opacity < 0.01 || (start.clip && start.clip.some((v) => v > 0.99)) || start.hidden || start.scramble || start.count === 0, `tekst IN ${type}: początek ukryty`, start);
   }
   for (const type of MO.TEXT_OUT.filter((x) => x !== 'none')) {
     const s = { type, dur: 0.5 };
     const st = MO.textOutFx(s, 0, 5, 0), end = MO.textOutFx(s, 4, 5, 9);
-    ok(near(st.opacity, 1) && near(st.dy, 0) && near(st.revealX, 1) && near(st.clipY, 0), `tekst OUT ${type}: początek neutralny`, st);
-    ok(end.opacity < 0.01 || end.revealX < 0.01 || Math.abs(end.clipY) > 0.99, `tekst OUT ${type}: koniec ukryty`, end);
+    ok(near(st.opacity, 1) && near(st.dy, 0) && (!st.clip || st.clip.every((v) => near(v, 0))), `tekst OUT ${type}: początek neutralny`, st);
+    ok(end.opacity < 0.01 || (end.clip && end.clip.some((v) => v > 0.99)), `tekst OUT ${type}: koniec ukryty`, end);
   }
   ok(MO.splitOf('chars-up') === 'chars' && MO.splitOf('words-fade') === 'words' && MO.splitOf('lines-clip') === 'lines' && MO.splitOf('fade') === 'whole' && MO.splitOf('scramble') === 'chars', 'podział jednostek');
   const st3 = { type: 'words-up', dur: 0.5, stagger: 0.1 };
@@ -77,6 +77,11 @@ const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
   ok(MO.counterText('bez liczb', 0.3) === 'bez liczb', 'licznik: tekst bez liczb bez zmian');
   ok(MO.textUnits('Ala ma {b}kota', 'words') === 3 && MO.textUnits('Ala ma', 'chars') === 5 && MO.textUnits('a\nb\n', 'lines') === 2, 'liczba jednostek tekstu');
   ok(near(MO.inEnd({ textIn: { type: 'words-up', dur: 0.5 } }, 0, 'Ala ma kota'), 0.5 + 0.18) && near(MO.outLen({ textOut: { type: 'fade', dur: 0.4 } }, 'x'), 0.4), 'czas efektu tekstu z odstępami');
+  ok(MO.textInFx({ type: 'clip-up', dur: 1, ease: 'linear' }, 0, 1, 0.25).clip.join() === '0.75,0,0,0', 'clip-up: przycięcie od góry jak w cgmotion (bez ruchu)');
+  ok(MO.textOutFx({ type: 'hide', dur: 1, ease: 'linear' }, 0, 1, 0.5).clip.join() === '0,0,0,0.5', 'hide: przycięcie od lewej');
+  ok(near(MO.textInFx({ type: 'blur', dur: 1, ease: 'linear' }, 0, 1, 0).blur, 20) && near(MO.textInFx({ type: 'words-blur', dur: 1, ease: 'linear' }, 0, 3, 0).blur, 14), 'rozmycie 20 px (całość) i 14 px (jednostki)');
+  const scr = { type: 'scramble', dur: 1, ease: 'linear' };
+  ok(!MO.textInFx(scr, 3, 10, 0.5).scramble && MO.textInFx(scr, 5, 10, 0.5).scramble, 'szyfrowanie: znaki gotowe wg postępu całego tekstu');
   ok(MO.scrambleChar(3, 1.0) === MO.scrambleChar(3, 1.01), 'szyfrowanie deterministyczne w kadrze');
 
   // pętle

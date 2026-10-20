@@ -32,10 +32,13 @@ Warianty o tej samej nazwie (4 × „Belka - PILNE”) mają w nazwie dopisek z 
 ```bash
 cd source
 node tools/build-btb-pack.mjs                                   # odbudowa paczki ze wzorców
-node tests/e2e/btb-visual.js target/release/vizrs /tmp/zrzuty   # porównanie z BTB CG + zestawienia PNG
+node tests/e2e/btb-visual.js target/release/vizrs /tmp/zrzuty [--frames]   # porównanie z BTB CG + zestawienia PNG
 ```
 
-Wynik: 31/31 zgodnych (stan po wejściu, to samo tło i godzina). Większość belek i plakietek różni się o 0–3% pikseli,
+Wynik: 31/31 zgodnych (stan po wejściu, to samo tło i godzina). Z `--frames` test porównuje też klatki 25/50/75% wejścia
+(zegar obu stron zatrzymany i przesuwany razem) – 31/31 zgodnych.
+
+Ruch jest zapisany jako `node.motion` (presety BTB 1:1, efekty tekstu, pętle, efekty tła) – w Artist w grupie **Ruch** i w trybie **≣ Sekwencja**. Większość belek i plakietek różni się o 0–3% pikseli,
 reszta to przesunięcia krawędzi tekstu o 1–2 px (zaokrąglenia silników).
 
 ## Znane różnice

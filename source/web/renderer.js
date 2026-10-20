@@ -1031,10 +1031,8 @@ export class ScenePlayer {
       if (!fx.hidden) lastVis = i;
       let tf = '';
       if (fx.dx || fx.dy) tf += `translate(${fx.dx}px, ${fx.dy}px) `;
-      if (fx.clipY) tf += `translateY(${fx.clipY * 100}%) `;
       if (fx.scale !== 1) tf += `scale(${fx.scale}) `;
-      const clip = fx.clipY ? `inset(${-fx.clipY * 100}% -30% ${fx.clipY * 100}% -30%)`
-        : fx.revealX < 1 ? `inset(-30% ${(1 - fx.revealX) * 100}% -30% 0)` : fx.revealY < 1 ? `inset(${(1 - fx.revealY) * 100}% -30% 0 -30%)` : '';
+      const clip = fx.clip ? `inset(${fx.clip.map((v) => +(v * 100).toFixed(3) + '%').join(' ')})` : '';
       const css = [fx.opacity, tf, clip, fx.blur, fx.hidden].join('|');
       for (const e of u.els) {
         if (u.css !== css) {
@@ -1157,6 +1155,29 @@ export class ScenePlayer {
       }
     } else if (it.loopEl) { it.loopEl.wrap.remove(); it.loopEl = null; }
     return out;
+  }
+
+  /** Stały efekt tła kształtu (motion.bg, jak `layer.effect` w BTB): gra od wejścia na wizję, także w trakcie IN/OUT. */
+  bgFx(it, type, now, baseOp) {
+    const s = MO.bgState(type, (now - this.wallStart) / 1000, baseOp);
+    if (s.shimmer != null || s.scan != null) {
+      let o = it.bgEl;
+      if (!o || o.type !== type) {
+        o?.wrap.remove();
+        const wrap = document.createElement('div'), bar = document.createElement('div');
+        wrap.className = 'vz-bgfx';
+        wrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit';
+        bar.style.cssText = type === 'shimmer'
+          ? 'position:absolute;top:0;width:60%;height:100%;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,0.28),rgba(255,255,255,0));transform:skewX(-20deg)'
+          : 'position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,0.18) 0 1px,transparent 1px 3px)';
+        wrap.appendChild(bar);
+        o = it.bgEl = { type, wrap, bar };
+      }
+      if (o.wrap.parentNode !== it.el) it.el.insertBefore(o.wrap, it.el.firstChild);
+      if (s.shimmer != null) o.bar.style.left = s.shimmer + '%';
+      else o.bar.style.backgroundPosition = `0 ${s.scan}px`;
+    } else if (it.bgEl) { it.bgEl.wrap.remove(); it.bgEl = null; }
+    return s;
   }
 
   // ---- renderowanie ----
@@ -1350,7 +1371,8 @@ export class ScenePlayer {
       const shift = shifts?.get(it.node.id) || 0;
       const mo = m ? MO.motionAt(m, t, outStart, shift) : null;
       const lp = m?.loop?.type && m.loop.type !== 'none' ? this.loopFx(it, m, t, outStart, shift, now, dt) : null;
-      let op = p('opacity') * (it.cyOp ?? 1) * (mo ? mo.opacity : 1) * (lp ? lp.opacity : 1);
+      const bg = m?.bg && m.bg !== 'none' ? this.bgFx(it, m.bg, now, p('opacity')) : null;
+      let op = p('opacity') * (it.cyOp ?? 1) * (mo ? mo.opacity : 1) * (lp ? lp.opacity : 1) * (bg ? bg.opacity : 1);
       const bl = p('blink');
       if (bl > 0) op *= 0.15 + 0.85 * (0.5 + 0.5 * Math.cos((now / 1000) * 2 * Math.PI / bl));
       st.opacity = op;
@@ -1363,7 +1385,9 @@ export class ScenePlayer {
       if (mo && (mo.flipX || mo.flipY)) tf += `perspective(1200px) rotateX(${mo.flipX}deg) rotateY(${mo.flipY}deg) `;
       if (rot || sx !== 1 || sy !== 1 || sk) tf += `rotate(${rot}deg) scale(${sx}, ${sy}) skewX(${sk}deg)`;
       st.transform = tf.trim();
-      st.transformOrigin = mo?.origin ? `${mo.origin[0] * 100}% ${mo.origin[1] * 100}%` : '50% 50%';
+      const org = mo?.origin || (Array.isArray(m?.origin) ? m.origin : null);
+      st.transformOrigin = org ? `${org[0] * 100}% ${org[1] * 100}%` : '50% 50%';
+      if (bg?.glow) st.boxShadow = [st.boxShadow, `0 0 ${bg.glow.toFixed(2)}px ${p('color')}`].filter(Boolean).join(', ');
       let cl = p('clipL'), cr = p('clipR'), ct = p('clipT'), cb = p('clipB');
       if (mo?.clip) { cl = Math.max(cl, mo.clip[0] * 100); ct = Math.max(ct, mo.clip[1] * 100); cr = Math.max(cr, 100 - mo.clip[2] * 100); cb = Math.max(cb, 100 - mo.clip[3] * 100); }
       if (mo && mo.diag >= 0) {
@@ -1378,6 +1402,7 @@ export class ScenePlayer {
       const shut = mo && mo.shutter < 0.999 ? `repeating-linear-gradient(180deg, #000 0 ${Math.max(0, mo.shutter) * 12.5}%, transparent ${Math.max(0, mo.shutter) * 12.5}% 12.5%)` : '';
       if (it.maskV !== shut) { it.maskV = shut; st.maskImage = shut; st.webkitMaskImage = shut; }
       if (!lp && it.loopEl) { it.loopEl.wrap.remove(); it.loopEl = null; it.loopW = 0; }
+      if (!bg && it.bgEl) { it.bgEl.wrap.remove(); it.bgEl = null; }
       const blr = p('blur') + (mo ? mo.blur : 0);
       let flt = blr > 0 ? `blur(${blr}px)` : '';
       const rgb = mo ? Math.abs(mo.rgb) : 0;

@@ -6,7 +6,7 @@
    "layer": "main",
    "width": 1920,
    "height": 1080,
-   "duration": 0.5,
+   "duration": 0.51,
    "stops": [
     0.5
    ],
@@ -26,7 +26,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {},
      "fields": {},
      "children": [
       {
@@ -44,8 +43,10 @@
         "radius": 10,
         "shadow": 20
        },
-       "anim": {},
-       "fields": {}
+       "fields": {},
+       "motion": {
+        "bg": "glow"
+       }
       },
       {
        "id": "tx2",
@@ -69,24 +70,46 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "none",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "out": {
+         "type": "none",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "none",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "none",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_-_pilne-new-wasm"
@@ -116,40 +139,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -167,8 +156,10 @@
         "radius": 10,
         "shadow": 20
        },
-       "anim": {},
-       "fields": {}
+       "fields": {},
+       "motion": {
+        "bg": "glow"
+       }
       },
       {
        "id": "tx2",
@@ -192,51 +183,46 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "blur": [
-         {
-          "t": 0,
-          "v": 14,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ],
-        "opacity": [
-         {
-          "t": 0,
-          "v": 0,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 1,
-          "e": "out"
-         },
-         {
-          "t": 1,
-          "v": 0
-         }
-        ],
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "blur",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "out": {
+         "type": "fade",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_-_pilne-new"
@@ -266,40 +252,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -317,8 +269,10 @@
         "radius": 10,
         "shadow": 20
        },
-       "anim": {},
-       "fields": {}
+       "fields": {},
+       "motion": {
+        "bg": "glow"
+       }
       },
       {
        "id": "tx2",
@@ -342,51 +296,46 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "blur": [
-         {
-          "t": 0,
-          "v": 14,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ],
-        "opacity": [
-         {
-          "t": 0,
-          "v": 0,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 1,
-          "e": "out"
-         },
-         {
-          "t": 1,
-          "v": 0
-         }
-        ],
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "blur",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "out": {
+         "type": "fade",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_-_pilne"
@@ -416,40 +365,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -467,8 +382,10 @@
         "radius": 10,
         "shadow": 20
        },
-       "anim": {},
-       "fields": {}
+       "fields": {},
+       "motion": {
+        "bg": "glow"
+       }
       },
       {
        "id": "tx2",
@@ -492,51 +409,46 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "blur": [
-         {
-          "t": 0,
-          "v": 14,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ],
-        "opacity": [
-         {
-          "t": 0,
-          "v": 0,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 1,
-          "e": "out"
-         },
-         {
-          "t": 1,
-          "v": 0
-         }
-        ],
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "blur",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "out": {
+         "type": "fade",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "power2.out"
+        },
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_-_pilne_json"
@@ -566,41 +478,6 @@
       "w": 1728,
       "h": 110
      },
-     "anim": {
-      "y": [
-       {
-        "t": 0,
-        "v": 964.8,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 854.8
-       }
-      ],
-      "scale": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -614,7 +491,6 @@
         "h": 110,
         "color": "#7e3e3e"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -639,7 +515,6 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
@@ -658,10 +533,27 @@
         "color2": "#00000000",
         "gradAngle": 90
        },
-       "anim": {},
        "fields": {}
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_exp_18_26_40"
@@ -694,40 +586,6 @@
       "w": 1650,
       "h": 125
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.25,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 0.45,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.25,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 0.45,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -744,7 +602,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -769,7 +626,6 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {},
        "fields": {
         "text": "tekst1"
        }
@@ -797,12 +653,28 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {},
        "fields": {
         "text": "tekst2"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.25,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.2
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_glowna"
@@ -833,88 +705,89 @@
       "h": 58,
       "scale": 1.5
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": -62.95,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 154.05
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
-       "id": "sh1",
-       "type": "rect",
-       "name": "na-zywo-container",
+       "id": "grp_city-bar_ruch",
+       "type": "group",
+       "name": "ruch elementu",
        "props": {
         "x": 0,
         "y": 0,
         "w": 217,
-        "h": 58,
-        "color": "#ffffff",
-        "radius": 4,
-        "follow": "tx2",
-        "followAxis": "w",
-        "followPad": 32,
-        "followMin": 0
+        "h": 58
        },
-       "anim": {},
-       "fields": {}
-      },
-      {
-       "id": "tx2",
-       "type": "text",
-       "name": "TITLE — slt-squash",
-       "props": {
-        "x": 16,
-        "y": 8,
-        "w": 900,
-        "h": 42,
-        "text": "WARSZAWA",
-        "font": "Inter",
-        "size": 30,
-        "weight": "700",
-        "color": "#000000",
-        "upper": true,
-        "align": "left",
-        "valign": "middle",
-        "spacing": 1,
-        "lineHeight": 1.399999976158142,
-        "textFit": "squeeze",
-        "squeezeMin": 0.5
-       },
-       "anim": {
-        "clipT": [
-         {
-          "t": 0.1,
-          "v": 100,
-          "e": "out"
+       "fields": {},
+       "children": [
+        {
+         "id": "sh1",
+         "type": "rect",
+         "name": "na-zywo-container",
+         "props": {
+          "x": 0,
+          "y": 0,
+          "w": 217,
+          "h": 58,
+          "color": "#ffffff",
+          "radius": 4,
+          "follow": "tx2",
+          "followAxis": "w",
+          "followPad": 32,
+          "followMin": 0
          },
-         {
-          "t": 0.5,
-          "v": 0
+         "fields": {}
+        },
+        {
+         "id": "tx2",
+         "type": "text",
+         "name": "TITLE — slt-squash",
+         "props": {
+          "x": 16,
+          "y": 8,
+          "w": 900,
+          "h": 42,
+          "text": "WARSZAWA",
+          "font": "Inter",
+          "size": 30,
+          "weight": "700",
+          "color": "#000000",
+          "upper": true,
+          "align": "left",
+          "valign": "middle",
+          "spacing": 1,
+          "lineHeight": 1.399999976158142,
+          "textFit": "squeeze",
+          "squeezeMin": 0.5
+         },
+         "fields": {
+          "text": "title"
+         },
+         "motion": {
+          "textIn": {
+           "type": "clip-up",
+           "dur": 0.4,
+           "delay": 0.1
+          }
          }
+        }
+       ],
+       "motion": {
+        "in": {
+         "type": "slide",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "ease-out"
+        },
+        "out": {
+         "type": "fade",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "ease-in"
+        },
+        "origin": [
+         0,
+         0
         ]
-       },
-       "fields": {
-        "text": "title"
        }
       }
      ]
@@ -950,40 +823,6 @@
       "w": 1650,
       "h": 125
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1000,7 +839,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1025,21 +863,14 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "tekst1"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       },
       {
@@ -1065,24 +896,34 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "tekst2"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_belka_pilne"
@@ -1108,30 +949,6 @@
       "w": 150,
       "h": 80
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": -54,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 96
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1145,7 +962,6 @@
         "h": 80,
         "color": "#0047ab"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1159,7 +975,6 @@
         "h": 80,
         "color": "#ffffff1a"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1174,10 +989,27 @@
         "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/TV_Republika_logo_2024.svg/200px-TV_Republika_logo_2024.svg.png",
         "fitMode": "contain"
        },
-       "anim": {},
        "fields": {}
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_grafika_-_theme"
@@ -1207,40 +1039,6 @@
       "w": 183,
       "h": 58
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1261,7 +1059,6 @@
         "followPad": 31.7,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1282,7 +1079,6 @@
         "followPad": 31.7,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1307,12 +1103,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_miasto_lewa"
@@ -1342,40 +1155,6 @@
       "w": 1192,
       "h": 58
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1392,7 +1171,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1409,7 +1187,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1434,24 +1211,36 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {
-        "clipT": [
-         {
-          "t": 0.1,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "clip-up",
+         "dur": 0.4,
+         "delay": 0.1
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_miasto_prawa_warszawa_odzyskana"
@@ -1481,40 +1270,6 @@
       "w": 104,
       "h": 58
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1535,7 +1290,6 @@
         "followPad": 32,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1556,7 +1310,6 @@
         "followPad": 32,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1581,12 +1334,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_miasto_prawa"
@@ -1616,35 +1386,6 @@
       "w": 180,
       "h": 51
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1.7,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1665,7 +1406,6 @@
         "followPad": 57.6,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1686,7 +1426,6 @@
         "followPad": 57.6,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1701,7 +1440,6 @@
         "color": "#ffffff",
         "radius": 7
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1726,12 +1464,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_na_zywo_lewa"
@@ -1761,35 +1516,6 @@
       "w": 180,
       "h": 51
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1.7,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1810,7 +1536,6 @@
         "followPad": 57.6,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1831,7 +1556,6 @@
         "followPad": 57.6,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1846,7 +1570,6 @@
         "color": "#ffffff",
         "radius": 7
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1871,12 +1594,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_na_zywo_lewo_dol"
@@ -1906,35 +1646,6 @@
       "w": 180,
       "h": 51
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1.7,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -1955,7 +1666,6 @@
         "followPad": 57.6,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1976,7 +1686,6 @@
         "followPad": 57.6,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -1991,7 +1700,6 @@
         "color": "#ffffff",
         "radius": 7
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2016,12 +1724,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_na_zywo_prawo"
@@ -2054,24 +1779,6 @@
       "w": 1651,
       "h": 42
      },
-     "anim": {
-      "y": [
-       {
-        "t": 0,
-        "v": 1031,
-        "e": "out"
-       },
-       {
-        "t": 0.6,
-        "v": 989,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 1031
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2088,7 +1795,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2115,13 +1821,30 @@
         "labelSize": 30,
         "labelWeight": "900"
        },
-       "anim": {},
        "fields": {
         "text": "items",
         "label": "wiper_text"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_pilne_ocg"
@@ -2152,91 +1875,96 @@
       "h": 58,
       "scale": 1.5
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": -54.8,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 151.2
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
-       "id": "sh1",
-       "type": "rect",
-       "name": "na-zywo-container",
+       "id": "grp_na-zywo-_ruch",
+       "type": "group",
+       "name": "ruch elementu",
        "props": {
         "x": 0,
         "y": 0,
         "w": 206,
-        "h": 58,
-        "color": "#b91c1c",
-        "radius": 4,
-        "follow": "tx3",
-        "followAxis": "w",
-        "followPad": 58,
-        "followMin": 0
+        "h": 58
        },
-       "anim": {},
-       "fields": {}
-      },
-      {
-       "id": "sh2",
-       "type": "rect",
-       "name": "na-zywo-dot",
-       "props": {
-        "x": 16.2,
-        "y": 22,
-        "w": 14,
-        "h": 14,
-        "color": "#ffffff",
-        "radius": 7
-       },
-       "anim": {},
-       "fields": {}
-      },
-      {
-       "id": "tx3",
-       "type": "text",
-       "name": "TITLE — slt-squash",
-       "props": {
-        "x": 42,
-        "y": 8,
-        "w": 900,
-        "h": 42,
-        "text": "NA ŻYWO",
-        "font": "Inter",
-        "size": 30,
-        "weight": "700",
-        "color": "#ffffff",
-        "upper": true,
-        "align": "left",
-        "valign": "middle",
-        "spacing": 1,
-        "lineHeight": 1.399999976158142,
-        "textFit": "squeeze",
-        "squeezeMin": 0.5
-       },
-       "anim": {},
-       "fields": {
-        "text": "title"
+       "fields": {},
+       "children": [
+        {
+         "id": "sh1",
+         "type": "rect",
+         "name": "na-zywo-container",
+         "props": {
+          "x": 0,
+          "y": 0,
+          "w": 206,
+          "h": 58,
+          "color": "#b91c1c",
+          "radius": 4,
+          "follow": "tx3",
+          "followAxis": "w",
+          "followPad": 58,
+          "followMin": 0
+         },
+         "fields": {}
+        },
+        {
+         "id": "sh2",
+         "type": "rect",
+         "name": "na-zywo-dot",
+         "props": {
+          "x": 16.2,
+          "y": 22,
+          "w": 14,
+          "h": 14,
+          "color": "#ffffff",
+          "radius": 7
+         },
+         "fields": {}
+        },
+        {
+         "id": "tx3",
+         "type": "text",
+         "name": "TITLE — slt-squash",
+         "props": {
+          "x": 42,
+          "y": 8,
+          "w": 900,
+          "h": 42,
+          "text": "NA ŻYWO",
+          "font": "Inter",
+          "size": 30,
+          "weight": "700",
+          "color": "#ffffff",
+          "upper": true,
+          "align": "left",
+          "valign": "middle",
+          "spacing": 1,
+          "lineHeight": 1.399999976158142,
+          "textFit": "squeeze",
+          "squeezeMin": 0.5
+         },
+         "fields": {
+          "text": "title"
+         }
+        }
+       ],
+       "motion": {
+        "in": {
+         "type": "slide",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "ease-out"
+        },
+        "out": {
+         "type": "fade",
+         "dir": "left",
+         "dur": 0.5,
+         "ease": "ease-in"
+        },
+        "origin": [
+         0,
+         0
+        ]
        }
       }
      ]
@@ -2265,24 +1993,6 @@
       "w": 50,
       "h": 22
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": 1745,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1695,
-        "e": "in"
-       },
-       {
-        "t": 1,
-        "v": 1745
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2297,10 +2007,27 @@
         "src": "f0b33a963f37c8dabf1bd0f40531ac64c889f96e.webp",
         "fitMode": "contain"
        },
-       "anim": {},
        "fields": {}
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_republika_logo_01_07_36"
@@ -2330,30 +2057,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": -1550,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 100
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.55,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1.05,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2367,7 +2070,6 @@
         "h": 150,
         "color": "#0047ab"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2392,32 +2094,19 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipT": [
-         {
-          "t": 0.1,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.55,
-          "v": 0
-         }
-        ],
-        "clipB": [
-         {
-          "t": 0.55,
-          "v": 0,
-          "e": "out"
-         },
-         {
-          "t": 0.85,
-          "v": 100
-         }
-        ]
-       },
        "fields": {
         "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "clip-up",
+         "dur": 0.45,
+         "delay": 0.1
+        },
+        "textOut": {
+         "type": "clip-down",
+         "dur": 0.3
+        }
        }
       },
       {
@@ -2433,22 +2122,36 @@
         "color2": "#00000000",
         "gradAngle": 90
        },
-       "anim": {
-        "opacity": [
-         {
-          "t": 0.15,
-          "v": 0,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 1
-         }
-        ]
-       },
-       "fields": {}
+       "fields": {},
+       "motion": {
+        "in": {
+         "type": "fade",
+         "dir": "left",
+         "dur": 0.35,
+         "delay": 0.15,
+         "ease": "power2.out"
+        }
+       }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_republika_lower_third"
@@ -2481,24 +2184,6 @@
       "w": 1920,
       "h": 60
      },
-     "anim": {
-      "y": [
-       {
-        "t": 0,
-        "v": 1080,
-        "e": "out"
-       },
-       {
-        "t": 0.6,
-        "v": 1020,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 1080
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2515,7 +2200,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2531,7 +2215,6 @@
         "radius": 10,
         "shadow": 20
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2554,7 +2237,6 @@
         "lineHeight": 1.399999976158142,
         "textFit": "none"
        },
-       "anim": {},
        "fields": {
         "text": "introtext"
        }
@@ -2580,12 +2262,29 @@
         "color": "#362626",
         "upper": true
        },
-       "anim": {},
        "fields": {
         "text": "items"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_ticker_tryb_whip_poziomy_pionowy"
@@ -2618,30 +2317,6 @@
       "w": 1650,
       "h": 42
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": -1430,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 220
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2658,7 +2333,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2686,13 +2360,30 @@
         "labelSize": 30,
         "labelWeight": "900"
        },
-       "anim": {},
        "fields": {
         "text": "items",
         "label": "introtext"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_ticker_whip_poziomy_pionowy"
@@ -2725,24 +2416,6 @@
       "w": 1651,
       "h": 42
      },
-     "anim": {
-      "y": [
-       {
-        "t": 0,
-        "v": 1031,
-        "e": "out"
-       },
-       {
-        "t": 0.6,
-        "v": 989,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 1031
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2759,7 +2432,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2786,13 +2458,30 @@
         "labelSize": 30,
         "labelWeight": "900"
        },
-       "anim": {},
        "fields": {
         "text": "items",
         "label": "wiper_text"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_ticker_-_pilne"
@@ -2822,24 +2511,6 @@
       "w": 1920,
       "h": 55
      },
-     "anim": {
-      "y": [
-       {
-        "t": 0,
-        "v": 1080,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1025,
-        "e": "out"
-       },
-       {
-        "t": 0.85,
-        "v": 1080
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2853,7 +2524,6 @@
         "h": 55,
         "color": "#000000"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2876,12 +2546,29 @@
         "color": "#ffffff",
         "upper": true
        },
-       "anim": {},
        "fields": {
         "text": "items"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.35,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_ticker_pelny_ekran"
@@ -2911,35 +2598,6 @@
       "w": 310,
       "h": 51
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.9,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1.7,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -2960,7 +2618,6 @@
         "followPad": 58.2,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2981,7 +2638,6 @@
         "followPad": 58.2,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -2996,7 +2652,6 @@
         "color": "#ffffff",
         "radius": 7
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3021,12 +2676,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_tylko_w_btb_info"
@@ -3059,24 +2731,6 @@
       "w": 1651,
       "h": 42
      },
-     "anim": {
-      "y": [
-       {
-        "t": 0,
-        "v": 1031,
-        "e": "out"
-       },
-       {
-        "t": 0.6,
-        "v": 989,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 1031
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3093,7 +2747,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3120,13 +2773,30 @@
         "labelSize": 30,
         "labelWeight": "900"
        },
-       "anim": {},
        "fields": {
         "text": "items",
         "label": "wiper_text"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_whiper_-_ticker_-_pilne"
@@ -3159,40 +2829,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3209,7 +2845,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3234,21 +2869,14 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "tekst1"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       },
       {
@@ -3273,24 +2901,34 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "tekst2"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_wizytowka_-_normalna"
@@ -3323,40 +2961,6 @@
       "w": 1650,
       "h": 150
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3373,7 +2977,6 @@
         "gradAngle": 160,
         "radius": 10
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3398,21 +3001,14 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "tekst1"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       },
       {
@@ -3437,24 +3033,34 @@
         "textFit": "squeeze",
         "squeezeMin": 0.3
        },
-       "anim": {
-        "clipR": [
-         {
-          "t": 0,
-          "v": 100,
-          "e": "out"
-         },
-         {
-          "t": 0.5,
-          "v": 0
-         }
-        ]
-       },
        "fields": {
         "text": "tekst2"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 0.5
+        }
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_wizytowka_-_pilne"
@@ -3484,35 +3090,6 @@
       "w": 340,
       "h": 51
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.3,
-        "v": 1
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.3,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 0.6,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3533,7 +3110,6 @@
         "followPad": 58.3,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3554,7 +3130,6 @@
         "followPad": 58.3,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3569,7 +3144,6 @@
         "color": "#ffffff",
         "radius": 7
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3594,12 +3168,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.3,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.3,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_wydanie_specjalne"
@@ -3629,40 +3220,6 @@
       "w": 305,
       "h": 58
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "inout"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3683,7 +3240,6 @@
         "followPad": 31.8,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3704,7 +3260,6 @@
         "followPad": 31.8,
         "followMin": 0
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3729,12 +3284,29 @@
         "textFit": "squeeze",
         "squeezeMin": 0.5
        },
-       "anim": {},
        "fields": {
         "text": "title"
        }
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_z_osoatniej_chwili"
@@ -3760,30 +3332,6 @@
       "w": 152,
       "h": 40
      },
-     "anim": {
-      "x": [
-       {
-        "t": 0,
-        "v": -56,
-        "e": "out"
-       },
-       {
-        "t": 0.5,
-        "v": 96
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "in"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3797,7 +3345,6 @@
         "h": 40,
         "color": "#0047ab"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3811,7 +3358,6 @@
         "h": 40,
         "color": "#ffffff1a"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3825,7 +3371,6 @@
         "h": 40,
         "color": "#0047ab"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3846,10 +3391,27 @@
         "align": "center",
         "valign": "middle"
        },
-       "anim": {},
        "fields": {}
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_zegar"
@@ -3875,40 +3437,6 @@
       "w": 152,
       "h": 40
      },
-     "anim": {
-      "scale": [
-       {
-        "t": 0,
-        "v": 0.85,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0.85
-       }
-      ],
-      "opacity": [
-       {
-        "t": 0,
-        "v": 0,
-        "e": "in"
-       },
-       {
-        "t": 0.5,
-        "v": 1,
-        "e": "out"
-       },
-       {
-        "t": 1,
-        "v": 0
-       }
-      ]
-     },
      "fields": {},
      "children": [
       {
@@ -3924,7 +3452,6 @@
         "color2": "#942424",
         "gradAngle": 160
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3938,7 +3465,6 @@
         "h": 40,
         "color": "#ffffff1a"
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3954,7 +3480,6 @@
         "color2": "#942424",
         "gradAngle": 160
        },
-       "anim": {},
        "fields": {}
       },
       {
@@ -3975,10 +3500,27 @@
         "align": "center",
         "valign": "middle"
        },
-       "anim": {},
        "fields": {}
       }
-     ]
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
     }
    ],
    "id": "btb_zegarek_kopia"

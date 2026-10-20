@@ -150,8 +150,10 @@ export function textSpec(t, kind, warn, where) {
     if (list.includes(fb)) type = fb;
     else { warn(`${where}: efekt tekstu „${t.type}” nie ma odpowiednika – użyto przenikania`); type = 'fade'; }
   }
-  const o = { type, dur: rnd(Math.min(60, Math.max(0, num(t.duration, 0.5)))) };
-  if (num(t.delay) > 0) o.delay = rnd(Math.min(60, num(t.delay)));
+  // domyślne jak w cgmotion: tekst IN – 1 s po 0,2 s, tekst OUT – 0,5 s bez opóźnienia
+  const o = { type, dur: rnd(Math.min(60, Math.max(0, num(t.duration, kind === 'in' ? 1 : 0.5)))) };
+  const delay = t.delay == null || t.delay === '' ? (kind === 'in' ? 0.2 : 0) : num(t.delay);
+  if (delay > 0) o.delay = rnd(Math.min(60, delay));
   if (num(t.stagger) > 0) o.stagger = rnd(Math.min(60, num(t.stagger)));
   if (MO.STAGGER_FROM.includes(t.from)) o.from = t.from;
   const e = motionEase(t.ease);
@@ -298,7 +300,7 @@ export function convertElement(el, opts = {}) {
     if (l.opacity !== undefined && l.opacity !== 1) p.opacity = l.opacity;
     if (l.visible === false) node.hidden = true;
     if (l.maskLayer) warn(`maska warstwy „${name}” nie jest przenoszona`);
-    if (l.effect && l.effect !== 'none') warn(`efekt „${l.effect}” (warstwa „${name}”) pominięty`);
+    if (l.effect && l.effect !== 'none' && !(l.type === 'shape' && MO.BG_TYPES.includes(l.effect))) warn(`efekt „${l.effect}” (warstwa „${name}”) pominięty`);
     switch (l.type) {
       case 'shape': {
         node.type = 'rect';
@@ -457,9 +459,23 @@ export function convertElement(el, opts = {}) {
     if (!n.motion?.textOut) setMotion(n, 'textOut', textSpec(an.textOut, 'out', warn, 'tekst elementu'));
   }
   for (const [n, id] of afterIds) { const tg = idMap.get(id); if (tg && tg !== n) n.motion.after = tg.id; }
+  // stałe efekty tła kształtów (shimmer, pulse, glow, scanline)
+  for (const l of sc.layers) { const n = idMap.get(l.id); if (n && l.type === 'shape' && MO.BG_TYPES.includes(l.effect) && l.effect !== 'none') setMotion(n, 'bg', l.effect); }
+  // ruch całego elementu w BTB działa na `.cg-scene` (punkt odniesienia: lewy górny róg) wewnątrz kontenera z położeniem i skalą layoutu,
+  // więc przesunięcia wjazdu też są skalowane; przy skali ≠ 1 ruch idzie do wewnętrznej grupy (zewnętrzna = layout)
+  let root = group;
+  if (group.motion) {
+    group.motion.origin = [0, 0];
+    if (scale !== 1) {
+      const inner = { id: group.id + '_ruch', type: 'group', name: 'ruch elementu', props: { x: 0, y: 0, w: W, h: H }, anim: {}, fields: {}, children: nodes, motion: group.motion };
+      delete group.motion;
+      group.children = [inner];
+      root = group;
+    }
+  }
   // wejście elementu: warstwy startują po nim (w BTB faza elementu i warstw biegnie razem – zostawiamy równolegle)
-  const all = [group, ...nodes];
-  const shifts = MO.sequenceShifts([group]);
+  const all = [group, ...(group.children[0]?.id === group.id + '_ruch' ? [group.children[0]] : []), ...nodes];
+  const shifts = MO.sequenceShifts([root]);
   let stop = 0, outL = 0;
   for (const n of all) {
     if (!n.motion) continue;

@@ -41,6 +41,7 @@ const TEXT_UNITS: &[&str] = &["words", "chars", "lines"];
 const TEXT_VARIANTS: &[&str] = &["up", "down", "fade", "blur", "scale", "clip"];
 const LOOP_TYPES: &[&str] = &["none", "pulse", "breathe", "heartbeat", "float", "bounce", "wobble", "shake", "flash", "glow", "shine", "underline-sweep"];
 const DIRECTIONS: &[&str] = &["left", "right", "top", "bottom"];
+const BG_TYPES: &[&str] = &["none", "shimmer", "pulse", "glow", "scanline"];
 const STAGGER_FROM: &[&str] = &["start", "end", "center", "edges"];
 
 fn text_fx_ok(t: &str) -> bool {
@@ -60,6 +61,17 @@ fn motion(m: &Json) -> R {
     for (k, v) in secs {
         if k == "after" {
             text_ok(v, "motion.after", 100)?;
+            continue;
+        }
+        if k == "bg" {
+            one_of(v, "motion.bg", |b| BG_TYPES.contains(&b))?;
+            continue;
+        }
+        if k == "origin" {
+            match v {
+                Json::Arr(xy) if xy.len() == 2 => xy.iter().try_for_each(|c| num_in(c, "motion.origin", 0.0, 1.0))?,
+                _ => return Err("motion.origin: oczekiwano [x, y] (0–1)".into()),
+            }
             continue;
         }
         let Json::Obj(fields) = v else { return Err(format!("motion.{k}: oczekiwano obiektu")) };
@@ -626,6 +638,10 @@ mod tests {
         assert!(node(r#"{"textIn":{"type":"words-explode"}}"#).is_err());
         assert!(node(r#"{"loop":{"type":"pulse","x":1}}"#).is_err());
         assert!(node(r#"{"magic":{}}"#).is_err());
+        assert!(node(r#"{"bg":"shimmer","origin":[0,0]}"#).is_ok());
+        assert!(node(r#"{"bg":"sparkle"}"#).is_err());
+        assert!(node(r#"{"origin":[0,2]}"#).is_err());
+        assert!(node(r#"{"origin":"tl"}"#).is_err());
         assert!(node(r#""slide""#).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"rect","props":5}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"props":{}}]}"#)).is_err());
