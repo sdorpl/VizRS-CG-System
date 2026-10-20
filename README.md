@@ -43,8 +43,9 @@ Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token 
 `web/text-model.js` to kopia modułu BTB-CG (typografia PL, reguły pola, Word Replace); jej zgodność pilnują wspólne wektory testowe `source/tests/vectors/*.json`.
 Odświeżanie i wykrywanie rozjazdu: `source/tools/sync-btb.sh [--check]`.
 
-### Usługa systemowa
+### Usługa systemowa i Docker
 Pliki w `deploy/` (systemd, launchd, Windows/NSSM). Token w `VIZRS_TOKEN`.
+VPS / Docker: `Dockerfile` (statyczna binarka, obraz ~3 MB) i `deploy/docker-compose.yml` (VizRS + Caddy z HTTPS) – krok po kroku w [docs/RUNBOOK.md](docs/RUNBOOK.md#vps-i-docker).
 
 ## Bezpieczeństwo (od 1.1)
 

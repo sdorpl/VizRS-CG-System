@@ -1,0 +1,53 @@
+# VizRS na VPS: serwer bez GUI + Caddy (HTTPS z Let's Encrypt).
+#
+#   cd deploy
+#   cp env.example .env       # ustaw VIZRS_DOMAIN i VIZRS_TOKEN
+#   docker compose up -d --build
+#
+# Domena musi wskazywać (rekord A/AAAA) na VPS, porty 80 i 443 otwarte – Caddy sam pobierze certyfikat.
+# Trio:   https://<domena>/trio?token=<token>     (raz – potem ciasteczko)
+# OBS:    https://<domena>/output?token=<token>   (Źródło → Przeglądarka, 1920×1080)
+# Opis: docs/RUNBOOK.md, sekcja „VPS i Docker”.
+
+services:
+  vizrs:
+    build:
+      context: ..
+      args:
+        VIZRS_GIT_HASH: ${VIZRS_GIT_HASH:-docker}
+    image: vizrs:latest
+    # tini jako PID 1: docker stop kończy kontener od razu
+    init: true
+    restart: unless-stopped
+    environment:
+      VIZRS_TOKEN: ${VIZRS_TOKEN:?ustaw VIZRS_TOKEN w pliku .env}
+      VIZRS_WEBHOOK: ${VIZRS_WEBHOOK:-}
+    volumes:
+      - vizrs-data:/data
+    # port 8088 widoczny tylko dla Caddy (sieć compose), nie z Internetu
+    expose:
+      - "8088"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - vizrs
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      VIZRS_DOMAIN: ${VIZRS_DOMAIN:?ustaw VIZRS_DOMAIN w pliku .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  vizrs-data:
+  caddy-data:
+  caddy-config:

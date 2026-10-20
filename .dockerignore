@@ -1,0 +1,7 @@
+# Do obrazu trafia tylko to, co potrzebne do kompilacji (Dockerfile kopiuje source/src, source/web, Cargo.*, build.rs).
+**
+!source/Cargo.toml
+!source/Cargo.lock
+!source/build.rs
+!source/src/**
+!source/web/**

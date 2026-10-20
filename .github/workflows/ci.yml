@@ -57,3 +57,30 @@ jobs:
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/artist.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/pack.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/motion.js target/release/vizrs
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Budowa obrazu
+        run: docker build --build-arg VIZRS_GIT_HASH=${GITHUB_SHA::7} -t vizrs:ci .
+      - name: Test dymny kontenera
+        run: |
+          docker image ls vizrs:ci --format 'rozmiar obrazu: {{.Size}}'
+          docker run -d --name v -p 8088:8088 -e VIZRS_TOKEN=ci-token vizrs:ci
+          for i in $(seq 1 30); do
+            s=$(docker inspect -f '{{.State.Health.Status}}' v); echo "health: $s"
+            [ "$s" = healthy ] && break; sleep 2
+          done
+          [ "$(docker inspect -f '{{.State.Health.Status}}' v)" = healthy ]
+          curl -fsS -H 'X-Token: ci-token' http://127.0.0.1:8088/health
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8088/api/state)" = 401
+          curl -fsS -o /dev/null 'http://127.0.0.1:8088/output?token=ci-token'
+          curl -fsS -H 'X-Token: ci-token' -X POST http://127.0.0.1:8088/api/take/1001
+          docker restart v && sleep 2
+          curl -fsS -H 'X-Token: ci-token' http://127.0.0.1:8088/api/show | grep -q '"pages"'
+          # bez tokenu kontener (bind 0.0.0.0) nie startuje
+          ! docker run --rm vizrs:ci
+          start=$(date +%s); docker stop v; echo "docker stop: $(( $(date +%s) - start )) s"
+          docker logs v | tail -20

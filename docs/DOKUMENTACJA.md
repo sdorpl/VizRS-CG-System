@@ -515,8 +515,10 @@ Flaga ma pierwszeństwo przed zmienną; pusta zmienna = nieustawiona. Opcje moż
 **Jeden serwer na katalog danych:** serwer zakłada `<data>/.vizrs.lock` (pid, adres, identyfikator instancji – ten sam co pole `instance` w `/health`). Drugi serwer na tym samym `--data` nie wystartuje (kod 3) i poda adres działającego. Plik po awarii (`kill -9`, zanik zasilania) jest rozpoznawany jako martwy i zastępowany przy następnym starcie. Gdy pliku nie da się zapisać, serwer działa dalej bez blokady (ostrzeżenie).
 
 Token: przeglądarka – raz `?token=…` (zapisuje ciasteczko); API – `Authorization: Bearer`, `X-Token` albo `?token=`; TCP – pierwsza linia `AUTH …`.
-Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site`, `Origin`). Brak TLS – w sieciach współdzielonych użyj reverse proxy z HTTPS.
+Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site`, `Origin`). VizRS sam nie obsługuje TLS – w sieciach współdzielonych i na VPS stawiaj go za reverse proxy z HTTPS (Caddy w `deploy/docker-compose.yml`).
 Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
+
+**Docker / VPS:** `docker build -t vizrs .` (statyczna binarka musl na pustym obrazie, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`, dane w wolumenie `/data`, port komend TCP domyślnie wyłączony). Serwer z HTTPS: `deploy/docker-compose.yml` (VizRS + Caddy, Let's Encrypt), przykład nginx: `deploy/nginx-vizrs.conf`. Instrukcja krok po kroku: [RUNBOOK.md](RUNBOOK.md#vps-i-docker).
 
 ## 14. Dane na dysku i kopie zapasowe
 

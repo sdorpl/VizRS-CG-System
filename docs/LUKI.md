@@ -5,7 +5,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 ## G1 – niezawodność i bezpieczeństwo
 | # | Luka | Uwagi |
 |---|---|---|
-| 1 | Brak TLS (token w ciasteczku/nagłówku jawnie w sieci) | dla sieci zaufanej; w sieciach współdzielonych użyj reverse proxy z HTTPS |
+| 1 | Brak TLS w samej binarce (token jawnie w sieci bez proxy) | zamierzone (bez kryptografii od zera); HTTPS przez reverse proxy: `deploy/docker-compose.yml` (Caddy), `deploy/nginx-vizrs.conf`, RUNBOOK „VPS i Docker” |
 | 2 | Wątek na połączenie (limit 512, nie pula) | wystarcza dla studia; pula przy większej skali |
 | 3 | `PUT /api/show` (import) nadal zastępuje cały show | chronione `rev`/`force`, kopiami i walidacją; brak scalania |
 | 4 | Blokady edycji są miękkie (ostrzeżenie + potwierdzenie) | zamierzone – operator może przejąć |

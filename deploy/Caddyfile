@@ -1,0 +1,7 @@
+# Caddy przed VizRS: automatyczny HTTPS (Let's Encrypt) dla domeny z VIZRS_DOMAIN.
+# Caddy zachowuje nagłówek Host (wymagany przez ochronę Origin w VizRS) i nie buforuje SSE (/events).
+# Nie włączaj tu `encode` – kompresja strumienia zdarzeń opóźnia TAKE na wyjściu.
+
+{$VIZRS_DOMAIN} {
+	reverse_proxy vizrs:8088
+}
