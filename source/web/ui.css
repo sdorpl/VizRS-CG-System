@@ -63,3 +63,28 @@ kbd { font-family: var(--mono); font-size: 11px; background: #0e0f12; border: 1p
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #33373f; border-radius: 5px; border: 2px solid var(--panel); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- wygląd aplikacji desktopowej (Artist i Trio; w oknie natywnym html.native) ---------- */
+/* interfejs to nie dokument: bez zaznaczania tekstu i „rączki” nad przyciskami; tekst zaznacza się tylko w polach */
+html, body { -webkit-user-select: none; user-select: none; cursor: default; }
+input, textarea, [contenteditable], .selectable { -webkit-user-select: text; user-select: text; }
+button, .list .item, .topbar nav a, input[type=color], select { cursor: default; }
+button:active { transform: none; background: #343944; }
+/* okno natywne: zakładki stron i logo są w menu i tytule okna */
+html.native .topbar .brand, html.native .topbar nav, html.native .topbar .navsep { display: none; }
+/* płaskie paski narzędzi: przycisk widać dopiero po najechaniu (jak w programach desktopowych) */
+.tb button:not(.acc):not(.on) { background: transparent; border-color: transparent; }
+.tb button:not(.acc):not(.on):hover { background: #2a2e35; border-color: #3a3f48; }
+.tb button.icon { min-width: 26px; padding: 2px 5px; }
+/* ikony monochromatyczne (kolor = kolor tekstu) zamiast emoji */
+.ico { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; background: currentColor; -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
+.ico.del { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.6 6.5v4.5M9.4 6.5v4.5'/%3E%3C/svg%3E"); }
+.ico.link { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M6.5 9.5l3-3M7 4.5l1.3-1.3a2.6 2.6 0 0 1 3.7 3.7L10.7 8.2M9 11.5l-1.3 1.3a2.6 2.6 0 0 1-3.7-3.7L5.3 7.8'/%3E%3C/svg%3E"); }
+.ico.scene { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5'%3E%3Crect x='1.75' y='3.25' width='12.5' height='9.5' rx='1'/%3E%3Cpath d='M1.75 10h12.5' /%3E%3C/svg%3E"); }
+.ico.img { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'%3E%3Crect x='1.75' y='2.75' width='12.5' height='10.5' rx='1'/%3E%3Cpath d='M2 11.5l3.5-3.5 3 3 2-2 3.5 3'/%3E%3Ccircle cx='10.5' cy='6' r='1.2'/%3E%3C/svg%3E"); }
+.ico.font { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13.5L8 2.5l5 11M5 9.5h6'/%3E%3C/svg%3E"); }
+.ico.gear { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5'%3E%3Ccircle cx='8' cy='8' r='2.3'/%3E%3Cpath d='M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4'/%3E%3C/svg%3E"); }
+.ico.lock { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5'%3E%3Crect x='3' y='7' width='10' height='7' rx='1'/%3E%3Cpath d='M5.5 7V5a2.5 2.5 0 0 1 5 0v2'/%3E%3C/svg%3E"); }
+/* pasek stanu na dole okna */
+.statusbar { display: flex; align-items: center; gap: 12px; height: 24px; padding: 0 10px; background: #0b0c0e; border-top: 1px solid var(--line); font-size: 11px; color: var(--dim); flex: none; white-space: nowrap; overflow: hidden; }
+.statusbar .hint { overflow: hidden; text-overflow: ellipsis; }

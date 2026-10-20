@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>VizRS Trio</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if (window.__vizrsShell) document.documentElement.classList.add('native');</script>
 <link rel="stylesheet" href="/ui.css">
 <script src="/text-model.js"></script>
 <style>
@@ -107,7 +108,7 @@
 <div class="topbar">
   <span class="brand">Viz<b>RS</b> Trio</span>
   <nav><a href="/artist">Artist</a><a href="/trio" class="on">Trio</a><a href="/output?checker=1&status=1" target="_blank">Wyjście ↗</a></nav>
-  <span class="sep"></span>
+  <span class="sep navsep"></span>
   <b id="showName"></b>
   <span id="conn" class="pill">łączenie…</span>
   <span id="saveErr" class="pill on" style="display:none"></span>
@@ -1189,6 +1190,11 @@ addEventListener('keydown', (e) => {
   }
 });
 addEventListener('beforeunload', (e) => { if (dirtyPage) { e.preventDefault(); e.returnValue = ''; } });
+
+// okno natywne: bez przeglądarkowego menu pod prawym przyciskiem; w polach tekstowych zostaje (kopiuj, wklej, pisownia)
+if (document.documentElement.classList.contains('native')) {
+  addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
+}
 
 // ------------------------------------------------------------ zdarzenia z serwera
 connectEvents((ev) => {

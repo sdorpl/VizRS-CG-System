@@ -4,14 +4,24 @@
 <meta charset="utf-8">
 <title>VizRS Artist</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>if (window.__vizrsShell) document.documentElement.classList.add('native');</script>
 <link rel="stylesheet" href="/ui.css">
 <style>
   body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  #main { flex: 1; display: grid; grid-template-columns: 270px 1fr 350px; grid-template-rows: 1fr 260px; gap: 6px; padding: 6px; min-height: 0; }
+  #main { flex: 1; display: grid; grid-template-columns: var(--l, 270px) 4px minmax(240px, 1fr) 4px var(--r, 350px); grid-template-rows: minmax(160px, 1fr) 4px var(--t, 260px); min-height: 0; background: #0b0c0e; }
   #treeP { grid-area: 1 / 1 / 2 / 2; }
-  #canvasP { grid-area: 1 / 2 / 2 / 3; }
-  #propsP { grid-area: 1 / 3 / 3 / 4; }
-  #timeP { grid-area: 2 / 1 / 3 / 3; }
+  #gL { grid-area: 1 / 2 / 2 / 3; cursor: col-resize; }
+  #canvasP { grid-area: 1 / 3 / 2 / 4; }
+  #gR { grid-area: 1 / 4 / 4 / 5; cursor: col-resize; }
+  #propsP { grid-area: 1 / 5 / 4 / 6; }
+  #gT { grid-area: 2 / 1 / 3 / 4; cursor: row-resize; }
+  #timeP { grid-area: 3 / 1 / 4 / 4; }
+  /* panele zadokowane jak w programie desktopowym: bez zaokrągleń i odstępów, rozdzielacze do przeciągania */
+  #main > .panel { border-radius: 0; border: none; }
+  #main > .panel > header { min-height: 30px; padding: 3px 6px; }
+  .gutter { background: #0b0c0e; touch-action: none; }
+  .gutter:hover, .gutter.drag { background: var(--acc-d); }
+  .topbar { padding: 4px 8px; gap: 6px; }
   #box { position: relative; flex: 1; overflow: hidden; }
   #stage { position: absolute; left: 0; top: 0; outline: 1px solid #3a3f48; }
   #stage .vz-node { cursor: move; }
@@ -95,12 +105,18 @@
   .mb .mbh { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: ew-resize; background: rgba(255,255,255,.35); }
   .mb.sel { outline: 1px solid #fff; }
   #seqMode.on { background: var(--acc); color: #000; }
-  #seqTools { display: none; gap: 4px; align-items: center; }
+  /* narzędzia trybu sekwencji – pasek kontekstowy pod paskiem osi czasu */
+  #seqTools { display: none; gap: 4px; align-items: center; padding: 3px 8px; background: #1d2024; border-bottom: 1px solid var(--line); flex: none; }
   #timeP header > input, #timeP header > button { flex: none; }
-  body.seq #seqTools { display: inline-flex; }
+  #timeP > header { flex-wrap: wrap; row-gap: 3px; gap: 4px; }
+  #timeP > header label { font-size: 12px; }
+  body.seq #seqTools { display: flex; }
   body.seq #keyed, body.seq #keyCopy, body.seq #keyPaste { display: none; }
-  #keyed { display: flex; gap: 6px; align-items: center; }
-  #keyed input { width: 80px; }
+  /* pasek zaznaczonego klucza – stały (bez przeskakiwania osi czasu); w trybie sekwencji w tym miejscu są narzędzia sekwencji */
+  #keyed, #seqTools { min-height: 30px; }
+  #keyed { display: flex; gap: 6px; align-items: center; padding: 3px 8px; background: #1d2024; border-bottom: 1px solid var(--line); flex: none; }
+  #keyed input { width: 72px; }
+  #keyed select { width: 90px; }
   #tc { width: 76px; font-family: var(--mono); text-align: right; }
   .sep { width: 1px; height: 20px; background: var(--line); margin: 0 2px; }
   .dirty::after { content: ' ●'; color: var(--acc); }
@@ -112,20 +128,19 @@
 </style>
 </head>
 <body>
-<div class="topbar">
+<div class="topbar tb">
   <span class="brand">Viz<b>RS</b> Artist</span>
   <nav><a href="/artist" class="on">Artist</a><a href="/trio">Trio</a><a href="/output?checker=1&status=1" target="_blank">Wyjście ↗</a></nav>
-  <span class="sep"></span>
+  <span class="sep navsep"></span>
   <label>Scena</label>
   <select id="sceneSel" style="min-width:180px"></select>
   <button id="bNew" title="Nowa scena">＋ Nowa</button>
   <button id="bDup" title="Duplikuj scenę">⧉</button>
-  <button id="bDel" class="danger" title="Usuń scenę">🗑</button>
+  <button id="bDel" class="icon danger" title="Usuń scenę"><i class="ico del"></i></button>
   <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
   <button id="bPack" title="Paczka belek .cgpack: wybrane sceny + strony + grafiki + czcionki w jednym pliku">⇩ Paczka</button>
   <button id="bImp" title="Import sceny (.json) albo paczki belek (.cgpack)">⇧ Import</button>
     <button id="bImpBtb" title="Importuj element z BTB CG (.json eksport v3 lub .cgpack) jako scenę + stronę">⇧ BTB</button>
-  <span id="conn" class="pill" title="Połączenie z serwerem VizRS">łączenie…</span>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
   <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
@@ -134,25 +149,25 @@
 </div>
 
 <div id="main">
-  <section class="panel" id="treeP">
+  <section class="panel" id="treeP" data-hint="Drzewo sceny: niżej na liście = wyżej na ekranie · przeciągnij, aby zmienić kolejność lub rodzica · Ctrl+D duplikuj · Del usuń">
     <header>
       <h3>Drzewo sceny</h3>
       <select id="addSel" title="Dodaj kontener"><option value="">＋ Dodaj…</option></select>
     </header>
-    <div class="row" style="padding:4px 6px;gap:3px;border-bottom:1px solid var(--line)">
+    <div class="row tb" style="padding:3px 4px;gap:2px;border-bottom:1px solid var(--line)">
       <button class="icon" id="tUp" title="W górę (pod spód)">↑</button>
       <button class="icon" id="tDown" title="W dół (na wierzch)">↓</button>
       <button class="icon" id="tOut" title="Wyjmij z grupy">⇤</button>
       <button class="icon" id="tIn" title="Włóż do poprzedniej grupy">⇥</button>
       <button class="icon" id="tDupN" title="Duplikuj (Ctrl+D)">⧉</button>
       <span class="grow"></span>
-      <button class="icon danger" id="tDel" title="Usuń (Del)">🗑</button>
+      <button class="icon danger" id="tDel" title="Usuń (Del)"><i class="ico del"></i></button>
     </div>
     <div class="scroll list" id="tree"></div>
-    <div class="dim" style="font-size:11px;padding:5px 8px;border-top:1px solid var(--line)">Niżej na liście = wyżej na ekranie</div>
   </section>
+  <div class="gutter" id="gL" data-k="l" title="Przeciągnij, aby zmienić szerokość (dwuklik = domyślna)"></div>
 
-  <section class="panel" id="canvasP">
+  <section class="panel" id="canvasP" data-hint="Kanwa: przeciągnij element · róg = rozmiar · strzałki = 1 px (Shift = 10 px) · klik w puste miejsce = ustawienia sceny">
     <div id="box" class="checker">
       <div id="stage"></div>
       <div id="safe"><div style="inset:5%"></div><div style="inset:10%"></div></div>
@@ -161,13 +176,15 @@
     </div>
   </section>
 
-  <section class="panel" id="propsP">
+  <div class="gutter" id="gR" data-k="r" title="Przeciągnij, aby zmienić szerokość (dwuklik = domyślna)"></div>
+  <section class="panel" id="propsP" data-hint="Właściwości: przeciągnij nazwę w poziomie = zmiana wartości · ◆ = klucz animacji w bieżącym czasie · łańcuch = pole kontrolne w Trio">
     <header><h3 id="propsTitle">Właściwości</h3></header>
     <div class="scroll" id="props"></div>
   </section>
 
-  <section class="panel" id="timeP">
-    <header>
+  <div class="gutter" id="gT" data-k="t" title="Przeciągnij, aby zmienić wysokość osi czasu (dwuklik = domyślna)"></div>
+  <section class="panel" id="timeP" data-hint="Oś czasu: dwuklik na ścieżce = nowy klucz · ramka = zaznaczenie kluczy · M = marker · Spacja = odtwórz · Home/End = początek/koniec">
+    <header class="tb">
       <input id="tc" title="Czas (s)">
       <button class="icon" id="pHome" title="Na początek (Home)">⏮</button>
       <button id="pTake" title="Odtwórz IN: 0 → pierwszy stop">▶ Take</button>
@@ -177,28 +194,28 @@
       <button class="icon" id="pStop" title="Pauza">⏸</button>
       <span class="sep"></span>
       <button id="addStop" title="Dodaj stop point w bieżącym czasie">＋ Stop</button>
-      <label>Długość</label><input id="dur" type="number" step="0.1" min="0.1" style="width:64px">
-      <span class="sep"></span>
-      <span id="keyed"></span>
+      <label title="Długość sceny (s)">Dł.</label><input id="dur" type="number" step="0.1" min="0.1" style="width:60px" title="Długość sceny (s)">
       <span class="grow"></span>
-      <span id="seqTools">
-        <label title="Odstęp kaskady">krok</label><input id="seqStep" type="number" step="0.05" min="0" value="0.1" style="width:52px">
-        <button data-seq="stagger" title="Kaskada: wejścia elementów jedno po drugim co „krok” (wyjścia w odwrotnej kolejności). Dotyczy dzieci zaznaczonej grupy, rodzeństwa zaznaczonego elementu albo całej sceny">⇶ Kaskada</button>
-        <button data-seq="chain" title="Po kolei: każdy element wchodzi po zakończeniu wejścia poprzedniego (powiązanie „po węźle”)">↳ Po kolei</button>
-        <button data-seq="copy" title="Kopiuj ruch zaznaczonego elementu na jego rodzeństwo">⧉ Kopiuj</button>
-        <button data-seq="keys" title="Zamień presety wejścia/wyjścia zaznaczonego elementu na klucze (pętle i efekty tekstu zostają)">◆ Klucze</button>
-        <button data-seq="clear" class="danger" title="Usuń ruch (presety) z zaznaczonego elementu albo całej grupy">✕</button>
-        <button data-seq="fit" title="Stop point po wejściu, długość = stop + wyjście">⟲ Dopasuj</button>
-      </span>
       <button id="seqMode" title="Prosty tryb sekwencji (jak „Ruch” w BTB CG Editor): paski wejścia, efektu tekstu, pętli i wyjścia każdego elementu – przeciągnij, aby zmienić opóźnienie, krawędź – czas">≣ Sekwencja</button>
-      <button id="markAdd" title="Dodaj marker w bieżącym czasie (M)">◆ Marker</button>
-      <button id="keyCopy" title="Kopiuj zaznaczone klucze (Ctrl+C na osi czasu)">⧉ Kopiuj</button>
-      <button id="keyPaste" title="Wklej klucze w bieżącym czasie na zaznaczony węzeł (Ctrl+V)">⎘ Wklej</button>
-      <label>Zoom</label><input id="zoom" type="range" min="40" max="1200" value="320" style="width:100px"><button id="zoomFit" title="Dopasuj do szerokości osi">↔</button>
+      <button id="markAdd" class="icon" title="Dodaj marker w bieżącym czasie (M)">▾</button>
+      <button id="keyCopy" class="icon" title="Kopiuj zaznaczone klucze (Ctrl+C na osi czasu)">⧉</button>
+      <button id="keyPaste" class="icon" title="Wklej klucze w bieżącym czasie na zaznaczony węzeł (Ctrl+V)">⎘</button>
+      <input id="zoom" type="range" min="40" max="1200" value="320" style="width:80px" title="Powiększenie osi czasu"><button id="zoomFit" class="icon" title="Dopasuj oś czasu do szerokości">↔</button>
     </header>
+    <div id="seqTools" class="tb"><span class="dim" style="font-size:11px">SEKWENCJA</span>
+      <label title="Odstęp kaskady">krok</label><input id="seqStep" type="number" step="0.05" min="0" value="0.1" style="width:52px">
+      <button data-seq="stagger" title="Kaskada: wejścia elementów jedno po drugim co „krok” (wyjścia w odwrotnej kolejności). Dotyczy dzieci zaznaczonej grupy, rodzeństwa zaznaczonego elementu albo całej sceny">⇶ Kaskada</button>
+      <button data-seq="chain" title="Po kolei: każdy element wchodzi po zakończeniu wejścia poprzedniego (powiązanie „po węźle”)">↳ Po kolei</button>
+      <button data-seq="copy" title="Kopiuj ruch zaznaczonego elementu na jego rodzeństwo">⧉ Kopiuj ruch</button>
+      <button data-seq="keys" title="Zamień presety wejścia/wyjścia zaznaczonego elementu na klucze (pętle i efekty tekstu zostają)">◆ Na klucze</button>
+      <button data-seq="clear" class="danger" title="Usuń ruch (presety) z zaznaczonego elementu albo całej grupy">✕ Usuń ruch</button>
+      <button data-seq="fit" title="Stop point po wejściu, długość = stop + wyjście">⟲ Dopasuj</button>
+    </div>
+    <div id="keyed" class="tb" title="Zaznaczony klucz animacji"></div>
     <div id="tl"></div>
   </section>
 </div>
+<footer class="statusbar" id="statusbar"><span class="hint" id="hint"></span><span class="grow"></span><span id="conn" class="pill" title="Połączenie z serwerem VizRS">łączenie…</span></footer>
 <datalist id="fontlist"></datalist>
 <datalist id="nodelist"></datalist>
 <datalist id="layerlist"><option>back</option><option>main</option><option>front</option></datalist>
@@ -337,7 +354,7 @@ async function newScene(name, base) {
 function renderAll() { renderSceneSel(); renderTree(); renderProps(); renderTimeline(); }
 
 function renderTree() {
-  let h = `<div class="item ${selId ? '' : 'sel'}" data-id=""><span class="ic">🎬</span><b class="grow">${esc(scene.name)}</b><span class="pill">${esc(scene.layer || 'main')}</span></div>`;
+  let h = `<div class="item ${selId ? '' : 'sel'}" data-id=""><span class="ic"><i class="ico scene"></i></span><b class="grow">${esc(scene.name)}</b><span class="pill">${esc(scene.layer || 'main')}</span></div>`;
   const rec = (nodes, d) => {
     for (const n of nodes) {
       const fl = Object.values(n.fields || {}).filter(Boolean);
@@ -386,7 +403,7 @@ function renderProps() {
     if (tkMode && TK_HIDE[tkMode]?.includes(p)) continue;
     if (tkMode && p === 'text') {
       if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
-      h += `<div class="prtk" data-prop="text"><div class="prtk-h"><span class="grow">wiadomości próbne <span class="dim">(w Trio: pole strony)</span></span><button class="icon fbtn" data-field="text" title="Pole kontrolne (Control Object) – edytowalne w Trio">⛓</button></div><div data-tkhost></div><textarea data-p="text" hidden></textarea></div>`;
+      h += `<div class="prtk" data-prop="text"><div class="prtk-h"><span class="grow">wiadomości próbne <span class="dim">(w Trio: pole strony)</span></span><button class="icon fbtn" data-field="text" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button></div><div data-tkhost></div><textarea data-p="text" hidden></textarea></div>`;
       continue;
     }
     if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
@@ -394,7 +411,7 @@ function renderProps() {
       <label data-scrub="${d.t === 'num' ? p : ''}" title="${p}${d.t === 'num' ? ' – przeciągnij, aby zmienić' : ''}">${esc(d.label || p)}</label>
       <div class="pin">${inputFor(p, d)}</div>
       ${d.anim ? `<button class="icon kbtn" data-key="${p}" title="Klucz animacji w bieżącym czasie (dodaj/usuń)">◆</button>` : '<span></span>'}
-      <button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio">⛓</button>
+      <button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button>
     </div>`;
     if (p === 'squeezeMin' && n.type === 'text') h += `<div class="sqinfo" id="sqInfo"></div>`;
   }
@@ -410,8 +427,8 @@ function renderProps() {
   } else h += `<div class="dim" style="padding:2px 10px;font-size:12px">Zdefiniuj warianty w ustawieniach sceny (kliknij puste tło), aby pokazywać ten węzeł tylko w wybranym wariancie.</div>`;
   h += `<div class="pgroup">Presety animacji</div>
   <div class="pr" style="grid-template-columns:1fr auto auto"><select id="apSel"><option value="">— wybierz —</option>${animPresets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} (${x.duration}s)</option>`).join('')}</select><button data-ap="apply" title="Wstaw klucze presetu od bieżącego czasu">Zastosuj</button><button data-ap="save" title="Zapisz klucze tego węzła jako preset">＋ zapisz</button></div>
-  <div class="pr" style="grid-template-columns:1fr auto auto auto"><span class="dim" style="font-size:11px">preset = zestaw kluczy (czasy względne)</span><button data-ap="export" title="Pobierz preset do pliku">⇩</button><button data-ap="import" title="Wczytaj preset z pliku">⇧</button><button data-ap="del" class="danger">🗑</button></div>
-  <div class="help">◆ – klucz animacji w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy/aktualizuje klucz automatycznie.<br>⛓ – wystawia właściwość jako <b>pole kontrolne</b>: operator Trio wpisze tu wartość na stronie.<br><b>[[tekst]]</b> w tekście = wyróżnienie (kolor tła/tekstu w grupie Tekst).<br><b>Autofollow</b> – prostokąt dopasowuje szerokość/wysokość do tekstu (np. pasek nazwiska). <b>Punkt X/Y</b> = right/bottom sprawia, że element rośnie w lewo/w górę.</div>`;
+  <div class="pr" style="grid-template-columns:1fr auto auto auto"><span class="dim" style="font-size:11px">preset = zestaw kluczy (czasy względne)</span><button data-ap="export" title="Pobierz preset do pliku">⇩</button><button data-ap="import" title="Wczytaj preset z pliku">⇧</button><button data-ap="del" class="icon danger" title="Usuń preset"><i class="ico del"></i></button></div>
+  <div class="help">◆ – klucz animacji w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy/aktualizuje klucz automatycznie.<br><i class="ico link"></i> – wystawia właściwość jako <b>pole kontrolne</b>: operator Trio wpisze tu wartość na stronie.<br><b>[[tekst]]</b> w tekście = wyróżnienie (kolor tła/tekstu w grupie Tekst).<br><b>Autofollow</b> – prostokąt dopasowuje szerokość/wysokość do tekstu (np. pasek nazwiska). <b>Punkt X/Y</b> = right/bottom sprawia, że element rośnie w lewo/w górę.</div>`;
   el.innerHTML = h;
   syncProps(true);
   showSqueeze();
@@ -566,12 +583,12 @@ function renderSceneProps() {
       pfields.map((f) => {
         const m = scene.fieldMeta?.[f.id] || {};
         const has = ['maxChars', 'softMax', 'maxLines', 'maxItems', 'cats', 'tab', 'help', 'oneLine', 'upper', 'typo', 'readonly'].some((k) => m[k]) || m.rich === false || m.spell === false;
-        return `<tr><td class="mono">${esc(f.id)}</td><td><input data-fm="${esc(f.id)}" value="${esc(m.label || '')}" placeholder="${esc(f.id)}"></td><td class="dim">${esc(f.node)}.${esc(f.prop)}</td><td><button class="icon ${has ? 'acc' : ''}" data-frtoggle="${esc(f.id)}" title="Reguły pola (limity znaków, wersaliki, typografia, Tab…)">⚙</button></td></tr>` +
+        return `<tr><td class="mono">${esc(f.id)}</td><td><input data-fm="${esc(f.id)}" value="${esc(m.label || '')}" placeholder="${esc(f.id)}"></td><td class="dim">${esc(f.node)}.${esc(f.prop)}</td><td><button class="icon ${has ? 'acc' : ''}" data-frtoggle="${esc(f.id)}" title="Reguły pola (limity znaków, wersaliki, typografia, Tab…)"><i class="ico gear"></i></button></td></tr>` +
           (openRules.has(f.id) ? `<tr><td colspan="4">${rulesForm(f)}</td></tr>` : '');
       }).join('') + '</table>';
-  } else h += `<div class="dim" style="padding:4px 10px">Brak. Zaznacz kontener i kliknij ⛓ przy właściwości.</div>`;
+  } else h += `<div class="dim" style="padding:4px 10px">Brak. Zaznacz kontener i kliknij <i class="ico link"></i> przy właściwości.</div>`;
   const known = assets.map((a) => a.name), used = PACK.sceneAssets({ ...scene, packAssets: undefined }, known), att = scene.packAssets || [];
-  const chip = (n, rm) => `<span class="chip" title="${PACK.FONT_RE.test(n) ? 'czcionka – na /output ładowana z serwera' : 'grafika'}">${PACK.FONT_RE.test(n) ? '🅰' : '🖼'} ${esc(n)}${known.includes(n) ? '' : ' <b style="color:#e55">brak!</b>'}${rm ? `<button data-pkrm="${esc(n)}" title="odłącz od paczki">×</button>` : ''}</span>`;
+  const chip = (n, rm) => `<span class="chip" title="${PACK.FONT_RE.test(n) ? 'czcionka – na /output ładowana z serwera' : 'grafika'}"><i class="ico ${PACK.FONT_RE.test(n) ? 'font' : 'img'}"></i> ${esc(n)}${known.includes(n) ? '' : ' <b style="color:#e55">brak!</b>'}${rm ? `<button data-pkrm="${esc(n)}" title="odłącz od paczki">×</button>` : ''}</span>`;
   h += `<div class="pgroup">Zasoby paczki (.cgpack) – grafiki i czcionki</div>
   <div class="sp"><label>Używane</label><div class="chips">${used.map((n) => chip(n, false)).join('') || '<span class="dim">brak</span>'}</div></div>
   <div class="sp"><label>Dołączone</label><div class="chips">${att.map((n) => chip(n, true)).join('') || '<span class="dim">np. czcionka używana w znacznikach tekstu albo grafika podmieniana przez operatora</span>'}</div></div>
@@ -758,13 +775,13 @@ function seqTool(act) {
 
 function renderKeyEd() {
   const el = $('#keyed');
-  if (!selKey || !selKey.node.anim?.[selKey.prop]?.includes(selKey.key)) { selKey = null; el.innerHTML = '<span class="dim" style="font-size:12px">dwuklik na ścieżce = nowy klucz</span>'; return; }
+  if (!selKey || !selKey.node.anim?.[selKey.prop]?.includes(selKey.key)) { selKey = null; el.innerHTML = '<span class="dim" style="font-size:11px">KLUCZ</span><span class="dim" style="font-size:12px">kliknij klucz (◆) na ścieżce, aby zmienić jego czas, wartość i krzywą · dwuklik na ścieżce = nowy klucz</span>'; return; }
   const k = selKey.key, d = PROPS[selKey.prop];
-  el.innerHTML = `<b style="font-size:12px">${esc(selKey.node.name)}.${esc(d?.label || selKey.prop)}</b>
+  el.innerHTML = `<span class="dim" style="font-size:11px">KLUCZ</span><b style="font-size:12px">${esc(selKey.node.name)}.${esc(d?.label || selKey.prop)}</b>
     <label>t</label><input id="kt" type="number" step="0.01" value="${k.t}">
     <label>wart.</label><input id="kv" ${d?.t === 'num' ? 'type="number" step="any"' : ''} value="${esc(k.v)}">
     <select id="ke" title="krzywa do następnego klucza">${EASES.map((e) => `<option ${(k.e || 'inout') === e ? 'selected' : ''}>${e}</option>`).join('')}</select>
-    <button class="icon danger" id="kdel" title="Usuń klucz">🗑</button>`;
+    <button class="icon danger" id="kdel" title="Usuń klucz"><i class="ico del"></i></button>`;
 }
 
 function updatePlayhead() {
@@ -813,7 +830,7 @@ function showSqueeze() {
   if (!it?.sq) { el.innerHTML = ''; return; }
   const one = it.sq.length === 1;
   el.innerHTML = it.sq.map((s, i) => `<span class="${s < 0.7 || it.over ? 'bad' : s < 0.999 ? 'warn' : ''}">${one ? 'ściśnięcie' : 'w' + (i + 1)}: ${Math.round(s * 100)}%</span>`).join('')
-    + (it.over ? '<span class="bad" title="Tekst wymaga ściśnięcia poniżej granicy (min. ściśnięcie) – wystaje poza ramkę">⚠ nie mieści się</span>' : '');
+    + (it.over ? '<span class="bad" title="Tekst wymaga ściśnięcia poniżej granicy (min. ściśnięcie) – wystaje poza ramkę">⚠︎ nie mieści się</span>' : '');
 }
 function parseVal(p, inp) {
   const d = PROPS[p];
@@ -1740,6 +1757,35 @@ let lastSync = 0;
 
 new ResizeObserver(() => resize()).observe(box);
 load().catch((e) => toast('Błąd: ' + e.message, true));
+
+// ------------------------------------------------------------ pasek stanu: podpowiedź do panelu pod kursorem
+const HINT0 = 'Ctrl+S zapisz · Ctrl+Z / Ctrl+Y cofnij / ponów · najedź na panel, aby zobaczyć jego skróty';
+$('#hint').textContent = HINT0;
+document.addEventListener('mouseover', (e) => { const h = e.target.closest?.('[data-hint]')?.dataset.hint || HINT0; if ($('#hint').textContent !== h) $('#hint').textContent = h; });
+
+// ------------------------------------------------------------ rozdzielacze paneli (rozmiary zapamiętane w przeglądarce/oknie)
+const LAY = { l: [270, 170, 560], r: [350, 260, 680], t: [260, 120, 640] }; // domyślnie, min, max
+const lay = (() => { try { return JSON.parse(localStorage.getItem('vizrs.artistLayout')) || {}; } catch { return {}; } })();
+const setLay = (k, v) => { const [, lo, hi] = LAY[k]; lay[k] = Math.round(Math.max(lo, Math.min(hi, v))); $('#main').style.setProperty('--' + k, lay[k] + 'px'); };
+const saveLay = () => { try { localStorage.setItem('vizrs.artistLayout', JSON.stringify(lay)); } catch { /* brak localStorage */ } renderTimeline(); };
+for (const k of Object.keys(LAY)) setLay(k, +lay[k] || LAY[k][0]);
+for (const g of document.querySelectorAll('.gutter')) {
+  const k = g.dataset.k;
+  g.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    g.setPointerCapture(e.pointerId); g.classList.add('drag');
+    const start = lay[k], x0 = e.clientX, y0 = e.clientY;
+    const move = (ev) => setLay(k, start + (k === 'l' ? ev.clientX - x0 : k === 'r' ? x0 - ev.clientX : y0 - ev.clientY));
+    const up = () => { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.classList.remove('drag'); saveLay(); };
+    g.addEventListener('pointermove', move); g.addEventListener('pointerup', up);
+  });
+  g.addEventListener('dblclick', () => { setLay(k, LAY[k][0]); saveLay(); });
+}
+
+// okno natywne: bez przeglądarkowego menu pod prawym przyciskiem (Wstecz/Odśwież…); w polach tekstowych zostaje (kopiuj, wklej, pisownia)
+if (document.documentElement.classList.contains('native')) {
+  addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
+}
 
 // ------------------------------------------------------------ połączenie z serwerem
 // tylko wskaźnik (edycja sceny nie jest nadpisywana zdarzeniami); okno aplikacji `vizrs artist` wie dzięki temu, że Artist jest otwarty

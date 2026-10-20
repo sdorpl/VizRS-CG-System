@@ -318,11 +318,14 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 | Obszar | Zawartość |
 |---|---|
-| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, 🗑 usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.6), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ BTB (import z BTB CG), wskaźnik połączenia z serwerem, ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz** |
-| Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, 🗑; przeciąganie zmienia rodzica z zachowaniem położenia |
+| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.6), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ BTB (import z BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W oknie natywnym (`vizrs-shell`) bez logo i zakładek Artist / Trio / Wyjście – są w menu okna |
+| Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, kosz; przeciąganie zmienia rodzica z zachowaniem położenia |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny |
 | Właściwości (prawo) | grupy: Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker; „widoczny gdy”; presety animacji |
-| Oś czasu (dół) | czas, ⏮, ▶ Take, ⏭ Continue, ⏏ Out, ▶/⏸, ＋ Stop, długość, edytor klucza, ◆ Marker, ⧉ Kopiuj / ⎘ Wklej klucze, zoom |
+| Oś czasu (dół) | pasek: czas, ⏮, ▶ Take, ⏭ Continue, ⏏ Out, ▶/⏸, ＋ Stop, Dł. (długość sceny), ≣ Sekwencja, ▾ marker (M), ⧉ / ⎘ kopiuj / wklej klucze, suwak powiększenia, ↔ dopasuj. Pod nim stały **pasek klucza** (czas, wartość, krzywa i usunięcie zaznaczonego klucza), a w trybie sekwencji w tym miejscu **pasek sekwencji** (§8.3a) – oś czasu nie przeskakuje |
+| Pasek stanu (dół okna) | podpowiedź ze skrótami panelu pod kursorem; wskaźnik **połączono / brak połączenia** z serwerem |
+
+Panele są zadokowane jak w programie desktopowym: szerokość drzewa i właściwości oraz wysokość osi czasu zmienia się przeciągnięciem rozdzielacza (dwuklik = rozmiar domyślny); rozmiary są zapamiętane w przeglądarce / oknie. Pasek osi czasu mieści się w jednym wierszu od szerokości strony 1280 px (np. ekran Full HD przy skali 150%, 3K przy 200%). Interfejs nie zaznacza tekstu poza polami edycji; w oknie natywnym prawy przycisk nie otwiera menu przeglądarki (w polach tekstowych zostaje: kopiuj, wklej, pisownia).
 
 ### 8.2 Ustawienia sceny (kliknij puste tło kanwy)
 
@@ -345,12 +348,12 @@ Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu 
 
 - **Wiersz na element** (z wcięciem wg drzewa): niebieski pasek – wejście, pomarańczowy – wyjście (za ostatnim stop pointem), cienkie paski pod nimi – efekt tekstu IN/OUT, kreskowane tło – pętla uwagi (od końca wejścia do wyjścia). Etykieta pokazuje „↳ węzeł” (wchodzi po nim) i ◆N (węzeł ma też klucze).
 - **Przeciągnij pasek** – zmienia opóźnienie; **przeciągnij krawędź** – czas trwania (Shift = co 0,05 s). Klik w pasek zaznacza element i ustawia głowicę na jego starcie; klik w puste miejsce przewija czas.
-- Narzędzia (działają na dzieciach zaznaczonej grupy, rodzeństwie zaznaczonego elementu albo całej scenie – przy jednej grupie głównej na jej dzieciach):
+- Narzędzia – pasek **SEKWENCJA** pod paskiem osi czasu (działają na dzieciach zaznaczonej grupy, rodzeństwie zaznaczonego elementu albo całej scenie – przy jednej grupie głównej na jej dzieciach):
   - **⇶ Kaskada** – wejścia jedno po drugim co **krok** s (wyjścia w odwrotnej kolejności); elementy bez ruchu dostają przenikanie.
   - **↳ Po kolei** – każdy element wchodzi po zakończeniu wejścia poprzedniego (`motion.after`); przesunięcie liczy się samo, także gdy zmienisz czas poprzednika.
-  - **⧉ Kopiuj** – ruch zaznaczonego elementu na jego rodzeństwo (efekty tekstu tylko na tekstach).
-  - **◆ Klucze** – presety wejścia/wyjścia zaznaczonego elementu zamienione na edytowalne klucze (jak „Presety na klucze” w BTB): typy liniowe z krzywą `power2.*`/`linear`/`back.out` dają dwa klucze, pozostałe – klucze co 1/30 s; odwrócenia 3D, przesłony, maska ukośna, żaluzja, rosnący pasek, RGB i glitch zostają presetami (raport). Pętle i efekty tekstu zostają. Węzeł z kluczami na tych samych właściwościach – odmowa.
-  - **✕** – usuwa ruch z zaznaczonego elementu (bez zaznaczenia – z całej grupy).
+  - **⧉ Kopiuj ruch** – ruch zaznaczonego elementu na jego rodzeństwo (efekty tekstu tylko na tekstach).
+  - **◆ Na klucze** – presety wejścia/wyjścia zaznaczonego elementu zamienione na edytowalne klucze (jak „Presety na klucze” w BTB): typy liniowe z krzywą `power2.*`/`linear`/`back.out` dają dwa klucze, pozostałe – klucze co 1/30 s; odwrócenia 3D, przesłony, maska ukośna, żaluzja, rosnący pasek, RGB i glitch zostają presetami (raport). Pętle i efekty tekstu zostają. Węzeł z kluczami na tych samych właściwościach – odmowa.
+  - **✕ Usuń ruch** – usuwa ruch z zaznaczonego elementu (bez zaznaczenia – z całej grupy).
   - **⟲ Dopasuj** – stop point po najdłuższym wejściu, długość = stop + najdłuższe wyjście.
 - W panelu **Ruch** węzła pole **po węźle** ustawia sekwencję ręcznie.
 
@@ -581,6 +584,7 @@ vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
 - **Serwer:** jeśli na danym katalogu danych działa już serwer VizRS, okno dołącza do niego. Jeśli nie, powłoka uruchamia `vizrs serve --idle-exit 10` jako **osobny proces**. Awaria okna nie zdejmuje anteny, a serwer kończy pracę sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS). Komunikaty serwera trafiają do pliku `vizrs-shell-serwer-<pid>.log` w katalogu tymczasowym (ścieżka w Pomoc → O programie). Błąd startu (np. zajęty port) okno pokazuje w okienku systemowym.
 - **Menu:** Plik – nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Widok – Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Pomoc – strona startowa i API, O programie.
 - **Pliki:** ⇩ Eksport i ⇩ Paczka otwierają systemowe okno „Zapisz jako”; ⇧ Import – systemowe okno wyboru pliku.
+- **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Artist / Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.
 - **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi tylko wynik skryptu testowego `--probe`.
 - **Pisownia:** na Linuksie polska (słownik hunspell `pl_PL` z systemu, pakiet `hunspell-pl`); na Windows i macOS według ustawień systemu.
 - **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24, R7 i BTB_PILNE – 82/82 pól tekstowych z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.

@@ -294,6 +294,8 @@ impl App {
         let builder = WebViewBuilder::new()
             .with_url(url)
             .with_devtools(true)
+            // znacznik okna natywnego: strony chowają zakładki „Artist / Trio / Wyjście” (są w menu) i menu przeglądarki
+            .with_initialization_script(concat!("window.__vizrsShell = { version: '", env!("CARGO_PKG_VERSION"), "' };"))
             .with_clipboard(true)
             // odnośniki poza serwer VizRS otwiera przeglądarka systemowa
             .with_navigation_handler(move |u| {

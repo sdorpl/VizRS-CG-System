@@ -22,6 +22,7 @@
 | macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data trio` |
 
 **Okna aplikacji:** Artist i Trio otwierają się we własnych oknach (Edge/Chrome/Chromium bez pasków przeglądarki). Drugie okno dołącza do już działającego serwera. Zamknięcie okna nie zdejmuje grafiki z anteny – serwer pracuje, dopóki OBS albo inne okno jest podłączone.
+Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze między nimi (dwuklik przywraca rozmiar); podpowiedzi skrótów dla panelu pod kursorem są w pasku stanu na dole okna.
 **Okno natywne (zalecane):** `vizrs-shell` – Artist w prawdziwym oknie systemowym z menu i oknem „Zapisz jako” (Linux: `bin/linux-x86_64/vizrs-shell`; `vizrs-shell trio` – Trio). Zamknięcie okna nie zdejmuje grafiki z anteny.
 Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli) – same wybiorą okno natywne, jeśli jest. Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
 
@@ -92,7 +93,7 @@ Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości �
 1. Na osi czasu kliknij **≣ Sekwencja** – zamiast kluczy zobaczysz paski wejścia (niebieskie) i wyjścia (pomarańczowe) każdego elementu.
 2. Zaznacz grupę belki i kliknij **⇶ Kaskada** – elementy wejdą jeden po drugim co „krok” (np. 0,1 s), a zejdą w odwrotnej kolejności. **↳ Po kolei** – każdy wchodzi, gdy skończy się poprzedni.
 3. Przeciągnij pasek, aby przesunąć start; przeciągnij jego prawą krawędź, aby wydłużyć ruch.
-4. Chcesz dopracować ruch ręcznie? Zaznacz element i kliknij **◆ Klucze** – preset zamieni się na zwykłe klucze.
+4. Chcesz dopracować ruch ręcznie? Zaznacz element i kliknij **◆ Na klucze** – preset zamieni się na zwykłe klucze.
 
 ## 6. Wyświetlenie w OBS
 

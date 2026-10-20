@@ -97,8 +97,8 @@ export const TYPES = {
   ellipse: { label: 'Elipsa', icon: '●', props: [...COMMON, ...FOLLOW, 'color', 'color2', 'gradAngle', 'borderColor', 'borderWidth', 'shadow'] },
   text: { label: 'Tekst', icon: 'T', props: [...COMMON, 'text', 'cycle', ...TEXT_STYLE, 'hlColor', 'hlText'] },
   qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', 'radius', 'shadow'] },
-  image: { label: 'Obraz/wideo', icon: '🖼', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
-  clock: { label: 'Zegar', icon: '⏱', props: [...COMMON, 'mode', 'format', 'seconds', 'target', ...TEXT_STYLE] },
+  image: { label: 'Obraz/wideo', icon: '▨', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
+  clock: { label: 'Zegar', icon: '◷', props: [...COMMON, 'mode', 'format', 'seconds', 'target', ...TEXT_STYLE] },
   ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'labelSize', 'labelWeight', 'gleam', 'textFit', 'squeezeMin', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
 };
 
