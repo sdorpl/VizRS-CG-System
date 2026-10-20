@@ -82,5 +82,6 @@ jobs:
           curl -fsS -H 'X-Token: ci-token' http://127.0.0.1:8088/api/show | grep -q '"pages"'
           # bez tokenu kontener (bind 0.0.0.0) nie startuje
           ! docker run --rm vizrs:ci
-          start=$(date +%s); docker stop v; echo "docker stop: $(( $(date +%s) - start )) s"
+          # SIGTERM obsłużony przez VizRS (PID 1 bez --init) – bez czekania 10 s na SIGKILL
+          start=$(date +%s); docker stop v; t=$(( $(date +%s) - start )); echo "docker stop: $t s"; [ "$t" -lt 5 ]
           docker logs v | tail -20

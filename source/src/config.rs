@@ -23,12 +23,18 @@ pub struct Config {
     pub tcp_port: u16,
     pub bind: String,
     pub token: Option<String>,
+    /// Token tylko do odczytu dla wyjść (OBS, vMix): `/output`, zdarzenia, fonty, grafiki.
+    pub output_token: Option<String>,
     pub osc_port: u16,
     pub webhook: Option<String>,
     pub data: PathBuf,
     pub web_dir: Option<PathBuf>,
     /// Zgoda na nasłuch w sieci bez tokenu (`--insecure` / `VIZRS_INSECURE=1`).
     pub insecure: bool,
+    /// Adres klienta z `X-Forwarded-For` (serwer za reverse proxy); bez limitu połączeń na adres gniazda.
+    pub trust_proxy: bool,
+    /// Log audytowy także na standardowe wyjście (JSON w linii) – `docker logs`.
+    pub log_stdout: bool,
     /// Identyfikator tej instancji serwera (z blokady katalogu danych), widoczny w `/health`.
     pub instance: String,
 }
@@ -41,17 +47,24 @@ impl Default for Config {
             tcp_port: 6100,
             bind: "127.0.0.1".into(),
             token: None,
+            output_token: None,
             osc_port: 0,
             webhook: None,
             data: PathBuf::from("vizrs-data"),
             web_dir: None,
             insecure: false,
+            trust_proxy: false,
+            log_stdout: false,
             instance: String::new(),
         }
     }
 }
 
 impl Config {
+    pub fn tokens(&self) -> crate::guard::Tokens {
+        crate::guard::Tokens { operator: self.token.clone(), output: self.output_token.clone() }
+    }
+
     /// Adres, pod którym ten serwer jest osiągalny z tej samej maszyny (`--healthcheck`, blokada danych).
     pub fn local_addr(&self) -> String {
         let host = match self.bind.as_str() {
@@ -116,6 +129,15 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
     if let Some(v) = env("VIZRS_TOKEN") {
         c.token = Some(token("VIZRS_TOKEN", &v)?);
     }
+    if let Some(v) = env("VIZRS_OUTPUT_TOKEN") {
+        c.output_token = Some(token("VIZRS_OUTPUT_TOKEN", &v)?);
+    }
+    if let Some(v) = env("VIZRS_TRUST_PROXY") {
+        c.trust_proxy = flag_true(&v);
+    }
+    if let Some(v) = env("VIZRS_LOG_STDOUT") {
+        c.log_stdout = flag_true(&v);
+    }
     if let Some(v) = env("VIZRS_WEBHOOK") {
         c.webhook = Some(webhook("VIZRS_WEBHOOK", &v)?);
     }
@@ -152,6 +174,9 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
             "--osc" => c.osc_port = num(name, &val()?)?,
             "--bind" => c.bind = val()?,
             "--token" => c.token = Some(token(name, &val()?)?),
+            "--output-token" => c.output_token = Some(token(name, &val()?)?),
+            "--trust-proxy" => c.trust_proxy = true,
+            "--log-stdout" => c.log_stdout = true,
             "--webhook" => c.webhook = Some(webhook(name, &val()?)?),
             "--data" | "-d" => c.data = PathBuf::from(val()?),
             "--web" => c.web_dir = Some(PathBuf::from(val()?)),
@@ -168,6 +193,12 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
         i += 1;
     }
 
+    if c.output_token.is_some() && c.token.is_none() {
+        return Err("--output-token wymaga tokenu operatora (--token / VIZRS_TOKEN)".into());
+    }
+    if c.output_token.is_some() && c.output_token == c.token {
+        return Err("token wyjścia musi być inny niż token operatora".into());
+    }
     if c.mode == Mode::Serve && c.token.is_none() && !is_loopback(&c.bind) && !c.insecure {
         return Err(format!(
             "nasłuch na {} bez tokenu: każdy w sieci mógłby sterować anteną.\nUstaw --token (albo VIZRS_TOKEN); świadomie bez tokenu: --insecure",
@@ -194,7 +225,11 @@ Opcje (w nawiasie zmienna środowiskowa; flaga ma pierwszeństwo):
   --bind ADRES   adres nasłuchu (VIZRS_BIND, domyślnie 127.0.0.1); inny niż lokalny wymaga tokenu
   --token HASŁO  wymagaj tokenu (VIZRS_TOKEN). UI: otwórz raz z ?token=…; API: Authorization: Bearer,
                  X-Token albo ?token=; TCP: pierwsza linia AUTH …
+  --output-token HASŁO  drugi token, tylko do odczytu: /output, zdarzenia, fonty, grafiki – dla OBS/vMix
+                 (VIZRS_OUTPUT_TOKEN); wyciek adresu wyjścia nie daje sterowania anteną
   --insecure     pozwól na nasłuch w sieci bez tokenu (VIZRS_INSECURE=1) – tylko w zaufanej sieci
+  --trust-proxy  serwer za reverse proxy: adres klienta z X-Forwarded-For (log, limity) (VIZRS_TRUST_PROXY=1)
+  --log-stdout   log audytowy także na standardowe wyjście, JSON w linii (VIZRS_LOG_STDOUT=1)
   --webhook URL  http://host:port/ścieżka dla zdarzeń onAir/offAir/error (VIZRS_WEBHOOK)
   --data KAT     katalog z show.json i assets/ (VIZRS_DATA, domyślnie vizrs-data)
   --web KAT      serwuj pliki UI z dysku zamiast wbudowanych (VIZRS_WEB)
@@ -263,6 +298,17 @@ mod tests {
         assert!(run(&["--bind", "::1"], &[]).is_ok());
         // healthcheck nie nasłuchuje – nie wymaga tokenu
         assert!(run(&["--healthcheck"], &[("VIZRS_BIND", "0.0.0.0")]).is_ok());
+    }
+
+    #[test]
+    fn output_token_and_proxy_options() {
+        let c = run(&["--token", "op", "--output-token", "out", "--trust-proxy", "--log-stdout"], &[]).unwrap();
+        assert_eq!(c.output_token.as_deref(), Some("out"));
+        assert!(c.trust_proxy && c.log_stdout);
+        let c = run(&[], &[("VIZRS_TOKEN", "op"), ("VIZRS_OUTPUT_TOKEN", "out"), ("VIZRS_TRUST_PROXY", "1"), ("VIZRS_LOG_STDOUT", "true")]).unwrap();
+        assert!(c.output_token.is_some() && c.trust_proxy && c.log_stdout);
+        assert!(run(&["--output-token", "out"], &[]).is_err(), "bez tokenu operatora");
+        assert!(run(&["--token", "x", "--output-token", "x"], &[]).is_err(), "taki sam token");
     }
 
     #[test]

@@ -2,7 +2,7 @@
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::json::Json;
 
@@ -131,10 +131,31 @@ fn read_line_limited<R: BufRead>(r: &mut R, buf: &mut String) -> Result<usize, S
 }
 
 const MAX_BODY: usize = 64 * 1024 * 1024;
+/// Cały nagłówek żądania musi dojść w tym czasie (ochrona przed „slowloris”: bajt co kilka sekund).
+const HEAD_DEADLINE: Duration = Duration::from_secs(15);
+/// Najdłuższa przerwa między kolejnymi kawałkami treści (wgrywanie dużych plików przez wolne łącze).
+const BODY_IDLE: Duration = Duration::from_secs(30);
+
+/// Czytnik z terminem: każdy odczyt dostaje tylko pozostały czas, po terminie – `TimedOut`.
+struct Deadline {
+    s: TcpStream,
+    until: Option<Instant>,
+}
+
+impl Read for Deadline {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let wait = match self.until {
+            Some(u) => u.checked_duration_since(Instant::now()).filter(|d| !d.is_zero()).ok_or(std::io::ErrorKind::TimedOut)?,
+            None => BODY_IDLE,
+        };
+        self.s.set_read_timeout(Some(wait))?;
+        self.s.read(buf)
+    }
+}
 
 pub fn read_request(stream: &mut TcpStream) -> Result<Request, String> {
-    stream.set_read_timeout(Some(Duration::from_secs(30))).ok();
-    let mut r = BufReader::new(stream.try_clone().map_err(|e| e.to_string())?);
+    let src = Deadline { s: stream.try_clone().map_err(|e| e.to_string())?, until: Some(Instant::now() + HEAD_DEADLINE) };
+    let mut r = BufReader::new(src);
     let mut line = String::new();
     read_line_limited(&mut r, &mut line)?;
     let mut parts = line.split_whitespace();
@@ -162,6 +183,7 @@ pub fn read_request(stream: &mut TcpStream) -> Result<Request, String> {
     if len > MAX_BODY {
         return Err("413".into());
     }
+    r.get_mut().until = None;
     let mut body = vec![0u8; len];
     r.read_exact(&mut body).map_err(|e| e.to_string())?;
 

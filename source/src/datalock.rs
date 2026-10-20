@@ -28,13 +28,20 @@ pub struct Owner {
     pub addr: String,
 }
 
-impl Drop for DataLock {
-    fn drop(&mut self) {
+impl DataLock {
+    /// Usuwa plik blokady, jeśli nadal jest nasz (można wołać wielokrotnie, np. przy zatrzymaniu sygnałem).
+    pub fn release(&self) {
         if let Some(p) = &self.path {
             if read(p).map(|j| j.str("instance") == Some(self.instance.as_str())).unwrap_or(false) {
                 std::fs::remove_file(p).ok();
             }
         }
+    }
+}
+
+impl Drop for DataLock {
+    fn drop(&mut self) {
+        self.release();
     }
 }
 

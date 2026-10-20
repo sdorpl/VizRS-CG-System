@@ -1,7 +1,7 @@
 # Obraz VizRS: statyczna binarka (musl) na pustym obrazie (~3 MB), bez powłoki i pakietów.
 #
 #   docker build -t vizrs .
-#   docker run -d --init -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data vizrs
+#   docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data vizrs
 #
 # Serwer z HTTPS (Caddy, Let's Encrypt): deploy/docker-compose.yml, opis w docs/RUNBOOK.md („VPS i Docker”).
 # Konfiguracja wyłącznie przez zmienne VIZRS_* (vizrs --help). Dane: wolumen /data (show.json, assets/, backups/, log.jsonl).

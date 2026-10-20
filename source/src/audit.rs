@@ -3,6 +3,7 @@
 
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 
 use crate::json::Json;
@@ -12,6 +13,8 @@ const MAX_BYTES: u64 = 5 * 1024 * 1024;
 pub struct Audit {
     path: PathBuf,
     lock: Mutex<()>,
+    /// Kopia wpisów na standardowe wyjście (`--log-stdout`, `docker logs`).
+    stdout: AtomicBool,
 }
 
 /// Usuwa `token=…` z fragmentu URL/komendy.
@@ -31,7 +34,11 @@ pub fn scrub(s: &str) -> String {
 
 impl Audit {
     pub fn new(dir: &std::path::Path) -> Audit {
-        Audit { path: dir.join("log.jsonl"), lock: Mutex::new(()) }
+        Audit { path: dir.join("log.jsonl"), lock: Mutex::new(()), stdout: AtomicBool::new(false) }
+    }
+
+    pub fn echo_stdout(&self, on: bool) {
+        self.stdout.store(on, Ordering::Relaxed);
     }
 
     pub fn log(&self, src: &str, what: &str, status: Option<u16>) {
@@ -43,8 +50,12 @@ impl Audit {
         if let Some(s) = status {
             rec.set("status", (s as f64).into());
         }
+        let line = rec.dump();
+        if self.stdout.load(Ordering::Relaxed) {
+            writeln!(std::io::stdout().lock(), "{line}").ok();
+        }
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&self.path) {
-            writeln!(f, "{}", rec.dump()).ok();
+            writeln!(f, "{line}").ok();
         }
     }
 

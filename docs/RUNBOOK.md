@@ -18,18 +18,22 @@ Trio pokazuje „🔒 imię” przy stronie edytowanej przez kogoś innego; zapi
 Konflikt zapisu (ktoś zapisał wcześniej) → komunikat z wyborem „nadpisz moją wersją / zachowaj zmiany”.
 
 ## Rotacja tokenu
-Zmień `VIZRS_TOKEN` w usłudze i zrestartuj; w OBS zaktualizuj `?token=` w URL wyjścia; w Companion nagłówek `X-Token`.
+Zmień `VIZRS_TOKEN` (i `VIZRS_OUTPUT_TOKEN`) w usłudze lub `deploy/.env` i zrestartuj (`docker compose up -d`); w OBS zaktualizuj `?token=` w URL wyjścia; w Companion nagłówek `X-Token`.
+W OBS/vMix używaj **tokenu wyjścia** (`--output-token`) – po wycieku wystarczy zmienić tylko jego, operatorzy pracują dalej.
+Próby złego tokenu: `docker compose logs vizrs | grep odmowa` albo `log.jsonl` (wpisy „odmowa: zły token”, z adresem klienta).
 
 ## VPS i Docker
 Obraz: statyczna binarka na pustym obrazie (`Dockerfile`, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`). Konfiguracja przez zmienne `VIZRS_*`, dane w wolumenie `/data`.
 
 **Serwer z HTTPS (zalecane na VPS)** – `deploy/docker-compose.yml` (VizRS + Caddy z certyfikatem Let's Encrypt):
 1. Rekord DNS `A`/`AAAA` domeny (np. `cg.example.pl`) na adres VPS; porty 80 i 443 otwarte w zaporze.
-2. `cd deploy && cp env.example .env` → ustaw `VIZRS_DOMAIN` i `VIZRS_TOKEN` (długi losowy, np. `openssl rand -hex 24`).
+2. `cd deploy && cp env.example .env` → ustaw `VIZRS_DOMAIN`, `VIZRS_TOKEN` i `VIZRS_OUTPUT_TOKEN` (długie losowe, np. `openssl rand -hex 24`).
 3. `docker compose up -d --build` → `docker compose ps` pokazuje `healthy`.
-4. Trio: `https://cg.example.pl/trio?token=…` (raz, potem ciasteczko). OBS: `https://cg.example.pl/output?token=…`.
+4. Trio: `https://cg.example.pl/trio?token=<VIZRS_TOKEN>` (raz, potem ciasteczko). OBS: `https://cg.example.pl/output?token=<VIZRS_OUTPUT_TOKEN>` (tylko odczyt).
 
-**Sieć lokalna, bez proxy:** `docker run -d --init --name vizrs -p 8088:8088 -e VIZRS_TOKEN=… -v vizrs-data:/data --restart unless-stopped vizrs`.
+Compose ustawia `VIZRS_TRUST_PROXY=1` (adres klienta z `X-Forwarded-For`) – **włączaj to tylko, gdy port VizRS jest osiągalny wyłącznie przez proxy**, inaczej klient może podać dowolny adres i ominąć spowalnianie prób tokenu.
+
+**Sieć lokalna, bez proxy:** `docker run -d --name vizrs -p 8088:8088 -e VIZRS_TOKEN=… -v vizrs-data:/data --restart unless-stopped vizrs`.
 Bez tokenu kontener nie wystartuje (nasłuch `0.0.0.0`); świadomie bez tokenu: `-e VIZRS_INSECURE=1`.
 
 **Własny nginx zamiast Caddy:** `deploy/nginx-vizrs.conf` – konieczne `proxy_set_header Host $host` (inaczej 403 „niedozwolony Origin”) oraz `proxy_buffering off` dla `/events` (inaczej wyjście dostaje TAKE z opóźnieniem).
@@ -48,7 +52,7 @@ Bez tokenu kontener nie wystartuje (nasłuch `0.0.0.0`); świadomie bez tokenu: 
 **Drugi kanał** = drugi kontener z własnym wolumenem i własną domeną (w `Caddyfile` drugi blok z `reverse_proxy vizrs2:8088`).
 
 ## Lista kontrolna przed emisją (OBS / vMix / Tricaster / ATEM)
-- [ ] OBS: źródło Przeglądarka `http://host:8088/output?token=…`, 1920×1080, „Odśwież, gdy scena aktywna”.
+- [ ] OBS: źródło Przeglądarka `http://host:8088/output?token=…` (token wyjścia, jeśli ustawiony), 1920×1080, „Odśwież, gdy scena aktywna”.
 - [ ] Test TAKE/CONTINUE/OUT każdej używanej strony; test `UPDATE` na antenie.
 - [ ] Fonty: ⚙ Stan → „Fonty offline”; własne fonty wgrane do assets (bez Google Fonts na antenie).
 - [ ] Key/Fill: dwa źródła – Fill `?mode=fill`, Key `?mode=key`; w mikserze Key = luma/linear key.

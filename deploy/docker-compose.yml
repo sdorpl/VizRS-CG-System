@@ -6,7 +6,7 @@
 #
 # Domena musi wskazywać (rekord A/AAAA) na VPS, porty 80 i 443 otwarte – Caddy sam pobierze certyfikat.
 # Trio:   https://<domena>/trio?token=<token>     (raz – potem ciasteczko)
-# OBS:    https://<domena>/output?token=<token>   (Źródło → Przeglądarka, 1920×1080)
+# OBS:    https://<domena>/output?token=<token wyjścia>   (Źródło → Przeglądarka, 1920×1080; token tylko do odczytu)
 # Opis: docs/RUNBOOK.md, sekcja „VPS i Docker”.
 
 services:
@@ -21,6 +21,11 @@ services:
     restart: unless-stopped
     environment:
       VIZRS_TOKEN: ${VIZRS_TOKEN:?ustaw VIZRS_TOKEN w pliku .env}
+      VIZRS_OUTPUT_TOKEN: ${VIZRS_OUTPUT_TOKEN:-}
+      # za Caddy: prawdziwy adres klienta z X-Forwarded-For (log audytowy, spowalnianie złych prób)
+      VIZRS_TRUST_PROXY: "1"
+      # log audytowy także w `docker compose logs vizrs`
+      VIZRS_LOG_STDOUT: "1"
       VIZRS_WEBHOOK: ${VIZRS_WEBHOOK:-}
     volumes:
       - vizrs-data:/data

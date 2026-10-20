@@ -16,14 +16,17 @@ mod hook;
 mod http;
 mod json;
 mod osc;
+mod shutdown;
 mod ticker;
 mod validate;
 
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
+use std::collections::HashMap;
+use std::net::IpAddr;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use engine::Engine;
@@ -87,6 +90,43 @@ impl Drop for ConnSlot {
     }
 }
 
+/// Najwyżej tyle jednoczesnych połączeń z jednego adresu (poza pętlą zwrotną i trybem `--trust-proxy`):
+/// jeden klient nie zajmie wszystkich `MAX_CONNS` (np. powolnymi nagłówkami).
+const MAX_PER_IP: usize = 128;
+static PER_IP: Mutex<Option<HashMap<IpAddr, usize>>> = Mutex::new(None);
+
+struct IpSlot(IpAddr);
+impl IpSlot {
+    fn acquire(ip: IpAddr) -> Option<IpSlot> {
+        let mut g = PER_IP.lock().unwrap_or_else(|e| e.into_inner());
+        let n = g.get_or_insert_with(HashMap::new).entry(ip).or_insert(0);
+        if *n >= MAX_PER_IP {
+            return None;
+        }
+        *n += 1;
+        Some(IpSlot(ip))
+    }
+}
+impl Drop for IpSlot {
+    fn drop(&mut self) {
+        let mut g = PER_IP.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(m) = g.as_mut() {
+            if let Some(n) = m.get_mut(&self.0) {
+                *n -= 1;
+                if *n == 0 {
+                    m.remove(&self.0);
+                }
+            }
+        }
+    }
+}
+
+/// Adres klienta podany przez reverse proxy (ostatni wpis `X-Forwarded-For`, inaczej `X-Real-IP`).
+fn forwarded_ip(req: &Request) -> Option<String> {
+    let xff = req.header("x-forwarded-for").and_then(|v| v.rsplit(',').map(str::trim).find(|s| !s.is_empty()));
+    xff.or_else(|| req.header("x-real-ip").map(str::trim)).and_then(|ip| ip.parse::<IpAddr>().ok()).map(|ip| ip.to_string())
+}
+
 use config::{Cli, Config, Mode};
 
 fn main() {
@@ -147,6 +187,10 @@ fn serve(mut cfg: Config) {
     cfg.instance = lock.instance.clone();
     let cfg = Arc::new(cfg);
     let engine = Engine::new(cfg.data.clone(), DEMO_SHOW);
+    engine.audit.echo_stdout(cfg.log_stdout);
+    if !config::is_loopback(&cfg.bind) && cfg.token.as_deref().map(|t| t.len() < 16).unwrap_or(false) {
+        eprintln!("[vizrs] UWAGA: token krótszy niż 16 znaków przy nasłuchu w sieci – użyj długiego losowego (np. openssl rand -hex 24)");
+    }
     for (name, bytes) in DEMO_ASSETS {
         let p = cfg.data.join("assets").join(name);
         if !p.exists() {
@@ -189,8 +233,25 @@ fn serve(mut cfg: Config) {
         println!("│  Komendy TCP:             port {:<26}│", cfg.tcp_port);
     }
     println!("│  Dane: {:<50}│", cfg.data.display().to_string());
-    println!("│  Nasłuch: {:<47}│", format!("{}{}", cfg.bind, if cfg.token.is_some() { " (token wymagany)" } else { "" }));
+    let auth = match (&cfg.token, &cfg.output_token) {
+        (Some(_), Some(_)) => " (token + token wyjścia)",
+        (Some(_), None) => " (token wymagany)",
+        _ => "",
+    };
+    println!("│  Nasłuch: {:<47}│", format!("{}{}{}", cfg.bind, auth, if cfg.trust_proxy { ", za proxy" } else { "" }));
     println!("└──────────────────────────────────────────────────────────┘");
+
+    // SIGTERM / Ctrl+C: zwolnij blokadę katalogu danych i zakończ (zapisy show są atomowe i synchroniczne)
+    let lock = Arc::new(lock);
+    {
+        let (lock, e) = (Arc::clone(&lock), Arc::clone(&engine));
+        shutdown::on_signal(move || {
+            println!("[vizrs] zatrzymanie – kończę pracę");
+            e.audit.log("system", "STOP (sygnał)", None);
+            lock.release();
+            std::process::exit(0);
+        });
+    }
 
     for stream in listener.incoming().flatten() {
         let Some(slot) = ConnSlot::acquire() else {
@@ -198,10 +259,21 @@ fn serve(mut cfg: Config) {
             Response::err(503, "za dużo połączeń").write_to(&mut s).ok();
             continue;
         };
+        let ip_slot = match stream.peer_addr().map(|a| a.ip()) {
+            Ok(ip) if !cfg.trust_proxy && !ip.is_loopback() => match IpSlot::acquire(ip) {
+                Some(s) => Some(s),
+                None => {
+                    let mut s = stream;
+                    Response::err(503, "za dużo połączeń z tego adresu").write_to(&mut s).ok();
+                    continue;
+                }
+            },
+            _ => None,
+        };
         let e = Arc::clone(&engine);
         let c = Arc::clone(&cfg);
         std::thread::spawn(move || {
-            let _slot = slot;
+            let _slots = (slot, ip_slot);
             handle_conn(stream, e, c)
         });
     }
@@ -209,7 +281,7 @@ fn serve(mut cfg: Config) {
 
 fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
     stream.set_nodelay(true).ok();
-    let req = match read_request(&mut stream) {
+    let mut req = match read_request(&mut stream) {
         Ok(r) => r,
         Err(e) => {
             let code = if e == "413" { 413 } else { 400 };
@@ -217,10 +289,20 @@ fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
             return;
         }
     };
-    let cookie = match guard::check(&req, &cfg.token) {
+    if cfg.trust_proxy {
+        if let Some(ip) = forwarded_ip(&req) {
+            req.peer = ip;
+        }
+    }
+    let cookie = match guard::check(&req, &cfg.tokens()) {
         guard::Verdict::Allow => None,
         guard::Verdict::AllowSetCookie(t) => Some(guard::cookie_header(&t)),
         guard::Verdict::Deny(code, msg) => {
+            if code == 401 {
+                engine.audit.log(&format!("http:{}", req.peer), &format!("odmowa: zły token – {} {}", req.method, req.path), Some(401));
+                // kolejne nieudane próby z tego adresu odpowiadają coraz wolniej
+                std::thread::sleep(guard::note_failure(&req.peer));
+            }
             Response::err(code, msg).write_to(&mut stream).ok();
             return;
         }
@@ -855,6 +937,25 @@ mod tests {
         let p = show.arr("pages").iter().find(|p| p.num("number") == Some(3001.0)).unwrap().clone();
         assert_eq!(p.get("values").and_then(|v| v.str("items")), Some(""), "zmiany zapisane na stronie");
         std::fs::remove_dir_all(&d).ok();
+    }
+
+    #[test]
+    fn per_ip_slots_limit_and_release() {
+        let ip: IpAddr = "198.51.100.7".parse().unwrap();
+        let held: Vec<IpSlot> = (0..MAX_PER_IP).map(|_| IpSlot::acquire(ip).unwrap()).collect();
+        assert!(IpSlot::acquire(ip).is_none());
+        assert!(IpSlot::acquire("198.51.100.8".parse().unwrap()).is_some());
+        drop(held);
+        assert!(IpSlot::acquire(ip).is_some());
+    }
+
+    #[test]
+    fn forwarded_ip_takes_last_proxy_entry() {
+        let r = |h: &[(&str, &str)]| Request { method: "GET".into(), path: "/".into(), query: vec![], headers: h.iter().map(|(a, b)| (a.to_string(), b.to_string())).collect(), body: vec![], peer: String::new(), raw_query: String::new() };
+        assert_eq!(forwarded_ip(&r(&[("x-forwarded-for", "1.2.3.4, 203.0.113.5")])).as_deref(), Some("203.0.113.5"));
+        assert_eq!(forwarded_ip(&r(&[("x-real-ip", "2001:db8::1")])).as_deref(), Some("2001:db8::1"));
+        assert_eq!(forwarded_ip(&r(&[("x-forwarded-for", "nie-ip")])), None);
+        assert_eq!(forwarded_ip(&r(&[])), None);
     }
 
     #[test]

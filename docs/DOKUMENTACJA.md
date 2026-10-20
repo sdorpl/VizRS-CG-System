@@ -502,6 +502,9 @@ Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vi
 | `--tcp` | `VIZRS_TCP` | 6100 | port komend tekstowych (0 = wyłączony) |
 | `--bind` | `VIZRS_BIND` | 127.0.0.1 | adres nasłuchu; adres inny niż lokalny (`0.0.0.0`, IP w sieci) **wymaga tokenu** |
 | `--token` | `VIZRS_TOKEN` | – | wymagany token (znaki `A-Z a-z 0-9 - _ .`) |
+| `--output-token` | `VIZRS_OUTPUT_TOKEN` | – | drugi token, **tylko do odczytu** – dla OBS/vMix (patrz niżej) |
+| `--trust-proxy` | `VIZRS_TRUST_PROXY=1` | – | serwer za reverse proxy: adres klienta z `X-Forwarded-For` (log, spowalnianie prób), bez limitu połączeń na adres |
+| `--log-stdout` | `VIZRS_LOG_STDOUT=1` | – | log audytowy także na standardowe wyjście (JSON w linii; `docker logs`) |
 | `--insecure` | `VIZRS_INSECURE=1` | – | świadoma zgoda na nasłuch w sieci bez tokenu (tylko sieć zaufana) |
 | `--osc` | `VIZRS_OSC` | 0 | port UDP OSC |
 | `--webhook` | `VIZRS_WEBHOOK` | – | adres `http://` dla zdarzeń |
@@ -515,6 +518,11 @@ Flaga ma pierwszeństwo przed zmienną; pusta zmienna = nieustawiona. Opcje moż
 **Jeden serwer na katalog danych:** serwer zakłada `<data>/.vizrs.lock` (pid, adres, identyfikator instancji – ten sam co pole `instance` w `/health`). Drugi serwer na tym samym `--data` nie wystartuje (kod 3) i poda adres działającego. Plik po awarii (`kill -9`, zanik zasilania) jest rozpoznawany jako martwy i zastępowany przy następnym starcie. Gdy pliku nie da się zapisać, serwer działa dalej bez blokady (ostrzeżenie).
 
 Token: przeglądarka – raz `?token=…` (zapisuje ciasteczko); API – `Authorization: Bearer`, `X-Token` albo `?token=`; TCP – pierwsza linia `AUTH …`.
+**Token wyjścia** (`--output-token`, wymaga `--token`): pozwala tylko na to, czego potrzebuje strona wyjścia – `/output`, skrypty i style, `/fonts/*`, `/assets/*`, zdarzenia `/events`, lista grafik i zgłaszanie błędów scen. TAKE, zmiany show, Trio i Artist z tym tokenem → 403. W OBS/vMix wpisuj `…/output?token=<token wyjścia>` – wyciek adresu (kolekcja scen, zrzut ekranu) nie daje sterowania anteną.
+
+**Ochrona w sieci publicznej:** po 5 nieudanych próbach tokenu z jednego adresu każda kolejna odpowiedź 401 jest opóźniana (do 3 s; licznik zeruje się po 10 min; poprawny token działa od razu), próby trafiają do logu audytowego; najwyżej 128 jednoczesnych połączeń z jednego adresu (poza `127.0.0.1` i trybem `--trust-proxy`); cały nagłówek żądania musi dojść w 15 s. Przy tokenie krótszym niż 16 znaków i nasłuchu w sieci serwer ostrzega na starcie.
+**Zatrzymanie:** SIGTERM/SIGINT (Docker, systemd, Ctrl+C) kończy pracę od razu i zwalnia blokadę katalogu danych (zapisy show są atomowe).
+
 Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site`, `Origin`). VizRS sam nie obsługuje TLS – w sieciach współdzielonych i na VPS stawiaj go za reverse proxy z HTTPS (Caddy w `deploy/docker-compose.yml`).
 Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 

@@ -55,6 +55,7 @@ uruchom z `--bind 0.0.0.0 --token TWOJE_HASŁO` (dozwolone znaki: `A-Z a-z 0-9 -
 | Kanał | Jak podać token |
 |---|---|
 | Przeglądarka / OBS | raz otwórz `http://host:8088/trio?token=HASŁO` (zapisze się ciasteczko; w OBS wpisz URL wyjścia z `?token=`) |
+| OBS / vMix (tylko odczyt) | `--output-token DRUGIE_HASŁO` i w OBS `…/output?token=DRUGIE_HASŁO` – ten token nie pozwala na TAKE ani edycję |
 | HTTP API (Companion, skrypty) | nagłówek `Authorization: Bearer HASŁO`, `X-Token: HASŁO` albo `?token=HASŁO` w URL |
 | TCP :6100 | pierwsza linia `AUTH HASŁO` |
 

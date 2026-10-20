@@ -467,6 +467,28 @@ async function waitUp() {
       srv2.kill(); hook.close(); fs.rmSync(d2, { recursive: true, force: true });
     }
 
+    // --- token wyjścia (tylko odczyt): OBS widzi grafikę, ale nie steruje (osobna instancja) ---
+    {
+      const p3 = PORT + 3, OUTT = 'e2e-wyjscie-1', d3 = fs.mkdtempSync(path.join(os.tmpdir(), 'vizrs-e2e3-'));
+      const B3 = `http://127.0.0.1:${p3}`;
+      const srv3 = spawn(BIN, ['--port', String(p3), '--tcp', '0', '--data', d3, '--token', TOKEN, '--output-token', OUTT], { stdio: 'ignore' });
+      for (let i = 0; i < 50; i++) { try { await fetch(B3 + '/health', { headers: { 'X-Token': TOKEN } }); break; } catch (e) { await sleep(100); } }
+      const ctx3 = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+      const out3 = await ctx3.newPage();
+      const errs3 = [];
+      out3.on('pageerror', (e) => errs3.push(e.message));
+      out3.on('response', (r) => { if (r.status() >= 400) errs3.push(r.status() + ' ' + r.url()); });
+      await out3.goto(B3 + '/output?token=' + OUTT);
+      await sleep(800);
+      ok((await fetch(B3 + '/api/take/1001', { method: 'POST', headers: { 'X-Token': OUTT } })).status === 403, 'token wyjścia: TAKE → 403');
+      ok((await fetch(B3 + '/trio?token=' + OUTT)).status === 403, 'token wyjścia: Trio → 403');
+      await fetch(B3 + '/api/take/1001?headline=TOKEN%20WYJSCIA', { method: 'POST', headers: { 'X-Token': TOKEN } });
+      await sleep(2200);
+      ok(await out3.evaluate(() => document.body.innerText.includes('TOKEN WYJSCIA')), 'token wyjścia: Output pokazuje grafikę po TAKE operatora');
+      ok(errs3.length === 0, 'token wyjścia: Output bez błędów i odmów (fonty, grafiki, zdarzenia)', errs3);
+      await ctx3.close(); srv3.kill(); fs.rmSync(d3, { recursive: true, force: true });
+    }
+
     // --- ticker: edytor wiadomości w Trio, UPDATE na antenie bez restartu przewijania, /api/ticker ---
     await trio.reload(); await sleep(900);
     await trio.fill('#filter', '3001'); await sleep(200);

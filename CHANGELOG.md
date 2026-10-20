@@ -5,6 +5,9 @@
 - **`vizrs --healthcheck`**: sprawdza `/health` działającego serwera (kod 0/1) – dla Dockera bez curla i monitoringu.
 - **Jeden serwer na katalog danych** (`<data>/.vizrs.lock`): drugi serwer na tym samym `--data` odmawia startu i podaje adres działającego; martwy plik po awarii jest zastępowany. `/health` zwraca `instance`.
 - **Zmiana zachowania:** nasłuch na adresie innym niż lokalny bez tokenu kończy start z błędem (świadomie: `--insecure`); nieznana opcja lub zła wartość portu to błąd (kod 2) zamiast cichego pominięcia.
+- **Token wyjścia** `--output-token` / `VIZRS_OUTPUT_TOKEN`: tylko odczyt dla OBS/vMix (`/output`, zdarzenia, fonty, grafiki, zgłaszanie błędów scen); TAKE, edycja, Trio i Artist → 403. Wyciek adresu wyjścia nie daje sterowania anteną.
+- **Ochrona w sieci publicznej:** spowalnianie odpowiedzi po 5 nieudanych próbach tokenu z adresu (do 3 s, wpisy „odmowa” w logu audytowym), limit 128 połączeń z jednego adresu, termin 15 s na cały nagłówek żądania (slowloris), ostrzeżenie przy krótkim tokenie.
+- `--trust-proxy` (adres klienta z `X-Forwarded-For` za Caddy/nginx), `--log-stdout` (log audytowy na standardowe wyjście), obsługa **SIGTERM/SIGINT** i zdarzeń konsoli Windows bez zależności (natychmiastowy `docker stop`, zwolnienie blokady katalogu danych). Compose ustawia token wyjścia, `VIZRS_TRUST_PROXY` i `VIZRS_LOG_STDOUT`.
 - **Docker i VPS:** `Dockerfile` (statyczna binarka musl na `scratch`, ~3 MB, użytkownik 10001, `HEALTHCHECK` przez `vizrs --healthcheck`, wolumen `/data`, TCP 6100 wyłączony), `deploy/docker-compose.yml` z Caddy (automatyczny HTTPS), `deploy/nginx-vizrs.conf`, `deploy/env.example`; RUNBOOK „VPS i Docker”; job CI `docker` (budowa, healthy, token, restart z zachowaniem show). `VIZRS_GIT_HASH` dla `--version` przy budowie bez `.git`.
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
