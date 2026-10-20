@@ -22,7 +22,8 @@
 | macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data trio` |
 
 **Okna aplikacji:** Artist i Trio otwierają się we własnych oknach (Edge/Chrome/Chromium bez pasków przeglądarki). Drugie okno dołącza do już działającego serwera. Zamknięcie okna nie zdejmuje grafiki z anteny – serwer pracuje, dopóki OBS albo inne okno jest podłączone.
-Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli). Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
+**Okno natywne (zalecane):** `vizrs-shell` – Artist w prawdziwym oknie systemowym z menu i oknem „Zapisz jako” (Linux: `bin/linux-x86_64/vizrs-shell`; `vizrs-shell trio` – Trio). Zamknięcie okna nie zdejmuje grafiki z anteny.
+Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli) – same wybiorą okno natywne, jeśli jest. Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
 
 Sterowanie serwerem na VPS z własnego komputera: `vizrs trio --connect https://twoj-serwer.pl --token TOKEN`.
 

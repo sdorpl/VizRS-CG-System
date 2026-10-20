@@ -510,6 +510,7 @@ Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vi
 | `--webhook` | `VIZRS_WEBHOOK` | – | adres `http://` dla zdarzeń |
 | `--data` | `VIZRS_DATA` | `vizrs-data` | katalog z `show.json` i `assets/` |
 | `--web` | `VIZRS_WEB` | – | serwuj UI z dysku zamiast wbudowanego |
+| `--idle-exit N` | | – | `serve`: zakończ po N s bez podłączonych okien i wyjść (serwer uruchamiany przez okno natywne) |
 | `--healthcheck` | | | sprawdź `/health` serwera pod `--bind`/`--port` (z `--token`) i zakończ |
 | `--version` | | | wersja i skrót commita |
 
@@ -557,6 +558,35 @@ Wyszukiwanie przeglądarki: Linux – `chromium`, `chromium-browser`, `google-ch
 - Windows: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1` – skróty w menu Start uruchamiają `vizrs-app.exe` (to samo co `vizrs.exe`, ale **bez okna konsoli**; błąd startu pokazuje w okienku systemowym) oraz „VizRS Serwer” (konsola). `start-windows.bat [artist|trio|serve]` – domyślnie okno Trio.
 
 Artist i Trio pokazują w pasku górnym wskaźnik **połączono / brak połączenia** z serwerem – przy pracy zdalnej (`--connect`) widać zerwanie łącza.
+
+### 13.2 Okno natywne (`vizrs-shell`)
+
+`vizrs-shell` to osobny program z prawdziwym oknem systemowym i systemowym silnikiem stron: **WebKitGTK** (Linux), **WebView2** (Windows, to Chromium), **WKWebView** (macOS). Pokazuje te same strony Artist i Trio co przeglądarka, więc renderer jest jeden.
+
+```bash
+vizrs-shell                 # okno Artist (domyślnie)
+vizrs-shell trio            # okno Trio
+vizrs-shell output          # podgląd wyjścia 960×540
+vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
+```
+
+| Opcja | Zmienna | Opis |
+|---|---|---|
+| `--data KAT` | `VIZRS_DATA` | katalog danych (domyślnie `vizrs-data`) |
+| `--port N` | `VIZRS_PORT` | port serwera uruchamianego przez okno (domyślnie 8088) |
+| `--token T` | `VIZRS_TOKEN` | token serwera |
+| `--connect URL` | `VIZRS_CONNECT` | tylko okno, serwer zdalny |
+| `--vizrs PLIK` | `VIZRS_BIN` | program `vizrs` (domyślnie obok `vizrs-shell` albo w `PATH`) |
+
+- **Serwer:** jeśli na danym katalogu danych działa już serwer VizRS, okno dołącza do niego. Jeśli nie, powłoka uruchamia `vizrs serve --idle-exit 10` jako **osobny proces**. Awaria okna nie zdejmuje anteny, a serwer kończy pracę sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS). Komunikaty serwera trafiają do pliku `vizrs-shell-serwer-<pid>.log` w katalogu tymczasowym (ścieżka w Pomoc → O programie). Błąd startu (np. zajęty port) okno pokazuje w okienku systemowym.
+- **Menu:** Plik – nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Widok – Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Pomoc – strona startowa i API, O programie.
+- **Pliki:** ⇩ Eksport i ⇩ Paczka otwierają systemowe okno „Zapisz jako”; ⇧ Import – systemowe okno wyboru pliku.
+- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi tylko wynik skryptu testowego `--probe`.
+- **Pisownia:** na Linuksie polska (słownik hunspell `pl_PL` z systemu, pakiet `hunspell-pl`); na Windows i macOS według ustawień systemu.
+- **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24, R7 i BTB_PILNE – 82/82 pól tekstowych z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.
+- **Wymagania:** Linux – biblioteki `libwebkit2gtk-4.1` i GTK 3 (są w typowym pulpicie; do budowy pakiety `-dev`); Windows – WebView2 Runtime (w Windows 10/11); macOS 10.15+.
+- **Budowa:** `cd source/shell && cargo build --release` (osobny workspace z zależnościami – rdzeń `vizrs` dalej ich nie ma). Linux: `bin/linux-x86_64/vizrs-shell`; Windows: `build-windows.bat` buduje też `vizrs-shell.exe`.
+- **Skróty:** `deploy/install-desktop-linux.sh` i `deploy\install-windows-shortcuts.ps1` używają okna natywnego, gdy `vizrs-shell` leży obok `vizrs` (wymuszenie okna Chromium: `--chromium` / `-Chromium`). Na Waylandzie ikonę okna daje wpis `vizrs-shell.desktop` zakładany przez skrypt.
 
 ## 14. Dane na dysku i kopie zapasowe
 

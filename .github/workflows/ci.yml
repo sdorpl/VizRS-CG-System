@@ -88,3 +88,57 @@ jobs:
           # SIGTERM obsłużony przez VizRS (PID 1 bez --init) – bez czekania 10 s na SIGKILL
           start=$(date +%s); docker stop v; t=$(( $(date +%s) - start )); echo "docker stop: $t s"; [ "$t" -lt 5 ]
           docker logs v | tail -20
+
+  # okno natywne vizrs-shell (osobny workspace z zależnościami; rdzeń vizrs bez zmian)
+  shell:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: source/shell
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Biblioteki WebKitGTK (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vizrs-shell-${{ matrix.os }}
+          path: |
+            source/shell/target/release/vizrs-shell
+            source/shell/target/release/vizrs-shell.exe
+
+  # okno natywne w działaniu (Linux, wirtualny ekran): cykl życia serwera i zgodność WebKitGTK z Chromium
+  shell-e2e:
+    needs: shell
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+    env:
+      GDK_BACKEND: x11
+      WEBKIT_DISABLE_COMPOSITING_MODE: '1'
+      WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev xvfb hunspell-pl
+      - run: cargo build --release
+      - run: cargo build --release
+        working-directory: source/shell
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - run: xvfb-run -a node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell
+      - run: PLAYWRIGHT_DIR=$PWD xvfb-run -a node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell

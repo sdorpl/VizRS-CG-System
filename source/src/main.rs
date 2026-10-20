@@ -177,10 +177,36 @@ struct Running {
 }
 
 fn serve(cfg: Config) {
-    let _running = start(cfg);
+    let idle_exit = cfg.idle_exit;
+    let running = start(cfg);
+    if let Some(s) = idle_exit {
+        // serwer uruchomiony przez okno (np. vizrs-shell): kończy pracę, gdy nikt z niego nie korzysta
+        exit_when_idle(s, running, std::time::Instant::now());
+    }
     loop {
         std::thread::park();
     }
+}
+
+/// Kończy proces, gdy przez `linger_s` s nie ma żadnego strumienia zdarzeń (okna, wyjścia OBS).
+/// Do pierwszego połączenia czeka co najmniej 30 s (okno mogło jeszcze nie zdążyć się połączyć).
+fn exit_when_idle(linger_s: u64, running: Running, started: std::time::Instant) -> ! {
+    let (mut seen, mut idle) = (false, 0);
+    loop {
+        if SSE_OPEN.load(Ordering::SeqCst) > 0 {
+            seen = true;
+            idle = 0;
+        } else if seen || started.elapsed() > Duration::from_secs(30) {
+            idle += 1;
+            if idle > linger_s {
+                break;
+            }
+        }
+        std::thread::sleep(Duration::from_secs(1));
+    }
+    println!("Brak podłączonych okien i wyjść – serwer kończy pracę.");
+    running.lock.release();
+    std::process::exit(0);
 }
 
 /// Otwiera okno; błąd tylko wypisuje (adres bez tokenu).
@@ -230,23 +256,7 @@ fn app_window(cfg: Config, w: app::Window) {
         ch.wait().ok();
         println!("Okno zamknięte. Serwer kończy pracę, gdy przez {linger_s} s nie będzie podłączone żadne okno ani wyjście (OBS) – Ctrl+C kończy od razu.");
     }
-    let (mut seen, mut idle) = (false, 0);
-    loop {
-        if SSE_OPEN.load(Ordering::SeqCst) > 0 {
-            seen = true;
-            idle = 0;
-        } else if seen || started.elapsed() > Duration::from_secs(30) {
-            // okno przekazane do już działającej przeglądarki mogło jeszcze nie zdążyć się połączyć
-            idle += 1;
-            if idle > linger_s {
-                break;
-            }
-        }
-        std::thread::sleep(Duration::from_secs(1));
-    }
-    println!("Brak podłączonych okien i wyjść – serwer kończy pracę.");
-    running.lock.release();
-    std::process::exit(0);
+    exit_when_idle(linger_s, running, started);
 }
 
 /// `--healthcheck`: 0 = serwer odpowiada `status: ok`, 1 = nie (Docker HEALTHCHECK, monitoring).

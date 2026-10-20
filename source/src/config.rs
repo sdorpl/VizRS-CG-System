@@ -44,6 +44,8 @@ pub struct Config {
     pub window: WindowOpts,
     /// Ile sekund bez żadnego okna/wyjścia, zanim serwer okna aplikacji zakończy pracę.
     pub linger_s: u64,
+    /// `serve --idle-exit N`: zakończ serwer po N s bez okien i wyjść (serwer uruchomiony przez okno powłoki).
+    pub idle_exit: Option<u64>,
     /// Identyfikator tej instancji serwera (z blokady katalogu danych), widoczny w `/health`.
     pub instance: String,
 }
@@ -67,6 +69,7 @@ impl Default for Config {
             connect: None,
             window: WindowOpts::default(),
             linger_s: 10,
+            idle_exit: None,
             instance: String::new(),
         }
     }
@@ -212,6 +215,7 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
                 c.window.position = Some(v.replace(' ', ""));
             }
             "--query" => c.window.query = Some(val()?),
+            "--idle-exit" => c.idle_exit = Some(val()?.trim().parse().map_err(|_| "--idle-exit: liczba sekund".to_string())?),
             "--linger" => c.linger_s = val()?.trim().parse().map_err(|_| "--linger: liczba sekund".to_string())?,
             "--version" | "-V" => return Ok(Cli::Version),
             "--help" | "-h" => return Ok(Cli::Help),
@@ -241,6 +245,9 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
     let window_opts = c.window.fullscreen || c.window.position.is_some() || c.window.query.is_some() || c.connect.is_some();
     if window_opts && !matches!(c.mode, Mode::App(_)) {
         return Err("--connect, --fullscreen, --position i --query dotyczą okna: vizrs artist|trio|output …".into());
+    }
+    if c.idle_exit.is_some() && c.mode != Mode::Serve {
+        return Err("--idle-exit dotyczy komendy serve (okna mają --linger)".into());
     }
     let local_server = match c.mode {
         Mode::Serve => true,
@@ -294,6 +301,7 @@ Opcje (w nawiasie zmienna środowiskowa; flaga ma pierwszeństwo):
   --webhook URL  http://host:port/ścieżka dla zdarzeń onAir/offAir/error (VIZRS_WEBHOOK)
   --data KAT     katalog z show.json i assets/ (VIZRS_DATA, domyślnie vizrs-data)
   --web KAT      serwuj pliki UI z dysku zamiast wbudowanych (VIZRS_WEB)
+  --idle-exit N  serve: zakończ po N s bez podłączonych okien i wyjść (serwer uruchamiany przez okno)
   --healthcheck  sprawdź /health działającego serwera i zakończ (0 = ok, 1 = błąd)
   --version      wersja i skrót commita",
         env!("CARGO_PKG_VERSION")
@@ -392,6 +400,8 @@ mod tests {
         assert!(run(&["trio"], &[("VIZRS_BIND", "0.0.0.0")]).is_err());
         assert_eq!(run(&["trio", "--linger", "3"], &[]).unwrap().linger_s, 3);
         assert!(run(&["trio", "artist"], &[]).is_err(), "jedno okno na wywołanie");
+        assert_eq!(run(&["serve", "--idle-exit", "5"], &[]).unwrap().idle_exit, Some(5));
+        assert!(run(&["trio", "--idle-exit", "5"], &[]).is_err());
     }
 
     #[test]

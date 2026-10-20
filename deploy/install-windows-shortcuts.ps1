@@ -1,17 +1,21 @@
-# Skróty VizRS w menu Start (Windows): „VizRS Artist” i „VizRS Trio” – okno aplikacji Edge/Chrome
-# bez okna konsoli (vizrs-app.exe) z serwerem na wskazanym katalogu danych.
+# Skróty VizRS w menu Start (Windows): „VizRS Artist” i „VizRS Trio” z serwerem na wskazanym katalogu danych.
+# Gdy obok vizrs.exe jest vizrs-shell.exe – okno natywne (WebView2, menu, „Zapisz jako”), inaczej okno aplikacji
+# Edge/Chrome bez okna konsoli (vizrs-app.exe). Przełącznik -Chromium wymusza to drugie.
 #
 # Użycie (PowerShell, w katalogu repozytorium, po build-windows.bat):
 #   powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1 [-Bin katalog] [-Data katalog]
 # Usunięcie: usuń folder „VizRS” z menu Start (Win+R → shell:programs).
 param(
     [string]$Bin = (Join-Path $PSScriptRoot '..\bin\windows-x86_64'),
-    [string]$Data = (Join-Path $PSScriptRoot '..\vizrs-data')
+    [string]$Data = (Join-Path $PSScriptRoot '..\vizrs-data'),
+    [switch]$Chromium
 )
 $ErrorActionPreference = 'Stop'
 $Bin = (Resolve-Path $Bin).Path
 $app = Join-Path $Bin 'vizrs-app.exe'
-if (-not (Test-Path $app)) { Write-Error "Brak $app – uruchom najpierw build-windows.bat"; exit 1 }
+$shellExe = Join-Path $Bin 'vizrs-shell.exe'
+$useShell = (-not $Chromium) -and (Test-Path $shellExe)
+if (-not $useShell -and -not (Test-Path $app)) { Write-Error "Brak $app – uruchom najpierw build-windows.bat"; exit 1 }
 New-Item -ItemType Directory -Force -Path $Data | Out-Null
 $Data = (Resolve-Path $Data).Path
 
@@ -24,8 +28,13 @@ $items = @(
 )
 foreach ($it in $items) {
     $lnk = $shell.CreateShortcut((Join-Path $dir ($it.Name + '.lnk')))
-    $lnk.TargetPath = $app
-    $lnk.Arguments = '--data "' + $Data + '" ' + $it.Mode
+    if ($useShell) {
+        $lnk.TargetPath = $shellExe
+        $lnk.Arguments = '--vizrs "' + (Join-Path $Bin 'vizrs.exe') + '" --data "' + $Data + '" ' + $it.Mode
+    } else {
+        $lnk.TargetPath = $app
+        $lnk.Arguments = '--data "' + $Data + '" ' + $it.Mode
+    }
     $lnk.WorkingDirectory = $Bin
     $lnk.Description = $it.Desc
     $lnk.Save()
@@ -39,3 +48,4 @@ $lnk.WorkingDirectory = $Bin
 $lnk.Description = 'Serwer VizRS (konsola)'
 $lnk.Save()
 Write-Host "Skróty w menu Start → VizRS ($dir). Dane: $Data"
+if ($useShell) { Write-Host "Okno natywne: $shellExe" }

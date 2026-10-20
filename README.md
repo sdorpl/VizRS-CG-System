@@ -4,7 +4,7 @@ Lekki klon duetu **Viz Artist** (projektowanie szablonów) + **Viz Trio** (playo
 napisany w Rust. Grafika renderuje się jako przezroczysta strona 1920×1080, którą
 OBS pobiera przez źródło **Przeglądarka (Browser Source)**.
 
-- Jeden plik wykonywalny, **zero zależności** (własny HTTP/1.1, SSE i JSON) — kompiluje się offline.
+- Jeden plik wykonywalny, **zero zależności** (własny HTTP/1.1, SSE i JSON) — kompiluje się offline. Opcjonalne okno natywne `vizrs-shell` to osobny program (z zależnościami).
 - UI (Artist, Trio, wyjście) jest wbudowane w binarkę.
 - Show zapisywany w `vizrs-data/show.json`, pliki graficzne w `vizrs-data/assets/`.
 
@@ -19,7 +19,8 @@ cargo build --release
 ./target/release/vizrs artist     # okno Artist (dołącza do działającego serwera)
 ./target/release/vizrs trio --connect https://cg.example.pl --token …   # okno dla serwera na VPS
 ```
-Okna aplikacji, skróty w menu (Linux/Windows), wyjście na drugi monitor: [DOKUMENTACJA §13.1](docs/DOKUMENTACJA.md#131-okna-aplikacji-artist-trio-output).
+**Okno natywne** (prawdziwe okno systemowe z menu, WebKitGTK / WebView2 / WKWebView): `vizrs-shell` (Artist) albo `vizrs-shell trio` – osobny program w `source/shell/` (jedyne miejsce z zależnościami; serwer `vizrs` dalej bez nich), gotowy plik `bin/linux-x86_64/vizrs-shell`. [DOKUMENTACJA §13.2](docs/DOKUMENTACJA.md#132-okno-natywne-vizrs-shell).
+Okna aplikacji przez Chromium, skróty w menu (Linux/Windows), wyjście na drugi monitor: [DOKUMENTACJA §13.1](docs/DOKUMENTACJA.md#131-okna-aplikacji-artist-trio-output).
 
 | Adres | Co to jest |
 |---|---|

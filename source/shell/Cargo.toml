@@ -1,0 +1,34 @@
+# vizrs-shell – natywne okno VizRS Artist/Trio (WebView systemowy: WebView2 / WebKitGTK / WKWebView).
+#
+# Osobny workspace z własnym Cargo.lock: rdzeń `vizrs` (../Cargo.toml) zostaje BEZ zależności,
+# a obraz Docker i jego CI nie widzą tego katalogu. Powłoka nie wkompilowuje serwera – uruchamia
+# `vizrs serve` jako osobny proces (awaria okna nie zdejmuje anteny) albo dołącza do działającego.
+#
+# Dozwolone zależności (wyjątek od zasady „zero zależności” tylko w tym katalogu):
+#   tao (okna, pętla zdarzeń), wry (WebView), muda (menu), rfd (okna dialogowe plików),
+#   png (ikona okna), serde_json (blokada katalogu danych, komunikaty IPC),
+#   webkit2gtk (tylko Linux, już zależność wry: pisownia polska w WebKitGTK).
+[package]
+name = "vizrs-shell"
+version = "0.1.0"
+edition = "2021"
+description = "Natywne okno VizRS Artist / Trio"
+
+[workspace]
+
+[dependencies]
+tao = "0.37"
+wry = { version = "0.57", features = ["devtools"] }
+muda = "0.21"
+rfd = "0.17"
+png = "0.18"
+serde_json = "1"
+
+# Linux: ustawienia WebKitGTK (pisownia polska); ta sama wersja, której używa wry – nic nowego do pobrania
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = "2.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

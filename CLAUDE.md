@@ -16,7 +16,8 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 ## Niepodważalne zasady
 
 - **Tylko BTB → VizRS.** BTB CG (`../BTB-CG-System-alpha`, `../btb-cgeditor`) to baza pomysłów i źródło grafik do importu. Eksportu z VizRS do BTB nie ma i nie przywracamy go.
-- **Zero zależności.** `Cargo.toml` nie ma sekcji zależności — własny HTTP/1.1, SSE, JSON, OSC. Nie dodawaj crate'ów. Front-end to czysty JS (moduły ES), bez bundlera i bez bibliotek z CDN (wyjście musi działać offline).
+- **Zero zależności w rdzeniu.** `source/Cargo.toml` (serwer `vizrs`) nie ma sekcji zależności — własny HTTP/1.1, SSE, JSON, OSC. Nie dodawaj tam crate'ów. Front-end to czysty JS (moduły ES), bez bundlera i bez bibliotek z CDN (wyjście musi działać offline).
+- **Wyjątek: okno natywne `source/shell/`** (`vizrs-shell`, decyzja użytkownika 2026-10-20) — osobny workspace z własnym `Cargo.lock`; dozwolone tylko crate'y wymienione w nagłówku `source/shell/Cargo.toml` (tao, wry, muda, rfd, png, serde_json, webkit2gtk). Powłoka nie wkompilowuje serwera, tylko uruchamia `vizrs serve --idle-exit` albo dołącza do działającego; nie dawaj stronie dostępu do systemu przez IPC (biała lista komunikatów). Zmiana renderera → `node tools/engines.js` (Chromium vs WebView okna, musi być 0 różnic).
 - **UI jest wbudowane w binarkę** (`include_str!` w `source/src/main.rs`, tablica `STATIC`). Wniosek:
   - zmiana w `source/web/*` nie działa w uruchomionym programie, dopóki nie przebudujesz binarki albo nie uruchomisz z `--web source/web`;
   - nowy plik w `web/` trzeba dopisać do `STATIC`;
@@ -56,6 +57,9 @@ node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLA
 node tests/e2e/artist.js target/release/vizrs     # Artist
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
 node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana przeglądarka)
+(cd shell && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # okno natywne
+node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell     # okno natywne w działaniu (otwiera okna)
+node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell       # zgodność WebView z Chromium (otwiera okno)
 node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch jak w BTB
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
 ```
@@ -72,6 +76,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/app.rs` | okna aplikacji: wyszukiwanie Chromium/Edge, argumenty `--app`, profil, `--connect` |
 | `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
 | `source/src/bin/vizrs-app.rs` | uruchamianie okien bez konsoli (Windows) |
+| `source/shell/` | `vizrs-shell` – okno natywne Artist/Trio (tao + wry: WebKitGTK / WebView2 / WKWebView), menu, „Zapisz jako”, pisownia pl; osobny workspace z zależnościami |
 | `source/src/engine.rs` | show, warstwy on-air, TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, dock, karuzela, rundown, makra, blokady, SSE |
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |
 | `source/src/ticker.rs` | zapis wiadomości tickera (`KAT|treść`), komendy `TICKER` |
@@ -108,5 +113,5 @@ i `showIf` (wariant). Szczegóły: [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) 
 
 - Jedna spójna zmiana = jeden commit, po polsku, opisowo (styl historii: „Tickery na wzór BTB CG: …”). Tylko zielone stany.
 - Pliki dodawaj jawnie (`git add ścieżka`), nie `git add -A`. Nie commituj `source/target/`, zrzutów i plików tymczasowych.
-- Binarkę `bin/linux-x86_64/vizrs` aktualizuj w commicie, który zmienia UI lub serwer (inaczej `start-linux.sh` uruchamia starą wersję).
+- Binarkę `bin/linux-x86_64/vizrs` aktualizuj w commicie, który zmienia UI lub serwer (inaczej `start-linux.sh` uruchamia starą wersję); `bin/linux-x86_64/vizrs-shell` – w commicie zmieniającym `source/shell/`.
 - Commit i push tylko na prośbę użytkownika.
