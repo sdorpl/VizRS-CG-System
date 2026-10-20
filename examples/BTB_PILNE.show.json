@@ -1,0 +1,232 @@
+{
+  "name": "BTB – Belka PILNE (wiele linii)",
+  "scenes": [
+    {
+      "name": "Belka - PILNE (wiele linii)",
+      "layer": "main",
+      "width": 1920,
+      "height": 1080,
+      "duration": 1,
+      "stops": [
+        0.5
+      ],
+      "fieldMeta": {
+        "title": {
+          "label": "Treść belki",
+          "maxLines": 3
+        }
+      },
+      "nodes": [
+        {
+          "id": "grp_trio-179",
+          "type": "group",
+          "name": "Belka - PILNE",
+          "props": {
+            "x": 220,
+            "y": 825,
+            "w": 1650,
+            "h": 150
+          },
+          "anim": {
+            "scale": [
+              {
+                "t": 0,
+                "v": 0.85,
+                "e": "in"
+              },
+              {
+                "t": 0.5,
+                "v": 1,
+                "e": "out"
+              },
+              {
+                "t": 1,
+                "v": 0.85
+              }
+            ],
+            "opacity": [
+              {
+                "t": 0,
+                "v": 0,
+                "e": "in"
+              },
+              {
+                "t": 0.5,
+                "v": 1,
+                "e": "out"
+              },
+              {
+                "t": 1,
+                "v": 0
+              }
+            ]
+          },
+          "fields": {},
+          "children": [
+            {
+              "id": "sh1",
+              "type": "rect",
+              "name": "rep-top-bar",
+              "props": {
+                "x": 0,
+                "y": 150,
+                "w": 1650,
+                "h": 150,
+                "color": "#c32222",
+                "color2": "#7e0e02",
+                "gradAngle": 160,
+                "radius": 10,
+                "shadow": 20,
+                "anchorY": "bottom",
+                "follow": "TITLE — strong",
+                "followAxis": "h",
+                "followPad": 50,
+                "followMin": 0
+              },
+              "anim": {},
+              "fields": {}
+            },
+            {
+              "id": "tx2",
+              "type": "text",
+              "name": "TITLE — strong",
+              "props": {
+                "x": 30,
+                "y": 125,
+                "w": 1589.7,
+                "h": 400,
+                "text": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ",
+                "font": "Bahnschrift.ttf",
+                "size": 62,
+                "weight": "700",
+                "color": "#ffffff",
+                "upper": true,
+                "align": "left",
+                "valign": "bottom",
+                "spacing": -0.5,
+                "lineHeight": 1.1,
+                "textFit": "squeeze-lines",
+                "squeezeMin": 0.6,
+                "anchorY": "bottom",
+                "maxLines": 3,
+                "lineBreak": "fill",
+                "fillSqueeze": 0.9
+              },
+              "anim": {
+                "blur": [
+                  {
+                    "t": 0,
+                    "v": 14,
+                    "e": "out"
+                  },
+                  {
+                    "t": 0.5,
+                    "v": 0
+                  }
+                ],
+                "opacity": [
+                  {
+                    "t": 0,
+                    "v": 0,
+                    "e": "out"
+                  },
+                  {
+                    "t": 0.5,
+                    "v": 1,
+                    "e": "out"
+                  },
+                  {
+                    "t": 1,
+                    "v": 0
+                  }
+                ],
+                "clipR": [
+                  {
+                    "t": 0,
+                    "v": 100,
+                    "e": "out"
+                  },
+                  {
+                    "t": 0.5,
+                    "v": 0
+                  }
+                ]
+              },
+              "fields": {
+                "text": "title"
+              }
+            }
+          ]
+        }
+      ],
+      "id": "s59e88fec1",
+      "rev": 1
+    }
+  ],
+  "pages": [
+    {
+      "scene": "s59e88fec1",
+      "number": 8501,
+      "name": "TVP – 2 linie",
+      "values": {
+        "title": "PREZYDENT ANDRZEJ DUDA ZABRAŁ GŁOS WS. UCHWAŁY DOTYCZĄCEJ ZMIAN W MEDIACH PUBLICZNYCH"
+      },
+      "id": "p59e88ff12",
+      "rev": 1
+    },
+    {
+      "scene": "s59e88fec1",
+      "number": 8502,
+      "name": "TVP – Zakopane",
+      "values": {
+        "title": "TELEWIZJA POLSKA I MIASTO ZAKOPANE ZAPRASZAJĄ NA „SYLWESTRA MARZEŃ”"
+      },
+      "id": "p59e88ff33",
+      "rev": 1
+    },
+    {
+      "scene": "s59e88fec1",
+      "number": 8503,
+      "name": "TVP – 1 linia",
+      "values": {
+        "title": "ODLICZANIE DO „SYLWESTRA MARZEŃ Z DWÓJKĄ”"
+      },
+      "id": "p59e88ff64",
+      "rev": 1
+    },
+    {
+      "scene": "s59e88fec1",
+      "number": 8504,
+      "name": "Republika – Trybunał",
+      "values": {
+        "title": "POLACY NIE ULEGNĄ PRESJI RZĄDZĄCYCH WS. TRYBUNAŁU"
+      },
+      "id": "p59e88ff95",
+      "rev": 1
+    },
+    {
+      "scene": "s59e88fec1",
+      "number": 8505,
+      "name": "Republika – zima",
+      "values": {
+        "title": "NADCHODZI NAJDROŻSZA ZIMA W HISTORII"
+      },
+      "id": "p59e88ffc6",
+      "rev": 1
+    },
+    {
+      "scene": "s59e88fec1",
+      "number": 8506,
+      "name": "3 linie",
+      "values": {
+        "title": "MAZOWSZE: KIEROWCA CIĘŻARÓWKI ŚMIERTELNIE POTRĄCONY NA TRASIE S17, GDY PRÓBOWAŁ WYMIENIĆ OPONĘ. POLICJA USTALA OKOLICZNOŚCI ZDARZENIA, TRASA W KIERUNKU WARSZAWY JEST ZABLOKOWANA"
+      },
+      "id": "p59e88ffe7",
+      "rev": 1
+    }
+  ],
+  "playlists": [],
+  "rev": 7,
+  "rundowns": [],
+  "macros": []
+}

@@ -469,7 +469,7 @@ Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 - Przywrócenie: Trio → ⚙ Stan → Kopie zapasowe → Przywróć (stan sprzed przywrócenia trafia do najnowszej kopii) albo `POST /api/backups/restore/<nazwa>`.
 - Nieudany zapis: czerwony znacznik w Trio, API zwraca 500; antena działa dalej.
 
-Zestawy przykładowe: demo **INFO24** (wbudowane), **R7 NEWS** (`examples/R7_NEWS.show.json`, strony 7001–7505), **BTB_CG** (`examples/BTB_CG/`). Wczytanie: Trio → ⇧ Import show (zastępuje bieżący show).
+Zestawy przykładowe: demo **INFO24** (wbudowane), **R7 NEWS** (`examples/R7_NEWS.show.json`, strony 7001–7505), **BTB_CG** (`examples/BTB_CG/`), **belka BTB wielowierszowa** (`examples/BTB_PILNE.show.json`, strony 8501–8506: „Belka - PILNE” z paczki BTB_CG jako 1–3 wiersze z łamaniem `fill`, teksty z belek TVP i TV Republika; font `Bahnschrift.ttf` z `examples/BTB_CG/assets`). Wczytanie: Trio → ⇧ Import show (zastępuje bieżący show).
 
 ## 15. Testy i narzędzia
 
@@ -488,6 +488,7 @@ node tests/e2e/btb-visual.js target/release/vizrs <katalog>  # porównanie z BTB
 |---|---|
 | `tools/sync-btb.sh [--check]` | odświeżenie `text-model.js` i wektorów z BTB-CG, wykrycie rozjazdu |
 | `tools/build-btb-pack.mjs` | odbudowa paczki `examples/BTB_CG` ze wzorców |
+| `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |
 | `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne |
 | `tools/gen_fonts.py` | wbudowane fonty (`fonts_data.rs`) |

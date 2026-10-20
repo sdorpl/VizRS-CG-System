@@ -137,6 +137,14 @@ Kompletna oprawa w innej stylistyce (petrol + bursztyn, ścięte krawędzie): be
 belka z wyróżnieniem, podpis, belka z autorem, ticker z logo i zegarem, bug NA ŻYWO, odliczanie, belka programu.
 Wczytaj w Trio: „⇧ Import show” albo uruchom `vizrs --data katalog` z tym plikiem jako `show.json`. Strony 7001–7401.
 
+## Belka BTB wielowierszowa (`examples/BTB_PILNE.show.json`)
+
+„Belka - PILNE” z paczki `examples/BTB_CG` przerobiona na 1–3 wiersze w układzie belek TVP: `squeeze-lines` z łamaniem
+**„wypełniaj”** (`lineBreak: fill`) – wiersz bierze kolejne słowa, dopóki mieści się po ściśnięciu najwyżej do 90% (`fillSqueeze`),
+reszta przechodzi niżej, każdy wiersz ma własne ściśnięcie, belka rośnie w górę. Strony 8501–8506. Font: skopiuj `examples/BTB_CG/assets/*` do `vizrs-data/assets/`.
+
+Podgląd wszystkich grafik przykładowych: `node source/tools/gallery.js` (zrzuty i `index.html` w `<tmp>/vizrs-galeria`).
+
 ## Elementy dodatkowe (w obu zestawach)
 
 | Element | INFO24 | R7 | Opis |

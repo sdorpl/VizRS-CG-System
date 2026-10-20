@@ -82,8 +82,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/btb-io.js` | import elementów BTB CG (`.json` v3, `.cgpack`) |
 | `source/web/demo_show.json` | show startowy (INFO24) |
 | `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
-| `source/tools/` | `sync-btb.sh`, `build-btb-pack.mjs`, `out_choreo.py`, `render_video.py` |
-| `examples/` | `R7_NEWS.show.json`, `INFO24.show.json`, paczka `BTB_CG/` (31 wzorców z BTB) |
+| `source/tools/` | `sync-btb.sh`, `build-btb-pack.mjs`, `out_choreo.py`, `render_video.py`, `gallery.js` (galeria zrzutów stron) |
+| `examples/` | `R7_NEWS.show.json`, `INFO24.show.json`, paczka `BTB_CG/` (31 wzorców z BTB), `BTB_PILNE.show.json` (belka BTB wielowierszowa) |
 | `deploy/` | systemd, launchd, Windows (NSSM) |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |
 | `vizrs-data/` | dane użytkownika (`show.json`, `assets/`, `backups/`, `log.jsonl`) — w `.gitignore`; przy pustym katalogu serwer wczytuje demo |
