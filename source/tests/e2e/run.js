@@ -520,6 +520,30 @@ async function waitUp() {
     ok((await api('/api/ticker/3001')).items.length >= 3, '/api/ticker: lista wiadomości strony');
     await api('/api/clear');
 
+    // --- tekst zmierzony przed wczytaniem fontu mierzy się ponownie także bez zdarzenia `loadingdone` (jak w WebKit) ---
+    {
+      const ctxF = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+      await ctxF.addInitScript(() => {
+        const fs = document.fonts, add = fs.addEventListener.bind(fs);
+        fs.addEventListener = (type, ...rest) => (type === 'loadingdone' ? undefined : add(type, ...rest));
+      });
+      // fonty dochodzą z opóźnieniem: pierwszy pomiar trafia na font zastępczy
+      await ctxF.route('**/fonts/*.woff2', async (route) => { await sleep(2500); await route.continue(); });
+      const outF = await ctxF.newPage();
+      await outF.goto(B + '/output?token=' + TOKEN);
+      await sleep(300);
+      await api('/api/clear'); await sleep(200);
+      await api('/api/take/2001');
+      await sleep(5500);
+      const sxF = await outF.evaluate(() => {
+        const n = [...document.querySelectorAll('.vz-node.vz-text')].find((e) => e.textContent.trim() === 'NA ŻYWO');
+        return n ? [n, ...n.querySelectorAll('*')].map((e) => e.style.transform).filter(Boolean).join(' ') : 'brak węzła';
+      });
+      ok(sxF === '', 'font wczytany po pierwszym pomiarze: „NA ŻYWO” bez zbędnego ściśnięcia (bez loadingdone)', sxF);
+      await api('/api/clear');
+      await ctxF.close();
+    }
+
     // --- Trio: okno Stan systemu ---
     await trio.click('#bSys');
     await sleep(600);

@@ -269,6 +269,21 @@ let fontEpoch = 0;
 if (typeof document !== 'undefined' && document.fonts) {
   document.fonts.addEventListener?.('loadingdone', () => { fontEpoch++; });
 }
+/**
+ * Tekst zmierzony przed wczytaniem swojej odmiany fontu (np. Barlow Condensed 700 przy pierwszym TAKE) ma szerokość
+ * fontu zastępczego i dostaje zbędne ściśnięcie. `loadingdone` nie zawsze przychodzi (WebKit/WebKitGTK – okno powłoki),
+ * więc font tekstu wczytujemy jawnie i po wczytaniu teksty mierzą się od nowa. Ponowienie najwyżej co 5 s na odmianę.
+ */
+const fontTries = new Map();
+function watchFont(spec) {
+  const fs = typeof document !== 'undefined' ? document.fonts : null;
+  if (!fs?.check || !fs.load) return;
+  try { if (fs.check(spec)) return; } catch (_) { return; }
+  const now = Date.now();
+  if (now - (fontTries.get(spec) || -1e9) < 5000) return;
+  fontTries.set(spec, now);
+  fs.load(spec).then(() => { fontEpoch++; }, () => { /* brak fontu – zostaje zastępczy */ });
+}
 
 // ------------------------------------------------------------------ format zegara
 // Tryb "time": yyyy MM dd HH H mm ss.  Tryby licznikowe: Dn (np. "3 dni"), D, HH, H, mm, ss, S.
@@ -1307,6 +1322,7 @@ export class ScenePlayer {
             ss.letterSpacing = p('spacing') + 'px';
             ss.lineHeight = lh;
             ss.fontVariantNumeric = 'tabular-nums';
+            watchFont(`${ss.fontStyle} ${ss.fontWeight} ${size}px "${font}"`);
             const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, lineBreak, fillSqueeze, hlBg, hlFg };
             const m = perLine ? fitLines(sp, text, fo) : fitText(sp, fo);
             it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;

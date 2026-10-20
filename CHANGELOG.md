@@ -1,6 +1,7 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Okna i serwer” (plan: `PLAN-natywne-i-serwer.md`)
+- **Poprawka: tekst mierzony przed wczytaniem swojej odmiany fontu** (np. „NA ŻYWO” w Barlow Condensed 700 przy pierwszym TAKE po otwarciu wyjścia) dostawał zbędne ściśnięcie fontu zastępczego, gdy przeglądarka nie zgłosiła `loadingdone` przed końcem animacji (zawsze w WebKit/WebKitGTK, w Chromium przy wolnym wczytaniu). Renderer wczytuje teraz font tekstu jawnie (`document.fonts.load`) i mierzy tekst ponownie. Test w `tests/e2e/run.js` (fonty z opóźnieniem, bez `loadingdone`).
 - **Konfiguracja przez zmienne środowiskowe** `VIZRS_PORT`, `VIZRS_TCP`, `VIZRS_OSC`, `VIZRS_BIND`, `VIZRS_DATA`, `VIZRS_WEB`, `VIZRS_WEBHOOK`, `VIZRS_INSECURE` (obok `VIZRS_TOKEN`); flaga ma pierwszeństwo. Komenda `serve` (domyślna) i składnia `--opcja=wartość`.
 - **`vizrs --healthcheck`**: sprawdza `/health` działającego serwera (kod 0/1) – dla Dockera bez curla i monitoringu.
 - **Jeden serwer na katalog danych** (`<data>/.vizrs.lock`): drugi serwer na tym samym `--data` odmawia startu i podaje adres działającego; martwy plik po awarii jest zastępowany. `/health` zwraca `instance`.
