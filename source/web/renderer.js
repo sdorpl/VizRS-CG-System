@@ -2,6 +2,7 @@ import { qrSvg } from '/qr.js';
 import { parseTickerItems, parseCatColors, catColorOf, labelOf, continuation, TICKER_MODES, SEP_STYLES } from '/ticker-model.js';
 export { parseTickerItem, serializeTickerItem, parseTickerItems, serializeTickerItems, parseCatColors, checkTickerItems } from '/ticker-model.js';
 import { hasMarkup, parseMarkup, stripMarkup, carryLines } from '/richtext.js';
+import * as MO from '/motion.js';
 export { hasMarkup, parseMarkup, stripMarkup, carryLines } from '/richtext.js';
 
 // VizRS renderer – odtwarza sceny (drzewo kontenerów + keyframe'y + stop pointy)
@@ -684,12 +685,6 @@ export class ScenePlayer {
     st.transition = dur > 0 ? `transform ${dur}s cubic-bezier(.4,0,.2,1)` : 'none';
     st.transform = dx || dy ? `translate(${dx}px, ${dy}px)` : '';
   }
-  /** Powiązanie (dock): płynne przesunięcie całej sceny o (dx, dy) px w czasie `dur` s. */
-  setDock(dx, dy, dur) {
-    const st = this.el.style;
-    st.transition = dur > 0 ? `transform ${dur}s cubic-bezier(.4,0,.2,1)` : 'none';
-    st.transform = dx || dy ? `translate(${dx}px, ${dy}px)` : '';
-  }
   setScene(scene) { this.scene = scene; this.el.style.width = (scene.width || 1920) + 'px'; this.el.style.height = (scene.height || 1080) + 'px'; this.build(); this.apply(this.t); }
   destroy() {
     if (this.dead) return;
@@ -1003,6 +998,167 @@ export class ScenePlayer {
     tk.tape.style.transform = `translateX(${vw - tk.d}px)`;
   }
 
+  // ---- ruch na wzór BTB: efekty tekstu i pętle uwagi ----
+
+  /**
+   * Efekt tekstu (motion.textIn / textOut): tekst po dopasowaniu dzielony jest na jednostki (całość, słowa, znaki, linie),
+   * a każda dostaje stan z `motion.js`. Poza czasem efektu tekst wraca do zwykłego, dokładnego układu (bez podziału).
+   */
+  textFx(it, m, t, outStart, shift) {
+    if (!MO.textFxActive(m, t, outStart, shift)) {
+      if (it.fx) {
+        it.fx = null; it.cache.key = null; // następny kadr złoży tekst od nowa
+        Object.assign(it.span.style, { opacity: '', clipPath: '', filter: '', visibility: '', boxShadow: '' });
+      }
+      return;
+    }
+    const outOn = m.textOut?.type && m.textOut.type !== 'none' && t > outStart + MO.specDelay(m.textOut) - 1e-6;
+    const spec = outOn ? m.textOut : m.textIn;
+    const tt = outOn ? t - outStart - MO.specDelay(m.textOut) : t - shift - MO.specDelay(m.textIn);
+    const split = MO.splitOf(spec.type);
+    if (it.fx && it.fx.key === it.cache.key && it.fx.split !== split) {
+      // inny podział (np. znaki przy IN, słowa przy OUT): najpierw zwykły układ tekstu, podział w następnym kadrze
+      it.fx = null; it.cache.key = null;
+      Object.assign(it.span.style, { opacity: '', clipPath: '', filter: '', visibility: '', boxShadow: '' });
+      return;
+    }
+    if (!it.fx || it.fx.key !== it.cache.key) this.splitText(it, split);
+    const U = it.fx.units, N = U.length;
+    let lastVis = -1;
+    for (let i = 0; i < N; i++) {
+      const u = U[i];
+      const fx = outOn ? MO.textOutFx(spec, i, N, tt) : MO.textInFx(spec, i, N, tt);
+      if (!fx.hidden) lastVis = i;
+      let tf = '';
+      if (fx.dx || fx.dy) tf += `translate(${fx.dx}px, ${fx.dy}px) `;
+      if (fx.clipY) tf += `translateY(${fx.clipY * 100}%) `;
+      if (fx.scale !== 1) tf += `scale(${fx.scale}) `;
+      const clip = fx.clipY ? `inset(${-fx.clipY * 100}% -30% ${fx.clipY * 100}% -30%)`
+        : fx.revealX < 1 ? `inset(-30% ${(1 - fx.revealX) * 100}% -30% 0)` : fx.revealY < 1 ? `inset(${(1 - fx.revealY) * 100}% -30% 0 -30%)` : '';
+      const css = [fx.opacity, tf, clip, fx.blur, fx.hidden].join('|');
+      for (const e of u.els) {
+        if (u.css !== css) {
+          e.style.opacity = fx.opacity < 1 ? Math.max(0, fx.opacity) : '';
+          e.style.transform = (tf + (u.base || '')).trim();
+          e.style.clipPath = clip;
+          e.style.filter = fx.blur > 0.05 ? `blur(${fx.blur}px)` : '';
+          e.style.visibility = fx.hidden ? 'hidden' : '';
+        }
+        if (spec.type === 'scramble' && u.txt && !/\s/.test(u.txt)) e.textContent = fx.scramble ? MO.scrambleChar(i, tt) : u.txt;
+      }
+      u.css = css;
+      if (spec.type === 'counter' && it.fx.texts) {
+        const k = fx.count ?? 1;
+        let done = false;
+        for (const [node, orig] of it.fx.texts) { if (!done && /\d/.test(orig)) { node.data = MO.counterText(orig, k); done = true; } else node.data = orig; }
+      }
+    }
+    if (spec.type === 'typewriter-caret') {
+      const blinkOn = Math.floor(tt * 2.5) % 2 === 0 || tt < MO.specDur(spec) + 0.4;
+      U.forEach((u, i) => { const sh = i === lastVis && blinkOn ? '.07em 0 0 0 currentColor' : ''; for (const e of u.els) if (e.style.boxShadow !== sh) e.style.boxShadow = sh; });
+    }
+  }
+
+  /** Podział tekstu na jednostki efektu. Znaki jednego słowa trzymane są razem (bez łamania w środku słowa). */
+  splitText(it, split) {
+    const sp = it.span;
+    const fx = { key: it.cache.key, split, units: [], texts: null };
+    it.fx = fx;
+    if (split === 'whole') {
+      fx.units.push({ els: [sp], base: sp.style.transform || '' });
+      const w = document.createTreeWalker(sp, NodeFilter.SHOW_TEXT);
+      fx.texts = [];
+      for (let n = w.nextNode(); n; n = w.nextNode()) fx.texts.push([n, n.data]);
+      return;
+    }
+    const nodes = [];
+    const w = document.createTreeWalker(sp, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) nodes.push(n);
+    const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('pl', { granularity: 'grapheme' }) : null;
+    const graphemes = (s) => (seg ? [...seg.segment(s)].map((x) => x.segment) : Array.from(s));
+    const words = [];
+    for (const tn of nodes) {
+      const frag = document.createDocumentFragment();
+      for (const tok of tn.data.split(/(\s+)/)) {
+        if (!tok) continue;
+        if (/^\s+$/.test(tok)) { frag.appendChild(document.createTextNode(tok)); continue; }
+        const ws = document.createElement('span');
+        ws.className = 'vz-u';
+        if (split === 'chars') {
+          ws.style.whiteSpace = 'nowrap';
+          for (const g of graphemes(tok)) {
+            const c = document.createElement('span');
+            c.textContent = g;
+            c.style.display = 'inline-block';
+            ws.appendChild(c);
+            fx.units.push({ els: [c], txt: g });
+          }
+        } else {
+          ws.textContent = tok;
+          ws.style.display = 'inline-block';
+          words.push(ws);
+        }
+        frag.appendChild(ws);
+      }
+      tn.parentNode.replaceChild(frag, tn);
+    }
+    if (split === 'words') for (const ws of words) fx.units.push({ els: [ws] });
+    if (split === 'lines') {
+      // linie: słowa grupowane wg położenia w pionie (wiersze automatyczne i ręczne)
+      const rows = new Map();
+      for (const ws of words) {
+        const top = Math.round(ws.getBoundingClientRect().top);
+        let key = [...rows.keys()].find((k) => Math.abs(k - top) < 4);
+        if (key === undefined) { key = top; rows.set(key, []); }
+        rows.get(key).push(ws);
+      }
+      for (const k of [...rows.keys()].sort((a, b) => a - b)) fx.units.push({ els: rows.get(k) });
+    }
+  }
+
+  /**
+   * Pętla uwagi (motion.loop): gra na zegarze ściennym, gdy węzeł stoi (po wejściu, przed wyjściem); wchodzi i schodzi płynnie.
+   * Zwraca składniki do złożenia z transformacją węzła; połysk i podkreślenie rysuje nakładkami.
+   */
+  loopFx(it, m, t, outStart, shift, now, dt) {
+    const hold = MO.holding(m, t, outStart, shift, m.textIn ? it.p('text') : undefined);
+    if (hold && it.loopT0 == null) it.loopT0 = now;
+    if (!hold) it.loopT0 = null;
+    const k = 1 - Math.exp(-Math.min(dt, 1) * 8);
+    it.loopW = (it.loopW ?? 0) + ((hold ? 1 : 0) - (it.loopW ?? 0)) * (dt >= 1 ? 1 : k);
+    const w = it.loopW;
+    const s = MO.loopState(m.loop, it.loopT0 == null ? 0 : (now - it.loopT0) / 1000);
+    const out = { tx: s.tx * w, ty: s.ty * w, rot: s.rot * w, sx: 1 + (s.sx - 1) * w, sy: 1 + (s.sy - 1) * w, opacity: 1 - (1 - s.opacity) * w, glow: s.glow * w,
+      color: m.loop.color || (m.loop.type === 'underline-sweep' ? 'rgba(255,255,255,0.9)' : m.loop.type === 'shine' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.6)'),
+      amp: m.loop.type === 'glow' && +m.loop.amp > 0 ? +m.loop.amp / 8 : 1 };
+    const type = m.loop.type;
+    if (type === 'shine' || type === 'underline-sweep') {
+      let o = it.loopEl;
+      if (!o || o.type !== type) {
+        o?.wrap.remove();
+        const wrap = document.createElement('div'), bar = document.createElement('div');
+        wrap.className = 'vz-loop';
+        wrap.style.cssText = type === 'shine'
+          ? 'position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit;z-index:2147483000'
+          : 'position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;pointer-events:none;z-index:2147483000';
+        bar.style.cssText = type === 'shine' ? 'position:absolute;top:-10%;bottom:-10%;left:0;width:30%' : 'position:absolute;top:0;bottom:0';
+        wrap.appendChild(bar);
+        o = it.loopEl = { type, wrap, bar };
+      }
+      if (o.wrap.parentNode !== it.el) it.el.appendChild(o.wrap);
+      o.bar.style.background = type === 'shine' ? `linear-gradient(90deg,transparent,${out.color},transparent)` : out.color;
+      const on = w > 0.5;
+      if (type === 'shine') {
+        o.wrap.style.display = on && s.shine >= 0 ? 'block' : 'none';
+        o.bar.style.transform = `translateX(${-150 + 600 * Math.max(0, s.shine)}%) skewX(-20deg)`;
+      } else {
+        o.wrap.style.display = on && s.underline ? 'block' : 'none';
+        if (s.underline) { o.bar.style.left = s.underline[0] * 100 + '%'; o.bar.style.width = (s.underline[1] - s.underline[0]) * 100 + '%'; }
+      }
+    } else if (it.loopEl) { it.loopEl.wrap.remove(); it.loopEl = null; }
+    return out;
+  }
+
   // ---- renderowanie ----
   /** Odrysowanie z izolacją błędów: wadliwy węzeł jest wyłączany (`broken`), reszta sceny gra dalej. */
   apply(t, now = performance.now()) {
@@ -1026,6 +1182,10 @@ export class ScenePlayer {
     const fe = fontEpoch;
     const dt = this._lastApply ? Math.min(0.25, Math.max(0, (now - this._lastApply) / 1000)) : 10;
     this._lastApply = now;
+    // ruch na wzór BTB (node.motion): wyjście zaczyna się w ostatnim stop poincie; „po węźle” przesuwa wejście
+    const stops = this.stops, ls = stops.length ? stops[stops.length - 1] : null;
+    const outStart = ls !== null && this.duration > ls + 1e-3 ? ls : Infinity;
+    const shifts = this.items.some((i) => i.node.motion?.after) ? MO.sequenceShifts(this.scene.nodes) : null;
 
     // przebieg 1: widoczność i treść (tu mierzymy teksty dla autofollow)
     for (const it of this.items) {
@@ -1135,6 +1295,7 @@ export class ScenePlayer {
               ScenePlayer.onOverflow?.({ scene: this.scene?.name || this.scene?.id || '?', node: n.name || n.id || '?', text: stripMarkup(text), sq: it.sq, min: squeezeFloor(sqMin) });
             } else delete el.dataset.over;
           }
+          if (n.motion) this.textFx(it, n.motion, t, outStart, shifts?.get(n.id) || 0);
           break;
         }
         case 'qr': {
@@ -1185,17 +1346,44 @@ export class ScenePlayer {
       const ax = p('anchorX'), ay = p('anchorY');
       st.left = p('x') - (ax === 'right' ? w : ax === 'center' ? w / 2 : 0) + 'px';
       st.top = p('y') - (ay === 'bottom' ? h : ay === 'middle' ? h / 2 : 0) + 'px';
-      let op = p('opacity') * (it.cyOp ?? 1);
+      const m = it.node.motion;
+      const shift = shifts?.get(it.node.id) || 0;
+      const mo = m ? MO.motionAt(m, t, outStart, shift) : null;
+      const lp = m?.loop?.type && m.loop.type !== 'none' ? this.loopFx(it, m, t, outStart, shift, now, dt) : null;
+      let op = p('opacity') * (it.cyOp ?? 1) * (mo ? mo.opacity : 1) * (lp ? lp.opacity : 1);
       const bl = p('blink');
       if (bl > 0) op *= 0.15 + 0.85 * (0.5 + 0.5 * Math.cos((now / 1000) * 2 * Math.PI / bl));
       st.opacity = op;
       st.visibility = op <= 0.001 ? 'hidden' : 'visible';
-      const rot = p('rotation'), sc = p('scale'), sk = p('skewX');
-      st.transform = (rot || sc !== 1 || sk) ? `rotate(${rot}deg) scale(${sc}) skewX(${sk}deg)` : '';
-      const cl = p('clipL'), cr = p('clipR'), ct = p('clipT'), cb = p('clipB');
-      st.clipPath = (cl || cr || ct || cb) ? `inset(${ct}% ${cr}% ${cb}% ${cl}%)` : '';
-      const blr = p('blur');
-      st.filter = blr > 0 ? `blur(${blr}px)` : '';
+      const rot = p('rotation') + (mo ? mo.rot : 0) + (lp ? lp.rot : 0);
+      const sc = p('scale'), sk = p('skewX') + (mo ? mo.skew : 0);
+      const sx = sc * (mo ? mo.sx : 1) * (lp ? lp.sx : 1), sy = sc * (mo ? mo.sy : 1) * (lp ? lp.sy : 1);
+      const tx = (mo ? mo.tx : 0) + (lp ? lp.tx : 0), ty = (mo ? mo.ty : 0) + (lp ? lp.ty : 0);
+      let tf = tx || ty ? `translate(${tx}px, ${ty}px) ` : '';
+      if (mo && (mo.flipX || mo.flipY)) tf += `perspective(1200px) rotateX(${mo.flipX}deg) rotateY(${mo.flipY}deg) `;
+      if (rot || sx !== 1 || sy !== 1 || sk) tf += `rotate(${rot}deg) scale(${sx}, ${sy}) skewX(${sk}deg)`;
+      st.transform = tf.trim();
+      st.transformOrigin = mo?.origin ? `${mo.origin[0] * 100}% ${mo.origin[1] * 100}%` : '50% 50%';
+      let cl = p('clipL'), cr = p('clipR'), ct = p('clipT'), cb = p('clipB');
+      if (mo?.clip) { cl = Math.max(cl, mo.clip[0] * 100); ct = Math.max(ct, mo.clip[1] * 100); cr = Math.max(cr, 100 - mo.clip[2] * 100); cb = Math.max(cb, 100 - mo.clip[3] * 100); }
+      if (mo && mo.diag >= 0) {
+        // maska ukośna (mask-diag): krawędź pochylona o 25% szerokości przesuwa się przez pole
+        const S = 25, e = mo.diag * (100 + S), L = cl, R = 100 - cr, T = ct, B = 100 - cb;
+        const c = (x) => Math.min(R, Math.max(L, x));
+        st.clipPath = mo.diagR
+          ? `polygon(${c(100 - e)}% ${T}%, ${R}% ${T}%, ${R}% ${B}%, ${c(100 - e + S)}% ${B}%)`
+          : `polygon(${L}% ${T}%, ${c(e)}% ${T}%, ${c(e - S)}% ${B}%, ${L}% ${B}%)`;
+      } else st.clipPath = (cl || cr || ct || cb) ? `inset(${ct}% ${cr}% ${cb}% ${cl}%)` : '';
+      // żaluzja (shutter): 8 listew odsłanianych od góry każdej listwy
+      const shut = mo && mo.shutter < 0.999 ? `repeating-linear-gradient(180deg, #000 0 ${Math.max(0, mo.shutter) * 12.5}%, transparent ${Math.max(0, mo.shutter) * 12.5}% 12.5%)` : '';
+      if (it.maskV !== shut) { it.maskV = shut; st.maskImage = shut; st.webkitMaskImage = shut; }
+      if (!lp && it.loopEl) { it.loopEl.wrap.remove(); it.loopEl = null; it.loopW = 0; }
+      const blr = p('blur') + (mo ? mo.blur : 0);
+      let flt = blr > 0 ? `blur(${blr}px)` : '';
+      const rgb = mo ? Math.abs(mo.rgb) : 0;
+      if (rgb > 0.01) flt += ` drop-shadow(${(8 * rgb).toFixed(2)}px 0 0 rgba(255,0,60,.75)) drop-shadow(${(-8 * rgb).toFixed(2)}px 0 0 rgba(0,220,255,.75))`;
+      if (lp && lp.glow > 0.01) flt += ` drop-shadow(0 0 ${(8 * lp.glow * (lp.amp ?? 1)).toFixed(2)}px ${lp.color})`;
+      st.filter = flt.trim();
     }
   }
 }

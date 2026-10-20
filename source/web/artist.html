@@ -47,6 +47,11 @@
   .chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chip { background: #3a1716; border: 1px solid var(--red); color: #ffb0ad; border-radius: 10px; padding: 0 4px 0 8px; font-size: 12px; display: inline-flex; gap: 4px; align-items: center; }
   .chip button { padding: 0 4px; border: none; background: none; color: inherit; }
+  .mo { display: grid; grid-template-columns: 62px 1fr 1fr; gap: 4px; align-items: center; padding: 2px 8px; }
+  .mo .sub { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; grid-column: 2 / 4; }
+  .mo .sub label { font-size: 10px; color: var(--dim); display: flex; flex-direction: column; gap: 1px; }
+  .mo .sub input, .mo .sub select { width: 100%; min-width: 0; }
+  .mohint { padding: 2px 10px 4px; font-size: 11px; color: var(--warn, #e8b04b); }
   .help { padding: 10px; color: var(--dim); font-size: 12px; line-height: 1.5; border-top: 1px solid var(--line); margin-top: 8px; }
   .ftable { width: 100%; border-collapse: collapse; font-size: 12px; }
   .ftable td { padding: 3px 6px; border-bottom: 1px solid #23262c; }
@@ -178,6 +183,7 @@
 <script type="module">
 import * as BTB from '/btb-io.js';
 import * as PACK from '/cgpack.js';
+import * as MO from '/motion.js';
 import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
@@ -368,6 +374,7 @@ function renderProps() {
     </div>`;
     if (p === 'squeezeMin' && n.type === 'text') h += `<div class="sqinfo" id="sqInfo"></div>`;
   }
+  h += motionForm(n);
   const vf = variantFields(scene);
   h += `<div class="pgroup">Wariant – widoczność</div>`;
   if (vf.length) {
@@ -393,6 +400,63 @@ function renderProps() {
       onHover: (i) => player.tickerPin(n.id, i),
     });
   }
+}
+
+/** Ruch jak w BTB CG (node.motion): presety IN/OUT, efekt tekstu, pętla uwagi – bez kluczy, liczone przez renderer. */
+function motionForm(n) {
+  const m = n.motion || {};
+  const opt = (list, v, lab) => list.map((x) => `<option value="${x}" ${x === (v || 'none') ? 'selected' : ''}>${esc(lab ? lab(x) : x)}</option>`).join('');
+  const numIn = (k, v, ph, step = 0.05) => `<input type="number" min="0" step="${step}" data-mo="${k}" value="${v ?? ''}" placeholder="${ph}">`;
+  const phase = (k, label) => {
+    const s = m[k] || {}, on = s.type && s.type !== '';
+    let r = `<div class="mo"><label>${label}</label><select data-mo="${k}.type" style="grid-column:2/4"><option value="" ${on ? '' : 'selected'}>— bez presetu —</option>${opt(MO.ANIM_TYPES, on ? s.type : '-', (x) => MO.ANIM_LABELS[x] || x)}</select>`;
+    if (on) {
+      r += `<div class="sub"><label>czas s${numIn(k + '.dur', s.dur, '0.5')}</label><label>opóźnienie s${numIn(k + '.delay', s.delay, '0')}</label>
+        <label>kierunek<select data-mo="${k}.dir" ${MO.DIR_TYPES.has(s.type) ? '' : 'disabled'}>${opt(MO.DIRECTIONS, s.dir || 'left', (x) => MO.DIR_LABELS[x])}</select></label></div>
+        <div class="sub"><label style="grid-column:1/4">krzywa<select data-mo="${k}.ease">${opt(MO.MOTION_EASES, s.ease || 'power2.out')}</select></label></div>`;
+    }
+    return r + '</div>';
+  };
+  const textPhase = (k, label, list) => {
+    const s = m[k] || {}, on = s.type && s.type !== 'none';
+    let r = `<div class="mo"><label>${label}</label><select data-mo="${k}.type" style="grid-column:2/4">${opt(list, s.type || 'none', MO.textLabel)}</select>`;
+    if (on) {
+      r += `<div class="sub"><label>czas s${numIn(k + '.dur', s.dur, '0.5')}</label><label>opóźnienie s${numIn(k + '.delay', s.delay, '0')}</label>
+        <label>odstęp s${numIn(k + '.stagger', s.stagger, 'auto', 0.01)}</label></div>
+        <div class="sub"><label style="grid-column:1/4">kolejność<select data-mo="${k}.from">${opt(MO.STAGGER_FROM, s.from || 'start', (x) => ({ start: 'od początku', end: 'od końca', center: 'od środka', edges: 'od krawędzi' })[x])}</select></label></div>`;
+    }
+    return r + '</div>';
+  };
+  const lp = m.loop || {}, lpOn = lp.type && lp.type !== 'none';
+  let h = `<div class="pgroup">Ruch (jak w BTB CG) – bez kluczy</div>` + phase('in', 'wejście') + phase('out', 'wyjście');
+  if (n.type === 'text' || n.type === 'clock') h += textPhase('textIn', 'tekst IN', MO.TEXT_IN) + textPhase('textOut', 'tekst OUT', MO.TEXT_OUT);
+  h += `<div class="mo"><label>pętla</label><select data-mo="loop.type" style="grid-column:2/4">${opt(MO.LOOP_TYPES, lp.type || 'none', (x) => MO.LOOP_LABELS[x])}</select>`;
+  if (lpOn) h += `<div class="sub"><label>okres s${numIn('loop.dur', lp.dur, 'auto')}</label><label>siła${numIn('loop.amp', lp.amp, 'auto', 0.5)}</label>
+    <label>kolor<input data-mo="loop.color" value="${esc(lp.color || '')}" placeholder="auto" ${['glow', 'shine', 'underline-sweep'].includes(lp.type) ? '' : 'disabled'}></label></div>`;
+  h += '</div>';
+  const hasOut = m.out?.type || (m.textOut?.type && m.textOut.type !== 'none');
+  const st = sortedStops();
+  if ((m.in?.type || hasOut || lpOn || (m.textIn?.type && m.textIn.type !== 'none')) && (!st.length || (hasOut && scene.duration < st[st.length - 1] + MO.outLen(m, n.props?.text) - 1e-3))) {
+    h += `<div class="mohint">${!st.length ? 'Brak stop pointu: wyjście (OUT) zagra od ostatniego stopu, a pętla gra, gdy grafika stoi.' : 'Wyjście nie mieści się w długości sceny.'} <button data-mofit title="Stop point po wejściu i długość sceny = stop + wyjście">⟲ Dopasuj stop i długość</button></div>`;
+  }
+  return h;
+}
+/** Stop point po najdłuższym wejściu i długość sceny = stop + najdłuższe wyjście (ruch presetów i klucze). */
+function fitMotionTiming() {
+  const sh = MO.sequenceShifts(scene.nodes);
+  let inE = 0, outL = 0, keyEnd = 0;
+  walk(scene.nodes, (x) => {
+    if (x.motion) { const tx = x.props?.text; inE = Math.max(inE, MO.inEnd(x.motion, sh.get(x.id) || 0, tx)); outL = Math.max(outL, MO.outLen(x.motion, tx)); }
+    for (const tr of Object.values(x.anim || {})) for (const k of tr) keyEnd = Math.max(keyEnd, k.t);
+  });
+  checkpoint();
+  const st = sortedStops();
+  if (!st.length) scene.stops = [Math.round(Math.max(inE, 0.04) * 100) / 100];
+  else if (st[st.length - 1] < inE) scene.stops = [...st.slice(0, -1), Math.round(inE * 100) / 100];
+  const last = Math.max(...scene.stops);
+  scene.duration = Math.round(Math.max(last + outL, last + 0.04, outL > 0 ? 0 : keyEnd) * 100) / 100;
+  $('#dur').value = scene.duration;
+  renderProps(); renderTimeline(); refresh();
 }
 
 const hex6 = (c) => { const p = parseColor(c); if (!p) return '#000000'; return '#' + p.slice(0, 3).map((x) => Math.round(x).toString(16).padStart(2, '0')).join(''); };
@@ -611,6 +675,25 @@ function onPropInput(e) {
   const inp = e.target;
   if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') { pendingCP = true; return; }
   const n = selNode();
+  if (n && inp.dataset.mo) {
+    if (e.type === 'input' && inp.tagName === 'SELECT') return; // wybór obsługuje 'change'
+    cp();
+    const [sec, key] = inp.dataset.mo.split('.');
+    const mo = (n.motion ||= {});
+    const s = (mo[sec] ||= {});
+    let v = inp.value.trim();
+    if (inp.type === 'number') v = v === '' ? '' : Math.max(0, parseFloat(v) || 0);
+    if (v === '' || (key === 'type' && v === 'none' && sec !== 'in' && sec !== 'out')) {
+      if (key === 'type') delete mo[sec]; else delete s[key];
+    } else s[key] = v;
+    if (key === 'type' && s.type && (sec === 'in' || sec === 'out') && s.dur == null) Object.assign(s, { dur: 0.5, ease: sec === 'out' ? 'power2.in' : 'power2.out', ...(MO.DIR_TYPES.has(s.type) && !s.dir ? { dir: 'left' } : {}) });
+    if (key === 'type' && sec.startsWith('text') && mo[sec] && s.dur == null) s.dur = 0.6;
+    if (mo[sec] && !Object.keys(mo[sec]).length) delete mo[sec];
+    if (!Object.keys(mo).length) delete n.motion;
+    refresh(); renderTimeline();
+    if (key === 'type' || e.type === 'change') renderProps();
+    return;
+  }
   if (inp.id === 'pkPick') { if (inp.value && e.type === 'change') { checkpoint(); scene.packAssets = [...new Set([...(scene.packAssets || []), inp.value])]; renderProps(); } return; }
   if (inp.id === 'pname' && n) { cp(); n.name = inp.value; renderTree(); return; }
   if (n && inp.dataset.p) {
@@ -705,6 +788,7 @@ $('#props').addEventListener('click', async (e) => {
   }
   const ub = e.target.closest('[data-upload]');
   if (ub && n) { const a = await uploadAsset(); if (a) { checkpoint(); setProp(n, ub.dataset.upload, a.name); renderProps(); refresh(); } return; }
+  if (e.target.closest('[data-mofit]')) { fitMotionTiming(); return; }
   if (e.target.id === 'pkAdd') { const a = await uploadAsset(); if (a) { checkpoint(); scene.packAssets = [...new Set([...(scene.packAssets || []), a.name])]; renderProps(); refresh(); } return; }
   const pkr = e.target.closest('[data-pkrm]');
   if (pkr) { checkpoint(); scene.packAssets = (scene.packAssets || []).filter((x) => x !== pkr.dataset.pkrm); if (!scene.packAssets.length) delete scene.packAssets; renderProps(); return; }

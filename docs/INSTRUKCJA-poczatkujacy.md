@@ -75,6 +75,13 @@ Element przy prawej krawędzi ekranu ustaw z **punktem X = right** – będzie r
 
 Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości → Presety animacji → ＋ zapisz) i stosować na innych węzłach.
 
+### Szybciej: ruch bez kluczy (jak w BTB CG)
+1. Zaznacz węzeł i przewiń Właściwości do grupy **Ruch (jak w BTB CG)**.
+2. **wejście** – wybierz efekt (np. *przesłona pozioma*, *wjazd*, *wyskok*), kierunek, czas i opóźnienie. **wyjście** – tak samo.
+3. Przy tekście: **tekst IN** (np. *znaki: w górę*, *maszyna do pisania*, *licznik liczby*) i **tekst OUT**.
+4. **pętla** – np. *pulsowanie* plakietki „NA ŻYWO” albo *połysk* paska; gra, gdy grafika stoi na wizji.
+5. Kliknij **⟲ Dopasuj stop i długość** – stop point stanie po wejściu, a scena wydłuży się o wyjście. Sprawdź **▶ Take** i **⏏ Out**.
+
 ## 6. Wyświetlenie w OBS
 
 1. OBS → Źródła → **+** → **Przeglądarka**.

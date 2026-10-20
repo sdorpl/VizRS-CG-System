@@ -42,6 +42,7 @@ const STATIC: &[Static] = &[
     Static { path: "/richtext.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/richtext.js") },
     Static { path: "/btb-io.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/btb-io.js") },
     Static { path: "/cgpack.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/cgpack.js") },
+    Static { path: "/motion.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/motion.js") },
     Static { path: "/text-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/text-model.js") },
     Static { path: "/qr.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/qr.js") },
     Static { path: "/ticker-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-model.js") },

@@ -51,10 +51,11 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test
 cargo build --release
-node tests/vectors/run.js && node tests/vectors/btb.js
+node tests/vectors/run.js && node tests/vectors/btb.js && node tests/motion.js
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
 node tests/e2e/artist.js target/release/vizrs     # Artist
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
+node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch jak w BTB
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
 ```
 
@@ -81,6 +82,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/text-model.js`, `richtext.js` | reguły pól, typografia PL, Word Replace; znaczniki `{b}{i}{u}{c=}{sz=}` i `[[ ]]` |
 | `source/web/ticker-model.js`, `ticker-items.js` | model wiadomości tickera; edytor listy wiadomości (Trio i Artist) |
 | `source/web/btb-io.js` | import elementów BTB CG (`.json` v3, `.cgpack`) |
+| `source/web/motion.js` | ruch jak w BTB CG (`node.motion`): krzywe GSAP, presety IN/OUT, efekty tekstu, pętle uwagi, sekwencja `after` – czyste funkcje, rysuje `renderer.js` |
 | `source/web/cgpack.js` | paczka belek VizRS `.cgpack` (sceny + strony + grafiki + czcionki): zapis ZIP, odczyt, instalacja plików |
 | `source/web/demo_show.json` | show startowy (INFO24) |
 | `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |

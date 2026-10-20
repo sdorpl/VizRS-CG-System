@@ -25,7 +25,7 @@ jobs:
           node-version: 22
       - name: Wspólne wektory tekstu i konwersja BTB
         shell: bash
-        run: node tests/vectors/run.js && node tests/vectors/btb.js
+        run: node tests/vectors/run.js && node tests/vectors/btb.js && node tests/motion.js
       - run: cargo build --release
       - name: Wersja i suma kontrolna
         shell: bash
@@ -56,3 +56,4 @@ jobs:
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/run.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/artist.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/pack.js target/release/vizrs
+      - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/motion.js target/release/vizrs

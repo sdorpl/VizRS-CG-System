@@ -28,6 +28,66 @@ fn text_ok(v: &Json, what: &str, max: usize) -> R {
 const TEXT_FIT: [&str; 6] = ["squeeze", "squeeze-shrink", "squeeze-lines", "squeeze-each", "shrink", "none"];
 /// Automatyczne łamanie wierszy w `squeeze-lines`/`squeeze-each` (`props.lineBreak`).
 const LINE_BREAK: [&str; 2] = ["balance", "fill"];
+// ruch na wzór BTB CG (web/motion.js: ANIM_TYPES, TEXT_IN, TEXT_OUT, LOOP_TYPES, DIRECTIONS, STAGGER_FROM)
+const ANIM_TYPES: &[&str] = &[
+    "none", "slide", "fade", "zoom", "zoom-in", "pop", "wipe", "wipe-y", "clip", "blur", "flip", "flip-x", "rotate", "skew", "drop", "glitch",
+    "slide-overshoot", "split-reveal", "mask-diag", "shutter", "bar-grow", "rgb-split",
+];
+const TEXT_FX: &[&str] = &[
+    "none", "reveal", "typewriter", "typewriter-caret", "clip-up", "clip-down", "fade", "blur", "scale", "hide", "slide-up", "slide-down", "slide-left",
+    "slide-right", "scramble", "counter",
+];
+const TEXT_UNITS: &[&str] = &["words", "chars", "lines"];
+const TEXT_VARIANTS: &[&str] = &["up", "down", "fade", "blur", "scale", "clip"];
+const LOOP_TYPES: &[&str] = &["none", "pulse", "breathe", "heartbeat", "float", "bounce", "wobble", "shake", "flash", "glow", "shine", "underline-sweep"];
+const DIRECTIONS: &[&str] = &["left", "right", "top", "bottom"];
+const STAGGER_FROM: &[&str] = &["start", "end", "center", "edges"];
+
+fn text_fx_ok(t: &str) -> bool {
+    TEXT_FX.contains(&t) || t.split_once('-').is_some_and(|(u, v)| TEXT_UNITS.contains(&u) && TEXT_VARIANTS.contains(&v))
+}
+
+fn one_of(v: &Json, what: &str, ok: impl Fn(&str) -> bool) -> R {
+    match v {
+        Json::Str(s) if ok(s) => Ok(()),
+        _ => Err(format!("{what}: niedozwolona wartość")),
+    }
+}
+
+/// `node.motion` – presety IN/OUT, efekty tekstu, pętla uwagi, sekwencja (`after`).
+fn motion(m: &Json) -> R {
+    let Json::Obj(secs) = m else { return Err("węzeł.motion: oczekiwano obiektu".into()) };
+    for (k, v) in secs {
+        if k == "after" {
+            text_ok(v, "motion.after", 100)?;
+            continue;
+        }
+        let Json::Obj(fields) = v else { return Err(format!("motion.{k}: oczekiwano obiektu")) };
+        let types: &dyn Fn(&str) -> bool = match k.as_str() {
+            "in" | "out" => &|t: &str| ANIM_TYPES.contains(&t),
+            "textIn" | "textOut" => &text_fx_ok,
+            "loop" => &|t: &str| LOOP_TYPES.contains(&t),
+            _ => return Err(format!("motion.{k}: nieznana sekcja")),
+        };
+        for (f, x) in fields {
+            if *x == Json::Null {
+                continue;
+            }
+            let what = format!("motion.{k}.{f}");
+            match f.as_str() {
+                "type" => one_of(x, &what, types)?,
+                "dir" => one_of(x, &what, |d| DIRECTIONS.contains(&d))?,
+                "from" => one_of(x, &what, |d| STAGGER_FROM.contains(&d))?,
+                "ease" => one_of(x, &what, |e| e.len() <= 60 && e.chars().all(|c| c.is_ascii_alphanumeric() || ".(),- ".contains(c)))?,
+                "color" => text_ok(x, &what, 60)?,
+                "dur" | "delay" | "stagger" => num_in(x, &what, 0.0, 60.0)?,
+                "amp" => num_in(x, &what, 0.0, 1_000.0)?,
+                _ => return Err(format!("{what}: nieznane pole")),
+            }
+        }
+    }
+    Ok(())
+}
 
 fn num_in(v: &Json, what: &str, lo: f64, hi: f64) -> R {
     match v {
@@ -87,6 +147,9 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
     }
     if let Some(v) = opt(n, "name") {
         text_ok(v, "węzeł.name", MAX_NAME)?;
+    }
+    if let Some(m) = opt(n, "motion") {
+        motion(m)?;
     }
     for k in ["props", "anim", "fields", "showIf"] {
         if let Some(v) = opt(n, k) {
@@ -554,6 +617,16 @@ mod tests {
         assert!(scene(&p(r#"{"packAssets":["../show.json"]}"#)).is_err());
         assert!(scene(&p(r#"{"packAssets":[1]}"#)).is_err());
         assert!(scene(&p(r#"{"packAssets":"x"}"#)).is_err());
+        let node = |m: &str| scene(&p(&format!(r#"{{"nodes":[{{"type":"rect","motion":{m}}}]}}"#)));
+        assert!(node(r#"{"in":{"type":"slide","dir":"left","dur":0.5,"delay":0.1,"ease":"back.out(1.7)"},"out":{"type":"glitch"},"textIn":{"type":"chars-up","stagger":0.03,"from":"center"},"textOut":{"type":"lines-clip"},"loop":{"type":"shine","dur":1.2,"amp":5,"color":"rgba(255,255,255,.4)"},"after":"n1"}"#).is_ok());
+        assert!(node(r#"{"in":{"type":"teleport"}}"#).is_err());
+        assert!(node(r#"{"in":{"type":"slide","dir":"up"}}"#).is_err());
+        assert!(node(r#"{"in":{"type":"slide","dur":-1}}"#).is_err());
+        assert!(node(r#"{"in":{"type":"slide","ease":"x;alert(1)"}}"#).is_err());
+        assert!(node(r#"{"textIn":{"type":"words-explode"}}"#).is_err());
+        assert!(node(r#"{"loop":{"type":"pulse","x":1}}"#).is_err());
+        assert!(node(r#"{"magic":{}}"#).is_err());
+        assert!(node(r#""slide""#).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"rect","props":5}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"props":{}}]}"#)).is_err());
         let mut deep = String::from(r#"{"nodes":["#);

@@ -1,6 +1,8 @@
 # VizRS – historia zmian
 
 ## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+- **Ruch jak w BTB CG – efekty wizualne bez kluczy** (`node.motion`, `web/motion.js`): 22 presety wejścia/wyjścia (m.in. przesłony, maska ukośna, żaluzja, odwrócenia 3D, glitch, rozdzielenie RGB, rosnący pasek, spadanie), 31 efektów tekstu (całość, słowa, znaki, linie, maszyna do pisania z kursorem, szyfrowanie, licznik liczby), 11 pętli uwagi (pulsowanie, bicie serca, połysk, poświata, podkreślenie…), krzywe GSAP (`back.out(1.7)`, `bounce.out`, `elastic.out`, `cubic-bezier`, aliasy `spring`/`overshoot`/`broadcast`). Ten sam renderer w Artist, Trio i OBS; składanie z kluczami jak w BTB.
+- Artist: grupa **Ruch (jak w BTB CG)** we właściwościach węzła i **⟲ Dopasuj stop i długość**; walidacja `motion` w `validate.rs`; testy `tests/motion.js` i `tests/e2e/motion.js`.
 - **Paczka belek `.cgpack`** (Artist → ⇩ Paczka / ⇧ Import, `web/cgpack.js`): wybrane sceny, ich strony z Trio, grafiki i czcionki w jednym pliku ZIP (`manifest.json` + `scenes.json` + `assets/`). Import dodaje sceny jako nowe, pomija pliki już obecne, rozwiązuje kolizje nazw (`nazwa_2.ext` z przepisaniem odnośników) i numerów stron, pokazuje raport. Paczka BTB CG podana do ⇧ Import trafia do importu BTB.
 - **Zasoby paczki w scenie:** sekcja w ustawieniach sceny – pliki używane (wykryte) i dołączone ręcznie (`scene.packAssets`, walidacja w `validate.rs`); ＋ Wgraj i dołącz (grafika, wideo, czcionka).
 - **Czcionki z serwera na /output:** wyjście ładuje wszystkie czcionki z assets zaraz po otwarciu (i nowe co 30 s) – komputer z OBS nie potrzebuje zainstalowanej czcionki, pierwszy TAKE nie czeka na font.

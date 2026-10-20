@@ -174,6 +174,26 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 - **Presety animacji** – biblioteka zestawów kluczy (czasy względne) wspólna dla stanowiska (`/api/animpresets`): zapis z węzła, wstawienie od bieżącego czasu, import/eksport pliku.
 - **Wyjście (OUT)** jest projektowane w scenie (klucze za ostatnim stop pointem). Dla gotowych zestawów `tools/out_choreo.py` generuje wyjścia całego show: teksty gasną z odjazdem, tła zmazują się maską zgodnie z wejściem.
 
+### 4.4a Ruch jak w BTB CG (presety bez kluczy)
+
+Obok kluczy węzeł może mieć **ruch opisany presetami** – tak jak zakładka „Ruch” w BTB CG Editor (`node.motion`, moduł `web/motion.js`, ta sama semantyka co `cgmotion.js` i btb-cgeditor `anim.rs`). Renderer liczy go z czasu sceny, więc działa jednakowo w Artist (przewijanie osi), w podglądzie Trio i na wyjściu OBS.
+
+| Sekcja | Pola | Czas |
+|---|---|---|
+| `in` – wejście | `type`, `dir` (left/right/top/bottom), `dur`, `delay`, `ease` | od początku sceny (TAKE) |
+| `out` – wyjście | jak `in` | od **ostatniego stop pointu** (OUT) |
+| `textIn` / `textOut` – efekt tekstu | `type`, `dur`, `delay`, `stagger` (odstęp jednostek, puste = auto: znaki 0,04 s, słowa 0,09 s), `from` (start/end/center/edges) | jak wejście / wyjście |
+| `loop` – pętla uwagi | `type`, `dur` (okres), `amp` (siła), `color` | zegar ścienny, gdy grafika stoi (po wejściu, przed wyjściem) |
+| `after` | id węzła | wejście zaczyna się po wejściu wskazanego węzła (sekwencja) |
+
+- **Presety IN/OUT (22):** wjazd, przenikanie, zoom, zoom z bliska, wyskok, przesłony pozioma i pionowa, przycięcie, rozmycie, odwrócenia X/Y (3D), obrót, skos, spadanie, glitch, wjazd z przeskokiem, rozsunięcie, maska ukośna, żaluzja, rosnący pasek, rozdzielenie RGB.
+- **Efekty tekstu (31):** całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
+- **Pętle uwagi (11):** pulsowanie, oddychanie, bicie serca, unoszenie, podskakiwanie, chwianie, drżenie, błyski, poświata, połysk, przesuwane podkreślenie. Wchodzą płynnie po wejściu i schodzą przed wyjściem; siła: pulsowanie/bicie serca – % skali, chwianie – stopnie, oddychanie – % krycia, unoszenie/podskakiwanie/drżenie – px.
+- **Krzywe (nazwy GSAP):** `power2.out` (domyślna), `power2.in`, `power2.inOut`, `power3.out`, `power4.out`, `expo.out`, `sine.inOut`, `linear`, `back.out`, `back.in`, `bounce.out`, `elastic.out` oraz aliasy BTB `spring`, `overshoot`, `broadcast`; przyjmowane są też `back.out(2)` i `cubic-bezier(…)`.
+- **Składanie z kluczami** (jak w BTB): przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą, maski dają część wspólną.
+- Wyjście gra tylko, gdy scena ma stop point i czas po nim. Artist podpowiada **⟲ Dopasuj stop i długość** (stop po najdłuższym wejściu, długość = stop + najdłuższe wyjście).
+- Walidacja (`validate.rs`): typy z list, kierunki, czasy 0–60 s, krzywa tylko z liter, cyfr i `.(),-`, nieznane pola odrzucane.
+
 ### 4.5 Warianty
 
 Pole wyboru na poziomie sceny (`fieldMeta.<pole> = {type: "select", options: [...], default}`), np. `styl = info, pilne`. Węzły mają „widoczny gdy” (`showIf`). W Trio wariant to rząd przycisków.
@@ -305,6 +325,8 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 ### 8.2 Ustawienia sceny (kliknij puste tło kanwy)
 
 Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery (⏹ = stop point z markera), **powiązania (dock)**, **warianty** (＋ Wariant), **pola kontrolne** (etykieta w Trio + ⚙ reguły), **zasoby paczki** (grafiki i czcionki, §8.6) i **＋ Utwórz stronę w Trio**.
+
+Właściwości węzła mają grupę **Ruch (jak w BTB CG)**: wejście, wyjście, tekst IN/OUT (tekst i zegar), pętla – z czasem, opóźnieniem, kierunkiem, krzywą, odstępem i kolejnością jednostek (§4.4a).
 
 ### 8.3 Klucze animacji
 
@@ -494,6 +516,8 @@ node tests/vectors/run.js && node tests/vectors/btb.js   # wspólne wektory z BT
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
 node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
+node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja
+node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
 node tests/e2e/btb-visual.js target/release/vizrs <katalog>  # porównanie z BTB CG
 ```
