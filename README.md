@@ -22,6 +22,8 @@ cargo build --release
 | http://localhost:8088/trio | **Trio** – playout |
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
+Galeria wszystkich grafik zestawów INFO24 i R7: [media/galeria/index.html](media/galeria/index.html) (arkusze: [INFO24](media/galeria/INFO24-arkusz.png), [R7](media/galeria/R7-arkusz.png)); odświeżanie: `node source/tools/gallery.js [ścieżka-do-vizrs]`.
+
 Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token HASŁO` (lub `VIZRS_TOKEN`), `--osc PORT`, `--webhook URL`, `--data katalog`, `--web katalog`, `--version`
 (serwuje pliki UI z dysku zamiast wbudowanych – wygodne przy własnych modyfikacjach `web/`).
 
