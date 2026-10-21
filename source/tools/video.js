@@ -1,5 +1,5 @@
 // Film ze wszystkimi paczkami grafik (tools/sets.js): każda strona TAKE → na antenie → (CONTINUE) → OUT.
-//   node tools/video.js [ścieżka-do-vizrs] [--out plik.mp4] [--only R7,BTB] [--fps 25]
+//   node tools/video.js [ścieżka-do-vizrs] [--out plik.mp4] [--only R7,BTB] [--fps 50]
 // Nagranie klatka po klatce w czasie wirtualnym (Playwright page.clock: performance.now, requestAnimationFrame):
 // zegar strony przesuwa się dokładnie o 1/fps na klatkę, więc film jest płynny niezależnie od wydajności
 // maszyny i braku GPU (renderowanie programowe w trybie headless). Klatki trafiają wprost do ffmpeg (H.264).
@@ -11,7 +11,7 @@ const args = process.argv.slice(2);
 const opt = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : null; };
 const OUT = path.resolve(opt('--out') || path.join(ROOT, 'media/vizrs_WSZYSTKIE_PACZKI.mp4'));
 const ONLY = opt('--only') ? opt('--only').split(',') : null;
-const FPS = Math.max(1, +opt('--fps') || 25);
+const FPS = Math.max(1, +opt('--fps') || 50);
 const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && !['--out', '--only', '--fps'].includes(args[i - 1])) || path.join(__dirname, '../target/release/vizrs'));
 const TITLES = { INFO24: 'INFO24 – oprawa demo', R7: 'R7 NEWS', BTB: 'Szablony BTB CG (import do VizRS)', 'BTB-PILNE': 'Belka BTB „PILNE” – wiele linii' };
 
