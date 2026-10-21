@@ -105,7 +105,7 @@ export function normalizeElements(j) {
   if (j && Array.isArray(j.elements)) return j.elements;
   if (j && Array.isArray(j.graphics)) return j.graphics;
   if (j && typeof j === 'object' && (j.scene || j.html_template)) return [j];
-  throw new Error('to nie jest plik elementu BTB CG (oczekiwano eksportu v3, elementu albo .cgpack)');
+  throw new Error('to nie jest plik elementu (oczekiwano eksportu v3, elementu albo .cgpack)');
 }
 
 // ---------------------------------------------------------------- animacje (ruch BTB → node.motion)
@@ -208,7 +208,7 @@ export function convertElement(el, opts = {}) {
   const seen = new Set();
   const warn = (m) => { if (!seen.has(m)) { seen.add(m); warnings.push(m); } };
   const sc = el.scene;
-  if (!sc || !Array.isArray(sc.layers)) throw new Error(`element „${el.name || el.id}”: brak sceny graficznej (kod ręczny HTML/CSS/JS nie jest obsługiwany – w BTB użyj „Przekształć w scenę”)`);
+  if (!sc || !Array.isArray(sc.layers)) throw new Error(`element „${el.name || el.id}”: brak sceny graficznej (kod ręczny HTML/CSS/JS nie jest obsługiwany – w edytorze źródłowym użyj „Przekształć w scenę”)`);
   const W = num(sc.frame?.w, el.layout?.width || 1920), H = num(sc.frame?.h, el.layout?.height || 110);
   const lay = el.layout || {};
   const scale = num(lay.scale, 1) || 1;
@@ -221,7 +221,7 @@ export function convertElement(el, opts = {}) {
     T = 1080 - my - H * scale;
     if (lay.side && !['left', 'right', 'center', 'custom'].includes(lay.side)) warn(`położenie „${lay.side}” przybliżone (lewy dolny róg z marginesami)`);
   }
-  if (lay.dock) warn('powiązania layout.dock (M4 BTB) nie są przenoszone – użyj sekcji „Powiązania” w Artist');
+  if (lay.dock) warn('powiązania layout.dock nie są przenoszone – użyj sekcji „Powiązania” w Artist');
   if (scale !== 1) warn(`skala elementu ${scale} przeliczona na skalę grupy`);
   // skala w VizRS działa wokół środka; zachowujemy lewy górny róg
   const gx = round3(L + (W * scale) / 2 - W / 2), gy = round3(T + (H * scale) / 2 - H / 2);
@@ -265,7 +265,7 @@ export function convertElement(el, opts = {}) {
       const cont = sc.layers.filter((l) => l.type === 'shape' && !drop.has(l.id)).sort((a, b) => num(b.w) * num(b.h) - num(a.w) * num(a.h))[0];
       const left = wShape ? num(wShape.x) : num(msg.x), right = cont ? num(cont.x) + num(cont.w) : W;
       tkPlan = { msg, drop, wShape, wText, x: left, y: cont ? num(cont.y) : num(msg.y), w: Math.max(10, right - left), h: cont ? num(cont.h) : num(msg.h) };
-      warn('ticker: kod szablonu BTB (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist');
+      warn('ticker: kod szablonu (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist');
     } else warn('element TICKER bez warstwy ticker i bez tekstu wiadomości – wiadomości trafiły tylko do pola strony');
   }
 
@@ -364,7 +364,7 @@ export function convertElement(el, opts = {}) {
           // żeby dłuższy tekst nie był ściskany do szerokości przykładu (przy środku/prawej zmieniłoby to położenie)
           const inner = p.align === 'left' && !l.autoW ? plateInner() : 0;
           if (inner > num(l.w) + 1) p.w = round3(inner);
-          warn(`warstwa tekstu „${name}” bez pola w BTB – dodano pole „${fid}”${inner > num(l.w) + 1 ? `, szerokość do krawędzi tła (${p.w} px)` : ''}`);
+          warn(`warstwa tekstu „${name}” bez pola w źródle – dodano pole „${fid}”${inner > num(l.w) + 1 ? `, szerokość do krawędzi tła (${p.w} px)` : ''}`);
         }
         if (fid) {
           node.fields.text = fid;
@@ -488,7 +488,7 @@ export function convertElement(el, opts = {}) {
   const end = stop + outL;
   for (const n of all) if (!Object.keys(n.anim).length) delete n.anim;
   const scene = {
-    name: String(el.name || 'Element BTB').slice(0, 100), layer: 'main', width: 1920, height: 1080,
+    name: String(el.name || 'Element').slice(0, 100), layer: 'main', width: 1920, height: 1080,
     duration: round3(Math.max(end, stop + 0.01, 0.05)), stops: stop > 0 ? [round3(stop)] : [], fieldMeta, nodes: [group],
   };
   const values = {};

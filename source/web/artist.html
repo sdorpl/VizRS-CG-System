@@ -140,7 +140,7 @@
   <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
   <button id="bPack" title="Paczka belek .cgpack: wybrane sceny + strony + grafiki + czcionki w jednym pliku">⇩ Paczka</button>
   <button id="bImp" title="Import sceny (.json) albo paczki belek (.cgpack)">⇧ Import</button>
-    <button id="bImpBtb" title="Importuj element z BTB CG (.json eksport v3 lub .cgpack) jako scenę + stronę">⇧ BTB</button>
+    <button id="bImpBtb" title="Importuj element zewnętrzny (.json eksport v3 lub paczka elementu .cgpack) jako scenę + stronę">⇧ Element</button>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
   <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
@@ -196,7 +196,7 @@
       <button id="addStop" title="Dodaj stop point w bieżącym czasie">＋ Stop</button>
       <label title="Długość sceny (s)">Dł.</label><input id="dur" type="number" step="0.1" min="0.1" style="width:60px" title="Długość sceny (s)">
       <span class="grow"></span>
-      <button id="seqMode" title="Prosty tryb sekwencji (jak „Ruch” w BTB CG Editor): paski wejścia, efektu tekstu, pętli i wyjścia każdego elementu – przeciągnij, aby zmienić opóźnienie, krawędź – czas">≣ Sekwencja</button>
+      <button id="seqMode" title="Prosty tryb sekwencji: paski wejścia, efektu tekstu, pętli i wyjścia każdego elementu – przeciągnij, aby zmienić opóźnienie, krawędź – czas">≣ Sekwencja</button>
       <button id="markAdd" class="icon" title="Dodaj marker w bieżącym czasie (M)">▾</button>
       <button id="keyCopy" class="icon" title="Kopiuj zaznaczone klucze (Ctrl+C na osi czasu)">⧉</button>
       <button id="keyPaste" class="icon" title="Wklej klucze w bieżącym czasie na zaznaczony węzeł (Ctrl+V)">⎘</button>
@@ -469,13 +469,13 @@ function motionForm(n) {
     return r + '</div>';
   };
   const lp = m.loop || {}, lpOn = lp.type && lp.type !== 'none';
-  let h = `<div class="pgroup">Ruch (jak w BTB CG) – bez kluczy</div>` + phase('in', 'wejście') + phase('out', 'wyjście');
+  let h = `<div class="pgroup">Ruch – bez kluczy</div>` + phase('in', 'wejście') + phase('out', 'wyjście');
   if (n.type === 'text' || n.type === 'clock') h += textPhase('textIn', 'tekst IN', MO.TEXT_IN) + textPhase('textOut', 'tekst OUT', MO.TEXT_OUT);
   h += `<div class="mo"><label>pętla</label><select data-mo="loop.type" style="grid-column:2/4">${opt(MO.LOOP_TYPES, lp.type || 'none', (x) => MO.LOOP_LABELS[x])}</select>`;
   if (lpOn) h += `<div class="sub"><label>okres s${numIn('loop.dur', lp.dur, 'auto')}</label><label>siła${numIn('loop.amp', lp.amp, 'auto', 0.5)}</label>
     <label>kolor<input data-mo="loop.color" value="${esc(lp.color || '')}" placeholder="auto" ${['glow', 'shine', 'underline-sweep'].includes(lp.type) ? '' : 'disabled'}></label></div>`;
   h += '</div>';
-  if (n.type === 'rect' || n.type === 'ellipse') h += `<div class="mo"><label title="Stały efekt tła (jak „efekt” kształtu w BTB) – gra cały czas, także w trakcie wejścia">efekt tła</label><select data-mobg style="grid-column:2/4">${opt(MO.BG_TYPES, m.bg || 'none', (x) => MO.BG_LABELS[x])}</select></div>`;
+  if (n.type === 'rect' || n.type === 'ellipse') h += `<div class="mo"><label title="Stały efekt tła – gra cały czas, także w trakcie wejścia">efekt tła</label><select data-mobg style="grid-column:2/4">${opt(MO.BG_TYPES, m.bg || 'none', (x) => MO.BG_LABELS[x])}</select></div>`;
   const ORG = { '': 'środek', '0,0': 'lewy górny róg', '0.5,0': 'góra', '1,0': 'prawy górny róg', '0,0.5': 'lewa krawędź', '1,0.5': 'prawa krawędź', '0,1': 'lewy dolny róg', '0.5,1': 'dół', '1,1': 'prawy dolny róg' };
   const org = Array.isArray(m.origin) ? m.origin.join(',') : '';
   h += `<div class="mo"><label title="Punkt odniesienia skali i obrotu ruchu (presety przesłon, obrotu i odwróceń mają własny)">punkt ruchu</label><select data-moorg style="grid-column:2/4">${Object.entries(ORG).map(([k, v]) => `<option value="${k}" ${k === org ? 'selected' : ''}>${v}</option>`).join('')}${org && !ORG[org] ? `<option value="${org}" selected>${org}</option>` : ''}</select></div>`;
@@ -1711,8 +1711,8 @@ async function importBtbFile(f) {
     }
     await loadAssets();
     if (last) openScene(last);
-    showReport(`Zaimportowano ${made} ${made === 1 ? 'element' : 'elementy'} z BTB CG`, report);
-  } catch (e) { toast('Import BTB: ' + e.message, true); }
+    showReport(`Zaimportowano ${made} ${made === 1 ? 'element' : 'elementy'}`, report);
+  } catch (e) { toast('Import elementu: ' + e.message, true); }
 }
 
 // ------------------------------------------------------------ klawiatura

@@ -36,7 +36,7 @@ const FX = path.join(__dirname, '../fixtures/btb');
   const ft = g.children.filter((c) => c.type === 'text');
   check('belka: tekst bez pola → pola tekst1/tekst2 z wartością przykładu', ft.map((c) => c.fields.text).join() === 'tekst1,tekst2' && r.page.values.tekst1 === 'TEST BELEK' && r.scene.fieldMeta.tekst1?.label === 'Tekst 1', [ft.map((c) => c.fields), r.page.values]);
   check('belka: tekst bez pola rozszerzony do krawędzi tła (1650 − 2×30)', ft.every((c) => c.props.w === 1590), ft.map((c) => c.props.w));
-  check('belka: ostrzeżenie o dodanym polu', r.warnings.some((w) => /bez pola w BTB/.test(w)), r.warnings);
+  check('belka: ostrzeżenie o dodanym polu', r.warnings.some((w) => /bez pola w źródle/.test(w)), r.warnings);
   const nz = io.convertElement((await load('na_zywo_lewa.json')).elements[0]);
   const t = nz.scene.nodes[0].children.find((c) => c.type === 'text');
   check('na żywo: pole TITLE → pole kontrolne title', t.fields.text === 'title' && nz.scene.fieldMeta.title && nz.page.values.title === 'na żywo', [t.fields, nz.page.values]);
