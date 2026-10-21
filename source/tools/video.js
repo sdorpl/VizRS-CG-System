@@ -72,7 +72,10 @@ function holdFor(sc) {
     await cardOpacity(0);
   };
 
+  // Sam install() zostawia zegar płynący w czasie rzeczywistym (runFor tylko dokłada) – wtedy zegary, tickery
+  // i animacje szłyby za szybko o czas zrzutów. pauseAt zatrzymuje go: czas strony płynie wyłącznie przez runFor.
   await page.clock.install(); // obowiązuje też po kolejnych page.goto
+  await page.clock.pauseAt(Date.now());
   try {
     for (const [setName, file] of SETS) {
       if (ONLY && !ONLY.includes(setName)) continue;
