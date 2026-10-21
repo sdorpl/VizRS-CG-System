@@ -1,61 +1,17 @@
-// Galeria wszystkich elementów grafiki (stron i scen) zestawów INFO24 i R7 oraz szablonów BTB CG (tests/fixtures/btb):
+// Galeria wszystkich elementów grafiki (stron i scen) ze wszystkich paczek z tools/sets.js (INFO24, R7, szablony BTB CG, belka BTB wielowierszowa):
 //   node tools/gallery.js [ścieżka-do-vizrs] [--out katalog]
 // Szablony BTB są importowane jak w Artist (btb-io.js → /api/scenes + /api/pages), z raportem konwersji.
 // Każda strona jest brana osobno na czyste wyjście, zrzut po zakończeniu animacji wejścia.
 // Wynik: <out>/<ZESTAW>-<numer>.png, arkusze <out>/<ZESTAW>-arkusz.png i przegląd <out>/index.html.
-const { spawn } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
+const { ROOT, SETS, BG, sleep, loadPlaywright, startSet } = require('./sets');
 
-function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
-  for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
-  return require('playwright');
-}
 const args = process.argv.slice(2);
 const outIdx = args.indexOf('--out');
-const ROOT = path.resolve(__dirname, '../..');
 const OUT = path.resolve(outIdx >= 0 ? args[outIdx + 1] : path.join(ROOT, 'media/galeria'));
 const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--out') || path.join(__dirname, '../target/release/vizrs'));
-const SETS = [
-  ['INFO24', path.join(ROOT, 'examples/INFO24.show.json')],
-  ['R7', path.join(ROOT, 'examples/R7_NEWS.show.json')],
-  ['BTB', path.join(ROOT, 'source/tests/fixtures/btb')],
-  ['BTB-PILNE', path.join(ROOT, 'examples/BTB_PILNE.show.json')],
-];
-const KNOWN_FONTS = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
-const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-
-// Import szablonów BTB CG (.json v3 / .cgpack) do pustego show – ta sama ścieżka co „Import BTB” w Artist.
-async function importBtb(B, dir) {
-  const io = await import(path.join(ROOT, 'source/web/btb-io.js'));
-  const post = async (url, body, raw) => {
-    const r = await fetch(B + url, { method: 'POST', body: raw ? body : JSON.stringify(body), headers: raw ? {} : { 'Content-Type': 'application/json' } });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(`${url}: ${j.error || r.status}`);
-    return j;
-  };
-  const warnings = {};
-  for (const name of fs.readdirSync(dir).filter((n) => /\.(json|cgpack)$/i.test(n)).sort()) {
-    const buf = fs.readFileSync(path.join(dir, name));
-    const { elements, files } = await io.readBtb(name.endsWith('.json') ? buf.toString('utf8') : buf, name);
-    for (const el of elements) {
-      const used = new Set();
-      const r = io.convertElement(el, {
-        knownFonts: KNOWN_FONTS,
-        assetName: (src) => { const k = Object.keys(files).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
-      });
-      for (const k of used) await post('/api/assets?name=' + encodeURIComponent(k.split('/').pop()), files[k], true);
-      const saved = await post('/api/scenes', r.scene);
-      await post('/api/pages', { scene: saved.id, name: r.page.name, values: r.page.values });
-      warnings[saved.id] = [`plik: ${name}`, ...r.warnings];
-    }
-  }
-  return warnings;
-}
 
 function nodeTypes(nodes) {
   const n = {};
@@ -70,18 +26,9 @@ function nodeTypes(nodes) {
   const browser = await chromium.launch();
   const sections = [];
   for (const [setName, file] of SETS) {
-    const port = 19000 + Math.floor(Math.random() * 900);
-    const data = fs.mkdtempSync(path.join(os.tmpdir(), 'vizrs-gal-'));
-    const isDir = fs.statSync(file).isDirectory();
-    if (isDir) fs.writeFileSync(path.join(data, 'show.json'), JSON.stringify({ name: setName, scenes: [], pages: [], playlists: [] }));
-    else fs.copyFileSync(file, path.join(data, 'show.json'));
-    const srv = spawn(BIN, ['--port', String(port), '--tcp', '0', '--data', data], { stdio: 'ignore' });
-    const B = `http://127.0.0.1:${port}`;
+    const { B, show, notes, stop } = await startSet(BIN, setName, file);
     const cards = [];
     try {
-      for (let i = 0; i < 60; i++) { try { await fetch(B + '/api/state'); break; } catch (e) { await sleep(100); } }
-      const notes = isDir ? await importBtb(B, file) : {};
-      const show = await fetch(B + '/api/show').then((r) => r.json());
       const scenes = Object.fromEntries(show.scenes.map((s) => [s.id, s]));
       const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
       await page.goto(B + '/output');
@@ -100,7 +47,7 @@ function nodeTypes(nodes) {
         console.log(`ZAPISANO ${name}  ${p.name}`);
       }
       await page.close();
-    } finally { srv.kill(); fs.rmSync(data, { recursive: true, force: true }); }
+    } finally { stop(); }
 
     // Arkusz zbiorczy zestawu (siatka 3 kolumny, miniatury 640×360)
     const cols = 3, tw = 640, th = 360, gap = 12, lab = 30;

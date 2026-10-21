@@ -23,6 +23,7 @@ cargo build --release
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
 Galeria wszystkich grafik zestawów INFO24 i R7, szablonów BTB CG (`source/tests/fixtures/btb`, import przez `btb-io.js`) i belki BTB wielowierszowej: [media/galeria/index.html](media/galeria/index.html) (arkusze: [INFO24](media/galeria/INFO24-arkusz.png), [R7](media/galeria/R7-arkusz.png), [BTB](media/galeria/BTB-arkusz.png), [BTB-PILNE](media/galeria/BTB-PILNE-arkusz.png)); odświeżanie: `node source/tools/gallery.js [ścieżka-do-vizrs]`.
+Film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080): [media/vizrs_WSZYSTKIE_PACZKI.mp4](media/vizrs_WSZYSTKIE_PACZKI.mp4); nagranie: `node source/tools/video.js [ścieżka-do-vizrs] [--only R7,BTB]` (wymaga ffmpeg). Lista paczek: `source/tools/sets.js`.
 
 Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token HASŁO` (lub `VIZRS_TOKEN`), `--osc PORT`, `--webhook URL`, `--data katalog`, `--web katalog`, `--version`
 (serwuje pliki UI z dysku zamiast wbudowanych – wygodne przy własnych modyfikacjach `web/`).
