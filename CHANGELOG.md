@@ -34,6 +34,7 @@
 - **Czcionki z serwera na /output:** wyjście ładuje wszystkie czcionki z assets zaraz po otwarciu (i nowe co 30 s) – komputer z OBS nie potrzebuje zainstalowanej czcionki, pierwszy TAKE nie czeka na font.
 - **Łamanie wierszy „wypełniaj”** (`lineBreak: fill`, próg `fillSqueeze`, domyślnie 0,9) w `squeeze-lines`/`squeeze-each`: wiersz bierze kolejne słowa do progu ściśnięcia, reszta przechodzi niżej, każdy wiersz ściskany osobno – jak belki TVP. Domyślnie bez zmian (`balance`, wiersze równej szerokości). Walidacja obu właściwości.
 - Przykład `examples/BTB_PILNE.show.json` (strony 8501–8506): „Belka - PILNE” z paczki BTB_CG jako belka 1–3-wierszowa z łamaniem `fill`, teksty z belek TVP i TV Republika.
+- `source/tools/video.js`: film wszystkich paczek (`media/vizrs_WSZYSTKIE_PACZKI.mp4`, 50 kl./s, czas wirtualny); lista paczek `source/tools/sets.js`; zapisana galeria `media/galeria/`.
 - `source/tools/gallery.js`: galeria wszystkich stron zestawów przykładowych (zrzuty, arkusze, `index.html`, poza repo).
 - Poprawka: automatyczne łamanie wierszy nie dzieli tekstu na twardej spacji (polska typografia „i\u00a0w\u00a0z…”) – wcześniej jednoliterowy spójnik mógł zostać sam na końcu wiersza.
 - **Przepełnienie tekstu widoczne wszędzie** (zamknięta luka #17): Artist pokazuje ściśnięcie zaznaczonego tekstu pod „min. ściśnięcie” i czerwoną ramkę przepełnionego tekstu na kanwie (`data-over`, jak `data-cg-overflow` w BTB); wyjście programu zgłasza przepełnienie do `/api/errors` („⚠ błędy scen” w Trio).

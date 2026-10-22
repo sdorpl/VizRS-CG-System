@@ -166,6 +166,7 @@ Wczytaj w Trio: „⇧ Import show” albo uruchom `vizrs --data katalog` z tym 
 reszta przechodzi niżej, każdy wiersz ma własne ściśnięcie, belka rośnie w górę. Strony 8501–8506. Font: skopiuj `examples/BTB_CG/assets/*` do `vizrs-data/assets/`.
 
 Podgląd wszystkich grafik przykładowych: `node source/tools/gallery.js` (zrzuty i `index.html` w `<tmp>/vizrs-galeria`).
+Zapisana galeria: [media/galeria/index.html](media/galeria/index.html). Film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080): [media/vizrs_WSZYSTKIE_PACZKI.mp4](media/vizrs_WSZYSTKIE_PACZKI.mp4); nagranie klatka po klatce w czasie wirtualnym: `node source/tools/video.js [ścieżka-do-vizrs] [--only R7,BTB] [--fps 25]` (wymaga ffmpeg). Lista paczek: `source/tools/sets.js`.
 
 ## Elementy dodatkowe (w obu zestawach)
 

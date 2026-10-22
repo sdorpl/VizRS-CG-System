@@ -1,0 +1,375 @@
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VizRS – galeria grafik</title>
+<style>
+body{margin:0;background:#0b0d10;color:#e8eaed;font:14px/1.45 system-ui,sans-serif}
+header{padding:24px 24px 8px}h1{margin:0 0 4px;font-size:22px}h2{margin:28px 24px 12px;font-size:18px}
+.muted{color:#8a929c}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px;padding:0 24px 24px}
+.card{background:#15191f;border:1px solid #232a33;border-radius:8px;overflow:hidden}
+.card img{display:block;width:100%;aspect-ratio:16/9;cursor:zoom-in}.meta{padding:10px 12px}
+.num{color:#f5a800;font-weight:700;margin-right:6px}.tags{font-size:12px;color:#8a929c;margin-top:4px}
+details{margin-top:6px;font-size:12px}pre{white-space:pre-wrap;margin:4px 0 0;color:#b8c0ca}
+#lb{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center}#lb img{max-width:96vw;max-height:94vh}
+</style></head><body>
+<header><h1>VizRS – wszystkie elementy grafiki</h1>
+<div class="muted">Zestawy INFO24 i R7, szablony BTB CG zaimportowane do VizRS (tests/fixtures/btb) oraz belka BTB w wersji wielowierszowej (examples/BTB_PILNE.show.json).</div>
+<div class="muted">Każda strona zestawu pokazana osobno po animacji wejścia (wyjście 1920×1080, zrzut 960×540). Wygenerowano: <code>node source/tools/gallery.js</code>.</div></header>
+<h2>INFO24 <span class="muted">(22 stron · examples/INFO24.show.json · <a style="color:#7fb3ff" href="INFO24-arkusz.png">arkusz</a>)</span></h2>
+<div class="grid"><div class="card"><img loading="lazy" src="INFO24-1001.png" alt="Belka – budżet">
+<div class="meta"><span class="num">1001</span>Belka – budżet
+<div class="tags">scena: Belka · warstwa: main<br>węzły: rect×3 · text</div>
+
+<details><summary>wartości pól</summary><pre>styl: info
+headline: Rząd przedstawił projekt budżetu na 2027 rok. Deficyt niższy od oczekiwań ekonomistów</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1002.png" alt="Belka PILNE – A2">
+<div class="meta"><span class="num">1002</span>Belka PILNE – A2
+<div class="tags">scena: Belka · warstwa: main<br>węzły: rect×3 · text</div>
+
+<details><summary>wartości pól</summary><pre>styl: pilne
+headline: Utrudnienia na autostradzie A2 w kierunku Warszawy</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1003.png" alt="Belka – infolinia">
+<div class="meta"><span class="num">1003</span>Belka – infolinia
+<div class="tags">scena: Belka · warstwa: main<br>węzły: rect×3 · text</div>
+
+<details><summary>wartości pól</summary><pre>styl: info
+headline: Infolinia dla poszkodowanych: [[800 123 456]] – czynna całą dobę</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1101.png" alt="Podpis – reporterka">
+<div class="meta"><span class="num">1101</span>Podpis – reporterka
+<div class="tags">scena: Podpis · warstwa: main<br>węzły: rect×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>name: Anna Kowalska
+title: INFO24</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1102.png" alt="Podpis – ekspert">
+<div class="meta"><span class="num">1102</span>Podpis – ekspert
+<div class="tags">scena: Podpis · warstwa: main<br>węzły: rect×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>name: prof. Jan Nowak
+title: Politechnika Warszawska, Wydział Transportu</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1201.png" alt="Belka z autorem">
+<div class="meta"><span class="num">1201</span>Belka z autorem
+<div class="tags">scena: BelkaAutor · warstwa: main<br>węzły: rect×3 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>author: Anna Kowalska / INFO24
+headline: Jutro nowe rozkłady jazdy pociągów</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1202.png" alt="Belka z autorem – długa">
+<div class="meta"><span class="num">1202</span>Belka z autorem – długa
+<div class="tags">scena: BelkaAutor · warstwa: main<br>węzły: rect×3 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>author: Jan Nowak / INFO24, Kraków
+headline: Rekordowa frekwencja na targach książki w Krakowie</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1301.png" alt="Belka programu">
+<div class="meta"><span class="num">1301</span>Belka programu
+<div class="tags">scena: BelkaProgram · warstwa: main<br>węzły: rect×3 · text×3 · image</div>
+
+<details><summary>wartości pól</summary><pre>program: #PORANEK
+czas: 7:10
+logo: 
+headline: Przegląd prasy</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1401.png" alt="QR lewy – wsparcie">
+<div class="meta"><span class="num">1401</span>QR lewy – wsparcie
+<div class="tags">scena: INFO24 KodQR · warstwa: qr<br>węzły: group×2 · rect×4 · qr×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>strona: lewa
+url: https://info24.example/wesprzyj
+caption: Wesprzyj nas!</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1402.png" alt="QR prawy – aplikacja">
+<div class="meta"><span class="num">1402</span>QR prawy – aplikacja
+<div class="tags">scena: INFO24 KodQR · warstwa: qr<br>węzły: group×2 · rect×4 · qr×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>strona: prawa
+url: https://info24.example/aplikacja
+caption: Pobierz aplikację INFO24</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1403.png" alt="Hashtag">
+<div class="meta"><span class="num">1403</span>Hashtag
+<div class="tags">scena: INFO24 Hashtag · warstwa: main<br>węzły: image · rect×3 · text×3</div>
+
+<details><summary>wartości pól</summary><pre>hashtag: #DROGAPRZEZPOLSKĘ
+badge: Reportaż
+tlo: tlo_hashtag.jpg</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1404.png" alt="Na żywo – 2 wiersze">
+<div class="meta"><span class="num">1404</span>Na żywo – 2 wiersze
+<div class="tags">scena: INFO24 NaZywo2 · warstwa: bug<br>węzły: group · rect×2 · ellipse · text×2</div>
+
+<details><summary>wartości pól</summary><pre>place: Gdańsk, Polska
+Wodowanie nowego promu
+live: Na żywo</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-1405.png" alt="Kafel programu (rotacja)">
+<div class="meta"><span class="num">1405</span>Kafel programu (rotacja)
+<div class="tags">scena: INFO24 KafelProgramu · warstwa: prog<br>węzły: group · rect×3 · text×3</div>
+
+<details><summary>wartości pól</summary><pre>next: Za chwilę
+programs: Dzień Dobry
+Pogoda
+Serwis
+times: 7:10
+7:55
+9:00</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-2001.png" alt="Na żywo – Plac Zamkowy">
+<div class="meta"><span class="num">2001</span>Na żywo – Plac Zamkowy
+<div class="tags">scena: NaZywo · warstwa: bug<br>węzły: group · rect×2 · ellipse · text×2</div>
+
+<details><summary>wartości pól</summary><pre>place: Plac Zamkowy
+live: Na żywo</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-2101.png" alt="Odliczanie – Sylwester">
+<div class="meta"><span class="num">2101</span>Odliczanie – Sylwester
+<div class="tags">scena: Odliczanie · warstwa: count<br>węzły: group · rect×2 · text · clock</div>
+
+<details><summary>wartości pól</summary><pre>label: Do Sylwestra
+target: 2027-01-01 00:00:00</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-3001.png" alt="Ticker">
+<div class="meta"><span class="num">3001</span>Ticker
+<div class="tags">scena: Ticker · warstwa: back<br>węzły: group · rect×4 · ticker · text · clock</div>
+
+<details><summary>wartości pól</summary><pre>label: INFO24
+items: Rząd przyjął projekt budżetu na 2027 rok
+Kurs EUR/PLN stabilny w okolicach 4,25
+Jutro w całym kraju do 18 stopni, przelotne opady
+Reprezentacja awansowała do turnieju finałowego
+Nowe połączenia kolejowe od grudnia</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-3002.png" alt="Ticker góra-dół z kategoriami">
+<div class="meta"><span class="num">3002</span>Ticker góra-dół z kategoriami
+<div class="tags">scena: TickerRoll · warstwa: back<br>węzły: group · rect×4 · ticker · text · clock</div>
+
+<details><summary>wartości pól</summary><pre>items: KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem
+ŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów
+ŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach
+GOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny
+SPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00
+POGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-3003.png" alt="Ticker wipe z kategoriami">
+<div class="meta"><span class="num">3003</span>Ticker wipe z kategoriami
+<div class="tags">scena: TickerWipe · warstwa: back<br>węzły: group · rect×4 · ticker · text · clock</div>
+
+<details><summary>wartości pól</summary><pre>items: KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem
+ŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów
+ŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach
+GOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny
+SPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00
+POGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-3004.png" alt="Ticker przewijany z kategoriami">
+<div class="meta"><span class="num">3004</span>Ticker przewijany z kategoriami
+<div class="tags">scena: Ticker · warstwa: back<br>węzły: group · rect×4 · ticker · text · clock</div>
+
+<details><summary>wartości pól</summary><pre>label: INFO24
+items: KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem
+ŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów
+ŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach
+GOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny
+SPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00
+POGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-4001.png" alt="Tytuł">
+<div class="meta"><span class="num">4001</span>Tytuł
+<div class="tags">scena: Title · warstwa: main<br>węzły: rect×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>headline: Wybory 2026
+sub: Wyniki exit poll o 21:00</pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-4101.png" alt="Pilne z logo">
+<div class="meta"><span class="num">4101</span>Pilne z logo
+<div class="tags">scena: PilneLogo · warstwa: main<br>węzły: group · rect×5 · text×4 · image · clock</div>
+
+<details><summary>wartości pól</summary><pre>kicker: Pilne
+top: Komunikat Głównego Inspektoratu Sanitarnego
+main: Wiadomość dnia
+logo: </pre></details>
+</div></div><div class="card"><img loading="lazy" src="INFO24-5001.png" alt="Wynik meczu">
+<div class="meta"><span class="num">5001</span>Wynik meczu
+<div class="tags">scena: Scoreboard · warstwa: score<br>węzły: group · rect×3 · text×5 · clock</div>
+
+<details><summary>wartości pól</summary><pre>home: LEG
+away: WIS
+homeScore: 2
+awayScore: 1</pre></details>
+</div></div></div><h2>R7 <span class="muted">(17 stron · examples/R7_NEWS.show.json · <a style="color:#7fb3ff" href="R7-arkusz.png">arkusz</a>)</span></h2>
+<div class="grid"><div class="card"><img loading="lazy" src="R7-7001.png" alt="R7 Belka info">
+<div class="meta"><span class="num">7001</span>R7 Belka info
+<div class="tags">scena: R7 Belka · warstwa: main<br>węzły: rect×4 · text×4</div>
+
+<details><summary>wartości pól</summary><pre>styl: info
+label: INFO
+headline: Nowa linia tramwajowa połączy dworzec z lotniskiem. Pierwsze kursy już w czerwcu</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7002.png" alt="R7 Belka pilne">
+<div class="meta"><span class="num">7002</span>R7 Belka pilne
+<div class="tags">scena: R7 Belka · warstwa: main<br>węzły: rect×4 · text×4</div>
+
+<details><summary>wartości pól</summary><pre>styl: pilne
+label: PILNE
+headline: Silny wiatr w górach
+Ostrzeżenia trzeciego stopnia w trzech województwach</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7003.png" alt="R7 Belka z wyróżnieniem">
+<div class="meta"><span class="num">7003</span>R7 Belka z wyróżnieniem
+<div class="tags">scena: R7 Belka · warstwa: main<br>węzły: rect×4 · text×4</div>
+
+<details><summary>wartości pól</summary><pre>styl: info
+label: INFO
+headline: Zbiórka dla schroniska: [[600 700 800]] – wpłaty do niedzieli</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7101.png" alt="R7 Podpis">
+<div class="meta"><span class="num">7101</span>R7 Podpis
+<div class="tags">scena: R7 Podpis · warstwa: main<br>węzły: rect×3 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>name: Marta Zielińska
+title: Reporterka R7 NEWS, Gdańsk</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7102.png" alt="R7 Belka z autorem">
+<div class="meta"><span class="num">7102</span>R7 Belka z autorem
+<div class="tags">scena: R7 BelkaAutor · warstwa: main<br>węzły: rect×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>author: Piotr Lis / R7 NEWS
+headline: Jutro o nowym rozkładzie jazdy</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7201.png" alt="R7 Na żywo">
+<div class="meta"><span class="num">7201</span>R7 Na żywo
+<div class="tags">scena: R7 NaZywo · warstwa: bug<br>węzły: group · rect×2 · text×2 · ellipse</div>
+
+<details><summary>wartości pól</summary><pre>place: Port w Gdyni</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7202.png" alt="R7 Odliczanie">
+<div class="meta"><span class="num">7202</span>R7 Odliczanie
+<div class="tags">scena: R7 Odliczanie · warstwa: count<br>węzły: group · rect×2 · text · clock</div>
+
+<details><summary>wartości pól</summary><pre>label: Do Nowego Roku
+target: 2027-01-01 00:00:00</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7301.png" alt="R7 Ticker">
+<div class="meta"><span class="num">7301</span>R7 Ticker
+<div class="tags">scena: R7 Ticker · warstwa: back<br>węzły: group · rect×3 · ticker · text×2 · clock</div>
+
+<details><summary>wartości pól</summary><pre>items: Nowa linia tramwajowa od czerwca
+Kurs EUR/PLN bez większych zmian
+Jutro słonecznie, do 19 stopni
+Finał pucharu kraju w sobotę o 18:00</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7302.png" alt="Ticker góra-dół z kategoriami">
+<div class="meta"><span class="num">7302</span>Ticker góra-dół z kategoriami
+<div class="tags">scena: R7 TickerRoll · warstwa: back<br>węzły: group · rect×3 · ticker · text×2 · clock</div>
+
+<details><summary>wartości pól</summary><pre>items: KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem
+ŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów
+ŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach
+GOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny
+SPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00
+POGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7303.png" alt="Ticker wipe z kategoriami">
+<div class="meta"><span class="num">7303</span>Ticker wipe z kategoriami
+<div class="tags">scena: R7 TickerWipe · warstwa: back<br>węzły: group · rect×3 · ticker · text×2 · clock</div>
+
+<details><summary>wartości pól</summary><pre>items: KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem
+ŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów
+ŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach
+GOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny
+SPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00
+POGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7304.png" alt="Ticker przewijany z kategoriami">
+<div class="meta"><span class="num">7304</span>Ticker przewijany z kategoriami
+<div class="tags">scena: R7 Ticker · warstwa: back<br>węzły: group · rect×3 · ticker · text×2 · clock</div>
+
+<details><summary>wartości pól</summary><pre>items: KRAJ|Nowa linia tramwajowa połączy dworzec z lotniskiem
+ŚWIAT#1c3f94|Szczyt klimatyczny zakończony porozumieniem w sprawie oceanów
+ŚWIAT#1c3f94|Rekordowa liczba turystów w europejskich stolicach
+GOSPODARKA#6b3fa0|Kurs EUR/PLN bez większych zmian, złoty stabilny
+SPORT#1f8a4c|Finał pucharu kraju w sobotę o 18:00
+POGODA#c77700|Jutro słonecznie, do 19 stopni na zachodzie kraju</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7401.png" alt="R7 Program">
+<div class="meta"><span class="num">7401</span>R7 Program
+<div class="tags">scena: R7 BelkaProgram · warstwa: main<br>węzły: rect×3 · text×3</div>
+
+<details><summary>wartości pól</summary><pre>program: Dzień Dobry
+czas: 7:10
+headline: Przegląd prasy</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7501.png" alt="QR lewy – wsparcie">
+<div class="meta"><span class="num">7501</span>QR lewy – wsparcie
+<div class="tags">scena: R7 KodQR · warstwa: qr<br>węzły: group×2 · rect×4 · qr×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>strona: lewa
+url: https://r7news.example/wesprzyj
+caption: Wesprzyj nas!</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7502.png" alt="QR prawy – aplikacja">
+<div class="meta"><span class="num">7502</span>QR prawy – aplikacja
+<div class="tags">scena: R7 KodQR · warstwa: qr<br>węzły: group×2 · rect×4 · qr×2 · text×2</div>
+
+<details><summary>wartości pól</summary><pre>strona: prawa
+url: https://r7news.example/aplikacja
+caption: Pobierz aplikację R7 NEWS</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7503.png" alt="Hashtag">
+<div class="meta"><span class="num">7503</span>Hashtag
+<div class="tags">scena: R7 Hashtag · warstwa: main<br>węzły: image · rect×3 · text×3</div>
+
+<details><summary>wartości pól</summary><pre>hashtag: #DROGAPRZEZPOLSKĘ
+badge: Reportaż
+tlo: tlo_hashtag2.jpg</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7504.png" alt="Na żywo – 2 wiersze">
+<div class="meta"><span class="num">7504</span>Na żywo – 2 wiersze
+<div class="tags">scena: R7 NaZywo2 · warstwa: bug<br>węzły: group · rect×2 · ellipse · text×2</div>
+
+<details><summary>wartości pól</summary><pre>place: Gdańsk, Polska
+Wodowanie nowego promu
+live: Na żywo</pre></details>
+</div></div><div class="card"><img loading="lazy" src="R7-7505.png" alt="Kafel programu (rotacja)">
+<div class="meta"><span class="num">7505</span>Kafel programu (rotacja)
+<div class="tags">scena: R7 KafelProgramu · warstwa: prog<br>węzły: group · rect×3 · text×3</div>
+
+<details><summary>wartości pól</summary><pre>next: Za chwilę
+programs: Dzień Dobry
+Pogoda
+Serwis
+times: 7:10
+7:55
+9:00</pre></details>
+</div></div></div><h2>BTB <span class="muted">(5 stron · source/tests/fixtures/btb · <a style="color:#7fb3ff" href="BTB-arkusz.png">arkusz</a>)</span></h2>
+<div class="grid"><div class="card"><img loading="lazy" src="BTB-1001.png" alt="Belka glowna">
+<div class="meta"><span class="num">1001</span>Belka glowna
+<div class="tags">scena: Belka glowna · warstwa: main<br>węzły: group · rect · text×2</div>
+<details><summary>raport konwersji BTB (1)</summary><pre>plik: belka_glowna.json
+font „Bahnschrift” niedostępny w VizRS – wgraj plik fontu w Artist albo zostanie użyty zastępczy</pre></details>
+
+</div></div><div class="card"><img loading="lazy" src="BTB-1002.png" alt="Belka - PILNE">
+<div class="meta"><span class="num">1002</span>Belka - PILNE
+<div class="tags">scena: Belka - PILNE · warstwa: main<br>węzły: group · rect · text</div>
+<details><summary>raport konwersji BTB (2)</summary><pre>plik: belka_pilne.cgpack
+efekt „glow” (warstwa „rep-top-bar”) pominięty
+font „Bahnschrift” niedostępny w VizRS – wgraj plik fontu w Artist albo zostanie użyty zastępczy</pre></details>
+<details><summary>wartości pól</summary><pre>title: SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-1003.png" alt="NA ŻYWO lewa">
+<div class="meta"><span class="num">1003</span>NA ŻYWO lewa
+<div class="tags">scena: NA ŻYWO lewa · warstwa: main<br>węzły: group · rect×3 · text</div>
+<details><summary>raport konwersji BTB (1)</summary><pre>plik: na_zywo_lewa.json
+font „Bahnschrift” niedostępny w VizRS – wgraj plik fontu w Artist albo zostanie użyty zastępczy</pre></details>
+<details><summary>wartości pól</summary><pre>title: na żywo</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-1004.png" alt="Republika Lower Third">
+<div class="meta"><span class="num">1004</span>Republika Lower Third
+<div class="tags">scena: Republika Lower Third · warstwa: main<br>węzły: group · rect×2 · text</div>
+<details><summary>raport konwersji BTB (0)</summary><pre>plik: republika_lt.json</pre></details>
+<details><summary>wartości pól</summary><pre>title: MECHANIZM WARUNKOWOŚCI</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-1005.png" alt="TICKER PEŁNY EKRAN">
+<div class="meta"><span class="num">1005</span>TICKER PEŁNY EKRAN
+<div class="tags">scena: TICKER PEŁNY EKRAN · warstwa: main<br>węzły: group · rect · ticker</div>
+<details><summary>raport konwersji BTB (0)</summary><pre>plik: ticker_pelny.json</pre></details>
+
+</div></div></div><h2>BTB-PILNE <span class="muted">(6 stron · examples/BTB_PILNE.show.json · <a style="color:#7fb3ff" href="BTB-PILNE-arkusz.png">arkusz</a>)</span></h2>
+<div class="grid"><div class="card"><img loading="lazy" src="BTB-PILNE-1001.png" alt="TVP – 2 linie">
+<div class="meta"><span class="num">1001</span>TVP – 2 linie
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: PREZYDENT ANDRZEJ DUDA ZABRAŁ GŁOS WS. UCHWAŁY DOTYCZĄCEJ ZMIAN W MEDIACH PUBLICZNYCH</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1002.png" alt="TVP – Zakopane">
+<div class="meta"><span class="num">1002</span>TVP – Zakopane
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: TELEWIZJA POLSKA I MIASTO ZAKOPANE ZAPRASZAJĄ NA „SYLWESTRA MARZEŃ”</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1003.png" alt="TVP – 1 linia">
+<div class="meta"><span class="num">1003</span>TVP – 1 linia
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: ODLICZANIE DO „SYLWESTRA MARZEŃ Z DWÓJKĄ”</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1004.png" alt="Republika – Trybunał">
+<div class="meta"><span class="num">1004</span>Republika – Trybunał
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: POLACY NIE ULEGNĄ PRESJI RZĄDZĄCYCH WS. TRYBUNAŁU</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1005.png" alt="Republika – zima">
+<div class="meta"><span class="num">1005</span>Republika – zima
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: NADCHODZI NAJDROŻSZA ZIMA W HISTORII</pre></details>
+</div></div><div class="card"><img loading="lazy" src="BTB-PILNE-1006.png" alt="3 linie">
+<div class="meta"><span class="num">1006</span>3 linie
+<div class="tags">scena: Belka - PILNE (wiele linii) · warstwa: main<br>węzły: group · rect · text</div>
+
+<details><summary>wartości pól</summary><pre>title: MAZOWSZE: KIEROWCA CIĘŻARÓWKI ŚMIERTELNIE POTRĄCONY NA TRASIE S17, GDY PRÓBOWAŁ WYMIENIĆ OPONĘ. POLICJA USTALA OKOLICZNOŚCI ZDARZENIA, TRASA W KIERUNKU WARSZAWY JEST ZABLOKOWANA</pre></details>
+</div></div></div>
+<div id="lb" onclick="this.style.display='none'"><img></div>
+<script>document.querySelectorAll('.card img').forEach(i=>i.onclick=()=>{const l=document.getElementById('lb');l.firstChild.src=i.src;l.style.display='flex'})</script>
+</body></html>
