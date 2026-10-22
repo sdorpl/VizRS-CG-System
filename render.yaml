@@ -1,0 +1,17 @@
+# Blueprint Render.com: New → Blueprint → wskaż to repozytorium.
+# Plan płatny jest wymagany: darmowy usypia usługę i nie ma trwałego dysku.
+services:
+  - type: web
+    name: vizrs
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    autoDeploy: false   # deploy restartuje wyjście OBS – wdrażaj ręcznie, poza anteną
+    envVars:
+      - key: VIZRS_TOKEN
+        sync: false     # Render zapyta o wartość przy tworzeniu (znaki: A-Z a-z 0-9 - _ .)
+    disk:
+      name: vizrs-data
+      mountPath: /var/data
+      sizeGB: 1

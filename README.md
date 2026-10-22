@@ -44,6 +44,15 @@ Odświeżanie i wykrywanie rozjazdu: `source/tools/sync-btb.sh [--check]`.
 ### Usługa systemowa
 Pliki w `deploy/` (systemd, launchd, Windows/NSSM). Token w `VIZRS_TOKEN`.
 
+### Render.com (hosting w chmurze)
+W repo są `Dockerfile`, `render.yaml` i `deploy/render/start.sh`.
+1. Render → **New → Blueprint** → wybierz to repozytorium. Powstanie usługa `vizrs` (plan Starter) z dyskiem 1 GB na `/var/data`.
+2. Podaj **`VIZRS_TOKEN`** (znaki `A-Z a-z 0-9 - _ .`) – bez niego usługa nie wystartuje.
+3. OBS: `https://<nazwa>.onrender.com/output?token=TOKEN`, Trio: `https://<nazwa>.onrender.com/trio?token=TOKEN`.
+
+Ograniczenia: darmowy plan się nie nadaje (usypia, brak dysku); TCP :6100 i OSC (UDP) niedostępne – Companion steruje przez HTTP API;
+każdy deploy restartuje usługę (wyjście OBS gaśnie na kilka-kilkanaście s), dlatego `autoDeploy` jest wyłączony – wdrażaj ręcznie poza anteną.
+
 ## Bezpieczeństwo (od 1.1)
 
 Domyślnie serwer słucha **tylko lokalnie** (`127.0.0.1`). Żeby OBS na innym komputerze lub telefon z Companion mogły się łączyć,
