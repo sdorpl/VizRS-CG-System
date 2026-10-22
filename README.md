@@ -52,6 +52,21 @@ Odświeżanie i wykrywanie rozjazdu: `source/tools/sync-btb.sh [--check]`.
 Pliki w `deploy/` (systemd, launchd, Windows/NSSM). Token w `VIZRS_TOKEN`.
 VPS / Docker: `Dockerfile` (statyczna binarka, obraz ~3 MB) i `deploy/docker-compose.yml` (VizRS + Caddy z HTTPS) – krok po kroku w [docs/RUNBOOK.md](docs/RUNBOOK.md#vps-i-docker).
 
+### Render.com (hosting w chmurze, plan darmowy)
+W repo są `Dockerfile`, `render.yaml` i `deploy/render/start.sh`.
+1. Render → **New → Blueprint** → wybierz to repozytorium (plan `free`).
+2. Podaj **`VIZRS_TOKEN`** (znaki `A-Z a-z 0-9 - _ .`) – bez niego usługa nie wystartuje.
+3. OBS: `https://<nazwa>.onrender.com/output?token=TOKEN`, Trio: `https://<nazwa>.onrender.com/trio?token=TOKEN`.
+
+Ograniczenia darmowego planu:
+- **brak trwałego dysku** – po restarcie, uśpieniu lub deployu show wraca do `deploy/render/seed/show.json`
+  (brak pliku = show demo). Gotowy show pobierz (`GET /api/show`), zapisz tam, zacommituj i zrób deploy;
+- **usypianie po 15 min bez ruchu** (budzenie ~1 min) – przed programem otwórz Trio; żeby nie zasypiało,
+  ustaw zewnętrzny ping co 10 min (np. UptimeRobot, cron-job.org) na `https://<nazwa>.onrender.com/` (wystarczy dowolna odpowiedź, nawet 401);
+- 750 h pracy miesięcznie na konto, TCP :6100 i OSC niedostępne – Companion przez HTTP API.
+
+Do realnej anteny lepszy plan płatny z dyskiem – patrz komentarz w `render.yaml`.
+
 ## Bezpieczeństwo (od 1.1)
 
 Domyślnie serwer słucha **tylko lokalnie** (`127.0.0.1`). Żeby OBS na innym komputerze lub telefon z Companion mogły się łączyć,

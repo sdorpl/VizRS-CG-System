@@ -5,3 +5,4 @@
 !source/build.rs
 !source/src/**
 !source/web/**
+!deploy/render/**
