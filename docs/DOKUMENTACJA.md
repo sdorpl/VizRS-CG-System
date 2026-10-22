@@ -581,7 +581,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 | Opcja | Zmienna | Opis |
 |---|---|---|
 | `--data KAT` | `VIZRS_DATA` | katalog danych (domyślnie `vizrs-data`) |
-| `--port N` | `VIZRS_PORT` | port serwera uruchamianego przez okno (domyślnie 8088) |
+| `--port N` | `VIZRS_PORT` | port serwera uruchamianego przez okno (domyślnie 8088; gdy zajęty, np. przez serwer na innym katalogu danych – następny wolny, adres w Pomoc → O programie; port podany jawnie bez zmian) |
 | `--token T` | `VIZRS_TOKEN` | token serwera |
 | `--connect URL` | `VIZRS_CONNECT` | tylko okno, serwer zdalny |
 | `--vizrs PLIK` | `VIZRS_BIN` | program `vizrs` (domyślnie obok `vizrs-shell` albo w `PATH`) |

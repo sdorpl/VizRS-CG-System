@@ -60,6 +60,8 @@ struct Args {
     kind: Kind,
     data: PathBuf,
     port: u16,
+    /// port podany jawnie (--port / VIZRS_PORT) – bez szukania wolnego
+    port_set: bool,
     token: Option<String>,
     connect: Option<String>,
     vizrs: Option<String>,
@@ -73,7 +75,7 @@ fn help() -> &'static str {
 Użycie: vizrs-shell [artist|trio|output|connect] [opcje]   (domyślnie artist; connect – najpierw wybór serwera)
 
   --data KAT      katalog danych serwera (VIZRS_DATA, domyślnie vizrs-data)
-  --port N        port serwera uruchamianego przez okno (VIZRS_PORT, domyślnie 8088)
+  --port N        port serwera uruchamianego przez okno (VIZRS_PORT; domyślnie 8088, a gdy zajęty – następny wolny)
   --token T       token serwera (VIZRS_TOKEN)
   --connect URL   okno dla serwera zdalnego, np. https://cg.example.pl (VIZRS_CONNECT)
   --local         serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu
@@ -93,6 +95,7 @@ fn parse_args() -> Result<Args, String> {
         kind: Kind::Artist,
         data: PathBuf::from(env("VIZRS_DATA").unwrap_or_else(|| "vizrs-data".into())),
         port: env("VIZRS_PORT").map(|p| p.parse().map_err(|_| "VIZRS_PORT: zły numer portu".to_string())).transpose()?.unwrap_or(8088),
+        port_set: env("VIZRS_PORT").is_some(),
         token: env("VIZRS_TOKEN"),
         connect: env("VIZRS_CONNECT"),
         vizrs: env("VIZRS_BIN"),
@@ -115,7 +118,10 @@ fn parse_args() -> Result<Args, String> {
             "output" => a.kind = Kind::Output,
             "connect" => a.kind = Kind::Connect,
             "--data" => a.data = PathBuf::from(val()?),
-            "--port" => a.port = val()?.parse().map_err(|_| "--port: zły numer portu".to_string())?,
+            "--port" => {
+                a.port = val()?.parse().map_err(|_| "--port: zły numer portu".to_string())?;
+                a.port_set = true;
+            }
             "--token" => a.token = Some(val()?),
             "--connect" => a.connect = Some(val()?),
             "--vizrs" => a.vizrs = Some(val()?),
@@ -597,6 +603,8 @@ fn main() {
     };
 
     // serwer: zdalny (--connect albo zapisany „przy uruchomieniu”), działający na tym katalogu danych albo uruchamiany teraz
+    // domyślny port zajęty (np. serwer na innym katalogu danych) – następny wolny; jawny --port bez zmian
+    let port = if args.port_set { args.port } else { server::free_port(args.port) };
     let auto = if args.connect.is_none() && !args.local { connect::Saved::load().auto } else { None };
     let mut token = args.token.clone();
     let (base, local, server_note) = if let Some(c) = &args.connect {
@@ -605,7 +613,7 @@ fn main() {
         token = connect::Saved::load().token_for(&a);
         (a, None, "serwer zdalny (łączenie przy uruchomieniu; serwer lokalny: --local)".to_string())
     } else {
-        match local_server(&args.data, args.port, args.token.as_deref(), args.vizrs.as_deref()) {
+        match local_server(&args.data, port, args.token.as_deref(), args.vizrs.as_deref()) {
             Ok((b, note)) => (b.clone(), Some(b), note),
             Err(e) => {
                 error_dialog(&e);
@@ -637,7 +645,7 @@ fn main() {
         }));
     }
     let (menu, ids) = build_menu();
-    let local_start = (args.data.clone(), args.port, args.vizrs.clone());
+    let local_start = (args.data.clone(), port, args.vizrs.clone());
     let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note };
     let first = args.kind;
 

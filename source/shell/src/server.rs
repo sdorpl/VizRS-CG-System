@@ -67,6 +67,13 @@ pub struct Spawned {
     _child: Child,
 }
 
+/// Pierwszy wolny port od `from` (do 20 kolejnych), inaczej dowolny wolny wskazany przez system.
+/// Przy porcie zajętym przez inny serwer VizRS (np. na innym katalogu danych) okno uruchamia własny obok.
+pub fn free_port(from: u16) -> u16 {
+    let free = |p: u16| std::net::TcpListener::bind(("127.0.0.1", p)).ok().and_then(|l| l.local_addr().ok()).map(|a| a.port());
+    (from..from.saturating_add(20)).find_map(|p| free(p).filter(|_| p != 0)).or_else(|| free(0)).unwrap_or(from)
+}
+
 /// Uruchamia `vizrs serve` i czeka, aż odpowie. Błąd zawiera komunikat serwera (np. zajęty port).
 pub fn spawn(vizrs: &Path, data: &Path, port: u16, token: Option<&str>) -> Result<Spawned, String> {
     // komunikaty serwera do pliku, nie do potoku: serwer żyje dłużej niż okno, a pisanie do
@@ -118,6 +125,15 @@ pub fn spawn(vizrs: &Path, data: &Path, port: u16, token: Option<&str>) -> Resul
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn busy_port_is_skipped() {
+        let busy = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let p = busy.local_addr().unwrap().port();
+        assert_ne!(free_port(p), p);
+        drop(busy);
+        assert_eq!(free_port(p), p);
+    }
 
     #[test]
     fn no_lock_means_no_server() {

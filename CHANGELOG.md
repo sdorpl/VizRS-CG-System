@@ -2,6 +2,7 @@
 
 ## Niewydane
 
+- **Poprawka okna natywnego / AppImage:** gdy domyślny port 8088 jest zajęty (np. serwer `./start-linux.sh` na innym katalogu danych), okno uruchamia swój serwer na następnym wolnym porcie zamiast kończyć się błędem; jawny `--port` / `VIZRS_PORT` bez zmian.
 - **Pakiet Debian/Ubuntu** `vizrs_<wersja>_amd64.deb` (`deploy/deb/build.sh`, w wydaniu na GitHub obok AppImage): `vizrs` i `vizrs-shell` w `/usr/bin`, w menu VizRS Artist, VizRS Trio i **VizRS Trio – serwer zdalny** (okno „Połącz z serwerem”), ikona, usługa systemd `vizrs` (wyłączona; użytkownik `vizrs`, dane `/var/lib/vizrs`). Zależności: WebKitGTK 4.1, GTK 3.
 
 ## 2.0.1 (2026-10-22) – „Okna i serwer”
