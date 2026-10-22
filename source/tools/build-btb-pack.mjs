@@ -1,4 +1,4 @@
-// Paczka „BTB CG” dla VizRS: każdy element z katalogu wzorców BTB CG konwertowany osobno (web/btb-io.js) → examples/BTB_CG/
+// Paczka „BTB CG” dla VizRS: każdy element z katalogu wzorców BTB CG konwertowany osobno (web/btb-io.js) → examples/archiwum/BTB_CG/
 //   node tools/build-btb-pack.mjs [katalog-wzorców] [katalog-wyjściowy]
 //   BTB_CG_DIR = BTB CG System (pliki /uploads/… i font Bahnschrift), domyślnie ~/Nextcloud/GitHub/BTB-CG-System-alpha
 // Wynik: show.json (sceny + strony, numeracja wg rodzaju elementu), assets/ (obrazy, fonty), konwersja.json (ostrzeżenia).
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(process.argv[2] || path.join(os.homedir(), 'Nextcloud/GitHub/btb-cgeditor/CG elements converted'));
-const OUT = path.resolve(process.argv[3] || path.join(HERE, '../../examples/BTB_CG'));
+const OUT = path.resolve(process.argv[3] || path.join(HERE, '../../examples/archiwum/BTB_CG'));
 const BTB = path.resolve(process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'));
 const io = await import(path.join(HERE, '../web/btb-io.js'));
 

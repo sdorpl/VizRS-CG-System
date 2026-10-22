@@ -153,17 +153,18 @@ Marka INFO24 jest fikcyjna – logo wgrasz jako plik w polu „Logo” strony 41
 Istniejący show w `vizrs-data/show.json` nie jest nadpisywany; żeby zobaczyć nowe demo,
 uruchom z pustym katalogiem (`--data nowy-katalog`) albo usuń `show.json`.
 
-## Drugi zestaw: R7 NEWS (`examples/R7_NEWS.show.json`)
+## Drugi zestaw: R7 NEWS (`examples/R7_NEWS.cgpack`)
 
 Kompletna oprawa w innej stylistyce (petrol + bursztyn, ścięte krawędzie): belka info/pilne 1–2 wiersze,
 belka z wyróżnieniem, podpis, belka z autorem, ticker z logo i zegarem, bug NA ŻYWO, odliczanie, belka programu.
-Wczytaj w Trio: „⇧ Import show” albo uruchom `vizrs --data katalog` z tym plikiem jako `show.json`. Strony 7001–7401.
+Wczytaj: Artist → ⇧ Import → `examples/R7_NEWS.cgpack` (najlepiej do nowego show w Trio). Strony 7001–7505.
 
-## Belka BTB wielowierszowa (`examples/BTB_PILNE.show.json`)
+## Paczka BTB (`examples/BTB.cgpack`)
 
-„Belka - PILNE” z paczki `examples/BTB_CG` przerobiona na 1–3 wiersze w układzie belek TVP: `squeeze-lines` z łamaniem
+31 wzorców BTB CG (belki, plakietki, tickery, zegar, logo) z fontem Bahnschrift – paczka nie do dystrybucji. Zawiera też belkę wielowierszową:
+„Belka - PILNE” przerobiona na 1–3 wiersze w układzie belek TVP: `squeeze-lines` z łamaniem
 **„wypełniaj”** (`lineBreak: fill`) – wiersz bierze kolejne słowa, dopóki mieści się po ściśnięciu najwyżej do 90% (`fillSqueeze`),
-reszta przechodzi niżej, każdy wiersz ma własne ściśnięcie, belka rośnie w górę. Strony 8501–8506. Font: skopiuj `examples/BTB_CG/assets/*` do `vizrs-data/assets/`.
+reszta przechodzi niżej, każdy wiersz ma własne ściśnięcie, belka rośnie w górę. Strony 8501–8506. Wszystkie paczki: [examples/README.md](examples/README.md).
 
 Podgląd wszystkich grafik przykładowych: `node source/tools/gallery.js` (zrzuty i `index.html` w `<tmp>/vizrs-galeria`).
 Zapisana galeria: [media/galeria/index.html](media/galeria/index.html). Film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080): [media/vizrs_WSZYSTKIE_PACZKI.mp4](media/vizrs_WSZYSTKIE_PACZKI.mp4); nagranie klatka po klatce w czasie wirtualnym: `node source/tools/video.js [ścieżka-do-vizrs] [--only R7,BTB] [--fps 25]` (wymaga ffmpeg). Lista paczek: `source/tools/sets.js`.

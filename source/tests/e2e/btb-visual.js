@@ -1,4 +1,4 @@
-// Porównanie wizualne paczki BTB CG (examples/BTB_CG) z oryginałami:  node tests/e2e/btb-visual.js [ścieżka-do-vizrs] [katalog-zrzutów]
+// Porównanie wizualne paczki BTB CG (examples/archiwum/BTB_CG) z oryginałami:  node tests/e2e/btb-visual.js [ścieżka-do-vizrs] [katalog-zrzutów]
 // Oryginał: element z katalogu wzorców renderowany rendererem wyjścia BTB CG (renderer.js + GSAP + fonty BTB) w Chromium.
 // Wynik: strona VizRS po TAKE na /output. Oba zrzuty w stanie po wejściu (stop point), to samo tło i ta sama godzina.
 // Różnica = piksele różniące się o > 60/255 (suma RGB) względem pikseli z treścią; tickery w ruchu oceniane łagodniej.
@@ -12,7 +12,7 @@ const path = require('path');
 
 const BTB = path.resolve(process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'));
 const SRC = path.resolve(process.env.BTB_ELEMENTS || path.join(os.homedir(), 'Nextcloud/GitHub/btb-cgeditor/CG elements converted'));
-const PACK = path.resolve(__dirname, '../../../examples/BTB_CG');
+const PACK = path.resolve(__dirname, '../../../examples/archiwum/BTB_CG');
 const FRAMES = process.argv.includes('--frames');
 const args = process.argv.slice(2).filter((a) => a !== '--frames');
 const BIN = path.resolve(args[0] || path.join(__dirname, '../../target/release/vizrs'));

@@ -102,7 +102,7 @@ const FX = path.join(__dirname, '../fixtures/btb');
   try { await io.unzip(new Uint8Array(zb)); } catch (e) { slip = e.message; }
   check('unzip: zip-slip („..” w nazwie) odrzucony', /niedozwolona|uszkodzony/.test(slip), slip);
 
-  // --- poprawki z przeniesienia wzorców BTB (examples/BTB_CG, tests/e2e/btb-visual.js)
+  // --- poprawki z przeniesienia wzorców BTB (examples/archiwum/BTB_CG, tests/e2e/btb-visual.js)
   check('zegar: HH:MM (minuty w BTB) → HH:mm', io.mapClockFormat('HH:MM') === 'HH:mm' && io.mapClockFormat('HH:MM:SS') === 'HH:mm:ss' && io.mapClockFormat() === 'HH:mm:ss');
   check('zegar: format rozszerzony DD.MM.YYYY HH:mm → dd.MM.yyyy HH:mm', io.mapClockFormat('DD.MM.YYYY HH:mm') === 'dd.MM.yyyy HH:mm');
   const zg = io.convertElement((await load('zegar.json')).elements[0]);

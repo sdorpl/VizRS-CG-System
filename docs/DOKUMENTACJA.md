@@ -489,7 +489,7 @@ VizRS **importuje** grafiki z BTB CG; eksportu w drugą stronę nie ma.
 - Ruch całego elementu jak w BTB: punkt odniesienia w lewym górnym rogu (`motion.origin`), a przy skali layoutu ≠ 1 ruch w wewnętrznej grupie „ruch elementu” (przesunięcia skalowane jak `.cg-scene` w BTB). Efekty tła kształtów (`shimmer`, `pulse`, `glow`, `scanline`) → `motion.bg`. Efekt tekstu bez czasu/opóźnienia dostaje domyślne BTB (IN 1 s po 0,2 s, OUT 0,5 s).
 - Nieprzenoszone (ostrzeżenia): maski warstw, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, „po warstwie” przy wyjściu (start równoczesny). Typ ruchu spoza listy → `fallback` z BTB albo przenikanie.
 - Zgodność sprawdza `tests/e2e/btb-visual.js` (stan po wejściu), z `--frames` także klatki 25/50/75% wejścia przy wspólnym zegarze obu stron.
-- Paczka wzorców: [examples/BTB_CG](../examples/BTB_CG/README.md) – 31 elementów, strony 8001–8402, warstwy `main`/`badge`/`ticker`/`clock`/`logo`.
+- Paczka wzorców: `examples/BTB.cgpack` ([opis](../examples/README.md)) – 31 scen, strony 8001–8506, warstwy `main`/`badge`/`ticker`/`clock`/`logo`.
 
 ## 13. Uruchamianie, opcje, bezpieczeństwo
 
@@ -608,7 +608,7 @@ vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
 - Przywrócenie: Trio → ⚙ Stan → Kopie zapasowe → Przywróć (stan sprzed przywrócenia trafia do najnowszej kopii) albo `POST /api/backups/restore/<nazwa>`.
 - Nieudany zapis: czerwony znacznik w Trio, API zwraca 500; antena działa dalej.
 
-Zestawy przykładowe: demo **INFO24** (wbudowane), **R7 NEWS** (`examples/R7_NEWS.show.json`, strony 7001–7505), **BTB_CG** (`examples/BTB_CG/`), **belka BTB wielowierszowa** (`examples/BTB_PILNE.show.json`, strony 8501–8506: „Belka - PILNE” z paczki BTB_CG jako 1–3 wiersze z łamaniem `fill`, teksty z belek TVP i TV Republika; font `Bahnschrift.ttf` z `examples/BTB_CG/assets`). Wczytanie: Trio → ⇧ Import show (zastępuje bieżący show).
+Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README.md)) – po jednym `.cgpack` na oprawę, ze wszystkimi scenami, stronami, grafikami i czcionkami: **INFO24.cgpack** (demo wbudowane, strony 1001–5001), **R7_NEWS.cgpack** (strony 7001–7505), **BTB.cgpack** (31 wzorców BTB CG i belka wielowierszowa, strony 8001–8506, z fontem Bahnschrift – nie do dystrybucji). Wczytanie: Trio → nowy show (▾), potem Artist → ⇧ Import → plik `.cgpack` (§8.6). Paczka nie przenosi playlist. Dawne pliki `.show.json` i katalog `BTB_CG/` są w `examples/archiwum/` (źródło paczek i testów).
 
 ## 15. Testy i narzędzia
 
@@ -629,7 +629,8 @@ node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porów
 | Narzędzie | Do czego |
 |---|---|
 | `tools/sync-btb.sh [--check]` | odświeżenie `text-model.js` i wektorów z BTB-CG, wykrycie rozjazdu |
-| `tools/build-btb-pack.mjs` | odbudowa paczki `examples/BTB_CG` ze wzorców |
+| `tools/build-btb-pack.mjs` | odbudowa `examples/archiwum/BTB_CG` ze wzorców BTB CG |
+| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |
 | `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne |

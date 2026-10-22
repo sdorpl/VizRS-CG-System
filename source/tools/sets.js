@@ -7,10 +7,10 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '../..');
 // [nazwa, plik show.json albo katalog z elementami BTB CG (.json v3 / .cgpack)]
 const SETS = [
-  ['INFO24', path.join(ROOT, 'examples/INFO24.show.json')],
-  ['R7', path.join(ROOT, 'examples/R7_NEWS.show.json')],
+  ['INFO24', path.join(ROOT, 'examples/archiwum/INFO24.show.json')],
+  ['R7', path.join(ROOT, 'examples/archiwum/R7_NEWS.show.json')],
   ['BTB', path.join(ROOT, 'source/tests/fixtures/btb')],
-  ['BTB-PILNE', path.join(ROOT, 'examples/BTB_PILNE.show.json')],
+  ['BTB-PILNE', path.join(ROOT, 'examples/archiwum/BTB_PILNE.show.json')],
 ];
 const KNOWN_FONTS = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';

@@ -20,10 +20,10 @@ const OUT = path.resolve(outIdx >= 0 ? args[outIdx + 1] : path.join(os.tmpdir(),
 const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--out') || path.join(__dirname, '../target/release/vizrs'));
 // [nazwa, show.json, katalog assets (opcjonalnie)]
 const SETS = [
-  ['INFO24', 'examples/INFO24.show.json'],
-  ['R7', 'examples/R7_NEWS.show.json'],
-  ['BTB_CG', 'examples/BTB_CG/show.json', 'examples/BTB_CG/assets'],
-  ['BTB_PILNE', 'examples/BTB_PILNE.show.json', 'examples/BTB_CG/assets'],
+  ['INFO24', 'examples/archiwum/INFO24.show.json'],
+  ['R7', 'examples/archiwum/R7_NEWS.show.json'],
+  ['BTB_CG', 'examples/archiwum/BTB_CG/show.json', 'examples/archiwum/BTB_CG/assets'],
+  ['BTB_PILNE', 'examples/archiwum/BTB_PILNE.show.json', 'examples/archiwum/BTB_CG/assets'],
 ];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

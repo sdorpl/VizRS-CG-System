@@ -20,7 +20,7 @@ const JSON_OUT = jsonAt >= 0 ? args.splice(jsonAt, 2)[1] : null;
 const BIN = path.resolve(args[0] || path.join(__dirname, '../target/release/vizrs'));
 const SHELL = path.resolve(args[1] || path.join(__dirname, '../shell/target/release/vizrs-shell'));
 const ROOT = path.resolve(__dirname, '../..');
-const SETS = [['INFO24', 'examples/INFO24.show.json'], ['R7', 'examples/R7_NEWS.show.json'], ['BTB_PILNE', 'examples/BTB_PILNE.show.json', 'examples/BTB_CG/assets']];
+const SETS = [['INFO24', 'examples/archiwum/INFO24.show.json'], ['R7', 'examples/archiwum/R7_NEWS.show.json'], ['BTB_PILNE', 'examples/archiwum/BTB_PILNE.show.json', 'examples/archiwum/BTB_CG/assets']];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Sonda wykonywana na stronie wyjścia (w obu silnikach ten sam kod). W powłoce wynik wraca przez window.ipc.

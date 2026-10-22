@@ -16,7 +16,7 @@ const UPDATE = args.includes('--update');
 const BIN = path.resolve(args.find((a) => !a.startsWith('--')) || path.join(__dirname, '../../target/release/vizrs'));
 const ROOT = path.resolve(__dirname, '../../..');
 const GOLD = path.join(__dirname, '../golden');
-const SETS = [['INFO24', path.join(ROOT, 'examples/INFO24.show.json')], ['R7', path.join(ROOT, 'examples/R7_NEWS.show.json')]];
+const SETS = [['INFO24', path.join(ROOT, 'examples/archiwum/INFO24.show.json')], ['R7', path.join(ROOT, 'examples/archiwum/R7_NEWS.show.json')]];
 const THRESH = 0.004;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;

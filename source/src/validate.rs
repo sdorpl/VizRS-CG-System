@@ -595,8 +595,8 @@ mod tests {
     #[test]
     fn demo_and_examples_are_valid() {
         show(&p(include_str!("../web/demo_show.json"))).unwrap();
-        show(&p(include_str!("../../examples/INFO24.show.json"))).unwrap();
-        show(&p(include_str!("../../examples/R7_NEWS.show.json"))).unwrap();
+        show(&p(include_str!("../../examples/archiwum/INFO24.show.json"))).unwrap();
+        show(&p(include_str!("../../examples/archiwum/R7_NEWS.show.json"))).unwrap();
     }
 
     #[test]

@@ -11,4 +11,4 @@
 | [LUKI.md](LUKI.md) | zespół | znane braki, uszeregowane |
 | [../CLAUDE.md](../CLAUDE.md) | programiści i agenci | zasady pracy z kodem, struktura, testy, commity |
 | [../CHANGELOG.md](../CHANGELOG.md) | wszyscy | historia zmian |
-| [../examples/BTB_CG/README.md](../examples/BTB_CG/README.md) | grafik | paczka 31 wzorców przeniesionych z BTB CG |
+| [../examples/README.md](../examples/README.md) | grafik, operator | paczki INFO24, R7 NEWS, BTB (`.cgpack`) |
