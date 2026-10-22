@@ -1,6 +1,6 @@
 //! vizrs-shell – natywne okno VizRS Artist (i Trio/Wyjście) z systemowym WebView.
 //!
-//!   vizrs-shell [artist|trio|output] [--data KAT] [--port N] [--token T] [--connect URL] [--vizrs ŚCIEŻKA]
+//!   vizrs-shell [artist|trio|output|connect] [--data KAT] [--port N] [--token T] [--connect URL] [--vizrs ŚCIEŻKA]
 //!
 //! Strony UI są te same co w przeglądarce (serwuje je `vizrs`), więc jeden renderer (`web/renderer.js`)
 //! obsługuje okno, Trio i wyjście OBS. Powłoka dodaje okno systemowe, menu, zapisywanie plików
@@ -8,11 +8,13 @@
 
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
+mod connect;
 mod server;
 
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::Mutex;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 use muda::accelerator::{Accelerator, Code, Modifiers};
 use muda::{Menu, MenuEvent, MenuId, MenuItem, PredefinedMenuItem, Submenu};
@@ -30,6 +32,8 @@ enum Kind {
     Trio,
     Output,
     Other,
+    /// okno „Połącz z serwerem” (strona wbudowana w powłokę)
+    Connect,
 }
 
 impl Kind {
@@ -38,7 +42,7 @@ impl Kind {
             Kind::Artist => "/artist",
             Kind::Trio => "/trio",
             Kind::Output => "/output?checker=1&status=1",
-            Kind::Other => "/",
+            Kind::Other | Kind::Connect => "/",
         }
     }
     fn title(self) -> &'static str {
@@ -47,6 +51,7 @@ impl Kind {
             Kind::Trio => "VizRS Trio",
             Kind::Output => "VizRS Wyjście",
             Kind::Other => "VizRS",
+            Kind::Connect => "VizRS – połącz z serwerem",
         }
     }
 }
@@ -58,20 +63,24 @@ struct Args {
     token: Option<String>,
     connect: Option<String>,
     vizrs: Option<String>,
+    local: bool,
     probe: Option<(PathBuf, PathBuf)>,
 }
 
 fn help() -> &'static str {
     "vizrs-shell – natywne okno VizRS
 
-Użycie: vizrs-shell [artist|trio|output] [opcje]   (domyślnie artist)
+Użycie: vizrs-shell [artist|trio|output|connect] [opcje]   (domyślnie artist; connect – najpierw wybór serwera)
 
   --data KAT      katalog danych serwera (VIZRS_DATA, domyślnie vizrs-data)
   --port N        port serwera uruchamianego przez okno (VIZRS_PORT, domyślnie 8088)
   --token T       token serwera (VIZRS_TOKEN)
   --connect URL   okno dla serwera zdalnego, np. https://cg.example.pl (VIZRS_CONNECT)
+  --local         serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu
   --vizrs PLIK    plik vizrs do uruchomienia serwera (VIZRS_BIN; domyślnie obok vizrs-shell albo w PATH)
   --probe JS --probe-out JSON   narzędzie testowe: po wczytaniu strony wykonaj skrypt, zapisz wynik, zakończ
+
+Plik → Połącz z serwerem… (Ctrl+Shift+K): adres i token serwera zdalnego (VPS), lista zapisanych połączeń.
 
 Jeśli serwer na tym katalogu danych już działa, okno dołącza do niego. Inaczej powłoka uruchamia
 `vizrs serve` jako osobny proces: zamknięcie okna nie zdejmuje grafiki z anteny, a serwer kończy pracę
@@ -87,6 +96,7 @@ fn parse_args() -> Result<Args, String> {
         token: env("VIZRS_TOKEN"),
         connect: env("VIZRS_CONNECT"),
         vizrs: env("VIZRS_BIN"),
+        local: false,
         probe: None,
     };
     let mut probe_js = None;
@@ -103,11 +113,13 @@ fn parse_args() -> Result<Args, String> {
             "artist" => a.kind = Kind::Artist,
             "trio" => a.kind = Kind::Trio,
             "output" => a.kind = Kind::Output,
+            "connect" => a.kind = Kind::Connect,
             "--data" => a.data = PathBuf::from(val()?),
             "--port" => a.port = val()?.parse().map_err(|_| "--port: zły numer portu".to_string())?,
             "--token" => a.token = Some(val()?),
             "--connect" => a.connect = Some(val()?),
             "--vizrs" => a.vizrs = Some(val()?),
+            "--local" => a.local = true,
             "--probe" => probe_js = Some(PathBuf::from(val()?)),
             "--probe-out" => probe_out = Some(PathBuf::from(val()?)),
             "--help" | "-h" => {
@@ -180,15 +192,21 @@ enum UserEvent {
     PageLoaded(WindowId),
     /// Wynik skryptu `--probe` (JSON).
     Probe(String),
+    /// Komunikat okna połączenia (JSON).
+    Conn(String),
+    /// Wynik sprawdzenia serwera przed przełączeniem (błąd albo None).
+    Checked(connect::Request, Option<String>),
 }
 
 struct Win {
     window: Window,
     webview: WebView,
     zoom: f64,
+    kind: Kind,
 }
 
 struct MenuIds {
+    connect: MenuId,
     artist: MenuId,
     trio: MenuId,
     output: MenuId,
@@ -210,6 +228,7 @@ fn item(text: &str, acc: Option<Accelerator>) -> MenuItem {
 
 fn build_menu() -> (Menu, MenuIds) {
     let ctrl = if cfg!(target_os = "macos") { Modifiers::META } else { Modifiers::CONTROL };
+    let connect = item("Połącz z serwerem…", Some(Accelerator::new(ctrl | Modifiers::SHIFT, Code::KeyK)));
     let artist = item("Nowe okno Artist", None);
     let trio = item("Nowe okno Trio", None);
     let output = item("Okno wyjścia (podgląd)", None);
@@ -224,6 +243,7 @@ fn build_menu() -> (Menu, MenuIds) {
     let docs = item("Strona startowa i API", None);
     let about = item("O programie", None);
     let ids = MenuIds {
+        connect: connect.id().clone(),
         artist: artist.id().clone(),
         trio: trio.id().clone(),
         output: output.id().clone(),
@@ -239,7 +259,7 @@ fn build_menu() -> (Menu, MenuIds) {
         about: about.id().clone(),
     };
     let sep = PredefinedMenuItem::separator;
-    let file = Submenu::with_items("Plik", true, &[&artist, &trio, &output, &sep(), &close, &quit]).expect("menu Plik");
+    let file = Submenu::with_items("Plik", true, &[&connect, &sep(), &artist, &trio, &output, &sep(), &close, &quit]).expect("menu Plik");
     let view = Submenu::with_items("Widok", true, &[&reload, &fullscreen, &sep(), &zoom_in, &zoom_out, &zoom_reset, &sep(), &devtools]).expect("menu Widok");
     let help = Submenu::with_items("Pomoc", true, &[&docs, &about]).expect("menu Pomoc");
     let menu = Menu::with_items(&[&file, &view, &help]).expect("menu");
@@ -247,7 +267,14 @@ fn build_menu() -> (Menu, MenuIds) {
 }
 
 struct App {
-    base: String,
+    /// adres serwera okien; wspólny z obsługą nawigacji (po przełączeniu serwera)
+    base: Arc<Mutex<String>>,
+    /// adres serwera lokalnego (uruchomionego albo dołączonego), None przy `--connect`
+    local: Option<String>,
+    /// token serwera lokalnego (`--token`)
+    local_token: Option<String>,
+    /// opcje do uruchomienia serwera lokalnego na żądanie (po starcie z serwerem zdalnym)
+    local_start: (PathBuf, u16, Option<String>),
     token: Option<String>,
     probe: Option<(String, PathBuf)>,
     menu: Menu,
@@ -260,8 +287,9 @@ struct App {
 impl App {
     fn open(&mut self, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>, kind: Kind, url: String) -> Result<(), String> {
         let size = if kind == Kind::Output { LogicalSize::new(960.0, 540.0) } else { LogicalSize::new(1600.0, 900.0) };
+        let size = if kind == Kind::Connect { LogicalSize::new(560.0, 600.0) } else { size };
         let window = WindowBuilder::new()
-            .with_title(kind.title())
+            .with_title(self.title(kind))
             .with_inner_size(size)
             .with_min_inner_size(LogicalSize::new(480.0, 270.0))
             // Artist i Trio to stanowiska pracy – od razu na cały ekran (wyjście: okno 960×540)
@@ -286,13 +314,21 @@ impl App {
         self.menu.init_for_nsapp();
 
         let base = self.base.clone();
-        let same_origin = move |u: &str| u.starts_with(&format!("{base}/")) || u == base || u.starts_with("about:") || u.starts_with("blob:") || u.starts_with("data:");
+        let same_origin = move |u: &str| {
+            let b = base.lock().map(|b| b.clone()).unwrap_or_default();
+            u.starts_with(&format!("{b}/")) || u == b || u.starts_with("about:") || u.starts_with("blob:") || u.starts_with("data:")
+        };
         let nav_ok = same_origin.clone();
         let p_new = proxy.clone();
         let p_load = proxy.clone();
         let p_ipc = proxy.clone();
-        let builder = WebViewBuilder::new()
-            .with_url(url)
+        let builder = if kind == Kind::Connect {
+            let data = connect::page_data(&connect::Saved::load(), &self.base(), self.token.as_deref(), self.local.as_deref());
+            WebViewBuilder::new().with_html(connect::PAGE).with_initialization_script(data)
+        } else {
+            WebViewBuilder::new().with_url(url)
+        };
+        let builder = builder
             .with_devtools(true)
             // znacznik okna natywnego: strony chowają zakładki „Artist / Trio / Wyjście” (są w menu) i menu przeglądarki
             .with_initialization_script(concat!("window.__vizrsShell = { version: '", env!("CARGO_PKG_VERSION"), "' };"))
@@ -340,11 +376,13 @@ impl App {
                     p_load.send_event(UserEvent::PageLoaded(id)).ok();
                 }
             })
-            // most strona → powłoka: tylko wynik skryptu testowego; innych komunikatów nie obsługujemy
+            // most strona → powłoka: wynik skryptu testowego; wybór serwera tylko z wbudowanego okna połączenia
             .with_ipc_handler(move |req| {
                 let body = req.body();
                 if let Some(rest) = body.strip_prefix("probe:") {
                     p_ipc.send_event(UserEvent::Probe(rest.to_string())).ok();
+                } else if kind == Kind::Connect {
+                    p_ipc.send_event(UserEvent::Conn(body.to_string())).ok();
                 }
             });
 
@@ -365,17 +403,140 @@ impl App {
             }
             wv
         };
-        self.wins.insert(id, Win { window, webview, zoom: 1.0 });
+        self.wins.insert(id, Win { window, webview, zoom: 1.0, kind });
         self.focused = Some(id);
         Ok(())
     }
 
+    fn base(&self) -> String {
+        self.base.lock().map(|b| b.clone()).unwrap_or_default()
+    }
+
     fn url(&self, kind: Kind) -> String {
-        page_url(&self.base, kind.path(), self.token.as_deref())
+        page_url(&self.base(), kind.path(), self.token.as_deref())
+    }
+
+    /// Tytuł okna; przy serwerze zdalnym z nazwą hosta.
+    fn title(&self, kind: Kind) -> String {
+        let base = self.base();
+        match kind {
+            Kind::Connect => kind.title().to_string(),
+            _ if self.local.as_deref() == Some(base.as_str()) => kind.title().to_string(),
+            _ => format!("{} – {}", kind.title(), base.split("://").nth(1).unwrap_or(&base)),
+        }
+    }
+
+    /// Przełącza wszystkie okna na inny serwer (okno połączenia się zamyka).
+    fn switch(&mut self, base: String, token: Option<String>, note: String) {
+        if let Ok(mut b) = self.base.lock() {
+            *b = base;
+        }
+        self.token = token;
+        self.server_note = note;
+        self.wins.retain(|_, w| w.kind != Kind::Connect);
+        let targets: Vec<(WindowId, Kind)> = self.wins.iter().map(|(id, w)| (*id, w.kind)).collect();
+        for (id, kind) in targets {
+            let (url, title) = (self.url(kind), self.title(kind));
+            if let Some(w) = self.wins.get(&id) {
+                w.window.set_title(&title);
+                w.webview.load_url(&url).ok();
+            }
+        }
+    }
+
+    /// Komunikat okna połączenia.
+    fn on_conn(&mut self, body: &str, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>, flow: &mut ControlFlow) {
+        let msg = match connect::parse_msg(body) {
+            Ok(m) => m,
+            Err(e) => return self.conn_error(&e),
+        };
+        match msg {
+            connect::Msg::Cancel => {
+                self.wins.retain(|_, w| w.kind != Kind::Connect);
+                if self.wins.is_empty() {
+                    *flow = ControlFlow::Exit;
+                }
+            }
+            connect::Msg::Forget(url) => {
+                let mut saved = connect::Saved::load();
+                saved.forget(&url);
+                if let Err(e) = saved.save() {
+                    self.conn_error(&e);
+                }
+            }
+            connect::Msg::Local => {
+                if self.local.is_none() {
+                    let (data, port, vizrs) = self.local_start.clone();
+                    match local_server(&data, port, self.local_token.as_deref(), vizrs.as_deref()) {
+                        Ok((base, _)) => self.local = Some(base),
+                        Err(e) => return self.conn_error(&e),
+                    }
+                }
+                if let Some(l) = self.local.clone() {
+                    self.switch(l, self.local_token.clone(), "serwer lokalny".into());
+                    self.ensure_window(target, proxy);
+                }
+            }
+            connect::Msg::Connect(mut req) => {
+                // puste pole tokenu = token zapamiętany dla tego serwera
+                if req.token.is_none() {
+                    req.token = connect::Saved::load().token_for(&req.url);
+                }
+                let p = proxy.clone();
+                std::thread::spawn(move || {
+                    let err = check_server(&req.url, req.token.as_deref()).err();
+                    p.send_event(UserEvent::Checked(req, err)).ok();
+                });
+            }
+        }
+    }
+
+    fn on_checked(&mut self, req: connect::Request, err: Option<String>, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>) {
+        if let Some(e) = err {
+            return self.conn_error(&e);
+        }
+        let connect::Request { url, token, keep_token, auto } = req;
+        let mut saved = connect::Saved::load();
+        saved.remember(&url, token.as_deref(), keep_token, auto);
+        if let Err(e) = saved.save() {
+            eprintln!("zapis listy serwerów: {e}");
+        }
+        self.switch(url, token, "serwer zdalny (Plik → Połącz z serwerem)".into());
+        self.ensure_window(target, proxy);
+    }
+
+    /// Po przełączeniu musi zostać choć jedno okno – domyślnie Trio.
+    fn ensure_window(&mut self, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>) {
+        if self.wins.is_empty() {
+            let url = self.url(Kind::Trio);
+            if let Err(e) = self.open(target, proxy, Kind::Trio, url) {
+                error_dialog(&e);
+            }
+        }
+    }
+
+    fn conn_error(&self, msg: &str) {
+        let js = format!("window.__vizrsConnError && window.__vizrsConnError({})", serde_json::Value::from(msg));
+        for w in self.wins.values().filter(|w| w.kind == Kind::Connect) {
+            w.webview.evaluate_script(&js).ok();
+        }
+    }
+
+    fn open_connect(&mut self, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>) {
+        if let Some(w) = self.wins.values().find(|w| w.kind == Kind::Connect) {
+            w.window.set_focus();
+            return;
+        }
+        if let Err(e) = self.open(target, proxy, Kind::Connect, String::new()) {
+            error_dialog(&e);
+        }
     }
 
     fn on_menu(&mut self, id: &MenuId, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>, flow: &mut ControlFlow) {
         let ids = &self.ids;
+        if *id == ids.connect {
+            return self.open_connect(target, proxy);
+        }
         let kind = if *id == ids.artist {
             Some(Kind::Artist)
         } else if *id == ids.trio {
@@ -399,7 +560,7 @@ impl App {
             return;
         }
         if *id == ids.about {
-            let msg = format!("vizrs-shell {}\nSerwer: {}\n{}", env!("CARGO_PKG_VERSION"), self.base, self.server_note);
+            let msg = format!("vizrs-shell {}\nSerwer: {}\n{}", env!("CARGO_PKG_VERSION"), self.base(), self.server_note);
             rfd::MessageDialog::new().set_title("O programie").set_description(msg).show();
             return;
         }
@@ -435,28 +596,20 @@ fn main() {
         }
     };
 
-    // serwer: zdalny, działający na tym katalogu danych albo uruchamiany teraz
-    let (base, server_note) = if let Some(c) = &args.connect {
-        (c.clone(), "serwer zdalny (--connect)".to_string())
+    // serwer: zdalny (--connect albo zapisany „przy uruchomieniu”), działający na tym katalogu danych albo uruchamiany teraz
+    let auto = if args.connect.is_none() && !args.local { connect::Saved::load().auto } else { None };
+    let mut token = args.token.clone();
+    let (base, local, server_note) = if let Some(c) = &args.connect {
+        (c.clone(), None, "serwer zdalny (--connect)".to_string())
+    } else if let Some(a) = auto {
+        token = connect::Saved::load().token_for(&a);
+        (a, None, "serwer zdalny (łączenie przy uruchomieniu; serwer lokalny: --local)".to_string())
     } else {
-        match server::running_server(&args.data, args.token.as_deref()) {
-            Ok(Some(addr)) => (format!("http://{addr}"), format!("dołączono do działającego serwera ({})", args.data.display())),
+        match local_server(&args.data, args.port, args.token.as_deref(), args.vizrs.as_deref()) {
+            Ok((b, note)) => (b.clone(), Some(b), note),
             Err(e) => {
                 error_dialog(&e);
                 std::process::exit(1);
-            }
-            Ok(None) => {
-                let Some(vizrs) = server::find_vizrs(args.vizrs.as_deref()) else {
-                    error_dialog("Nie znaleziono programu vizrs (obok vizrs-shell ani w PATH) – wskaż go: --vizrs ŚCIEŻKA albo VIZRS_BIN.");
-                    std::process::exit(1);
-                };
-                match server::spawn(&vizrs, &args.data, args.port, args.token.as_deref()) {
-                    Ok(s) => (format!("http://{}", s.addr), format!("serwer uruchomiony przez okno ({}), log: {}", args.data.display(), s.log.display())),
-                    Err(e) => {
-                        error_dialog(&format!("Serwer VizRS nie wystartował:\n{e}"));
-                        std::process::exit(1);
-                    }
-                }
             }
         }
     };
@@ -484,12 +637,14 @@ fn main() {
         }));
     }
     let (menu, ids) = build_menu();
-    let mut app = App { base, token: args.token.clone(), probe, menu, ids, wins: HashMap::new(), focused: None, server_note };
+    let local_start = (args.data.clone(), args.port, args.vizrs.clone());
+    let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note };
     let first = args.kind;
 
     event_loop.run(move |event, target, flow| {
         *flow = ControlFlow::Wait;
         match event {
+            Event::NewEvents(StartCause::Init) if first == Kind::Connect => app.open_connect(target, &proxy),
             Event::NewEvents(StartCause::Init) => {
                 let url = app.url(first);
                 if let Err(e) = app.open(target, &proxy, first, url) {
@@ -505,6 +660,8 @@ fn main() {
                 }
             }
             Event::UserEvent(UserEvent::Menu(id)) => app.on_menu(&id, target, &proxy, flow),
+            Event::UserEvent(UserEvent::Conn(body)) => app.on_conn(&body, target, &proxy, flow),
+            Event::UserEvent(UserEvent::Checked(req, err)) => app.on_checked(req, err, target, &proxy),
             Event::UserEvent(UserEvent::OpenUrl(u)) => {
                 let kind = if u.contains("/output") { Kind::Output } else { Kind::Other };
                 if let Err(e) = app.open(target, &proxy, kind, u) {
@@ -527,6 +684,30 @@ fn main() {
             _ => {}
         }
     });
+}
+
+/// Serwer lokalny: działający na tym katalogu danych albo uruchamiany teraz. Zwraca (adres, opis).
+fn local_server(data: &Path, port: u16, token: Option<&str>, vizrs: Option<&str>) -> Result<(String, String), String> {
+    if let Some(addr) = server::running_server(data, token)? {
+        return Ok((format!("http://{addr}"), format!("dołączono do działającego serwera ({})", data.display())));
+    }
+    let vizrs = server::find_vizrs(vizrs).ok_or("Nie znaleziono programu vizrs (obok vizrs-shell ani w PATH) – wskaż go: --vizrs ŚCIEŻKA albo VIZRS_BIN.")?;
+    let s = server::spawn(&vizrs, data, port, token).map_err(|e| format!("Serwer VizRS nie wystartował:\n{e}"))?;
+    Ok((format!("http://{}", s.addr), format!("serwer uruchomiony przez okno ({}), log: {}", data.display(), s.log.display())))
+}
+
+/// Przed przełączeniem okien: `/api/state` serwera `http://` (token, dostępność). `https://` sprawdza dopiero strona
+/// (powłoka nie ma TLS) – wskaźnik połączenia w Trio/Artist.
+fn check_server(url: &str, token: Option<&str>) -> Result<(), String> {
+    let Some((addr, path)) = connect::check_target(url) else { return Ok(()) };
+    match server::http_get(&addr, &path, token, Duration::from_secs(3)) {
+        Ok((200, body)) if body.trim_start().starts_with('{') => Ok(()),
+        Ok((200, _)) => Err(format!("{url} odpowiada, ale to nie jest serwer VizRS")),
+        Ok((401, _)) => Err(if token.is_some() { "Serwer odrzucił token.".into() } else { "Serwer wymaga tokenu.".into() }),
+        Ok((403, _)) => Err("Ten token nie pozwala sterować (to token wyjścia OBS?).".into()),
+        Ok((code, _)) => Err(format!("{url}: odpowiedź HTTP {code}")),
+        Err(e) => Err(format!("Brak połączenia z serwerem: {e}")),
+    }
 }
 
 #[cfg(test)]

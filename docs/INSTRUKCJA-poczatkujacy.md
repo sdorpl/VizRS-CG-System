@@ -26,7 +26,7 @@ Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze
 **Okno natywne (zalecane):** `vizrs-shell` – Artist w prawdziwym oknie systemowym z menu i oknem „Zapisz jako” (Linux: `bin/linux-x86_64/vizrs-shell`; `vizrs-shell trio` – Trio). Zamknięcie okna nie zdejmuje grafiki z anteny.
 Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli) – same wybiorą okno natywne, jeśli jest. Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
 
-Sterowanie serwerem na VPS z własnego komputera: `vizrs trio --connect https://twoj-serwer.pl --token TOKEN`.
+Sterowanie serwerem na VPS z własnego komputera: w oknie natywnym **Plik → Połącz z serwerem…** (Ctrl+Shift+K) – wpisz adres serwera i token, kliknij **Połącz** (zaznacz „zapamiętaj token”, by następnym razem wybrać serwer z listy; **Serwer lokalny** wraca do pracy na swoim komputerze). Z wiersza poleceń: `vizrs trio --connect https://twoj-serwer.pl --token TOKEN`.
 
 Możesz też otworzyć strony w zwykłej przeglądarce:
 

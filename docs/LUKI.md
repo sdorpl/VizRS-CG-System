@@ -27,7 +27,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 13 | Brak dedykowanego modułu Companion (jest generyczny HTTP/OSC + zmienne) | |
 | 14 | Parenting przez drzewo (zmiana rodzica); brak „pick whip” jak w AE | |
 | 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | propozycje G, H, K z btb-cgeditor |
-| 17 | Okna aplikacji: brak listy zapisanych połączeń zdalnych i ekranu wyboru (jest `--connect URL`); brak globalnych skrótów, menu systemowego i zasobnika | PLAN-natywne-i-serwer.md N3/N4; skróty sprzętowe – Companion przez HTTP/OSC |
+| 17 | Okna aplikacji: lista zapisanych połączeń i ekran wyboru – jest w oknie natywnym (Plik → Połącz z serwerem), brak w oknie Chromium (`vizrs trio`, tam `--connect URL`); brak globalnych skrótów, menu systemowego i zasobnika | PLAN-natywne-i-serwer.md N3/N4; skróty sprzętowe – Companion przez HTTP/OSC |
 | 18 | Okna aplikacji i `vizrs-shell` na Windows/macOS sprawdzone tylko kompilacją (Linux: testy E2E, prawdziwy Chrome i WebKitGTK) | uruchomić `vizrs trio`, `vizrs-shell` i skróty z `install-windows-shortcuts.ps1` na Windows; macOS – WKWebView niezmierzony `tools/engines.js` |
 | 19 | `vizrs-shell`: brak zasobnika, skrótów globalnych, wyboru monitora i instalatorów (MSI/.deb/.app); na Waylandzie ikona okna tylko przez wpis `vizrs-shell.desktop` | PLAN-natywne-i-serwer.md N4.2–N4.5 |
 | 16 | Ticker: brak źródła zewnętrznego (URL z JSON/RSS i odświeżanie) | PLAN-ticker.md T5.2 (opcja); dziś: `TICKER …` / `/api/ticker` z zewnętrznego skryptu |

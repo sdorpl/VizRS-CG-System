@@ -574,6 +574,7 @@ vizrs-shell                 # okno Artist (domyślnie)
 vizrs-shell trio            # okno Trio
 vizrs-shell output          # podgląd wyjścia 960×540
 vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
+vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 ```
 
 | Opcja | Zmienna | Opis |
@@ -583,12 +584,15 @@ vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
 | `--token T` | `VIZRS_TOKEN` | token serwera |
 | `--connect URL` | `VIZRS_CONNECT` | tylko okno, serwer zdalny |
 | `--vizrs PLIK` | `VIZRS_BIN` | program `vizrs` (domyślnie obok `vizrs-shell` albo w `PATH`) |
+| `--local` | | serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu |
+| | `VIZRS_CONFIG` | katalog listy serwerów (domyślnie niżej) |
 
 - **Serwer:** jeśli na danym katalogu danych działa już serwer VizRS, okno dołącza do niego. Jeśli nie, powłoka uruchamia `vizrs serve --idle-exit 10` jako **osobny proces**. Awaria okna nie zdejmuje anteny, a serwer kończy pracę sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS). Komunikaty serwera trafiają do pliku `vizrs-shell-serwer-<pid>.log` w katalogu tymczasowym (ścieżka w Pomoc → O programie). Błąd startu (np. zajęty port) okno pokazuje w okienku systemowym.
-- **Menu:** Plik – nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Widok – Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Pomoc – strona startowa i API, O programie.
+- **Połącz z serwerem** (Plik → Połącz z serwerem…, Ctrl+Shift+K): okno z adresem serwera (`https://cg.example.pl`, sam host = `https://`) i tokenem operatora. Dla serwera `http://` okno najpierw sprawdza token (`/api/state`: zły token, token wyjścia OBS i brak serwera – komunikat w oknie); `https://` sprawdza wskaźnik połączenia w Trio/Artist (powłoka nie ma TLS). Po połączeniu **wszystkie okna** przechodzą na ten serwer (tytuł z nazwą hosta), a gdy żadne nie było otwarte – otwiera się Trio. Lista zapisanych serwerów (klik – wypełnij, dwuklik – połącz, × – usuń) leży w `connections.json`: Linux `~/.config/vizrs/`, Windows `%APPDATA%\VizRS\`, macOS `~/Library/Application Support/VizRS/` (plik z prawami tylko dla właściciela); token zapisuje się tylko przy „zapamiętaj token” – puste pole tokenu = token zapamiętany. „Łącz z tym serwerem przy uruchomieniu” – kolejne starty okna idą od razu do tego serwera, bez serwera lokalnego (`--local` – mimo to lokalny). **Serwer lokalny** wraca do serwera na katalogu danych (w razie potrzeby uruchamia go). Przełączenie serwera nie zmienia niczego na antenie żadnego z serwerów.
+- **Menu:** Plik – Połącz z serwerem… (Ctrl+Shift+K), nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Widok – Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Pomoc – strona startowa i API, O programie.
 - **Pliki:** ⇩ Eksport i ⇩ Paczka otwierają systemowe okno „Zapisz jako”; ⇧ Import – systemowe okno wyboru pliku.
 - **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Artist / Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.
-- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi tylko wynik skryptu testowego `--probe`.
+- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi tylko wynik skryptu testowego `--probe`, a wybór serwera wyłącznie z wbudowanego okna połączenia (strony serwera nie mogą przełączyć okien).
 - **Pisownia:** na Linuksie polska (słownik hunspell `pl_PL` z systemu, pakiet `hunspell-pl`); na Windows i macOS według ustawień systemu.
 - **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24, R7 i BTB_PILNE – 82/82 pól tekstowych z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.
 - **Wymagania:** Linux – biblioteki `libwebkit2gtk-4.1` i GTK 3 (są w typowym pulpicie; do budowy pakiety `-dev`); Windows – WebView2 Runtime (w Windows 10/11); macOS 10.15+.

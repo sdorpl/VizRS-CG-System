@@ -2,6 +2,7 @@
 
 ## Niewydane – „Okna i serwer” (plan: `PLAN-natywne-i-serwer.md`)
 
+- **Okno natywne: Plik → Połącz z serwerem…** (Ctrl+Shift+K, `vizrs-shell connect`): adres i token serwera zdalnego (VPS) wpisywane w oknie; przed przełączeniem sprawdzenie tokenu (serwery `http://`), potem wszystkie okna przechodzą na ten serwer. Lista zapisanych serwerów (`connections.json` w katalogu konfiguracji, token tylko na życzenie, plik tylko dla właściciela), „łącz przy uruchomieniu” (`--local` – mimo to serwer lokalny), powrót do serwera lokalnego. Strony serwera nie mogą przełączyć okien (komunikat przyjmuje tylko wbudowane okno połączenia).
 - **Wydania na GitHub** (`.github/workflows/release.yml`, znacznik `v*` albo ręcznie): archiwa Windows/macOS/Linux (`vizrs`, `vizrs-app`, `vizrs-shell`, paczki `.cgpack`), **AppImage VizRS Artist i VizRS Trio** (`deploy/appimage/`), **obraz Docker serwera** `ghcr.io/sdorpl/vizrs` (amd64, arm64), `SHA256SUMS.txt`.
 - **Poprawka CI Windows:** testy Node importowały moduły po ścieżce `D:\…` (`ERR_UNSUPPORTED_ESM_URL_SCHEME`) – teraz `pathToFileURL`.
 - **Paczka `examples/BTB_TRIO.cgpack`:** grafiki z gałęzi `TRIO` BTB CG System (19 grafik, 18 scen, strony 15001–15401) z zachowanymi powiązaniami belek (dokowanie BTB → `scene.dock`) i kolejnością warstw; opis w `archiwum/BTB_TRIO/README.md`, budowa `tools/build-btb-trio.mjs`.

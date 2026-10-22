@@ -2,7 +2,7 @@
 //   node tests/e2e/shell.js [ścieżka-do-vizrs] [ścieżka-do-vizrs-shell]
 // Sprawdza: Artist i Trio ładują się w WebView i łączą z serwerem; powłoka uruchamia `vizrs serve --idle-exit`,
 // który po zamknięciu okna kończy pracę sam (gdy nie ma wyjść), a dopóki OBS jest podłączony – działa;
-// drugie okno dołącza do działającego serwera. Otwiera na kilka sekund widoczne okna (w CI: xvfb-run).
+// drugie okno dołącza do działającego serwera; okno „Połącz z serwerem” przełącza Trio na serwer zdalny. Otwiera na kilka sekund widoczne okna (w CI: xvfb-run).
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const http = require('http');
@@ -62,6 +62,37 @@ const probe = (kind) => {
     for (let i = 0; i < 40 && !gone; i++) { await sleep(1000); gone = !(await health()); }
     ok(gone, 'bez okien i wyjść serwer kończy pracę sam');
     ok(!fs.existsSync(path.join(data, '.vizrs.lock')), 'blokada zwolniona');
+
+    // 4. Plik → Połącz z serwerem: zły token → komunikat, dobry → Trio sterujące serwerem „zdalnym”
+    const RPORT = PORT + 1, TOKEN = 'zdalny-token-1234567', cfg = path.join(tmp, 'cfg');
+    const remote = spawn(BIN, ['--port', String(RPORT), '--tcp', '0', '--data', path.join(tmp, 'remote'), '--token', TOKEN], { stdio: 'ignore' });
+    try {
+      await sleep(800);
+      const CPROBE = path.join(tmp, 'connect.js');
+      fs.writeFileSync(CPROBE, `(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const $ = (id) => document.getElementById(id);
+  if (document.title === 'Połącz z serwerem') {
+    $('url').value = 'http://127.0.0.1:${RPORT}'; $('token').value = 'zly-token-12345678'; $('go').click();
+    for (let i = 0; i < 50 && !$('err').textContent; i++) await sleep(100);
+    $('token').value = '${TOKEN}'; $('keep').checked = true; $('go').click();
+    return;
+  }
+  // strona serwera nie może przełączyć okien na inny adres
+  window.ipc.postMessage(JSON.stringify({ action: 'connect', url: 'http://127.0.0.1:1' }));
+  for (let i = 0; i < 50 && document.querySelector('#conn')?.textContent !== 'połączono'; i++) await sleep(100);
+  window.ipc.postMessage('probe:' + JSON.stringify({ href: location.href, title: document.title, conn: document.querySelector('#conn')?.textContent, pages: document.querySelectorAll('#pages .item').length }));
+})();`);
+      const out = path.join(tmp, 'connect.json');
+      spawnSync(SHELL, ['connect', '--data', path.join(tmp, 'local'), '--port', String(PORT + 2), '--vizrs', BIN, '--probe', CPROBE, '--probe-out', out], { encoding: 'utf8', timeout: 60000, env: { ...process.env, VIZRS_CONFIG: cfg } });
+      const c = fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, 'utf8')) : {};
+      ok(c.title?.startsWith('VizRS Trio') && c.conn === 'połączono' && c.pages > 0 && c.href?.startsWith(`http://127.0.0.1:${RPORT}/trio`), 'okno połączenia przełącza Trio na serwer zdalny z tokenem', c);
+      const saved = JSON.parse(fs.readFileSync(path.join(cfg, 'connections.json'), 'utf8'));
+      ok(saved.servers[0]?.url === `http://127.0.0.1:${RPORT}` && saved.servers[0]?.token === TOKEN, 'serwer i token na liście zapisanych', saved);
+      if (process.platform !== 'win32') ok((fs.statSync(path.join(cfg, 'connections.json')).mode & 0o077) === 0, 'lista zapisanych tylko dla właściciela');
+    } finally {
+      remote.kill();
+    }
   } catch (e) {
     console.error(e);
     failures++;
