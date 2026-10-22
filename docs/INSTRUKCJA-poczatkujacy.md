@@ -57,7 +57,7 @@ Za pierwszym razem startuje przykładowy zestaw **INFO24** (belki, ticker, zegar
 1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
 2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
 3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px).
-4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze` (jak w BTB CG): długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej ustaw `maks. linii` = 2 i wybierz `squeeze-each` (operator łamie wiersze Enterem, każdy wiersz ściska się osobno, wysokość liter ta sama) albo `squeeze-lines` (wiersze dzielą się same; „łamanie wierszy” = `fill` wypełnia najpierw pierwszy wiersz, jak belki TVP), dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
+4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze`: długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej ustaw `maks. linii` = 2 i wybierz `squeeze-each` (operator łamie wiersze Enterem, każdy wiersz ściska się osobno, wysokość liter ta sama) albo `squeeze-lines` (wiersze dzielą się same; „łamanie wierszy” = `fill` wypełnia najpierw pierwszy wiersz, jak belki TVP), dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
 5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
 
@@ -82,8 +82,8 @@ Element przy prawej krawędzi ekranu ustaw z **punktem X = right** – będzie r
 
 Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości → Presety animacji → ＋ zapisz) i stosować na innych węzłach.
 
-### Szybciej: ruch bez kluczy (jak w BTB CG)
-1. Zaznacz węzeł i przewiń Właściwości do grupy **Ruch (jak w BTB CG)**.
+### Szybciej: ruch bez kluczy
+1. Zaznacz węzeł i przewiń Właściwości do grupy **Ruch**.
 2. **wejście** – wybierz efekt (np. *przesłona pozioma*, *wjazd*, *wyskok*), kierunek, czas i opóźnienie. **wyjście** – tak samo.
 3. Przy tekście: **tekst IN** (np. *znaki: w górę*, *maszyna do pisania*, *licznik liczby*) i **tekst OUT**.
 4. **pętla** – np. *pulsowanie* plakietki „NA ŻYWO” albo *połysk* paska; gra, gdy grafika stoi na wizji.

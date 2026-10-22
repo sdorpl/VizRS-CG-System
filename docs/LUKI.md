@@ -15,10 +15,10 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | # | Luka | Uwagi |
 |---|---|---|
 | 6 | `OUT` zdejmuje warstwę w silniku od razu; animację OUT gra tylko klient | kolejny TAKE w czasie OUT może ją ściąć |
-| 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | BTB ma osie i krawędzie (`layout.dock`) |
-| 8 | Konwerter BTB: maski warstw, `layout.dock`, auto-szerokość `follow`, „po warstwie” przy wyjściu → ostrzeżenia, nie przenoszone | ruch, efekty tekstu, pętle i efekty tła przenoszone 1:1; zgodność klatek wejścia z BTB sprawdza `btb-visual.js --frames` |
+| 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | brak osi i krawędzi |
+| 8 | Import elementów: maski warstw, `layout.dock`, auto-szerokość `follow`, „po warstwie” przy wyjściu → ostrzeżenia, nie przenoszone | ruch, efekty tekstu, pętle i efekty tła przenoszone 1:1; zgodność klatek wejścia sprawdza test wizualny `--frames` |
 | 10 | Pisownia: natywna przeglądarki (lang=pl); brak własnego słownika (sjp.pl/Hunspell) | w CEF (OBS dock) zależy od przeglądarki |
-| 11 | Znaczniki tekstu: rozmiar `{sz=}` w % (BTB używa px) – przy imporcie z BTB pomijany | |
+| 11 | Znaczniki tekstu: rozmiar `{sz=}` w % – rozmiar w px przy imporcie elementów pomijany | |
 
 ## G3 – funkcje
 | # | Luka | Uwagi |
@@ -26,7 +26,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 12 | Rundown bez harmonogramu czasowego/automatu (zamierzone: tylko ręczne NEXT) | opcja „AUTO” z widocznym stanem i STOP |
 | 13 | Brak dedykowanego modułu Companion (jest generyczny HTTP/OSC + zmienne) | |
 | 14 | Parenting przez drzewo (zmiana rodzica); brak „pick whip” jak w AE | |
-| 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | propozycje G, H, K z btb-cgeditor |
+| 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | |
 | 17 | Okna aplikacji: lista zapisanych połączeń i ekran wyboru – jest w oknie natywnym (Plik → Połącz z serwerem), brak w oknie Chromium (`vizrs trio`, tam `--connect URL`); brak globalnych skrótów, menu systemowego i zasobnika | PLAN-natywne-i-serwer.md N3/N4; skróty sprzętowe – Companion przez HTTP/OSC |
 | 18 | Okna aplikacji i `vizrs-shell` na Windows/macOS sprawdzone tylko kompilacją (Linux: testy E2E, prawdziwy Chrome i WebKitGTK) | uruchomić `vizrs trio`, `vizrs-shell` i skróty z `install-windows-shortcuts.ps1` na Windows; macOS – WKWebView niezmierzony `tools/engines.js` |
 | 19 | `vizrs-shell`: brak zasobnika, skrótów globalnych, wyboru monitora i instalatorów (MSI/.deb/.app); na Waylandzie ikona okna tylko przez wpis `vizrs-shell.desktop` | PLAN-natywne-i-serwer.md N4.2–N4.5 |
