@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 const ROOT = path.resolve(__dirname, '../..');
 // [nazwa, plik show.json albo katalog z elementami BTB CG (.json v3 / .cgpack)]
@@ -24,7 +25,7 @@ function loadPlaywright() {
 
 // Import szablonów BTB CG (.json v3 / .cgpack) do pustego show – ta sama ścieżka co „Import BTB” w Artist.
 async function importBtb(B, dir) {
-  const io = await import(path.join(ROOT, 'source/web/btb-io.js'));
+  const io = await import(pathToFileURL(path.join(ROOT, 'source/web/btb-io.js')).href);
   const post = async (url, body, raw) => {
     const r = await fetch(B + url, { method: 'POST', body: raw ? body : JSON.stringify(body), headers: raw ? {} : { 'Content-Type': 'application/json' } });
     const j = await r.json().catch(() => ({}));

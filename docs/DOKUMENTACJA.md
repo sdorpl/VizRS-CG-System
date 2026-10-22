@@ -532,7 +532,7 @@ Token: przeglądarka – raz `?token=…` (zapisuje ciasteczko); API – `Author
 Niezależnie od tokenu serwer odrzuca żądania z obcych witryn (`Sec-Fetch-Site`, `Origin`). VizRS sam nie obsługuje TLS – w sieciach współdzielonych i na VPS stawiaj go za reverse proxy z HTTPS (Caddy w `deploy/docker-compose.yml`).
 Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 
-**Docker / VPS:** `docker build -t vizrs .` (statyczna binarka musl na pustym obrazie, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`, dane w wolumenie `/data`, port komend TCP domyślnie wyłączony). Serwer z HTTPS: `deploy/docker-compose.yml` (VizRS + Caddy, Let's Encrypt), przykład nginx: `deploy/nginx-vizrs.conf`. Instrukcja krok po kroku: [RUNBOOK.md](RUNBOOK.md#vps-i-docker).
+**Docker / VPS:** `docker build -t vizrs .` (statyczna binarka musl na pustym obrazie, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`, dane w wolumenie `/data`, port komend TCP domyślnie wyłączony). Serwer z HTTPS: `deploy/docker-compose.yml` (VizRS + Caddy, Let's Encrypt), przykład nginx: `deploy/nginx-vizrs.conf`. Instrukcja krok po kroku: [RUNBOOK.md](RUNBOOK.md#vps-i-docker). Gotowy obraz z każdego wydania: `ghcr.io/sdorpl/vizrs:<wersja>` / `:latest` (amd64, arm64).
 
 ### 13.1 Okna aplikacji (Artist, Trio, Output)
 
@@ -559,6 +559,7 @@ Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 Wyszukiwanie przeglądarki: Linux – `chromium`, `chromium-browser`, `google-chrome(-stable)`, `microsoft-edge(-stable)`, `brave-browser`, `vivaldi` w `PATH`, potem Flatpak i Snap; Windows – Edge, Chrome, Brave, Chromium w `Program Files` i `%LOCALAPPDATA%` (Edge jest w każdym Windows 10/11); macOS – `/Applications` i `~/Applications`.
 
 **Skróty systemowe:**
+- Linux bez instalacji: `VizRS-Artist-<wersja>-x86_64.AppImage` i `VizRS-Trio-…AppImage` z wydania na GitHub (budowa: `deploy/appimage/build.sh vizrs vizrs-shell wersja`). Okno natywne wymaga systemowego WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`), bez niego otwiera się okno Chromium. Dane: `$VIZRS_DATA`, domyślnie `~/.local/share/vizrs` – wspólne dla obu, drugie okno dołącza do serwera; binarka serwera kopiowana do `~/.cache/vizrs/<wersja>/` (serwer działa dłużej niż zamontowany obraz).
 - Linux: `deploy/install-desktop-linux.sh [vizrs] [katalog-danych]` – „VizRS Artist” i „VizRS Trio” w menu aplikacji (pliki `.desktop`, ikona `deploy/vizrs.svg`).
 - Windows: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1` – skróty w menu Start uruchamiają `vizrs-app.exe` (to samo co `vizrs.exe`, ale **bez okna konsoli**; błąd startu pokazuje w okienku systemowym) oraz „VizRS Serwer” (konsola). `start-windows.bat [artist|trio|serve]` – domyślnie okno Trio.
 

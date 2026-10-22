@@ -1,0 +1,22 @@
+#!/bin/sh
+# AppRun AppImage VizRS Artist / Trio (szablon; build.sh wstawia rodzaj okna w miejsce @KIND@).
+# Okno natywne vizrs-shell używa systemowego WebKitGTK 4.1; gdy go brak – okno aplikacji Chromium/Chrome/Edge.
+# Dane: $VIZRS_DATA, domyślnie ~/.local/share/vizrs – wspólne dla obu AppImage (drugie okno dołącza do serwera).
+HERE="$(dirname "$(readlink -f "$0")")"
+KIND=@KIND@
+: "${VIZRS_DATA:=${XDG_DATA_HOME:-$HOME/.local/share}/vizrs}"
+export VIZRS_DATA
+mkdir -p "$VIZRS_DATA"
+# Serwer żyje dłużej niż okno, a obraz AppImage jest odmontowywany po jego zamknięciu –
+# kopia binarki serwera poza obrazem (jedna na wersję).
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/vizrs/$("$HERE/usr/bin/vizrs" --version | tr -c 'A-Za-z0-9.\n-' _ | head -1)"
+if [ ! -x "$CACHE/vizrs" ]; then
+  mkdir -p "$CACHE" && cp "$HERE/usr/bin/vizrs" "$CACHE/vizrs.tmp" && mv "$CACHE/vizrs.tmp" "$CACHE/vizrs"
+fi
+VIZRS="$CACHE/vizrs"
+[ -x "$VIZRS" ] || VIZRS="$HERE/usr/bin/vizrs"
+if ldd "$HERE/usr/bin/vizrs-shell" 2>/dev/null | grep -q 'not found'; then
+  echo "VizRS: brak WebKitGTK 4.1 (pakiet libwebkit2gtk-4.1-0) – okno aplikacji przeglądarki" >&2
+  exec "$VIZRS" --data "$VIZRS_DATA" "$KIND" "$@"
+fi
+exec "$HERE/usr/bin/vizrs-shell" --vizrs "$VIZRS" "$KIND" "$@"

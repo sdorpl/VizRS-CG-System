@@ -2,6 +2,8 @@
 
 ## Niewydane – „Okna i serwer” (plan: `PLAN-natywne-i-serwer.md`)
 
+- **Wydania na GitHub** (`.github/workflows/release.yml`, znacznik `v*` albo ręcznie): archiwa Windows/macOS/Linux (`vizrs`, `vizrs-app`, `vizrs-shell`, paczki `.cgpack`), **AppImage VizRS Artist i VizRS Trio** (`deploy/appimage/`), **obraz Docker serwera** `ghcr.io/sdorpl/vizrs` (amd64, arm64), `SHA256SUMS.txt`.
+- **Poprawka CI Windows:** testy Node importowały moduły po ścieżce `D:\…` (`ERR_UNSUPPORTED_ESM_URL_SCHEME`) – teraz `pathToFileURL`.
 - **Paczki przykładowe jako `.cgpack`:** `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack` – każda oprawa w jednym pliku ze scenami, stronami, grafikami (tła hashtagów) i czcionkami (Bahnschrift w BTB). BTB łączy 31 wzorców z belką wielowierszową (8501–8506); usunięty duplikat „zegarek (kopia)”, tickery z trybami przemianowane. Dawne `.show.json` i `BTB_CG/` w `examples/archiwum/`; budowa: `tools/build-packs.mjs`.
 - **Osobny show na audycję:** biblioteka `vizrs-data/shows/`, lista wyboru w pasku Trio (przełączenie zdejmuje wszystko z anteny), ▾ nowy / kopia bieżącego / usuń; API `/api/shows`.
 - Artist: z interfejsu usunięto nazwy BTB (przycisk importu elementu to teraz **⇧ Element**, bez „BTB” w podpowiedziach, raportach i komunikatach).

@@ -33,7 +33,7 @@ Obraz: statyczna binarka na pustym obrazie (`Dockerfile`, ~3 MB, użytkownik 100
 
 Compose ustawia `VIZRS_TRUST_PROXY=1` (adres klienta z `X-Forwarded-For`) – **włączaj to tylko, gdy port VizRS jest osiągalny wyłącznie przez proxy**, inaczej klient może podać dowolny adres i ominąć spowalnianie prób tokenu.
 
-**Sieć lokalna, bez proxy:** `docker run -d --name vizrs -p 8088:8088 -e VIZRS_TOKEN=… -v vizrs-data:/data --restart unless-stopped vizrs`.
+**Sieć lokalna, bez proxy:** `docker run -d --name vizrs -p 8088:8088 -e VIZRS_TOKEN=… -v vizrs-data:/data --restart unless-stopped ghcr.io/sdorpl/vizrs:latest` (obraz z wydania; własna budowa: `docker build -t vizrs .`).
 Bez tokenu kontener nie wystartuje (nasłuch `0.0.0.0`); świadomie bez tokenu: `-e VIZRS_INSECURE=1`.
 
 **Własny nginx zamiast Caddy:** `deploy/nginx-vizrs.conf` – konieczne `proxy_set_header Host $host` (inaczej 403 „niedozwolony Origin”) oraz `proxy_buffering off` dla `/events` (inaczej wyjście dostaje TAKE z opóźnieniem).

@@ -1,0 +1,118 @@
+name: Release
+# Wydanie po wypchnięciu znacznika v* (np. v2.1.0) albo ręcznie (Actions → Release → Run workflow).
+#   binarki vizrs + vizrs-app + vizrs-shell: Windows (.zip), macOS (.tar.gz), Linux (.tar.gz)
+#   AppImage: VizRS Artist i VizRS Trio (Linux x86_64, okno natywne WebKitGTK)
+#   serwer: obraz Docker ghcr.io/<właściciel>/vizrs:<wersja> i :latest
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Wersja (np. 2.1.0) – bez znacznika powstaje tylko szkic wydania'
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+jobs:
+  bin:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, name: windows-x86_64 }
+          - { os: macos-latest, name: macos-arm64 }
+          - { os: ubuntu-22.04, name: linux-x86_64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Biblioteki WebKitGTK (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev
+      - run: cargo build --release --locked
+        working-directory: source
+      - run: cargo build --release --locked
+        working-directory: source/shell
+      - name: Paczka
+        shell: bash
+        run: |
+          v=${VERSION#v}; d=VizRS-$v-${{ matrix.name }}; mkdir -p dist/$d
+          for f in source/target/release/vizrs source/target/release/vizrs-app source/shell/target/release/vizrs-shell; do
+            for x in "$f" "$f.exe"; do [ -f "$x" ] && cp "$x" dist/$d/; done
+          done
+          cp README.md CHANGELOG.md dist/$d/ 2>/dev/null || true
+          cp -r examples/*.cgpack dist/$d/ 2>/dev/null || true
+          cd dist
+          if [ "$RUNNER_OS" = Windows ]; then 7z a -tzip $d.zip $d >/dev/null; else tar czf $d.tar.gz $d; fi
+          rm -rf $d; ls -la
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ matrix.name }}
+          path: dist/*
+
+  appimage:
+    runs-on: ubuntu-22.04   # starsza glibc = AppImage działa na większej liczbie dystrybucji
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev
+      - run: cargo build --release --locked
+        working-directory: source
+      - run: cargo build --release --locked
+        working-directory: source/shell
+      - run: deploy/appimage/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "${VERSION#v}" dist && rm -f dist/appimagetool
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: dist/*.AppImage
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nazwa obrazu
+        id: img
+        run: echo "name=ghcr.io/$(echo '${{ github.repository_owner }}' | tr 'A-Z' 'a-z')/vizrs" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: VIZRS_GIT_HASH=${{ github.sha }}
+          tags: |
+            ${{ steps.img.outputs.name }}:${{ env.VERSION }}
+            ${{ steps.img.outputs.name }}:latest
+
+  release:
+    needs: [bin, appimage, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Sumy kontrolne
+        run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          generate_release_notes: true
+          files: dist/*
+          body: |
+            **Serwer (Docker):** `docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data ghcr.io/${{ github.repository_owner }}/vizrs:${{ env.VERSION }}`
+            **Linux:** `VizRS-Artist-*.AppImage`, `VizRS-Trio-*.AppImage` (wymaga WebKitGTK 4.1, bez niego okno Chromium; dane w `~/.local/share/vizrs`).
+            **Windows / macOS / Linux:** archiwum z `vizrs`, `vizrs-app`, `vizrs-shell`.

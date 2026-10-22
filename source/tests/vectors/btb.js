@@ -2,12 +2,13 @@
 // Testy na kopiach elementów z BTB CG Editor (tests/fixtures/btb).
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 let failed = 0, passed = 0;
 const check = (name, cond, info) => { if (cond) passed++; else { failed++; console.log('FAIL ' + name + (info !== undefined ? ' → ' + JSON.stringify(info).slice(0, 300) : '')); } };
 const FX = path.join(__dirname, '../fixtures/btb');
 
 (async () => {
-  const io = await import(path.join(__dirname, '../../web/btb-io.js'));
+  const io = await import(pathToFileURL(path.join(__dirname, '../../web/btb-io.js')).href);
 
   // --- ease / kolory
   check('mapEase: nazwy CSS', io.mapEase('ease-in') === 'in' && io.mapEase('ease-out') === 'out' && io.mapEase('ease-in-out') === 'inout' && io.mapEase('linear') === 'linear');

@@ -9,6 +9,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 const BTB = path.resolve(process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'));
 const SRC = path.resolve(process.env.BTB_ELEMENTS || path.join(os.homedir(), 'Nextcloud/GitHub/btb-cgeditor/CG elements converted'));
@@ -32,7 +33,7 @@ const MIME = { js: 'text/javascript', css: 'text/css', ttf: 'font/ttf', woff2: '
 (async () => {
   const report = JSON.parse(fs.readFileSync(path.join(PACK, 'konwersja.json'), 'utf8'));
   const show = JSON.parse(fs.readFileSync(path.join(PACK, 'show.json'), 'utf8'));
-  const io = await import(path.join(__dirname, '../../web/btb-io.js'));
+  const io = await import(pathToFileURL(path.join(__dirname, '../../web/btb-io.js')).href);
   if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
   const data = fs.mkdtempSync(path.join(os.tmpdir(), 'vizrs-btb-'));

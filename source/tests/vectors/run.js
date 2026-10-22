@@ -3,6 +3,7 @@
 // Wektory i kopię odświeża tools/sync-btb.sh; rozjazd z BTB wykrywa `tools/sync-btb.sh --check`.
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const T = require('../../web/text-model.js');
 const load = (n) => JSON.parse(fs.readFileSync(path.join(__dirname, n + '.json'), 'utf8'));
 let failed = 0, passed = 0;
@@ -30,7 +31,7 @@ wr.parse.forEach((c) => {
 load('spell-tokens').cases.forEach((c) => check('spellTokens: ' + JSON.stringify(c.text).slice(0, 30), eq(T.spellTokens(c.text), c.expect)));
 
 // model wiadomości tickera (web/ticker-model.js) – te same wektory sprawdza src/ticker.rs
-import(path.join(__dirname, '../../web/ticker-model.js')).then((K) => {
+import(pathToFileURL(path.join(__dirname, '../../web/ticker-model.js')).href).then((K) => {
   const tk = load('ticker');
   tk.parse.forEach((c) => check('ticker parse: ' + c.in, eq(K.parseTickerItem(c.in), c.out), K.parseTickerItem(c.in)));
   tk.serialize.forEach((c) => {

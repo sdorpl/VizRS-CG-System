@@ -5,13 +5,14 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { fileURLToPath } from 'url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(process.argv[2] || path.join(os.homedir(), 'Nextcloud/GitHub/btb-cgeditor/CG elements converted'));
 const OUT = path.resolve(process.argv[3] || path.join(HERE, '../../examples/archiwum/BTB_CG'));
 const BTB = path.resolve(process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'));
-const io = await import(path.join(HERE, '../web/btb-io.js'));
+const io = await import(pathToFileURL(path.join(HERE, '../web/btb-io.js')).href);
 
 const OFFLINE = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
 // fonty BTB dostępne jako pliki: rodzina → [plik w BTB, nazwa zasobu VizRS]
