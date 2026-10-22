@@ -2,10 +2,10 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [../PLAN-rozbudowy.md](../PLAN-rozbudowy.md), raport: [../RAPORT-analiza-VizRS-vs-BTB.md](../RAPORT-analiza-VizRS-vs-BTB.md).
 >
-> **Ostatnia aktualizacja:** 2026-10-20
+> **Ostatnia aktualizacja:** 2026-10-22
 
 ## Bieżący etap
-**Wydanie 2.0.0 „Studio”** – wdrożone wszystkie etapy planu F0–F4 (patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
+**Wydanie 2.0.1 „Okna i serwer”** (2026-10-22; 2.0.0 „Studio” – wdrożone wszystkie etapy planu F0–F4, patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
 **Gałąź testowa `test/natywne-serwer`** – [../PLAN-natywne-i-serwer.md](../PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker.
 

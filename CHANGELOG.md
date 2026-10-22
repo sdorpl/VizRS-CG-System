@@ -1,6 +1,10 @@
 # VizRS – historia zmian
 
-## Niewydane – „Okna i serwer” (plan: `PLAN-natywne-i-serwer.md`)
+## Niewydane
+
+## 2.0.1 (2026-10-22) – „Okna i serwer”
+
+### Okna i serwer (plan: `PLAN-natywne-i-serwer.md`)
 
 - **Okno natywne: Plik → Połącz z serwerem…** (Ctrl+Shift+K, `vizrs-shell connect`): adres i token serwera zdalnego (VPS) wpisywane w oknie; przed przełączeniem sprawdzenie tokenu (serwery `http://`), potem wszystkie okna przechodzą na ten serwer. Lista zapisanych serwerów (`connections.json` w katalogu konfiguracji, token tylko na życzenie, plik tylko dla właściciela), „łącz przy uruchomieniu” (`--local` – mimo to serwer lokalny), powrót do serwera lokalnego. Strony serwera nie mogą przełączyć okien (komunikat przyjmuje tylko wbudowane okno połączenia).
 - **Wydania na GitHub** (`.github/workflows/release.yml`, znacznik `v*` albo ręcznie): archiwa Windows/macOS/Linux (`vizrs`, `vizrs-app`, `vizrs-shell`, paczki `.cgpack`), **AppImage VizRS Artist i VizRS Trio** (`deploy/appimage/`), **obraz Docker serwera** `ghcr.io/sdorpl/vizrs` (amd64, arm64), `SHA256SUMS.txt`.
@@ -32,7 +36,7 @@
 - `--trust-proxy` (adres klienta z `X-Forwarded-For` za Caddy/nginx), `--log-stdout` (log audytowy na standardowe wyjście), obsługa **SIGTERM/SIGINT** i zdarzeń konsoli Windows bez zależności (natychmiastowy `docker stop`, zwolnienie blokady katalogu danych). Compose ustawia token wyjścia, `VIZRS_TRUST_PROXY` i `VIZRS_LOG_STDOUT`.
 - **Docker i VPS:** `Dockerfile` (statyczna binarka musl na `scratch`, ~3 MB, użytkownik 10001, `HEALTHCHECK` przez `vizrs --healthcheck`, wolumen `/data`, TCP 6100 wyłączony), `deploy/docker-compose.yml` z Caddy (automatyczny HTTPS), `deploy/nginx-vizrs.conf`, `deploy/env.example`; RUNBOOK „VPS i Docker”; job CI `docker` (budowa, healthy, token, restart z zachowaniem show). `VIZRS_GIT_HASH` dla `--version` przy budowie bez `.git`.
 
-## Niewydane – „Ticker” (plan: `PLAN-ticker.md`)
+### Ticker (plan: `PLAN-ticker.md`)
 - **Ruch jak w BTB CG – efekty wizualne bez kluczy** (`node.motion`, `web/motion.js`): 22 presety wejścia/wyjścia (m.in. przesłony, maska ukośna, żaluzja, odwrócenia 3D, glitch, rozdzielenie RGB, rosnący pasek, spadanie), 31 efektów tekstu (całość, słowa, znaki, linie, maszyna do pisania z kursorem, szyfrowanie, licznik liczby), 11 pętli uwagi (pulsowanie, bicie serca, połysk, poświata, podkreślenie…), krzywe GSAP (`back.out(1.7)`, `bounce.out`, `elastic.out`, `cubic-bezier`, aliasy `spring`/`overshoot`/`broadcast`). Ten sam renderer w Artist, Trio i OBS; składanie z kluczami jak w BTB.
 - Przykład `examples/BTB_PILNE.show.json` przebudowany na nowej scenie z paczki BTB_CG (ruch `node.motion`: zoom elementu z lewego górnego rogu, odsłonięcie tekstu, świecenie paska) z zachowanym układem 1–3 wierszy (`squeeze-lines`, `fill`).
 - **Belki BTB dopasowane do VizRS:** paczka `examples/BTB_CG` przebudowana nowym konwerterem (31 scen z `node.motion` zamiast kluczy). Stałe efekty tła kształtów BTB (`motion.bg`: połysk, pulsowanie, świecenie, linie skanowania), punkt odniesienia ruchu (`motion.origin`, ruch elementu z lewego górnego rogu), ruch elementu ze skalą layoutu w wewnętrznej grupie, efekty tekstu z wartościami `cgmotion.js` (maski `inset`, rozmycie 20/14 px, `hide` od lewej, szyfrowanie wg postępu całego tekstu), domyślne czasy efektu tekstu jak w BTB. `btb-visual.js --frames`: klatki 25/50/75% wejścia – 31/31 zgodnych z oryginałem.
