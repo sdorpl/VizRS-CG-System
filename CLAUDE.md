@@ -97,7 +97,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/demo_show.json` | show startowy (INFO24) |
 | `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
 | `source/tools/` | `sync-btb.sh`, `build-btb-pack.mjs`, `out_choreo.py`, `render_video.py`, `gallery.js` (galeria zrzutów stron) |
-| `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json`, `BTB_CG/`, `assets/` (używane przez testy) |
+| `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json`, `BTB_CG/`, `BTB_ALPHA/`, `BTB_TRIO/`, `assets/` (używane przez testy) |
 | `deploy/` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, skróty okien (Linux `.desktop`, Windows `.ps1`) |
 | `Dockerfile` | obraz `scratch` ze statyczną binarką musl |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |

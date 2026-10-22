@@ -7,7 +7,7 @@
 ## Bieżący etap
 **Wydanie 2.0.1 „Okna i serwer”** (2026-10-22; 2.0.0 „Studio” – wdrożone wszystkie etapy planu F0–F4, patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
-**Gałąź testowa `test/natywne-serwer`** – [../PLAN-natywne-i-serwer.md](../PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker.
+**Okna aplikacji i serwer** – [../PLAN-natywne-i-serwer.md](../PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
 | Etap | Stan |
 |---|---|
