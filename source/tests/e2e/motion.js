@@ -125,6 +125,19 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     await pg.keyboard.press('Control+s'); await sleep(500);
     s2 = (await api('/api/show')).scenes.find((x) => x.id === 'sq');
     ok(!s2.nodes[0].children[1].motion.after, 'Panel Ruch: „po węźle” – od początku sceny usuwa powiązanie');
+    // z kluczy: przenikanie na wejściu, wyjazd w prawo na wyjściu → presety
+    const fk = { id: 'fk', name: 'Z kluczy', layer: 'front', width: 1920, height: 1080, duration: 3, stops: [2], fieldMeta: {}, nodes: [{ id: 'k1', type: 'rect', name: 'k1', props: { x: 100, y: 0, w: 100, h: 50 },
+      anim: { opacity: [{ t: 0.3, v: 0, e: 'out' }, { t: 0.7, v: 1 }, { t: 2, v: 1, e: 'in' }, { t: 2.5, v: 0 }], x: [{ t: 2, v: 100, e: 'in' }, { t: 2.5, v: 2020 }], rotation: [{ t: 0, v: 0 }, { t: 1, v: 10 }] } }] };
+    await api('/api/scenes', { method: 'POST', body: JSON.stringify(fk) });
+    await pg.goto(B + '/artist?scene=fk'); await sleep(900);
+    if (!(await pg.locator('#seqMode.on').count())) await pg.click('#seqMode');
+    await pg.click('#tl .tl-lbl[data-sel="k1"]'); await sleep(150);
+    await pg.click('[data-seq="fromkeys"]'); await sleep(300);
+    await pg.keyboard.press('Control+s'); await sleep(500);
+    const k1 = (await api('/api/show')).scenes.find((x) => x.id === 'fk').nodes[0];
+    ok(k1.motion?.in?.type === 'fade' && k1.motion.in.delay === 0.3 && k1.motion.in.dur === 0.4 && k1.motion.in.ease === 'power2.out'
+      && k1.motion.out?.type === 'slide' && k1.motion.out.dir === 'right' && k1.motion.out.ease === 'power2.in' && !k1.anim.opacity && !k1.anim.x && k1.anim.rotation?.length === 2 && k1.props.opacity === 1,
+    'Z kluczy: przenikanie i wyjazd → presety, obrót zostaje kluczami', k1);
     ok(errs.length === 0, 'Bez błędów JS', errs);
   } catch (e) {
     console.error(e); failures++;

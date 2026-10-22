@@ -95,7 +95,7 @@ Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości �
 1. Na osi czasu kliknij **≣ Sekwencja** – zamiast kluczy zobaczysz paski wejścia (niebieskie) i wyjścia (pomarańczowe) każdego elementu.
 2. Zaznacz grupę belki i kliknij **⇶ Kaskada** – elementy wejdą jeden po drugim co „krok” (np. 0,1 s), a zejdą w odwrotnej kolejności. **↳ Po kolei** – każdy wchodzi, gdy skończy się poprzedni.
 3. Przeciągnij pasek, aby przesunąć start; przeciągnij jego prawą krawędź, aby wydłużyć ruch.
-4. Chcesz dopracować ruch ręcznie? Zaznacz element i kliknij **◆ Na klucze** – preset zamieni się na zwykłe klucze.
+4. Chcesz dopracować ruch ręcznie? Zaznacz element i kliknij **◆ Na klucze** – preset zamieni się na zwykłe klucze. W drugą stronę działa **◇ Z kluczy**: klucze wejścia/wyjścia zamienią się na preset (gdy nie pasują dokładnie, Artist zapyta o przybliżenie).
 
 ## 6. Wyświetlenie w OBS
 

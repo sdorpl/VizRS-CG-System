@@ -102,6 +102,17 @@ const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
   const k4 = MO.motionToKeys({ in: { type: 'clip', dir: 'left', dur: 0.3, ease: 'linear' } }, { rest, outStart: 1, shift: 0.5 });
   ok(k4.anim.clipR?.[0].t === 0.5 && k4.anim.clipR[0].v === 100 && k4.anim.clipR[1].v === 0 && !k4.anim.x, 'na klucze: przycięcie z przesunięciem sekwencji', k4.anim);
 
+  // klucze → presety (odwrotność): powrót z motionToKeys daje ten sam preset
+  const lin = (anim) => (p, t) => { const tr = anim[p]; if (t <= tr[0].t) return tr[0].v; for (let i = 0; i < tr.length - 1; i++) { const a = tr[i], b = tr[i + 1]; if (t <= b.t) { const u = (t - a.t) / (b.t - a.t || 1); const E = { out: (x) => 1 - (1 - x) ** 3, in: (x) => x ** 3, linear: (x) => x }[a.e] || ((x) => x); return a.v + (b.v - a.v) * E(u); } } return tr.at(-1).v; };
+  const m1 = MO.keysToMotion(k1.anim, { props: rest, sample: lin(k1.anim), outStart: 2 });
+  ok(m1.done.join() === 'in,out' && m1.motion.in.type === 'slide' && m1.motion.in.dir === 'left' && m1.motion.in.dur === 0.5 && m1.motion.in.ease === 'power2.out', 'z kluczy: wjazd z lewej', m1.motion);
+  ok(m1.motion.out.type === 'fade' && m1.motion.out.delay === 0.1 && m1.motion.out.dur === 0.4 && m1.motion.out.ease === 'power2.in' && !Object.keys(m1.anim).length && m1.props.x === 100, 'z kluczy: wyjście przenikaniem, klucze usunięte, spoczynek w props', m1);
+  const a5 = { y: [{ t: 0.2, v: 900, e: 'out' }, { t: 0.7, v: 700 }] };
+  const m5 = MO.keysToMotion(a5, { props: rest, sample: lin(a5), outStart: Infinity });
+  ok(!m5.done.length && m5.skipped.length === 1, 'z kluczy: krótki wjazd 200 px nie jest presetem', m5.skipped);
+  const m6 = MO.keysToMotion(a5, { props: rest, sample: lin(a5), outStart: Infinity, approx: true, shift: 0.5 });
+  ok(m6.done[0] === 'in' && m6.motion.in.type && m6.approx.length === 1 && m6.dropAfter && m6.motion.in.delay === 0.2 && m6.props.y === 700, 'z kluczy: przybliżenie na prośbę, bez sekwencji', m6);
+
   console.log(failures ? `\n${failures} FAIL / ${checks}` : `Ruch zgodny (${checks} sprawdzeń)`);
   process.exit(failures ? 1 : 0);
 })();

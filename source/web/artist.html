@@ -208,6 +208,7 @@
       <button data-seq="chain" title="Po kolei: każdy element wchodzi po zakończeniu wejścia poprzedniego (powiązanie „po węźle”)">↳ Po kolei</button>
       <button data-seq="copy" title="Kopiuj ruch zaznaczonego elementu na jego rodzeństwo">⧉ Kopiuj ruch</button>
       <button data-seq="keys" title="Zamień presety wejścia/wyjścia zaznaczonego elementu na klucze (pętle i efekty tekstu zostają)">◆ Na klucze</button>
+      <button data-seq="fromkeys" title="Zamień klucze wejścia/wyjścia zaznaczonego elementu (położenie, krycie, skala, skos, rozmycie, przycięcie) na presety ruchu – odwrotność „Na klucze”">◇ Z kluczy</button>
       <button data-seq="clear" class="danger" title="Usuń ruch (presety) z zaznaczonego elementu albo całej grupy">✕ Usuń ruch</button>
       <button data-seq="fit" title="Stop point po wejściu, długość = stop + wyjście">⟲ Dopasuj</button>
     </div>
@@ -225,7 +226,7 @@
 import * as BTB from '/btb-io.js';
 import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
-import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
+import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, trackValue, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -763,6 +764,25 @@ function seqTool(act) {
     if (!Object.keys(n.motion).length) delete n.motion;
     seqMode = false; try { localStorage.setItem('vizrs.seq', '0'); } catch { /* ignoruj */ }
     if (r.skipped.length) showReport('Na klucze – część pominięta', r.skipped); else toast('Presety zamienione na klucze – widok kluczy');
+  } else if (act === 'fromkeys') {
+    if (!n || !MO.MOTION_PROPS.some((p) => n.anim?.[p]?.length >= 2)) return toast('Zaznacz element z kluczami położenia, krycia, skali, skosu, rozmycia lub przycięcia', true);
+    if (n.motion?.in || n.motion?.out) return toast('Z kluczy: element ma już preset wejścia/wyjścia – usuń go najpierw', true);
+    const defaults = Object.fromEntries(MO.MOTION_PROPS.map((p) => [p, PROPS[p].d]));
+    const opt = { props: n.props || {}, defaults, sample: (p, t) => +trackValue(n.anim[p], t, 'num') || 0, outStart: outStartOf(), shift: MO.sequenceShifts(scene.nodes).get(n.id) || 0 };
+    let r = MO.keysToMotion(n.anim, opt);
+    if (r.skipped.length) {
+      const a = MO.keysToMotion(n.anim, { ...opt, approx: true });
+      if (a.approx.length && confirm(`Części kluczy nie da się zapisać dokładnie presetem:\n${a.approx.join('\n')}\n\nZamienić w przybliżeniu?`)) r = a;
+    }
+    if (!r.done.length) return showReport('Z kluczy – nic nie zamieniono', r.skipped);
+    checkpoint();
+    n.anim = r.anim; if (!Object.keys(n.anim).length) delete n.anim;
+    n.props = { ...(n.props || {}), ...r.props };
+    const mo = (n.motion ||= {});
+    Object.assign(mo, r.motion);
+    if (r.dropAfter) delete mo.after;
+    seqMode = true; try { localStorage.setItem('vizrs.seq', '1'); } catch { /* ignoruj */ }
+    if (r.skipped.length) showReport('Z kluczy – część zostaje kluczami', r.skipped); else toast('Klucze zamienione na presety – widok sekwencji');
   } else if (act === 'clear') {
     const list = n ? [n] : seqTargets();
     const withM = list.filter((x) => x.motion);

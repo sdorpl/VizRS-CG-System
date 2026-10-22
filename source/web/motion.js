@@ -535,6 +535,104 @@ export function motionToKeys(m, { rest, outStart, shift = 0 }) {
   return { anim, done, skipped };
 }
 
+// ---------------------------------------------------------------- klucze → presety (odwrotność „Na klucze”)
+/** Właściwości, które presety IN/OUT umieją zapisać (jak w motionToKeys). */
+export const MOTION_PROPS = ['x', 'y', 'opacity', 'scale', 'skewX', 'blur', 'clipL', 'clipT', 'clipR', 'clipB'];
+/** Typy dopasowywane do kluczy (te, które da się zapisać kluczami). */
+const FIT_TYPES = ['fade', 'zoom', 'zoom-in', 'blur', 'slide', 'slide-overshoot', 'skew', 'clip', 'split-reveal', 'pop', 'drop'];
+const FIT_EASES = [...MOTION_EASES, 'power1.out', 'power1.in', 'power1.inOut', 'sine.out', 'sine.in', 'expo.in', 'power3.in', 'power3.inOut'];
+/** Tolerancja dopasowania w jednostkach właściwości (błąd / tolerancja ≤ 1 = zgodne). */
+const FIT_TOL = { x: 4, y: 4, opacity: 0.03, scale: 0.02, skewX: 1, blur: 1, clipL: 1.5, clipT: 1.5, clipR: 1.5, clipB: 1.5 };
+
+function stateProps(s, rest) {
+  if (Math.abs(s.sx - s.sy) > 1e-6) return null;
+  const c = s.clip || [0, 0, 1, 1];
+  return {
+    x: rest.x + s.tx, y: rest.y + s.ty, opacity: rest.opacity * s.opacity, scale: rest.scale * s.sx, skewX: rest.skewX + s.skew, blur: rest.blur + s.blur,
+    clipL: Math.max(rest.clipL, c[0] * 100), clipT: Math.max(rest.clipT, c[1] * 100), clipR: Math.max(rest.clipR, 100 - c[2] * 100), clipB: Math.max(rest.clipB, 100 - c[3] * 100),
+  };
+}
+
+/** Najlepszy preset dla przebiegu `vals` (tablica {prop: v} w równych odstępach postępu 0…1). Zwraca { type, dir, ease, err }. */
+function fitPhase(kind, vals, rest) {
+  let best = null;
+  const st = kind === 'in' ? stateIn : stateOut;
+  for (const type of FIT_TYPES) {
+    for (const dir of DIR_TYPES.has(type) ? DIRECTIONS : [undefined]) {
+      for (const e of FIT_EASES) {
+        let err = 0;
+        for (let i = 0; i < vals.length && (!best || err < best.err); i++) {
+          const o = stateProps(st(type, dir, e, i / (vals.length - 1)), rest);
+          if (!o) { err = Infinity; break; }
+          for (const p of MOTION_PROPS) err = Math.max(err, Math.abs(o[p] - vals[i][p]) / FIT_TOL[p]);
+        }
+        if (!best || err < best.err) best = { type, dir, ease: e, err };
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * Zamienia klucze wejścia/wyjścia węzła na presety (`node.motion.in/out`) – odwrotność motionToKeys.
+ * `anim` – klucze węzła, `props` – właściwości węzła, `sample(prop, t)` – wartość ścieżki w czasie t (krzywe kluczy rysuje renderer),
+ * `outStart` – ostatni stop, `shift` – przesunięcie sekwencji, `approx` – przyjmij najbliższy preset, gdy żaden nie jest zgodny.
+ * Zwraca { motion: {in?, out?}, props: {prop: spoczynek}, anim: klucze po zamianie, done, skipped, approx: [opisy przybliżeń], dropAfter }.
+ */
+export function keysToMotion(anim, { props = {}, sample, outStart = Infinity, shift = 0, approx = false, defaults = {} }) {
+  const r3 = (v) => Math.round(v * 1000) / 1000;
+  const out = { motion: {}, props: {}, anim: structuredClone(anim || {}), done: [], skipped: [], approx: [] };
+  const tracks = MOTION_PROPS.filter((p) => (anim?.[p]?.length || 0) >= 2 && anim[p].some((k) => Math.abs(k.v - anim[p][0].v) > 1e-9));
+  if (!tracks.length) { out.skipped.push('brak kluczy położenia, krycia, skali, skosu, rozmycia ani przycięcia'); return out; }
+  const restOf = (t) => Object.fromEntries(MOTION_PROPS.map((p) => [p, anim?.[p]?.length ? sample(p, t) : +(props[p] ?? defaults[p] ?? 0) || 0]));
+  const eps = 1e-3;
+  const phases = [];
+  // granice fazy: od pierwszego klucza, po którym wartość się zmienia, do ostatniego klucza ze zmianą
+  const span = (keep) => {
+    let a = Infinity, b = -Infinity;
+    for (const p of tracks) {
+      const ks = anim[p].filter(keep);
+      for (let i = 1; i < ks.length; i++) if (Math.abs(ks[i].v - ks[i - 1].v) > 1e-9) { a = Math.min(a, ks[i - 1].t); b = Math.max(b, ks[i].t); }
+    }
+    return a < b ? [a, b] : null;
+  };
+  const inS = span((k) => k.t <= outStart + eps), outS = Number.isFinite(outStart) ? span((k) => k.t >= outStart - eps) : null;
+  if (inS) phases.push(['in', ...inS]);
+  if (outS) phases.push(['out', ...outS]);
+  let rest = null;
+  for (const [kind, t0, t1] of phases) {
+    const name = kind === 'in' ? 'wejście' : 'wyjście';
+    if (t1 - t0 < 0.01) continue; // jeden klucz w fazie (np. spoczynek na stopie) – nic do zamiany
+    const r = kind === 'in' ? restOf(t1) : restOf(t0);
+    if (r.opacity < 0.01) { out.skipped.push(`${name}: element w spoczynku jest niewidoczny`); continue; }
+    if (rest && MOTION_PROPS.some((p) => Math.abs(rest[p] - r[p]) > FIT_TOL[p] * 0.25)) { out.skipped.push(`${name}: zaczyna się od innego stanu niż koniec wejścia`); continue; }
+    const N = 24, vals = [];
+    for (let i = 0; i <= N; i++) { const t = t0 + (t1 - t0) * i / N; vals.push(Object.fromEntries(MOTION_PROPS.map((p) => [p, anim?.[p]?.length ? sample(p, t) : r[p]]))); }
+    const f = fitPhase(kind, vals, r);
+    if (!f || f.err > 1) {
+      if (!approx || !f || !Number.isFinite(f.err)) { out.skipped.push(`${name}: klucze nie odpowiadają żadnemu presetowi${f && Number.isFinite(f.err) ? ` (najbliższy „${ANIM_LABELS[f.type]}”)` : ''}`); continue; }
+      out.approx.push(`${name} ≈ „${ANIM_LABELS[f.type]}”${f.dir ? ` ${DIR_LABELS[f.dir]}` : ''}, ${f.ease} – ruch będzie wyglądał inaczej niż klucze`);
+    }
+    rest ||= r;
+    const spec = { type: f.type };
+    if (f.dir) spec.dir = f.dir;
+    spec.dur = r3(t1 - t0);
+    if (kind === 'in' && t0 < shift - eps) out.dropAfter = true; // klucze zaczynają się przed końcem poprzednika – bez sekwencji
+    const d = r3(kind === 'in' ? t0 - (out.dropAfter ? 0 : shift) : t0 - outStart);
+    if (d > 0) spec.delay = d;
+    spec.ease = f.ease;
+    out.motion[kind] = spec;
+    out.done.push(kind);
+    for (const p of tracks) {
+      if (!out.anim[p]) continue;
+      const tr = out.anim[p].filter((k) => (kind === 'in' ? k.t > t1 + eps : k.t < t0 - eps));
+      if (tr.length) out.anim[p] = tr; else delete out.anim[p];
+    }
+  }
+  if (rest) for (const p of tracks) if (!out.anim[p]) out.props[p] = r3(rest[p]);
+  return out;
+}
+
 // ---------------------------------------------------------------- stałe efekty tła kształtu (BTB `layer.effect`: shimmer, pulse, glow, scanline)
 export const BG_TYPES = ['none', 'shimmer', 'pulse', 'glow', 'scanline'];
 export const BG_LABELS = { none: 'brak', shimmer: 'połysk tła (ciągły)', pulse: 'pulsowanie krycia', glow: 'świecenie (cień w kolorze)', scanline: 'linie skanowania' };

@@ -1,7 +1,7 @@
 # VizRS – historia zmian
 
 ## Niewydane
-
+- **Artist, tryb sekwencji – ◇ Z kluczy:** zamiana kluczy wejścia/wyjścia elementu na presety ruchu (odwrotność „◆ Na klucze”), z propozycją przybliżenia, gdy klucze nie pasują dokładnie.
 - **Zajęty port – fallback:** gdy domyślny port 8088 jest zajęty (np. serwer `./start-linux.sh` na innym katalogu danych), serwer `vizrs`, okna `vizrs artist|trio` i okno natywne / AppImage używają następnego wolnego portu (komunikat na starcie) zamiast kończyć się błędem; jawny `--port` / `VIZRS_PORT` bez zmian.
 - **Zatrzymanie serwera (SIGTERM, Ctrl+C) przy zamkniętym wyjściu konsoli:** komunikat „zatrzymanie” nie blokuje już zakończenia procesu.
 - **Pakiet Debian/Ubuntu** `vizrs_<wersja>_amd64.deb` (`deploy/deb/build.sh`, w wydaniu na GitHub obok AppImage): `vizrs` i `vizrs-shell` w `/usr/bin`, w menu VizRS Artist, VizRS Trio i **VizRS Trio – serwer zdalny** (okno „Połącz z serwerem”), ikona, usługa systemd `vizrs` (wyłączona; użytkownik `vizrs`, dane `/var/lib/vizrs`). Zależności: WebKitGTK 4.1, GTK 3.
