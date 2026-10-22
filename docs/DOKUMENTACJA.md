@@ -503,7 +503,7 @@ Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vi
 
 | Opcja | Zmienna | Domyślnie | Opis |
 |---|---|---|---|
-| `--port` | `VIZRS_PORT` | 8088 | port HTTP (UI + wyjście) |
+| `--port` | `VIZRS_PORT` | 8088 | port HTTP (UI + wyjście). Gdy domyślny 8088 jest zajęty (np. drugi serwer na innym katalogu danych), serwer bierze następny wolny (do 8107) i pisze o tym na starcie – adres jest w ramce; port podany jawnie (`--port`, `VIZRS_PORT`, Docker) zajęty = błąd, jak dotąd |
 | `--tcp` | `VIZRS_TCP` | 6100 | port komend tekstowych (0 = wyłączony) |
 | `--bind` | `VIZRS_BIND` | 127.0.0.1 | adres nasłuchu; adres inny niż lokalny (`0.0.0.0`, IP w sieci) **wymaga tokenu** |
 | `--token` | `VIZRS_TOKEN` | – | wymagany token (znaki `A-Z a-z 0-9 - _ .`) |

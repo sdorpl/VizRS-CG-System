@@ -23,6 +23,8 @@ pub enum Mode {
 pub struct Config {
     pub mode: Mode,
     pub port: u16,
+    /// Port podany jawnie (`--port` / `VIZRS_PORT`) – bez przejścia na wolny, gdy zajęty.
+    pub port_set: bool,
     pub tcp_port: u16,
     pub bind: String,
     pub token: Option<String>,
@@ -55,6 +57,7 @@ impl Default for Config {
         Config {
             mode: Mode::Serve,
             port: 8088,
+            port_set: false,
             tcp_port: 6100,
             bind: "127.0.0.1".into(),
             token: None,
@@ -131,6 +134,7 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
     // 1. zmienne środowiskowe
     if let Some(v) = env("VIZRS_PORT") {
         c.port = num("VIZRS_PORT", &v)?;
+        c.port_set = true;
     }
     if let Some(v) = env("VIZRS_TCP") {
         c.tcp_port = num("VIZRS_TCP", &v)?;
@@ -190,7 +194,10 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
             args.get(i).cloned().ok_or(format!("{name}: brak wartości"))
         };
         match name {
-            "--port" | "-p" => c.port = num(name, &val()?)?,
+            "--port" | "-p" => {
+                c.port = num(name, &val()?)?;
+                c.port_set = true;
+            }
             "--tcp" => c.tcp_port = num(name, &val()?)?,
             "--osc" => c.osc_port = num(name, &val()?)?,
             "--bind" => c.bind = val()?,
@@ -287,7 +294,7 @@ Okna:
   --linger N     sekundy bez okien i wyjść przed zakończeniem serwera okna (domyślnie 10)
 
 Opcje (w nawiasie zmienna środowiskowa; flaga ma pierwszeństwo):
-  --port N       port HTTP – UI + wyjście OBS (VIZRS_PORT, domyślnie 8088)
+  --port N       port HTTP – UI + wyjście OBS (VIZRS_PORT; domyślnie 8088, a gdy zajęty – następny wolny)
   --tcp N        port komend tekstowych, 0 = wyłączony (VIZRS_TCP, domyślnie 6100)
   --osc N        port UDP OSC, 0 = wyłączony (VIZRS_OSC); przy tokenie: /vizrs/<token>/take
   --bind ADRES   adres nasłuchu (VIZRS_BIND, domyślnie 127.0.0.1); inny niż lokalny wymaga tokenu
@@ -340,6 +347,9 @@ mod tests {
         assert_eq!((c.port, c.token.as_deref()), (9100, Some("xyz")));
         // pusta zmienna = brak
         assert_eq!(run(&[], &[("VIZRS_PORT", "")]).unwrap().port, 8088);
+        assert!(!run(&[], &[]).unwrap().port_set);
+        assert!(run(&["-p", "8088"], &[]).unwrap().port_set);
+        assert!(run(&[], &[("VIZRS_PORT", "9000")]).unwrap().port_set);
     }
 
     #[test]

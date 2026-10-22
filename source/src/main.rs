@@ -278,8 +278,20 @@ fn healthcheck(cfg: &Config) -> i32 {
     }
 }
 
+/// Pierwszy port od `from` (do 20 kolejnych), na którym da się nasłuchiwać pod `bind`.
+fn free_port(bind: &str, from: u16) -> Option<u16> {
+    (from..from.saturating_add(20)).find(|p| TcpListener::bind((bind, *p)).is_ok())
+}
+
 /// Uruchamia serwer: blokada danych, silnik, porty; nasłuch HTTP w wątku w tle.
 fn start(mut cfg: Config) -> Running {
+    // domyślny port zajęty (np. drugi serwer na innym katalogu danych) – następny wolny; jawny --port bez zmian
+    if !cfg.port_set {
+        if let Some(p) = free_port(&cfg.bind, cfg.port).filter(|p| *p != cfg.port) {
+            eprintln!("[vizrs] port {} jest zajęty – serwer używa portu {p} (stały port: --port / VIZRS_PORT)", cfg.port);
+            cfg.port = p;
+        }
+    }
     let lock = match datalock::acquire(&cfg.data, &cfg.local_addr(), cfg.token.as_deref()) {
         Ok(l) => l,
         Err(o) => {
@@ -354,7 +366,9 @@ fn start(mut cfg: Config) -> Running {
     {
         let (lock, e) = (Arc::clone(&lock), Arc::clone(&engine));
         shutdown::on_signal(move || {
-            println!("[vizrs] zatrzymanie – kończę pracę");
+            // bez println!: przy zamkniętym potoku stdout panika zatrzymałaby wyjście z programu
+            use std::io::Write;
+            writeln!(std::io::stdout(), "[vizrs] zatrzymanie – kończę pracę").ok();
             e.audit.log("system", "STOP (sygnał)", None);
             lock.release();
             std::process::exit(0);
@@ -944,6 +958,15 @@ fn tcp_client(stream: TcpStream, engine: Arc<Engine>, token: Option<String>) {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn busy_port_falls_back() {
+        let busy = TcpListener::bind("127.0.0.1:0").unwrap();
+        let p = busy.local_addr().unwrap().port();
+        assert!(free_port("127.0.0.1", p).is_some_and(|f| f != p));
+        drop(busy);
+        assert_eq!(free_port("127.0.0.1", p), Some(p));
+    }
 
     fn setup(name: &str) -> (Arc<Engine>, Config, PathBuf) {
         let d = std::env::temp_dir().join(format!("vizrs-main-{}-{}", std::process::id(), name));
