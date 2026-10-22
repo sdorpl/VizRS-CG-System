@@ -1,4 +1,5 @@
-// Pomiar grafik BTB CG (gałąź alpha, szablony HTML/CSS/JS) → examples/archiwum/BTB_ALPHA/zrodlo.json dla tools/build-btb-alpha.mjs.
+// Pomiar grafik BTB CG (gałęzie alpha i TRIO, szablony HTML/CSS/JS) → examples/archiwum/BTB_ALPHA/zrodlo.json dla tools/build-btb-alpha.mjs
+// (TRIO: plik wyjściowy examples/archiwum/BTB_TRIO/zrodlo.json → tools/build-btb-trio.mjs).
 //   1. serwer BTB alpha na kopii bazy:  PORT=3999 DATABASE_URL=kopia.sqlite node server.js   (w katalogu BTB-CG-System, gałąź alpha)
 //   2. node tools/measure-btb-alpha.cjs [adres=http://localhost:3999] [plik-wyjściowy]
 // Każda grafika (i każdy szablon bez grafiki – z ustawieniami domyślnymi szablonu) wchodzi osobno na output.html;
@@ -13,7 +14,7 @@ const io = require(path.join(NM, 'socket.io-client'));
 const URL = process.argv[2] || 'http://localhost:3999';
 const OUT = path.resolve(process.argv[3] || path.join(__dirname, '../../examples/archiwum/BTB_ALPHA/zrodlo.json'));
 const KEEP = ['id', 'name', 'type', 'templateId', 'title', 'subtitle', 'introText', 'items', 'animation', 'style', 'layout', 'wiper', 'tickerMode',
-  'separatorStyle', 'speed', 'accentColor', 'url', 'sideImage', 'titleHtml', 'groupId'];
+  'separatorStyle', 'speed', 'accentColor', 'url', 'sideImage', 'titleHtml', 'groupId', 'fields'];
 
 function measure() {
   const out = [];
@@ -48,7 +49,7 @@ function measure() {
   const st = await new Promise((res) => s.on('initialState', res));
   // szablony bez grafik: grafika z domyślnymi ustawieniami szablonu (szerokość z `var(--v-width, Npx)`)
   const used = new Set(st.graphics.map((g) => g.templateId));
-  const extra = st.templates.filter((t) => !used.has(t.id)).map((t) => {
+  const extra = (st.templates || []).filter((t) => !used.has(t.id)).map((t) => {
     const df = { ...(t.defaultFields || {}) };
     delete df.fields;
     const w = /var\(--v-width, (\d+)px\)/.exec(t.css_template || '');
@@ -72,8 +73,8 @@ function measure() {
     console.error(i, all[i].name, pomiar[i].length);
   }
   s.emit('updateState', st);
-  const zrodlo = { zrodlo: 'github.com/sdorpl/BTB-CG-System gałąź alpha, database.sqlite + templates/',
-    szablony: Object.fromEntries(st.templates.map((t) => [t.id, t.name])),
+  const zrodlo = { zrodlo: process.env.BTB_ZRODLO || 'github.com/sdorpl/BTB-CG-System gałąź alpha, database.sqlite + templates/',
+    szablony: Object.fromEntries((st.templates || []).map((t) => [t.id, t.name])),
     grafiki: all.map((g) => Object.fromEntries(KEEP.filter((k) => k in g).map((k) => [k, g[k]]))), pomiar };
   fs.writeFileSync(OUT, JSON.stringify(zrodlo, null, 0) + '\n');
   await b.close();

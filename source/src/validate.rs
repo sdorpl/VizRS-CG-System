@@ -293,8 +293,10 @@ pub fn scene(s: &Json) -> R {
             }
             for d in list {
                 match d.get("target") {
-                    Some(Json::Str(t)) if t.len() <= 100 && ["layer:", "page:", "scene:"].iter().any(|p| t.starts_with(p) && t.len() > p.len()) => {}
-                    _ => return Err("dock.target: oczekiwano layer:<warstwa>, page:<numer> lub scene:<nazwa>".into()),
+                    // kilka celów „a|b”: reguła działa raz, gdy na antenie jest którykolwiek
+                    Some(Json::Str(t))
+                        if t.len() <= 400 && t.split('|').all(|c| ["layer:", "page:", "scene:"].iter().any(|p| c.starts_with(p) && c.len() > p.len())) => {}
+                    _ => return Err("dock.target: oczekiwano layer:<warstwa>, page:<numer> lub scene:<nazwa> (kilka: a|b)".into()),
                 }
                 for k in ["dx", "dy"] {
                     if let Some(v) = opt(d, k) {
@@ -690,6 +692,8 @@ mod tests {
         assert!(scene(&p(r#"{"markers":"x"}"#)).is_err());
         assert!(scene(&p(r#"{"dock":[{"target":"zle"}]}"#)).is_err());
         assert!(scene(&p(r#"{"dock":[{"target":"layer:"}]}"#)).is_err());
+        assert!(scene(&p(r#"{"dock":[{"target":"page:15001|page:15002|layer:back"}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"dock":[{"target":"page:15001|"}]}"#)).is_err());
         assert!(scene(&p(r#"{"dock":[{"target":"page:3001","dx":99999}]}"#)).is_err());
         assert!(scene(&p(r#"{"dock":[{"target":"scene:Ticker","dur":-1}]}"#)).is_err());
     }

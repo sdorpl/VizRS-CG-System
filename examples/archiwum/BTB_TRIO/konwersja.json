@@ -1,0 +1,96 @@
+{
+ "zrodlo": "github.com/sdorpl/BTB-CG-System gałąź TRIO (511ec91), db.json",
+ "uwagi": [
+  "„Z osoatniej chwili”: pominięto powiązanie z grafikami spoza bazy (6f6d9625-5a3a-460f-9d45-07a44145a92b)",
+  "„Ozdobnik - img”: pominięto powiązanie z grafikami spoza bazy (trio-1791990217537, 6f6d9625-5a3a-460f-9d45-07a44145a92b, trio-1791828767640)"
+ ],
+ "strony": {
+  "15001": "13: Belka glowna",
+  "15002": "14: Belka - PILNE",
+  "15003": "15: Wizytówka - PILNE",
+  "15004": "16: Wizytówka - normalna",
+  "15101": "2: MIASTO lewa",
+  "15102": "3: Z osoatniej chwili",
+  "15103": "4: MIASTO prawa",
+  "15104": "5: NA ŻYWO lewa",
+  "15105": "6: NA ŻYWO prawo",
+  "15106": "7: NA ŻYWO lewo dol",
+  "15107": "8: tylko w btb info",
+  "15108": "9: WYDANIE SPECJALNE",
+  "15109": "17: MIASTO prawa",
+  "15201": "0: TICKER PEŁNY EKRAN",
+  "15202": "10: Ticker - szeroki",
+  "15203": "11: Ticker - zepsuty",
+  "15204": "18: Ticker - Pilne",
+  "15301": "1: zegarek (kopia)",
+  "15401": "12: Ozdobnik - img"
+ },
+ "powiazania": [
+  {
+   "scena": "MIASTO lewa",
+   "dock": [
+    {
+     "target": "page:15104",
+     "dx": 0,
+     "dy": 55,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "scena": "Z ostatniej chwili",
+   "dock": [
+    {
+     "target": "page:15001",
+     "dx": 0,
+     "dy": -130,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "scena": "MIASTO prawa",
+   "dock": [
+    {
+     "target": "page:15105|page:15107",
+     "dx": 0,
+     "dy": 55,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "scena": "tylko w btb info",
+   "dock": [
+    {
+     "target": "page:15105",
+     "dx": -175,
+     "dy": 0,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "scena": "WYDANIE SPECJALNE",
+   "dock": [
+    {
+     "target": "page:15201|page:15002|page:15003",
+     "dx": 0,
+     "dy": -160,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "scena": "Ozdobnik - img",
+   "dock": [
+    {
+     "target": "page:15001",
+     "dx": 0,
+     "dy": -155,
+     "dur": 0.6
+    }
+   ]
+  }
+ ]
+}

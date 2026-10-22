@@ -1,0 +1,2078 @@
+{
+ "name": "BTB CG TRIO – grafiki przeniesione",
+ "scenes": [
+  {
+   "id": "trio_ticker_pelny_ekran",
+   "name": "TICKER PEŁNY EKRAN",
+   "layer": "z5_ticker_pelny_ekran",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 0.95,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "TICKER PEŁNY EKRAN",
+     "props": {
+      "x": 0,
+      "y": 1025,
+      "w": 1920,
+      "h": 55
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 55,
+        "color": "#000000"
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 55,
+        "tickerMode": "crawl",
+        "text": "70. RAJD POLSKI: ROBERT KUBICA WYGRAŁ ETAP GÓRSKI PRZEDOSTATNIEGO DNIA\nWYNIKI NA ŻYWO: KUBICA AWANSOWAŁ NA PODIUM RAJDU POLSKI\nSPORTOWE EMOCJE: DRAMATYCZNA WALKA O WYNIK W OSTATNIM OKRĄŻENIU\nORGANIZATORZY RAJDU POTWIERDZAJĄ: REKORDOWA FREKWENCJA NA TRASIE",
+        "font": "Bahnschrift.ttf",
+        "size": 32,
+        "weight": "700",
+        "color": "#ffffff",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "speed": 120,
+        "sepStyle": "dot",
+        "sepColor": "#ffffff80",
+        "crawlFrom": "left"
+       },
+       "fields": {
+        "text": "items"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.35
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_zegarek",
+   "name": "zegarek",
+   "layer": "z1_zegarek",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "zegarek",
+     "props": {
+      "x": 50,
+      "y": 990,
+      "w": 152,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-left-panel",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 152,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       }
+      },
+      {
+       "id": "ck3",
+       "type": "clock",
+       "name": "zegar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "font": "Arial",
+        "size": 28,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "spacing": 1,
+        "mode": "time",
+        "format": "HH:mm"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_miasto_lewa",
+   "name": "MIASTO lewa",
+   "layer": "z2_miasto_lewa",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "MIASTO lewa",
+     "props": {
+      "x": 50,
+      "y": 50,
+      "w": 164,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.4,
+         "ease": "power2.out"
+        }
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 16,
+        "y": 20,
+        "w": 140,
+        "h": 24,
+        "text": "BIAŁYSTOK",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "clip",
+         "dir": "left",
+         "dur": 0.45,
+         "delay": 0.12
+        },
+        "out": {
+         "type": "clip",
+         "dir": "right",
+         "dur": 0.3
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "dock": [
+    {
+     "target": "page:15104",
+     "dx": 0,
+     "dy": 55,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "trio_z_ostatniej_chwili",
+   "name": "Z ostatniej chwili",
+   "layer": "z2_z_ostatniej_chwili",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Z ostatniej chwili",
+     "props": {
+      "x": 220,
+      "y": 930,
+      "w": 135,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 135,
+        "h": 58,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.4,
+         "ease": "power2.out"
+        }
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 8,
+        "w": 135,
+        "h": 42,
+        "text": "tesrt",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#000000",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "clip",
+         "dir": "left",
+         "dur": 0.45,
+         "delay": 0.12
+        },
+        "out": {
+         "type": "clip",
+         "dir": "right",
+         "dur": 0.3
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "dock": [
+    {
+     "target": "page:15001",
+     "dx": 0,
+     "dy": -130,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "trio_miasto_prawa",
+   "name": "MIASTO prawa",
+   "layer": "z2_miasto_prawa",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "MIASTO prawa",
+     "props": {
+      "x": 1774,
+      "y": 50,
+      "w": 96,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.4,
+         "ease": "power2.out"
+        }
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 20,
+        "w": 96,
+        "h": 24,
+        "text": "Łódź",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "in": {
+         "type": "clip",
+         "dir": "left",
+         "dur": 0.45,
+         "delay": 0.12
+        },
+        "out": {
+         "type": "clip",
+         "dir": "right",
+         "dur": 0.3
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "dock": [
+    {
+     "target": "page:15105|page:15107",
+     "dx": 0,
+     "dy": 55,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "trio_na_zywo_lewa",
+   "name": "NA ŻYWO lewa",
+   "layer": "z1_na_zywo_lewa",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "NA ŻYWO lewa",
+     "props": {
+      "x": 50,
+      "y": 50,
+      "w": 164,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 114,
+        "h": 24,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_na_zywo_prawo",
+   "name": "NA ŻYWO prawo",
+   "layer": "z1_na_zywo_prawo",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "NA ŻYWO prawo",
+     "props": {
+      "x": 1692,
+      "y": 50,
+      "w": 178,
+      "h": 50
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 178,
+        "h": 50,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 17.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 8,
+        "w": 128,
+        "h": 34,
+        "text": "NA ŻYWO",
+        "font": "Arial",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_na_zywo_lewo_dol",
+   "name": "NA ŻYWO lewo dol",
+   "layer": "z1_na_zywo_lewo_dol",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "NA ŻYWO lewo dol",
+     "props": {
+      "x": 50,
+      "y": 793,
+      "w": 164,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 19.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 114,
+        "h": 24,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_tylko_w_btb_info",
+   "name": "tylko w btb info",
+   "layer": "z1_tylko_w_btb_info",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "tylko w btb info",
+     "props": {
+      "x": 1597,
+      "y": 50,
+      "w": 273,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 273,
+        "h": 52,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 223,
+        "h": 24,
+        "text": "tylko w btb info",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "dock": [
+    {
+     "target": "page:15105",
+     "dx": -175,
+     "dy": 0,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "trio_wydanie_specjalne",
+   "name": "WYDANIE SPECJALNE",
+   "layer": "z1_wydanie_specjalne",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1.35
+   ],
+   "duration": 1.65,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "WYDANIE SPECJALNE",
+     "props": {
+      "x": 220,
+      "y": 930,
+      "w": 314,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 314,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#7a0000",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 264,
+        "h": 24,
+        "text": "WYDANIE SPECJALNE",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.3,
+       "delay": 0.95,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.3,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "dock": [
+    {
+     "target": "page:15201|page:15002|page:15003",
+     "dx": 0,
+     "dy": -160,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "trio_ticker_szeroki",
+   "name": "Ticker - szeroki",
+   "layer": "z5_ticker_szeroki",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker - szeroki",
+     "props": {
+      "x": 0,
+      "y": 1020,
+      "w": 1920,
+      "h": 60
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 60,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 60,
+        "tickerMode": "crawl",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "speed": 120,
+        "sepStyle": "skew",
+        "sepColor": "#442c2c",
+        "label": "PILNE",
+        "catW": 160,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5,
+        "crawlFrom": "left"
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_ticker_zepsuty",
+   "name": "Ticker - zepsuty",
+   "layer": "z5_ticker_zepsuty",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker - zepsuty",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "roll",
+        "text": "PILNE|PRZYKŁADOWA WIADOMOŚĆ NR 1\nINFO|PRZYKŁADOWA WIADOMOŚĆ NR 2\nPRZYKŁADOWA WIADOMOŚĆ NR 3",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 5,
+        "label": "PILNE",
+        "catW": 160,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_ozdobnik_img",
+   "name": "Ozdobnik - img",
+   "layer": "z9_ozdobnik_img",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ozdobnik - img",
+     "props": {
+      "x": 1594,
+      "y": 699,
+      "w": 252,
+      "h": 252
+     },
+     "children": [
+      {
+       "id": "im1",
+       "type": "image",
+       "name": "logo",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 252,
+        "h": 252,
+        "src": "logo_f0b33a96.webp",
+        "fitMode": "contain"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ],
+   "dock": [
+    {
+     "target": "page:15001",
+     "dx": 0,
+     "dy": -155,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "trio_belka_glowna",
+   "name": "Belka glowna",
+   "layer": "z1_belka_glowna",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.5
+   ],
+   "duration": 0.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka glowna",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#000057",
+        "color2": "#001a80",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 10,
+        "w": 1600,
+        "h": 67,
+        "text": "BELKA GŁÓWNA",
+        "font": "Inter",
+        "size": 48,
+        "weight": "400",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "flip-x",
+       "dir": "bottom",
+       "dur": 0.25,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.2
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_belka_pilne",
+   "name": "Belka - PILNE",
+   "layer": "z1_belka_pilne",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 29,
+        "w": 1600,
+        "h": 96,
+        "text": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ",
+        "font": "Bahnschrift.ttf",
+        "size": 96,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 1,
+         "delay": 0.2
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_wizytowka_pilne",
+   "name": "Wizytówka - PILNE",
+   "layer": "z1_wizytowka_pilne",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    },
+    "subtitle": {
+     "label": "Podtytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Wizytówka - PILNE",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 13,
+        "w": 1600,
+        "h": 49,
+        "text": "Karol Nawrocki",
+        "font": "Inter",
+        "size": 40,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 1,
+         "delay": 0.2
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "subtitle",
+       "props": {
+        "x": 30,
+        "y": 68,
+        "w": 1600,
+        "h": 39,
+        "text": "Prezydent RP",
+        "font": "Inter",
+        "size": 32,
+        "weight": "400",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "subtitle"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_wizytowka_normalna",
+   "name": "Wizytówka - normalna",
+   "layer": "z1_wizytowka_normalna",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    },
+    "subtitle": {
+     "label": "Podtytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Wizytówka - normalna",
+     "props": {
+      "x": 220,
+      "y": 825,
+      "w": 1650,
+      "h": 150
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 150,
+        "color": "#170033",
+        "color2": "#0134ad",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 13,
+        "w": 1600,
+        "h": 49,
+        "text": "Karol Nawrocki",
+        "font": "Inter",
+        "size": 40,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 1,
+         "delay": 0.2
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "subtitle",
+       "props": {
+        "x": 30,
+        "y": 68,
+        "w": 1600,
+        "h": 39,
+        "text": "Prezydent RP",
+        "font": "Inter",
+        "size": 32,
+        "weight": "400",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "subtitle"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "trio_ticker_pilne",
+   "name": "Ticker - Pilne",
+   "layer": "z5_ticker_pilne",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker - Pilne",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "whip",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 6,
+        "label": "BTB",
+        "catW": 127,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "id": "trio_p15001",
+   "number": 15001,
+   "name": "Belka glowna – BELKA GŁÓWNA",
+   "scene": "trio_belka_glowna",
+   "values": {
+    "title": "BELKA GŁÓWNA"
+   }
+  },
+  {
+   "id": "trio_p15002",
+   "number": 15002,
+   "name": "Belka - PILNE – SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REP",
+   "scene": "trio_belka_pilne",
+   "values": {
+    "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
+   }
+  },
+  {
+   "id": "trio_p15003",
+   "number": 15003,
+   "name": "Wizytówka - PILNE – Karol Nawrocki",
+   "scene": "trio_wizytowka_pilne",
+   "values": {
+    "title": "Karol Nawrocki",
+    "subtitle": "Prezydent RP"
+   }
+  },
+  {
+   "id": "trio_p15004",
+   "number": 15004,
+   "name": "Wizytówka - normalna – Karol Nawrocki",
+   "scene": "trio_wizytowka_normalna",
+   "values": {
+    "title": "Karol Nawrocki",
+    "subtitle": "Prezydent RP"
+   }
+  },
+  {
+   "id": "trio_p15101",
+   "number": 15101,
+   "name": "MIASTO lewa – BIAŁYSTOK",
+   "scene": "trio_miasto_lewa",
+   "values": {
+    "title": "BIAŁYSTOK"
+   }
+  },
+  {
+   "id": "trio_p15102",
+   "number": 15102,
+   "name": "Z ostatniej chwili – tesrt",
+   "scene": "trio_z_ostatniej_chwili",
+   "values": {
+    "title": "tesrt"
+   }
+  },
+  {
+   "id": "trio_p15103",
+   "number": 15103,
+   "name": "MIASTO prawa – Łódź",
+   "scene": "trio_miasto_prawa",
+   "values": {
+    "title": "Łódź"
+   }
+  },
+  {
+   "id": "trio_p15104",
+   "number": 15104,
+   "name": "NA ŻYWO lewa – na żywo",
+   "scene": "trio_na_zywo_lewa",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "trio_p15105",
+   "number": 15105,
+   "name": "NA ŻYWO prawo – NA ŻYWO",
+   "scene": "trio_na_zywo_prawo",
+   "values": {
+    "title": "NA ŻYWO"
+   }
+  },
+  {
+   "id": "trio_p15106",
+   "number": 15106,
+   "name": "NA ŻYWO lewo dol – na żywo",
+   "scene": "trio_na_zywo_lewo_dol",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "trio_p15107",
+   "number": 15107,
+   "name": "tylko w btb info – tylko w btb info",
+   "scene": "trio_tylko_w_btb_info",
+   "values": {
+    "title": "tylko w btb info"
+   }
+  },
+  {
+   "id": "trio_p15108",
+   "number": 15108,
+   "name": "WYDANIE SPECJALNE – WYDANIE SPECJALNE",
+   "scene": "trio_wydanie_specjalne",
+   "values": {
+    "title": "WYDANIE SPECJALNE"
+   }
+  },
+  {
+   "id": "trio_p15109",
+   "number": 15109,
+   "name": "MIASTO prawa – Łódź",
+   "scene": "trio_miasto_prawa",
+   "values": {
+    "title": "Łódź"
+   }
+  },
+  {
+   "id": "trio_p15201",
+   "number": 15201,
+   "name": "TICKER PEŁNY EKRAN",
+   "scene": "trio_ticker_pelny_ekran",
+   "values": {
+    "items": "70. RAJD POLSKI: ROBERT KUBICA WYGRAŁ ETAP GÓRSKI PRZEDOSTATNIEGO DNIA\nWYNIKI NA ŻYWO: KUBICA AWANSOWAŁ NA PODIUM RAJDU POLSKI\nSPORTOWE EMOCJE: DRAMATYCZNA WALKA O WYNIK W OSTATNIM OKRĄŻENIU\nORGANIZATORZY RAJDU POTWIERDZAJĄ: REKORDOWA FREKWENCJA NA TRASIE"
+   }
+  },
+  {
+   "id": "trio_p15202",
+   "number": 15202,
+   "name": "Ticker - szeroki",
+   "scene": "trio_ticker_szeroki",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+    "wiper_text": "PILNE"
+   }
+  },
+  {
+   "id": "trio_p15203",
+   "number": 15203,
+   "name": "Ticker - zepsuty",
+   "scene": "trio_ticker_zepsuty",
+   "values": {
+    "items": "PILNE|PRZYKŁADOWA WIADOMOŚĆ NR 1\nINFO|PRZYKŁADOWA WIADOMOŚĆ NR 2\nPRZYKŁADOWA WIADOMOŚĆ NR 3",
+    "wiper_text": "PILNE"
+   }
+  },
+  {
+   "id": "trio_p15204",
+   "number": 15204,
+   "name": "Ticker - Pilne",
+   "scene": "trio_ticker_pilne",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+    "wiper_text": "BTB"
+   }
+  },
+  {
+   "id": "trio_p15301",
+   "number": 15301,
+   "name": "zegarek",
+   "scene": "trio_zegarek",
+   "values": {}
+  },
+  {
+   "id": "trio_p15401",
+   "number": 15401,
+   "name": "Ozdobnik - img",
+   "scene": "trio_ozdobnik_img",
+   "values": {}
+  }
+ ],
+ "playlists": []
+}

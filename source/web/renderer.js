@@ -105,8 +105,9 @@ export const TYPES = {
 export const FONTS = ['Barlow Condensed', 'Barlow', 'Inter', 'Oswald', 'Bebas Neue', 'Roboto Condensed', 'Montserrat', 'Anton', 'Archivo Black', 'Teko', 'Roboto Mono', 'Playfair Display', 'Arial'];
 export const EASES = ['inout', 'out', 'in', 'linear', 'back', 'hold'];
 
-export const LAYER_Z = { back: 10, main: 20, front: 30 };
-export const layerZ = (n) => LAYER_Z[n] ?? 25;
+export const LAYER_Z = { back: 1000, main: 2000, front: 3000 };
+// inne nazwy między main a front; `z<N>_nazwa` (N 0–99) – kolejność wg N jak numer warstwy w BTB CG
+export const layerZ = (n) => LAYER_Z[n] ?? 2500 + (+(/^z(\d{1,2})_/.exec(n) || [])[1] || 0);
 
 // ------------------------------------------------------------------ pomocnicze
 let _id = 0;
@@ -1469,7 +1470,7 @@ export class LayerHost {
   }
   /**
    * Powiązania (dock): scena z regułami `dock` przesuwa się, gdy wskazana grafika jest na antenie
-   * (`layer:<nazwa>`, `page:<numer>`, `scene:<nazwa>`). Własna warstwa nie wyzwala własnej reguły.
+   * (`layer:<nazwa>`, `page:<numer>`, `scene:<nazwa>`, kilka: `a|b`). Własna warstwa nie wyzwala własnej reguły.
    */
   recomputeDock() {
     const air = [];
@@ -1479,8 +1480,11 @@ export class LayerHost {
       let dx = 0, dy = 0, dur = 0.6;
       if (!this.dockOff.has(name)) {
         for (const r of p.scene?.dock || []) {
-          const [kind, ...rest] = String(r.target || '').split(':'); const val = rest.join(':');
-          const hit = air.some((a) => a.layer !== name && (kind === 'layer' ? a.layer === val : kind === 'page' ? String(a.page) === val : kind === 'scene' ? a.scene === val : false));
+          // kilka celów „a|b”: przesunięcie raz, gdy na antenie jest którykolwiek (jak dokowanie do wielu rodziców w BTB)
+          const hit = String(r.target || '').split('|').some((t) => {
+            const [kind, ...rest] = t.split(':'); const val = rest.join(':');
+            return air.some((a) => a.layer !== name && (kind === 'layer' ? a.layer === val : kind === 'page' ? String(a.page) === val : kind === 'scene' ? a.scene === val : false));
+          });
           if (hit) { dx += +r.dx || 0; dy += +r.dy || 0; dur = r.dur ?? dur; }
         }
       }

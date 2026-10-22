@@ -75,7 +75,7 @@ Odpowiedniki pojęć Viz:
 - Wyjście po ponownym połączeniu dostaje `snapshot` i odtwarza stan anteny bez migotania: grafiki stają w swoich stop pointach.
 - Błąd w jednym węźle sceny nie psuje reszty: węzeł jest ukrywany, a wyjście zgłasza błąd do serwera (`/api/report`, znacznik „⚠ błędy scen” w Trio).
 
-Kolejność warstw na wyjściu: `back` (10) < `main` (20) < `front` (30); inne nazwy mają poziom 25 (między `main` a `front`).
+Kolejność warstw na wyjściu: `back` < `main` < inne nazwy < `front`. Warstwy `z<N>_nazwa` (N 0–99, np. `z5_ticker`) układają się nad innymi nazwami wg N (większe wyżej) – jak numer warstwy w BTB CG; zawsze pod `front`.
 
 ## 3. Model danych (show)
 
@@ -203,7 +203,7 @@ Pole wyboru na poziomie sceny (`fieldMeta.<pole> = {type: "select", options: [..
 ### 4.6 Powiązania (dock)
 
 `scene.dock = [{ target, dx, dy, dur }]` – scena przesuwa się o (`dx`, `dy`) w czasie `dur` s, gdy na antenie jest wskazana grafika:
-`layer:<warstwa>`, `page:<numer>` albo `scene:<nazwa>`. Przykład: belka unosi się o 90 px, gdy na warstwie `back` jest ticker.
+`layer:<warstwa>`, `page:<numer>` albo `scene:<nazwa>`; kilka celów rozdzielonych `|` (np. `page:15001|page:15002`) – przesunięcie raz, gdy na antenie jest którykolwiek. Przykład: belka unosi się o 90 px, gdy na warstwie `back` jest ticker.
 Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warstwa>/off`). Stan jest odtwarzany po odświeżeniu wyjścia.
 
 ### 4.7 Fonty
@@ -632,6 +632,7 @@ node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porów
 | `tools/sync-btb.sh [--check]` | odświeżenie `text-model.js` i wektorów z BTB-CG, wykrycie rozjazdu |
 | `tools/build-btb-pack.mjs` | odbudowa `examples/archiwum/BTB_CG` ze wzorców BTB CG |
 | `tools/measure-btb-alpha.cjs`, `tools/build-btb-alpha.mjs` | grafiki gałęzi alpha BTB CG (szablony HTML/CSS/JS): pomiar DOM na wyjściu działającego serwera BTB → `examples/archiwum/BTB_ALPHA/zrodlo.json`, potem sceny i strony → `BTB_ALPHA/show.json` (paczka `BTB_ALPHA.cgpack`) |
+| `tools/build-btb-trio.mjs`, `tools/btb-measure-lib.mjs` | grafiki gałęzi TRIO BTB CG z powiązaniami: pomiar tym samym skryptem → `examples/archiwum/BTB_TRIO/zrodlo.json`, sceny, strony i `scene.dock` → `BTB_TRIO/show.json` (paczka `BTB_TRIO.cgpack`); wspólne funkcje pomiar → węzły w `btb-measure-lib.mjs` |
 | `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |

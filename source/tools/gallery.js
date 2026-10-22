@@ -25,6 +25,7 @@ const SETS = [
   ['BTB_CG', 'examples/archiwum/BTB_CG/show.json', 'examples/archiwum/BTB_CG/assets'],
   ['BTB_PILNE', 'examples/archiwum/BTB_PILNE.show.json', 'examples/archiwum/BTB_CG/assets'],
   ['BTB_ALPHA', 'examples/archiwum/BTB_ALPHA/show.json', 'examples/archiwum/BTB_CG/assets', 'examples/archiwum/BTB_ALPHA/assets'],
+  ['BTB_TRIO', 'examples/archiwum/BTB_TRIO/show.json', 'examples/archiwum/BTB_CG/assets', 'examples/archiwum/BTB_TRIO/assets'],
 ];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
