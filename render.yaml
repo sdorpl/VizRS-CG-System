@@ -1,0 +1,15 @@
+# Blueprint Render.com: New → Blueprint → wskaż to repozytorium.
+# Darmowy plan: usługa usypia po 15 min bez ruchu i nie ma trwałego dysku –
+# po każdym starcie show wraca do deploy/render/seed/show.json (patrz README).
+# Plan płatny z dyskiem: plan: starter + sekcja disk (mountPath: /var/data, sizeGB: 1).
+services:
+  - type: web
+    name: vizrs
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    autoDeploy: false   # deploy restartuje wyjście OBS – wdrażaj ręcznie, poza anteną
+    envVars:
+      - key: VIZRS_TOKEN
+        sync: false     # Render zapyta o wartość przy tworzeniu (znaki: A-Z a-z 0-9 - _ .)
