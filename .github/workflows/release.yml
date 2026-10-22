@@ -78,6 +78,9 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
+    env:
+      # bez artefaktu „*.dockerbuild” (zapis budowy) – download-artifact w jobie release nie umiał go pobrać
+      DOCKER_BUILD_RECORD_UPLOAD: false
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
@@ -107,6 +110,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          # tylko paczki wydania (bin-*, appimage), bez artefaktów pomocniczych innych akcji
+          pattern: '{bin-*,appimage}'
           merge-multiple: true
       - name: Sumy kontrolne
         run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
