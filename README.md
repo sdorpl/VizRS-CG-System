@@ -1,6 +1,6 @@
 # VizRS — grafika CG na żywo dla OBS Studio (2.0)
 
-Lekki klon duetu **Viz Artist** (projektowanie szablonów) + **Viz Trio** (playout stron),
+System grafiki CG na żywo: **Artist** (projektowanie szablonów) + **Trio** (playout stron),
 napisany w Rust. Grafika renderuje się jako przezroczysta strona 1920×1080, którą
 OBS pobiera przez źródło **Przeglądarka (Browser Source)**.
 
@@ -40,13 +40,9 @@ Opcje: `--port 8088`, `--tcp 6100` (0 = wyłącz), `--bind 127.0.0.1`, `--token 
 | **Operator (Trio)** | **Rundown** (kolejność przeciąganiem, notatki, stany, **NEXT** F8, import/eksport CSV), **skrót klawiszowy strony** (TAKE/OUT), **ARM** (F6) na wyjście **Preview** (`/output?bus=preview`), **makra** i presety segmentów („⇥ z anteny”), komendy zbiorcze `TAKE 1001,3001`, ⚙ **Stan systemu** (zdrowie, błędy scen, kopie, log, Word Replace) |
 | **Pola i tekst** | reguły pola kontrolnego z Artist (maks. znaków, próg ostrzeżenia, linie, jedna linia, WERSALIKI, polska typografia, Tab, podpowiedź, tylko do odczytu), **tekst sformatowany** `{b} {i} {u} {c=#hex} {sz=120}` + `[[wyróżnienie]]` z paskiem formatowania, **Word Replace** (skrót + Ctrl+Spacja), sprawdzanie pisowni przeglądarki (PL), klik w element podglądu → pole |
 | **Wyjście** | `?mode=fill` / `?mode=key` (ATEM/Tricaster), `?bus=preview`, wbudowane fonty offline (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat), izolacja błędów węzłów, odtwarzanie stanu po ponownym połączeniu bez migotania |
-| **Artist** | **powiązania (dock)** scen, markery (→ stop point), zaznaczanie kluczy Shift/ramką, **kopiuj/wklej klucze**, zoom Ctrl+kółko, przeciąganie w drzewie (zmiana rodzica), **biblioteka presetów animacji**, **import z BTB CG** (`.json` v3, `.cgpack`) |
+| **Artist** | **powiązania (dock)** scen, markery (→ stop point), zaznaczanie kluczy Shift/ramką, **kopiuj/wklej klucze**, zoom Ctrl+kółko, przeciąganie w drzewie (zmiana rodzica), **biblioteka presetów animacji** |
 | **Sterowanie** | OSC (`--osc`), webhook (`--webhook`), `/api/variables` dla Companion – patrz [docs/COMPANION.md](docs/COMPANION.md), pełne API: [docs/API.md](docs/API.md) |
 | **Niezawodność** | `rev` i konflikty 409, walidacja danych, odroczone wdrożenie zmian szablonu („Wdróż teraz”), blokady edycji wielu operatorów, `/health`, log audytowy – runbook: [docs/RUNBOOK.md](docs/RUNBOOK.md) |
-
-### Wspólny model tekstu z BTB CG
-`web/text-model.js` to kopia modułu BTB-CG (typografia PL, reguły pola, Word Replace); jej zgodność pilnują wspólne wektory testowe `source/tests/vectors/*.json`.
-Odświeżanie i wykrywanie rozjazdu: `source/tools/sync-btb.sh [--check]`.
 
 ### Usługa systemowa i Docker
 Pliki w `deploy/` (systemd, launchd, Windows/NSSM). Token w `VIZRS_TOKEN`.
@@ -101,7 +97,7 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test                       # silnik, API, parser JSON (w tym testy losowe), ochrona, kopie zapasowe
 cargo build --release
-node tests/vectors/run.js && node tests/vectors/btb.js           # wspólne wektory tekstu i tickera, konwersja BTB
+node tests/vectors/run.js                                       # wektory tekstu i tickera
 node tests/e2e/run.js target/release/vizrs                       # E2E Trio/Output (Playwright; PLAYWRIGHT_DIR=katalog z node_modules)
 node tests/e2e/artist.js target/release/vizrs                    # E2E Artist
 node tests/e2e/golden.js target/release/vizrs [--update]         # zrzuty wzorcowe Outputu (INFO24, R7) – test lokalny
@@ -119,16 +115,16 @@ CI: `.github/workflows/ci.yml` (Linux/macOS/Windows). `vizrs --version` pokazuje
 Parametry wyjścia: `?layers=front` (tylko wybrane warstwy – osobne źródła w OBS),
 `?bg=%2300ff00` (tło chroma), `?w=1280&h=720`, `?checker=1` (podgląd z szachownicą).
 
-## Model (jak w Vizrt)
+## Model
 
-| Vizrt | VizRS |
+| Pojęcie | VizRS |
 |---|---|
-| Scena Viz Artist | scena (drzewo kontenerów: grupa, prostokąt, elipsa, tekst, obraz/wideo, zegar, ticker) |
+| Scena | scena (drzewo kontenerów: grupa, prostokąt, elipsa, tekst, obraz/wideo, zegar, ticker) |
 | Keyframe'y / director | ścieżki animacji z krzywymi (inout, out, in, linear, back, hold) |
 | Stop points | TAKE → 1. stop, CONTINUE → kolejny stop, OUT → od ostatniego stopu do końca |
 | Control Object / Control Text… | ⛓ pole kontrolne na dowolnej właściwości (tekst, kolor, liczba, obraz…) |
 | Template / Page (Trio) | szablon = scena, strona = dane + numer (np. 1001) |
-| Viz layers (back/main/front) | warstwy `back` < `main` < `front` + dowolne własne nazwy |
+| Warstwy | warstwy `back` < `main` < `front` + dowolne własne nazwy |
 | Update | podmiana danych na antenie bez ponownej animacji |
 | Carousel | playlista z czasami, w pętli, odtwarzana przez serwer |
 
@@ -159,15 +155,10 @@ Kompletna oprawa w innej stylistyce (petrol + bursztyn, ścięte krawędzie): be
 belka z wyróżnieniem, podpis, belka z autorem, ticker z logo i zegarem, bug NA ŻYWO, odliczanie, belka programu.
 Wczytaj: Artist → ⇧ Import → `examples/R7_NEWS.cgpack` (najlepiej do nowego show w Trio). Strony 7001–7505.
 
-## Paczka BTB (`examples/BTB.cgpack`)
-
-31 wzorców BTB CG (belki, plakietki, tickery, zegar, logo) z fontem Bahnschrift – paczka nie do dystrybucji. Zawiera też belkę wielowierszową:
-„Belka - PILNE” przerobiona na 1–3 wiersze w układzie belek TVP: `squeeze-lines` z łamaniem
-**„wypełniaj”** (`lineBreak: fill`) – wiersz bierze kolejne słowa, dopóki mieści się po ściśnięciu najwyżej do 90% (`fillSqueeze`),
-reszta przechodzi niżej, każdy wiersz ma własne ściśnięcie, belka rośnie w górę. Strony 8501–8506. Wszystkie paczki: [examples/README.md](examples/README.md).
+Wszystkie paczki: [examples/README.md](examples/README.md).
 
 Podgląd wszystkich grafik przykładowych: `node source/tools/gallery.js` (zrzuty i `index.html` w `<tmp>/vizrs-galeria`).
-Zapisana galeria: [media/galeria/index.html](media/galeria/index.html). Film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080): [media/vizrs_WSZYSTKIE_PACZKI.mp4](media/vizrs_WSZYSTKIE_PACZKI.mp4); nagranie klatka po klatce w czasie wirtualnym: `node source/tools/video.js [ścieżka-do-vizrs] [--only R7,BTB] [--fps 25]` (wymaga ffmpeg). Lista paczek: `source/tools/sets.js`.
+Zapisana galeria: [media/galeria/index.html](media/galeria/index.html). Film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080): [media/vizrs_WSZYSTKIE_PACZKI.mp4](media/vizrs_WSZYSTKIE_PACZKI.mp4); nagranie klatka po klatce w czasie wirtualnym: `node source/tools/video.js [ścieżka-do-vizrs] [--only R7] [--fps 25]` (wymaga ffmpeg). Lista paczek: `source/tools/sets.js`.
 
 ## Elementy dodatkowe (w obu zestawach)
 
