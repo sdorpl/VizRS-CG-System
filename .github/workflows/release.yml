@@ -2,6 +2,7 @@ name: Release
 # Wydanie po wypchnięciu znacznika v* (np. v2.1.0) albo ręcznie (Actions → Release → Run workflow).
 #   binarki vizrs + vizrs-app + vizrs-shell: Windows (.zip), macOS (.tar.gz), Linux (.tar.gz)
 #   AppImage: VizRS Artist i VizRS Trio (Linux x86_64, okno natywne WebKitGTK)
+#   .deb: pakiet Debian/Ubuntu vizrs_<wersja>_amd64.deb (deploy/deb/build.sh)
 #   serwer: obraz Docker ghcr.io/<właściciel>/vizrs:<wersja> i :latest
 on:
   push:
@@ -67,10 +68,13 @@ jobs:
       - run: cargo build --release --locked
         working-directory: source/shell
       - run: deploy/appimage/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "${VERSION#v}" dist && rm -f dist/appimagetool
+      - run: deploy/deb/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "${VERSION#v}" dist
       - uses: actions/upload-artifact@v4
         with:
           name: appimage
-          path: dist/*.AppImage
+          path: |
+            dist/*.AppImage
+            dist/*.deb
 
   docker:
     runs-on: ubuntu-latest
@@ -115,4 +119,5 @@ jobs:
           body: |
             **Serwer (Docker):** `docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data ghcr.io/${{ github.repository_owner }}/vizrs:${{ env.VERSION }}`
             **Linux:** `VizRS-Artist-*.AppImage`, `VizRS-Trio-*.AppImage` (wymaga WebKitGTK 4.1, bez niego okno Chromium; dane w `~/.local/share/vizrs`).
+            **Debian / Ubuntu (22.04+):** `sudo apt install ./vizrs_*_amd64.deb` – okna Artist, Trio i „Trio – serwer zdalny” w menu, usługa `vizrs` (wyłączona).
             **Windows / macOS / Linux:** archiwum z `vizrs`, `vizrs-app`, `vizrs-shell`.

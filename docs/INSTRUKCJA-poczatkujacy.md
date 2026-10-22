@@ -17,6 +17,8 @@
 
 | System | Polecenie |
 |---|---|
+| Debian / Ubuntu | `sudo apt install ./vizrs_2.0.1_amd64.deb` (plik z wydania na GitHub), potem w menu aplikacji **VizRS Trio** / **VizRS Artist** / **VizRS Trio – serwer zdalny** |
+| inny Linux | `VizRS-Trio-…-x86_64.AppImage` / `VizRS-Artist-…AppImage` z wydania na GitHub – nadaj prawo uruchamiania i kliknij |
 | Linux | `./start-linux.sh trio` (okno Trio) albo `./start-linux.sh artist` (okno Artist); `./start-linux.sh` = sam serwer |
 | Windows | raz `build-windows.bat` (wymaga Rust z https://rustup.rs), potem `start-windows.bat` (okno Trio) albo `start-windows.bat artist` |
 | macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data trio` |
