@@ -9,10 +9,11 @@ Paczka nie przenosi playlist.
 | `INFO24.cgpack` | 16 – belka, podpis, autor, program, tytuł, pilne z logo, NA ŻYWO (1 i 2 wiersze), odliczanie, wynik, QR, hashtag, kafel programu, tickery (przewijany, góra-dół, wipe) | 1001–5001 | `tlo_hashtag.jpg` |
 | `R7_NEWS.cgpack` | 13 – ten sam zestaw w stylistyce R7, bez tytułu, pilne z logo i wyniku | 7001–7505 | `tlo_hashtag2.jpg` |
 | `BTB.cgpack` | 31 – wzorce BTB CG i belka PILNE 1–3-wierszowa | 8001–8402, 8501–8506 | `Bahnschrift.ttf`, logo `.webp` |
+| `BTB_INFO24.cgpack` | 16 – zestaw INFO24 w stylistyce BTB (czerwień, żółty akcent, granat, Bahnschrift), generowany z `INFO24.show.json` | 9001–13001 (INFO24 + 8000) | `Bahnschrift.ttf`, `tlo_hashtag.jpg` |
 
 INFO24 to także demo wbudowane w serwer (`source/web/demo_show.json`). Fonty INFO24 i R7 (Barlow, Oswald, …) są wbudowane w serwer.
 
-**BTB.cgpack zawiera font Microsoftu Bahnschrift – nie dystrybuuj tej paczki.** Opis wzorców i znane różnice względem BTB CG:
+**BTB.cgpack i BTB_INFO24.cgpack zawierają font Microsoftu Bahnschrift – nie dystrybuuj tych paczek.** Opis wzorców i znane różnice względem BTB CG:
 [archiwum/BTB_CG/README.md](archiwum/BTB_CG/README.md). Względem 31 wzorców: dołączona belka wielowierszowa,
 usunięty „zegarek (kopia)” (8302), tickery 8202/8203 przemianowane na „Ticker tryby (Whip / Poziomy / Pionowy)” i „Ticker tryby – kategorie”.
 
