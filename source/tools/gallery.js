@@ -18,12 +18,13 @@ const outIdx = args.indexOf('--out');
 const ROOT = path.resolve(__dirname, '../..');
 const OUT = path.resolve(outIdx >= 0 ? args[outIdx + 1] : path.join(os.tmpdir(), 'vizrs-galeria'));
 const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--out') || path.join(__dirname, '../target/release/vizrs'));
-// [nazwa, show.json, katalog assets (opcjonalnie)]
+// [nazwa, show.json, katalogi assets (opcjonalnie)]
 const SETS = [
   ['INFO24', 'examples/archiwum/INFO24.show.json'],
   ['R7', 'examples/archiwum/R7_NEWS.show.json'],
   ['BTB_CG', 'examples/archiwum/BTB_CG/show.json', 'examples/archiwum/BTB_CG/assets'],
   ['BTB_PILNE', 'examples/archiwum/BTB_PILNE.show.json', 'examples/archiwum/BTB_CG/assets'],
+  ['BTB_ALPHA', 'examples/archiwum/BTB_ALPHA/show.json', 'examples/archiwum/BTB_CG/assets', 'examples/archiwum/BTB_ALPHA/assets'],
 ];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -41,11 +42,11 @@ function nodeTypes(nodes) {
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
   const sections = [];
-  for (const [setName, file, assets] of SETS) {
+  for (const [setName, file, ...assets] of SETS) {
     const port = 19000 + Math.floor(Math.random() * 900);
     const data = fs.mkdtempSync(path.join(os.tmpdir(), 'vizrs-gal-'));
     fs.copyFileSync(path.join(ROOT, file), path.join(data, 'show.json'));
-    if (assets) fs.cpSync(path.join(ROOT, assets), path.join(data, 'assets'), { recursive: true });
+    for (const a of assets) fs.cpSync(path.join(ROOT, a), path.join(data, 'assets'), { recursive: true });
     const srv = spawn(BIN, ['--port', String(port), '--tcp', '0', '--data', data], { stdio: 'ignore' });
     const B = `http://127.0.0.1:${port}`;
     const cards = [];

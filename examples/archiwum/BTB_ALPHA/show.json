@@ -1,0 +1,6430 @@
+{
+ "name": "BTB CG alpha – grafiki przeniesione",
+ "scenes": [
+  {
+   "id": "alpha_pilne_ocg",
+   "name": "PILNE (OCG)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "PILNE (OCG)",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "whip",
+        "text": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBTB INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 6
+       },
+       "fields": {
+        "text": "items"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_unified_v3",
+   "name": "Ticker Unified V3",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Unified V3",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "crawl",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nasdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "speed": 180,
+        "sepStyle": "skew",
+        "sepColor": "#442c2c",
+        "label": "POLSKA",
+        "catW": 218,
+        "catBg": "#ff0055",
+        "catFg": "#ffffff",
+        "labelSize": 35,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_unified_v3_2",
+   "name": "Ticker Unified V3 2",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Unified V3",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "roll",
+        "text": "POLSKA|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPOLSKA|SZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPOLSKA|asdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nŚWIAT|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nŚWIAT|TEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nŚWIAT|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nBIZNES|USA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nBIZNES|PILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 3,
+        "label": "POLSKA",
+        "catW": 218,
+        "catBg": "#ff0055",
+        "catFg": "#ffffff",
+        "labelSize": 35,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_unified_v3_3",
+   "name": "Ticker Unified V3 3",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Unified V3",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "roll",
+        "text": "POLSKA|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPOLSKA|SZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPOLSKA|asdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nŚWIAT|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nŚWIAT|TEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nŚWIAT|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nBIZNES|USA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nBIZNES|PILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 5
+       },
+       "fields": {
+        "text": "items"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp",
+   "name": "belka exp",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "belka exp",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1728,
+      "h": 20
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 20,
+        "color": "#ffffff"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp_2",
+   "name": "belka exp 2",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "belka exp",
+     "props": {
+      "x": 180,
+      "y": 855,
+      "w": 1728,
+      "h": 110
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 110,
+        "color": "#7e3e3e"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 18,
+        "w": 1678,
+        "h": 72,
+        "text": "Sample Title",
+        "font": "Arial",
+        "size": 64,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.5,
+       "ease": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp_3",
+   "name": "belka exp 3",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "belka exp",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1728,
+      "h": 62
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 62,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 5,
+        "w": 1678,
+        "h": 52,
+        "text": "Sample Title",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp_z_grafika",
+   "name": "Belka EXP z Grafiką",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka EXP z Grafiką",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1728,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 52,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 5,
+        "w": 1678,
+        "h": 42,
+        "text": "Tytuł z grafiką",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp_z_grafika_2",
+   "name": "Belka EXP z Grafiką 2",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka EXP z Grafiką",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1728,
+      "h": 61
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 61,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "im2",
+       "type": "image",
+       "name": "grafika",
+       "props": {
+        "x": 1639,
+        "y": 5,
+        "w": 59,
+        "h": 51,
+        "src": "grafika_f789a479.webp",
+        "fitMode": "contain"
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 10,
+        "w": 1678,
+        "h": 42,
+        "text": "Tytuł z grafiką",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp_z_grafika_3",
+   "name": "Belka EXP z Grafiką 3",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka EXP z Grafiką",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 304,
+      "h": 189
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 189,
+        "color": "#233c76"
+       }
+      },
+      {
+       "id": "im2",
+       "type": "image",
+       "name": "grafika",
+       "props": {
+        "x": 241,
+        "y": 65,
+        "w": 63,
+        "h": 59,
+        "src": "grafika_ec91e371.png",
+        "fitMode": "contain"
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 30,
+        "w": 195,
+        "h": 138,
+        "text": "Tytuł z grafiką",
+        "font": "Bahnschrift.ttf",
+        "size": 48,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze-lines",
+        "squeezeMin": 0.5,
+        "maxLines": 2,
+        "lineBreak": "fill",
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_miasto_lewa",
+   "name": "MIASTO lewa",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "MIASTO lewa",
+     "props": {
+      "x": 50,
+      "y": 50,
+      "w": 164,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 16,
+        "y": 20,
+        "w": 140,
+        "h": 24,
+        "text": "BIAŁYSTOK",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_z_osoatniej_chwili",
+   "name": "Z osoatniej chwili",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Z osoatniej chwili",
+     "props": {
+      "x": 220,
+      "y": 930,
+      "w": 271,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 271,
+        "h": 58,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 16,
+        "y": 20,
+        "w": 247,
+        "h": 24,
+        "text": "Z OSTATNIEJ CHWILI",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_miasto_prawa",
+   "name": "MIASTO prawa",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "MIASTO prawa",
+     "props": {
+      "x": 1774,
+      "y": 50,
+      "w": 96,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 20,
+        "w": 96,
+        "h": 24,
+        "text": "Łódź",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_miasto",
+   "name": "Belka Miasto",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka Miasto",
+     "props": {
+      "x": 50,
+      "y": 100,
+      "w": 300,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 300,
+        "h": 58,
+        "color": "#ffffff",
+        "color2": "#894848",
+        "gradAngle": 135,
+        "radius": 4
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 16,
+        "y": 20,
+        "w": 276,
+        "h": 24,
+        "text": "WARSZAWA/Mokotów",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_miasto_2",
+   "name": "Belka Miasto 2",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka Miasto",
+     "props": {
+      "x": 100,
+      "y": 150,
+      "w": 296,
+      "h": 87
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 296,
+        "h": 87,
+        "color": "#ffffff",
+        "radius": 6
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 24,
+        "y": 12,
+        "w": 256,
+        "h": 63,
+        "text": "WARSZAWA",
+        "font": "Bahnschrift.ttf",
+        "size": 45,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_modern_lower_third",
+   "name": "Modern Lower Third",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Modern Lower Third",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 355,
+      "h": 92
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "modern-plate",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 355,
+        "h": 92,
+        "color": "#0f172a",
+        "radius": 12,
+        "borderWidth": 1,
+        "borderColor": "#ffffff1a"
+       },
+       "motion": {
+        "bg": "shimmer"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 25,
+        "w": 355,
+        "h": 42,
+        "text": "TESTING JETSKI",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_na_zywo_lewa",
+   "name": "NA ŻYWO lewa",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "NA ŻYWO lewa",
+     "props": {
+      "x": 50,
+      "y": 50,
+      "w": 164,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 114,
+        "h": 24,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_na_zywo_prawo",
+   "name": "NA ŻYWO prawo",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "NA ŻYWO prawo",
+     "props": {
+      "x": 1706,
+      "y": 50,
+      "w": 164,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 114,
+        "h": 24,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_na_zywo_lewo_dol",
+   "name": "NA ŻYWO lewo dol",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "NA ŻYWO lewo dol",
+     "props": {
+      "x": 50,
+      "y": 793,
+      "w": 164,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 164,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#8f2e24",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 19.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 114,
+        "h": 24,
+        "text": "na żywo",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_tylko_w_btb_info",
+   "name": "tylko w btb info",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    1
+   ],
+   "duration": 1.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "tylko w btb info",
+     "props": {
+      "x": 1597,
+      "y": 50,
+      "w": 273,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 273,
+        "h": 52,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 223,
+        "h": 24,
+        "text": "tylko w btb info",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#000000",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.9,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.8,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_wydanie_specjalne",
+   "name": "WYDANIE SPECJALNE",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.5
+   ],
+   "duration": 0.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "WYDANIE SPECJALNE",
+     "props": {
+      "x": 220,
+      "y": 930,
+      "w": 314,
+      "h": 52
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-wrapper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 314,
+        "h": 52,
+        "color": "#b91c1c",
+        "color2": "#7a0000",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 18.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 14,
+        "w": 264,
+        "h": 24,
+        "text": "WYDANIE SPECJALNE",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.3,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.3,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_plakietka_na_zywo",
+   "name": "Plakietka NA ŻYWO",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Plakietka NA ŻYWO",
+     "props": {
+      "x": 100,
+      "y": 100,
+      "w": 206,
+      "h": 58
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "na-zywo-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 206,
+        "h": 58,
+        "color": "#b91c1c",
+        "radius": 4
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "ellipse",
+       "name": "na-zywo-dot",
+       "props": {
+        "x": 16.5,
+        "y": 22.5,
+        "w": 14,
+        "h": 14,
+        "color": "#ffffff"
+       },
+       "motion": {
+        "loop": {
+         "type": "breathe",
+         "dur": 2,
+         "amp": 70
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 42,
+        "y": 8,
+        "w": 156,
+        "h": 42,
+        "text": "NA ŻYWO",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_zegarek",
+   "name": "zegarek",
+   "layer": "clock",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "zegarek",
+     "props": {
+      "x": 50,
+      "y": 990,
+      "w": 152,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-left-panel",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 152,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       }
+      },
+      {
+       "id": "ck3",
+       "type": "clock",
+       "name": "zegar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "font": "Arial",
+        "size": 28,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "spacing": 1,
+        "mode": "time",
+        "format": "HH:mm"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_zegarek_2",
+   "name": "zegarek 2",
+   "layer": "clock",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "zegarek",
+     "props": {
+      "x": 50,
+      "y": 990,
+      "w": 152,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-left-panel",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 152,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "rep-clock",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "color": "#901414",
+        "color2": "#942424",
+        "gradAngle": 160
+       }
+      },
+      {
+       "id": "ck3",
+       "type": "clock",
+       "name": "zegar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 40,
+        "font": "Arial",
+        "size": 28,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "spacing": 1,
+        "mode": "time",
+        "format": "HH:mm"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_logo",
+   "name": "Republika Logo",
+   "layer": "logo",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Logo",
+     "props": {
+      "x": 96,
+      "y": 910,
+      "w": 150,
+      "h": 80
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-logo-box",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 80,
+        "color": "#0047ab"
+       }
+      },
+      {
+       "id": "im2",
+       "type": "image",
+       "name": "logo",
+       "props": {
+        "x": 26,
+        "y": 13,
+        "w": 96,
+        "h": 54,
+        "src": "logo_6b14c687.png",
+        "fitMode": "contain"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_logo_2",
+   "name": "Republika Logo 2",
+   "layer": "logo",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Logo",
+     "props": {
+      "x": 96,
+      "y": 910,
+      "w": 150,
+      "h": 80
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-logo-box",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 80,
+        "color": "#0047ab"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_logo_3",
+   "name": "Republika Logo 3",
+   "layer": "logo",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Logo",
+     "props": {
+      "x": 1594,
+      "y": 699,
+      "w": 252,
+      "h": 252
+     },
+     "children": [
+      {
+       "id": "im1",
+       "type": "image",
+       "name": "logo",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 252,
+        "h": 252,
+        "src": "logo_f0b33a96.webp",
+        "fitMode": "contain"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "slide",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_glowna",
+   "name": "Belka glowna",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.5
+   ],
+   "duration": 0.8,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    },
+    "subtitle": {
+     "label": "Podtytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka glowna",
+     "props": {
+      "x": 220,
+      "y": 856,
+      "w": 1650,
+      "h": 119
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 119,
+        "color": "#000057",
+        "color2": "#001a80",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 13,
+        "w": 1600,
+        "h": 48,
+        "text": "TEST BELEK",
+        "font": "Bahnschrift.ttf",
+        "size": 48,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "subtitle",
+       "props": {
+        "x": 30,
+        "y": 83,
+        "w": 1600,
+        "h": 24,
+        "text": "Font size",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "400",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true,
+        "italic": true
+       },
+       "fields": {
+        "text": "subtitle"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.25,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.2
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_pilne",
+   "name": "Belka pilne",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    },
+    "subtitle": {
+     "label": "Podtytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka pilne",
+     "props": {
+      "x": 220,
+      "y": 856,
+      "w": 1650,
+      "h": 119
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 119,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 13,
+        "w": 1600,
+        "h": 48,
+        "text": "KCOM MNIE ZNISZCZYĆ",
+        "font": "Bahnschrift.ttf",
+        "size": 48,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 1,
+         "delay": 0.2
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "subtitle",
+       "props": {
+        "x": 30,
+        "y": 83,
+        "w": 1600,
+        "h": 24,
+        "text": "zmasowane ataki w stronę Barneja",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "400",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true,
+        "italic": true
+       },
+       "fields": {
+        "text": "subtitle"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_lower_third",
+   "name": "Republika Lower Third",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Lower Third",
+     "props": {
+      "x": 96,
+      "y": 950,
+      "w": 1728,
+      "h": 62
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 62,
+        "color": "#c8102e"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 5,
+        "w": 1678,
+        "h": 52,
+        "text": "MECHANIZM WARUNKOWOŚCI",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_lower_third_2",
+   "name": "Republika Lower Third 2",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Lower Third",
+     "props": {
+      "x": 96,
+      "y": 950,
+      "w": 1728,
+      "h": 62
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 62,
+        "color": "#c8102e"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 5,
+        "w": 1678,
+        "h": 52,
+        "text": "MECHANIZM WARUNKOWOŚCI",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_lower_third_3",
+   "name": "Republika Lower Third 3",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Lower Third",
+     "props": {
+      "x": 96,
+      "y": 950,
+      "w": 1728,
+      "h": 62
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 62,
+        "color": "#ffff00"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 5,
+        "w": 1678,
+        "h": 52,
+        "text": "MECHANIZM WARUNKOWOŚCI",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_lower_third_4",
+   "name": "Republika Lower Third 4",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Lower Third",
+     "props": {
+      "x": 96,
+      "y": 950,
+      "w": 1728,
+      "h": 62
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 62,
+        "color": "#0000ff",
+        "color2": "#00ff00",
+        "gradAngle": 135
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 5,
+        "w": 1678,
+        "h": 52,
+        "text": "MECHANIZM WARUNKOWOŚCI",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_pilny",
+   "name": "Ticker Pilny",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Pilny",
+     "props": {
+      "x": 276,
+      "y": 1960,
+      "w": 1728,
+      "h": 60
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 60,
+        "color": "#d32222",
+        "color2": "#990000",
+        "gradAngle": 135
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 60,
+        "tickerMode": "crawl",
+        "text": "Niespodziewana decyzja banku centralnego w sprawie stóp procentowych, rynki reagują spadkami.\nMasowa ewakuacja mieszkańców na południu kraju w związku z rosnącym poziomem rzek.\nZa kilka minut rozpocznie się specjalna konferencja prasowa premiera dotycząca bezpieczeństwa.\nOgromne utrudnienia w ruchu lotniczym nad Europą z powodu globalnej awarii systemu radarowego.\nOsiągnięto historyczne porozumienie na międzynarodowym szczycie klimatycznym w Genewie.\nKarambol na autostradzie A4, trasa w obu kierunkach jest całkowicie zablokowana.\nRekordowe wzrosty akcji spółek technologicznych po ogłoszeniu nowych przełomowych wynalazków.",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "speed": 160,
+        "sepStyle": "skew",
+        "sepColor": "#f0f0f0"
+       },
+       "fields": {
+        "text": "items"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5,
+       "ease": "ease-in-out"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_lw",
+   "name": "Lw",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Lw",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 335,
+      "h": 82
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "plate",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 335,
+        "h": 82,
+        "color": "#2563eb"
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "plate – krawędź L",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 82,
+        "color": "#facc15"
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 50,
+        "y": 20,
+        "w": 265,
+        "h": 42,
+        "text": "VinciFlow Title",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_lw_2",
+   "name": "Lw 2",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Lw",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 335,
+      "h": 82
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "plate",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 335,
+        "h": 82,
+        "color": "#2563eb"
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "plate – krawędź L",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 82,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 50,
+        "y": 20,
+        "w": 265,
+        "h": 42,
+        "text": "VinciFlow Title",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_lw_3",
+   "name": "Lw 3",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Lw",
+     "props": {
+      "x": 0,
+      "y": 0,
+      "w": 303,
+      "h": 82
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "plate",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 303,
+        "h": 82,
+        "color": "#2563eb"
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "plate – krawędź L",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 82,
+        "color": "#ffffff"
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 50,
+        "y": 20,
+        "w": 233,
+        "h": 42,
+        "text": "VinciFlow Title",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_zwykly",
+   "name": "Ticker zwykły",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker zwykły",
+     "props": {
+      "x": 220,
+      "y": 988,
+      "w": 1650,
+      "h": 42
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 42,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "wiper",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 42,
+        "color": "#ff0000",
+        "shadow": 15
+       },
+       "motion": {
+        "bg": "shimmer"
+       }
+      },
+      {
+       "id": "tk3",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 150,
+        "y": 0,
+        "w": 1500,
+        "h": 42,
+        "tickerMode": "crawl",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Arial",
+        "size": 30,
+        "weight": "700",
+        "color": "#170d4a",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "speed": 200,
+        "sepStyle": "skew",
+        "sepColor": "#e00000"
+       },
+       "fields": {
+        "text": "items"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_pilne_ocg_2",
+   "name": "PILNE (OCG) 2",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "PILNE (OCG)",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "whip",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 6,
+        "label": "PILNE",
+        "catW": 168,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_exp_4",
+   "name": "belka exp 4",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "belka exp",
+     "props": {
+      "x": 150,
+      "y": 850,
+      "w": 2074,
+      "h": 74
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 2074,
+        "h": 74,
+        "color": "#ff0000",
+        "radius": 24
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 36,
+        "y": 6,
+        "w": 2018,
+        "h": 62,
+        "text": "EXPORT TEST TITLE",
+        "font": "Inter",
+        "size": 36,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.6,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-out"
+      },
+      "out": {
+       "type": "fade",
+       "dir": "left",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_belka_pilne_2",
+   "name": "Belka pilne 2",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Belka pilne",
+     "props": {
+      "x": 220,
+      "y": 888,
+      "w": 1650,
+      "h": 87
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-top-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 87,
+        "color": "#c32222",
+        "color2": "#7e0e02",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 10,
+        "w": 1600,
+        "h": 67,
+        "text": "PRZYKŁADOWY TYTUŁ",
+        "font": "Inter",
+        "size": 48,
+        "weight": "400",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": -0.5,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "reveal",
+         "dur": 1,
+         "delay": 0.2
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "zoom",
+       "dir": "top",
+       "dur": 0.5,
+       "ease": "ease-in"
+      },
+      "out": {
+       "type": "zoom",
+       "dir": "right",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_pionowy_ocg_style",
+   "name": "Ticker Pionowy (OCG Style)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Pionowy (OCG Style)",
+     "props": {
+      "x": 220,
+      "y": 988,
+      "w": 1650,
+      "h": 42
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 42,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 42,
+        "tickerMode": "roll",
+        "text": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 29.1903,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 4,
+        "label": "PILNE",
+        "catW": 168,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_tryb_whip_poziomy_pionowy",
+   "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "whip",
+        "text": "PILNE|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nINFO|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#ffffff",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 6,
+        "label": "PILNE",
+        "catW": 168,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_unified_v2_whip_scroll_vert",
+   "name": "Ticker Unified V2 (Whip/Scroll/Vert)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Unified V2 (Whip/Scroll/Vert)",
+     "props": {
+      "x": 220,
+      "y": 990,
+      "w": 1650,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "color": "#ffcc00",
+        "color2": "#d3a012",
+        "gradAngle": 160,
+        "radius": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1650,
+        "h": 40,
+        "tickerMode": "roll",
+        "text": "test|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\ncf|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "600",
+        "color": "#362626",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 5,
+        "label": "test",
+        "catW": 150,
+        "catBg": "#901414",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "900",
+        "gleam": 5
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.6
+      },
+      "out": {
+       "type": "slide",
+       "dir": "bottom",
+       "dur": 0.4
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_imie_nazwisko",
+   "name": "OCG: IMIĘ NAZWISKO",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Imię i nazwisko"
+    },
+    "subtitle": {
+     "label": "Funkcja"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: IMIĘ NAZWISKO",
+     "props": {
+      "x": 30,
+      "y": 795,
+      "w": 1575,
+      "h": 170
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "belka podtytułu",
+       "props": {
+        "x": 0,
+        "y": 110,
+        "w": 1575,
+        "h": 60,
+        "color": "#d1d1d1e6",
+        "color2": "#f0f0f0e6",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.7,
+         "delay": 0.25,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "subtitle",
+       "props": {
+        "x": 30,
+        "y": 110,
+        "w": 1500,
+        "h": 60,
+        "text": "Ekspert ds. Geopolityki",
+        "font": "Bahnschrift.ttf",
+        "size": 32,
+        "weight": "400",
+        "color": "#000000",
+        "valign": "middle",
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "subtitle"
+       },
+       "motion": {
+        "textIn": {
+         "type": "fade",
+         "dur": 0.3,
+         "delay": 0.55
+        }
+       }
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "belka główna",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 787.5,
+        "h": 110,
+        "color": "#ffffff",
+        "color2": "#e0e0e0",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "sh4",
+       "type": "rect",
+       "name": "belka główna (2)",
+       "props": {
+        "x": 786.5,
+        "y": 0,
+        "w": 788.5,
+        "h": 110,
+        "color": "#e0e0e0",
+        "color2": "#ffffff",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "sh5",
+       "type": "rect",
+       "name": "cień dolny",
+       "props": {
+        "x": 0,
+        "y": 106,
+        "w": 1575,
+        "h": 4,
+        "color": "#0000001a"
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "tx6",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 0,
+        "w": 1520,
+        "h": 110,
+        "text": "PRZYKŁADOWY TYTUŁ",
+        "font": "Bahnschrift.ttf",
+        "size": 80,
+        "weight": "700",
+        "color": "#000000",
+        "valign": "middle",
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "fade",
+         "dur": 0.33,
+         "delay": 0.27
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_belka_ws",
+   "name": "OCG: BELKA WS",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "tag": {
+     "label": "Tag",
+     "oneLine": true
+    },
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: BELKA WS",
+     "props": {
+      "x": 30,
+      "y": 755,
+      "w": 1575,
+      "h": 215
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tag",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 380,
+        "h": 40,
+        "color": "#e91e63",
+        "color2": "#f44336",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "fade",
+         "dur": 0.3,
+         "delay": 0.35
+        }
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "tag_text",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 380,
+        "h": 40,
+        "text": "WYDANIE SPECJALNE",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "tag"
+       },
+       "motion": {
+        "in": {
+         "type": "fade",
+         "dur": 0.3,
+         "delay": 0.35
+        }
+       }
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "belka",
+       "props": {
+        "x": 0,
+        "y": 40,
+        "w": 787.5,
+        "h": 170,
+        "color": "#4a0404",
+        "color2": "#8b0000",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "sh4",
+       "type": "rect",
+       "name": "belka (2)",
+       "props": {
+        "x": 786.5,
+        "y": 40,
+        "w": 788.5,
+        "h": 170,
+        "color": "#8b0000",
+        "color2": "#ff0000",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "tx5",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 20,
+        "y": 45,
+        "w": 1540,
+        "h": 170,
+        "text": "PRZYKŁADOWY TYTUŁ",
+        "font": "Bahnschrift.ttf",
+        "size": 80,
+        "weight": "700",
+        "color": "#ffffff",
+        "valign": "middle",
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "fade",
+         "dur": 0.15,
+         "delay": 0.55
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_belka_bialo_szara",
+   "name": "OCG: BELKA: BIAŁO-SZARA",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: BELKA: BIAŁO-SZARA",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1575,
+      "h": 116
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "lt-container-v8",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 787.5,
+        "h": 116,
+        "color": "#1e3a8a",
+        "color2": "#000000",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "lt-container-v8 (2)",
+       "props": {
+        "x": 786.5,
+        "y": 0,
+        "w": 788.5,
+        "h": 116,
+        "color": "#000000",
+        "color2": "#1e3a8a",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "lt-container-v8 – krawędź D",
+       "props": {
+        "x": 0,
+        "y": 112,
+        "w": 1575,
+        "h": 4,
+        "color": "#0000001a"
+       }
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 0,
+        "w": 1525,
+        "h": 112,
+        "text": "INFORMACJA DNIA",
+        "font": "Bahnschrift.ttf",
+        "size": 80,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_belka_czerwona",
+   "name": "OCG: BELKA: CZERWONA",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: BELKA: CZERWONA",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 1575,
+      "h": 116
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "lt-container-v8",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 787.5,
+        "h": 116,
+        "color": "#1e3a8a",
+        "color2": "#000000",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "lt-container-v8 (2)",
+       "props": {
+        "x": 786.5,
+        "y": 0,
+        "w": 788.5,
+        "h": 116,
+        "color": "#000000",
+        "color2": "#1e3a8a",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "lt-container-v8 – krawędź D",
+       "props": {
+        "x": 0,
+        "y": 112,
+        "w": 1575,
+        "h": 4,
+        "color": "#0000004d"
+       }
+      },
+      {
+       "id": "tx4",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 0,
+        "w": 1525,
+        "h": 112,
+        "text": "PILNE INFORMACJE",
+        "font": "Bahnschrift.ttf",
+        "size": 80,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_belka_gosc",
+   "name": "OCG: BELKA: GOŚĆ",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    },
+    "subtitle": {
+     "label": "Podtytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: BELKA: GOŚĆ",
+     "props": {
+      "x": 100,
+      "y": 799,
+      "w": 1575,
+      "h": 175
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "nazwa-row",
+       "props": {
+        "x": 0,
+        "y": 1,
+        "w": 787.5,
+        "h": 114,
+        "color": "#1e3a8a",
+        "color2": "#000000",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "nazwa-row (2)",
+       "props": {
+        "x": 786.5,
+        "y": 1,
+        "w": 788.5,
+        "h": 114,
+        "color": "#000000",
+        "color2": "#1e3a8a",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "sh3",
+       "type": "rect",
+       "name": "nazwa-row – krawędź D",
+       "props": {
+        "x": 0,
+        "y": 111,
+        "w": 1575,
+        "h": 4,
+        "color": "#0000001a"
+       }
+      },
+      {
+       "id": "sh4",
+       "type": "rect",
+       "name": "sub-row",
+       "props": {
+        "x": 0,
+        "y": 115,
+        "w": 851,
+        "h": 60,
+        "color": "#1e3a8a",
+        "color2": "#000000",
+        "gradAngle": 90
+       }
+      },
+      {
+       "id": "tx5",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 30,
+        "y": 0,
+        "w": 1525,
+        "h": 112,
+        "text": "JAN KOWALSKI",
+        "font": "Bahnschrift.ttf",
+        "size": 80,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       }
+      },
+      {
+       "id": "tx6",
+       "type": "text",
+       "name": "subtitle",
+       "props": {
+        "x": 30,
+        "y": 123,
+        "w": 801,
+        "h": 45,
+        "text": "Ekspert ds. Geopolityki",
+        "font": "Bahnschrift.ttf",
+        "size": 32,
+        "weight": "400",
+        "color": "#eeeeee",
+        "align": "left",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "subtitle"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_belka_norm",
+   "name": "OCG: BELKA NORM",
+   "layer": "main",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: BELKA NORM",
+     "props": {
+      "x": 30,
+      "y": 795,
+      "w": 1575,
+      "h": 175
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "belka",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 787.5,
+        "h": 170,
+        "color": "#a0a0a0",
+        "color2": "#e6e6e6",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "belka (2)",
+       "props": {
+        "x": 786.5,
+        "y": 0,
+        "w": 788.5,
+        "h": 170,
+        "color": "#e6e6e6",
+        "color2": "#ffffff",
+        "gradAngle": 90
+       },
+       "motion": {
+        "in": {
+         "type": "wipe",
+         "dir": "left",
+         "dur": 0.67,
+         "ease": "power2.inOut"
+        }
+       }
+      },
+      {
+       "id": "tx3",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 20,
+        "y": 5,
+        "w": 1515,
+        "h": 170,
+        "text": "SYSTEM MULTILAYER GOTOWY",
+        "font": "Bahnschrift.ttf",
+        "size": 80,
+        "weight": "700",
+        "color": "#000000",
+        "valign": "middle",
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       },
+       "motion": {
+        "textIn": {
+         "type": "fade",
+         "dur": 0.15,
+         "delay": 0.55
+        }
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_pasek_scroll_crawl",
+   "name": "OCG: PASEK: SCROLL (Crawl)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: PASEK: SCROLL (Crawl)",
+     "props": {
+      "x": 100,
+      "y": 850,
+      "w": 1728,
+      "h": 50
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 50,
+        "color": "#ffffff",
+        "color2": "#dcdcdc",
+        "gradAngle": 180,
+        "shadow": 10
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 50,
+        "tickerMode": "crawl",
+        "text": "KGHM MA NOWEGO PREZESA\nTRUMP ZAPOWIADA KOLEJNE CŁA",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "400",
+        "color": "#000000",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "speed": 80,
+        "sepStyle": "square",
+        "sepColor": "#7f0000"
+       },
+       "fields": {
+        "text": "items"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_tag_bialystok",
+   "name": "OCG: TAG: BIAŁYSTOK",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: TAG: BIAŁYSTOK",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 190,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "live-tag",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 40,
+        "color": "#ffffff",
+        "color2": "#404040",
+        "gradAngle": 315,
+        "shadow": 10
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 3,
+        "w": 190,
+        "h": 35,
+        "text": "BIAŁYSTOK",
+        "font": "Bahnschrift.ttf",
+        "size": 25,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_tag_na_zywo",
+   "name": "OCG: TAG: NA ŻYWO",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: TAG: NA ŻYWO",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 190,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "live-tag",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 40,
+        "color": "#4a0404",
+        "color2": "#8b0000",
+        "gradAngle": 315,
+        "shadow": 10,
+        "borderWidth": 2,
+        "borderColor": "#ffffff"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 3,
+        "w": 190,
+        "h": 35,
+        "text": "NA ŻYWO",
+        "font": "Bahnschrift.ttf",
+        "size": 25,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_tag_powtorka",
+   "name": "OCG: TAG: POWTÓRKA",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł"
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: TAG: POWTÓRKA",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 190,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "live-tag",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 40,
+        "color": "#ffffff",
+        "color2": "#404040",
+        "gradAngle": 315,
+        "shadow": 10,
+        "borderWidth": 2,
+        "borderColor": "#020202"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 3,
+        "w": 190,
+        "h": 35,
+        "text": "POWTÓRKA",
+        "font": "Bahnschrift.ttf",
+        "size": 25,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "lineHeight": 1.4,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5,
+        "spacing": 1,
+        "upper": true
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_tag_wydanie_specjalne",
+   "name": "OCG: TAG: WYDANIE SPECJALNE",
+   "layer": "badge",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "title": {
+     "label": "Tytuł",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: TAG: WYDANIE SPECJALNE",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 380,
+      "h": 40
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "live-tag",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 380,
+        "h": 40,
+        "color": "#e91e63",
+        "color2": "#f44336",
+        "gradAngle": 135,
+        "borderWidth": 2,
+        "borderColor": "#ffffff",
+        "shadow": 10
+       },
+       "motion": {
+        "bg": "shimmer"
+       }
+      },
+      {
+       "id": "tx2",
+       "type": "text",
+       "name": "title",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 380,
+        "h": 40,
+        "text": "WYDANIE SPECJALNE",
+        "font": "Bahnschrift.ttf",
+        "size": 24,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "center",
+        "valign": "middle",
+        "upper": true,
+        "spacing": 1,
+        "textFit": "squeeze",
+        "squeezeMin": 0.5
+       },
+       "fields": {
+        "text": "title"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.6,
+       "ease": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.4
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ocg_pasek_wiadomosci_rotacyjne_wiper",
+   "name": "OCG: PASEK: WIADOMOŚCI ROTACYJNE (Wiper)",
+   "layer": "clock",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.7
+   ],
+   "duration": 1.1,
+   "fieldMeta": {},
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "OCG: PASEK: WIADOMOŚCI ROTACYJNE (Wiper)",
+     "props": {
+      "x": 100,
+      "y": 800,
+      "w": 190,
+      "h": 176
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "widget-container",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 170,
+        "color": "#000000",
+        "shadow": 10
+       }
+      },
+      {
+       "id": "sh2",
+       "type": "rect",
+       "name": "clock-top",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 82,
+        "color": "#f0f0f0",
+        "color2": "#c0c0c0",
+        "gradAngle": 135
+       },
+       "motion": {
+        "bg": "shimmer"
+       }
+      },
+      {
+       "id": "ck3",
+       "type": "clock",
+       "name": "zegar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 82,
+        "mode": "time",
+        "format": "HH:mm",
+        "font": "Bahnschrift.ttf",
+        "size": 65,
+        "weight": "400",
+        "color": "#000000",
+        "align": "center",
+        "valign": "middle"
+       }
+      },
+      {
+       "id": "sh4",
+       "type": "rect",
+       "name": "info-bottom",
+       "props": {
+        "x": 0,
+        "y": 88,
+        "w": 190,
+        "h": 82,
+        "color": "#8b0000"
+       }
+      },
+      {
+       "id": "tx5",
+       "type": "text",
+       "name": "btb",
+       "props": {
+        "x": 0,
+        "y": 88,
+        "w": 118,
+        "h": 82,
+        "text": "BTB",
+        "font": "Arial",
+        "size": 38,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "right",
+        "valign": "middle",
+        "textFit": "none"
+       }
+      },
+      {
+       "id": "tx6",
+       "type": "text",
+       "name": "info",
+       "props": {
+        "x": 120,
+        "y": 94,
+        "w": 70,
+        "h": 82,
+        "text": "INFO",
+        "font": "Arial",
+        "size": 18,
+        "weight": "700",
+        "color": "#ffffff",
+        "align": "left",
+        "valign": "middle",
+        "textFit": "none"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "pop",
+       "dur": 0.6,
+       "ease": "back.out"
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.4
+      },
+      "origin": [
+       0.5,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_republika_ticker_cycling",
+   "name": "Republika Ticker (Cycling)",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Republika Ticker (Cycling)",
+     "props": {
+      "x": 96,
+      "y": 980,
+      "w": 1728,
+      "h": 60
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "rep-bottom-bar",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 60,
+        "color": "#002d5e"
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 1728,
+        "h": 60,
+        "tickerMode": "roll",
+        "hold": 5,
+        "text": "Pierwsza wiadomość\nDruga wiadomość\nTrzecia wiadomość",
+        "font": "Bahnschrift.ttf",
+        "size": 30,
+        "weight": "800",
+        "color": "#ffffff",
+        "upper": true,
+        "label": "PILNE",
+        "catW": 170,
+        "catBg": "#ff0000",
+        "catFg": "#ffffff",
+        "labelSize": 35,
+        "labelWeight": "900",
+        "gleam": 5,
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0.5
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "alpha_ticker_pionowy",
+   "name": "Ticker Pionowy",
+   "layer": "ticker",
+   "width": 1920,
+   "height": 1080,
+   "stops": [
+    0.6
+   ],
+   "duration": 1.1,
+   "fieldMeta": {
+    "items": {
+     "label": "Wiadomości"
+    },
+    "wiper_text": {
+     "label": "Etykieta (wiper)",
+     "oneLine": true
+    }
+   },
+   "nodes": [
+    {
+     "id": "grp",
+     "type": "group",
+     "name": "Ticker Pionowy",
+     "props": {
+      "x": 50,
+      "y": 970,
+      "w": 800,
+      "h": 60
+     },
+     "children": [
+      {
+       "id": "sh1",
+       "type": "rect",
+       "name": "tło paska",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 800,
+        "h": 60,
+        "color": "#1e3a8a"
+       }
+      },
+      {
+       "id": "tk2",
+       "type": "ticker",
+       "name": "ticker",
+       "props": {
+        "x": 0,
+        "y": 0,
+        "w": 800,
+        "h": 60,
+        "tickerMode": "roll",
+        "text": "Przykładowa wiadomość pionowa nr 1\nKolejna ważna informacja\nTrzecia wiadomość tickera",
+        "font": "Arial",
+        "size": 30,
+        "weight": "800",
+        "color": "#ffffff",
+        "textFit": "squeeze-shrink",
+        "squeezeMin": 0.6,
+        "upper": true,
+        "hold": 5,
+        "label": "AKTUALNOŚCI",
+        "catW": 281,
+        "catBg": "#3b82f6",
+        "catFg": "#ffffff",
+        "labelSize": 30,
+        "labelWeight": "800"
+       },
+       "fields": {
+        "text": "items",
+        "label": "wiper_text"
+       }
+      }
+     ],
+     "motion": {
+      "in": {
+       "type": "slide",
+       "dir": "left",
+       "dur": 0.5
+      },
+      "out": {
+       "type": "fade",
+       "dur": 0.5
+      },
+      "origin": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "id": "alpha_p14201",
+   "number": 14201,
+   "name": "PILNE (OCG)",
+   "scene": "alpha_pilne_ocg",
+   "values": {
+    "items": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBTB INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "alpha_p14202",
+   "number": 14202,
+   "name": "Ticker Unified V3",
+   "scene": "alpha_ticker_unified_v3",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nasdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+    "wiper_text": "POLSKA"
+   }
+  },
+  {
+   "id": "alpha_p14203",
+   "number": 14203,
+   "name": "Ticker Unified V3",
+   "scene": "alpha_ticker_unified_v3_2",
+   "values": {
+    "items": "POLSKA|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPOLSKA|SZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPOLSKA|asdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nŚWIAT|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nŚWIAT|TEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nŚWIAT|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nBIZNES|USA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nBIZNES|PILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+    "wiper_text": "POLSKA"
+   }
+  },
+  {
+   "id": "alpha_p14204",
+   "number": 14204,
+   "name": "Ticker Unified V3",
+   "scene": "alpha_ticker_unified_v3_3",
+   "values": {
+    "items": "POLSKA|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPOLSKA|SZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPOLSKA|asdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nŚWIAT|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nŚWIAT|TEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nŚWIAT|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nBIZNES|USA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nBIZNES|PILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\""
+   }
+  },
+  {
+   "id": "alpha_p14205",
+   "number": 14205,
+   "name": "Ticker Unified V3",
+   "scene": "alpha_ticker_unified_v3",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nasdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+    "wiper_text": "POLSKA"
+   }
+  },
+  {
+   "id": "alpha_p14206",
+   "number": 14206,
+   "name": "Ticker Unified V3",
+   "scene": "alpha_ticker_unified_v3",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nasdadsdfsdfsdfsdfc dssdfsdcsdc dcsc dcsdcsdcdc\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+    "wiper_text": "POLSKA"
+   }
+  },
+  {
+   "id": "alpha_p14001",
+   "number": 14001,
+   "name": "belka exp",
+   "scene": "alpha_belka_exp",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14002",
+   "number": 14002,
+   "name": "belka exp – Sample Title",
+   "scene": "alpha_belka_exp_2",
+   "values": {
+    "title": "Sample Title"
+   }
+  },
+  {
+   "id": "alpha_p14003",
+   "number": 14003,
+   "name": "belka exp – Sample Title",
+   "scene": "alpha_belka_exp_3",
+   "values": {
+    "title": "Sample Title"
+   }
+  },
+  {
+   "id": "alpha_p14004",
+   "number": 14004,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14005",
+   "number": 14005,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika_2",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14006",
+   "number": 14006,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14007",
+   "number": 14007,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14008",
+   "number": 14008,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14009",
+   "number": 14009,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14010",
+   "number": 14010,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14011",
+   "number": 14011,
+   "name": "Belka EXP z Grafiką – Tytuł z grafiką",
+   "scene": "alpha_belka_exp_z_grafika_3",
+   "values": {
+    "title": "Tytuł z grafiką"
+   }
+  },
+  {
+   "id": "alpha_p14101",
+   "number": 14101,
+   "name": "MIASTO lewa – BIAŁYSTOK",
+   "scene": "alpha_miasto_lewa",
+   "values": {
+    "title": "BIAŁYSTOK"
+   }
+  },
+  {
+   "id": "alpha_p14102",
+   "number": 14102,
+   "name": "Z osoatniej chwili – Z OSTATNIEJ CHWILI",
+   "scene": "alpha_z_osoatniej_chwili",
+   "values": {
+    "title": "Z OSTATNIEJ CHWILI"
+   }
+  },
+  {
+   "id": "alpha_p14103",
+   "number": 14103,
+   "name": "MIASTO prawa – Łódź",
+   "scene": "alpha_miasto_prawa",
+   "values": {
+    "title": "Łódź"
+   }
+  },
+  {
+   "id": "alpha_p14104",
+   "number": 14104,
+   "name": "Belka Miasto – WARSZAWA/Mokotów",
+   "scene": "alpha_belka_miasto",
+   "values": {
+    "title": "WARSZAWA/Mokotów"
+   }
+  },
+  {
+   "id": "alpha_p14105",
+   "number": 14105,
+   "name": "Belka Miasto – WARSZAWA",
+   "scene": "alpha_belka_miasto_2",
+   "values": {
+    "title": "WARSZAWA"
+   }
+  },
+  {
+   "id": "alpha_p14106",
+   "number": 14106,
+   "name": "Belka Miasto – WARSZAWA",
+   "scene": "alpha_belka_miasto_2",
+   "values": {
+    "title": "WARSZAWA"
+   }
+  },
+  {
+   "id": "alpha_p14012",
+   "number": 14012,
+   "name": "Modern Lower Third – TESTING JETSKI",
+   "scene": "alpha_modern_lower_third",
+   "values": {
+    "title": "TESTING JETSKI"
+   }
+  },
+  {
+   "id": "alpha_p14107",
+   "number": 14107,
+   "name": "NA ŻYWO lewa – na żywo",
+   "scene": "alpha_na_zywo_lewa",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "alpha_p14108",
+   "number": 14108,
+   "name": "NA ŻYWO prawo – na żywo",
+   "scene": "alpha_na_zywo_prawo",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "alpha_p14109",
+   "number": 14109,
+   "name": "NA ŻYWO lewo dol – na żywo",
+   "scene": "alpha_na_zywo_lewo_dol",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "alpha_p14110",
+   "number": 14110,
+   "name": "tylko w btb info – tylko w btb info",
+   "scene": "alpha_tylko_w_btb_info",
+   "values": {
+    "title": "tylko w btb info"
+   }
+  },
+  {
+   "id": "alpha_p14111",
+   "number": 14111,
+   "name": "WYDANIE SPECJALNE – WYDANIE SPECJALNE",
+   "scene": "alpha_wydanie_specjalne",
+   "values": {
+    "title": "WYDANIE SPECJALNE"
+   }
+  },
+  {
+   "id": "alpha_p14112",
+   "number": 14112,
+   "name": "Plakietka NA ŻYWO – NA ŻYWO",
+   "scene": "alpha_plakietka_na_zywo",
+   "values": {
+    "title": "NA ŻYWO"
+   }
+  },
+  {
+   "id": "alpha_p14301",
+   "number": 14301,
+   "name": "zegarek",
+   "scene": "alpha_zegarek",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14302",
+   "number": 14302,
+   "name": "zegarek",
+   "scene": "alpha_zegarek_2",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14401",
+   "number": 14401,
+   "name": "Republika Logo",
+   "scene": "alpha_republika_logo",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14402",
+   "number": 14402,
+   "name": "Republika Logo",
+   "scene": "alpha_republika_logo_2",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14403",
+   "number": 14403,
+   "name": "Republika Logo",
+   "scene": "alpha_republika_logo_3",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14013",
+   "number": 14013,
+   "name": "Belka glowna – TEST BELEK",
+   "scene": "alpha_belka_glowna",
+   "values": {
+    "title": "TEST BELEK",
+    "subtitle": "Font size"
+   }
+  },
+  {
+   "id": "alpha_p14014",
+   "number": 14014,
+   "name": "Belka pilne – KCOM MNIE ZNISZCZYĆ",
+   "scene": "alpha_belka_pilne",
+   "values": {
+    "title": "KCOM MNIE ZNISZCZYĆ",
+    "subtitle": "zmasowane ataki w stronę Barneja"
+   }
+  },
+  {
+   "id": "alpha_p14015",
+   "number": 14015,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14016",
+   "number": 14016,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14017",
+   "number": 14017,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14018",
+   "number": 14018,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14019",
+   "number": 14019,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third_2",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14020",
+   "number": 14020,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third_2",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14021",
+   "number": 14021,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third_3",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14022",
+   "number": 14022,
+   "name": "Republika Lower Third – MECHANIZM WARUNKOWOŚCI",
+   "scene": "alpha_republika_lower_third_4",
+   "values": {
+    "title": "MECHANIZM WARUNKOWOŚCI"
+   }
+  },
+  {
+   "id": "alpha_p14207",
+   "number": 14207,
+   "name": "Ticker Pilny",
+   "scene": "alpha_ticker_pilny",
+   "values": {
+    "items": "Niespodziewana decyzja banku centralnego w sprawie stóp procentowych, rynki reagują spadkami.\nMasowa ewakuacja mieszkańców na południu kraju w związku z rosnącym poziomem rzek.\nZa kilka minut rozpocznie się specjalna konferencja prasowa premiera dotycząca bezpieczeństwa.\nOgromne utrudnienia w ruchu lotniczym nad Europą z powodu globalnej awarii systemu radarowego.\nOsiągnięto historyczne porozumienie na międzynarodowym szczycie klimatycznym w Genewie.\nKarambol na autostradzie A4, trasa w obu kierunkach jest całkowicie zablokowana.\nRekordowe wzrosty akcji spółek technologicznych po ogłoszeniu nowych przełomowych wynalazków."
+   }
+  },
+  {
+   "id": "alpha_p14023",
+   "number": 14023,
+   "name": "Lw – VinciFlow Title",
+   "scene": "alpha_lw",
+   "values": {
+    "title": "VinciFlow Title"
+   }
+  },
+  {
+   "id": "alpha_p14024",
+   "number": 14024,
+   "name": "Lw – VinciFlow Title",
+   "scene": "alpha_lw_2",
+   "values": {
+    "title": "VinciFlow Title"
+   }
+  },
+  {
+   "id": "alpha_p14025",
+   "number": 14025,
+   "name": "Lw – VinciFlow Title",
+   "scene": "alpha_lw_2",
+   "values": {
+    "title": "VinciFlow Title"
+   }
+  },
+  {
+   "id": "alpha_p14026",
+   "number": 14026,
+   "name": "Lw – VinciFlow Title",
+   "scene": "alpha_lw_3",
+   "values": {
+    "title": "VinciFlow Title"
+   }
+  },
+  {
+   "id": "alpha_p14208",
+   "number": 14208,
+   "name": "Ticker zwykły",
+   "scene": "alpha_ticker_zwykly",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "alpha_p14209",
+   "number": 14209,
+   "name": "PILNE (OCG)",
+   "scene": "alpha_pilne_ocg_2",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+    "wiper_text": "PILNE"
+   }
+  },
+  {
+   "id": "alpha_p14027",
+   "number": 14027,
+   "name": "belka exp",
+   "scene": "alpha_belka_exp_4",
+   "values": {
+    "title": "EXPORT TEST TITLE"
+   }
+  },
+  {
+   "id": "alpha_p14210",
+   "number": 14210,
+   "name": "PILNE (OCG)",
+   "scene": "alpha_pilne_ocg",
+   "values": {
+    "items": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBTB INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "alpha_p14028",
+   "number": 14028,
+   "name": "Belka pilne",
+   "scene": "alpha_belka_pilne_2",
+   "values": {
+    "title": "PRZYKŁADOWY TYTUŁ"
+   }
+  },
+  {
+   "id": "alpha_p14113",
+   "number": 14113,
+   "name": "NA ŻYWO lewa",
+   "scene": "alpha_na_zywo_lewa",
+   "values": {
+    "title": "na żywo"
+   }
+  },
+  {
+   "id": "alpha_p14404",
+   "number": 14404,
+   "name": "Republika Logo",
+   "scene": "alpha_republika_logo_3",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14211",
+   "number": 14211,
+   "name": "Ticker Pionowy (OCG Style)",
+   "scene": "alpha_ticker_pionowy_ocg_style",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+    "wiper_text": "PILNE"
+   }
+  },
+  {
+   "id": "alpha_p14212",
+   "number": 14212,
+   "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
+   "scene": "alpha_ticker_tryb_whip_poziomy_pionowy",
+   "values": {
+    "items": "PILNE|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nINFO|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"",
+    "wiper_text": "PILNE"
+   }
+  },
+  {
+   "id": "alpha_p14213",
+   "number": 14213,
+   "name": "Ticker Unified V2 (Whip/Scroll/Vert)",
+   "scene": "alpha_ticker_unified_v2_whip_scroll_vert",
+   "values": {
+    "items": "test|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\ncf|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+    "wiper_text": "test"
+   }
+  },
+  {
+   "id": "alpha_p14214",
+   "number": 14214,
+   "name": "Ticker zwykły",
+   "scene": "alpha_ticker_zwykly",
+   "values": {
+    "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+   }
+  },
+  {
+   "id": "alpha_p14029",
+   "number": 14029,
+   "name": "OCG: IMIĘ NAZWISKO",
+   "scene": "alpha_ocg_imie_nazwisko",
+   "values": {
+    "title": "PRZYKŁADOWY TYTUŁ",
+    "subtitle": "Ekspert ds. Geopolityki"
+   }
+  },
+  {
+   "id": "alpha_p14030",
+   "number": 14030,
+   "name": "OCG: BELKA WS",
+   "scene": "alpha_ocg_belka_ws",
+   "values": {
+    "tag": "WYDANIE SPECJALNE",
+    "title": "PRZYKŁADOWY TYTUŁ"
+   }
+  },
+  {
+   "id": "alpha_p14031",
+   "number": 14031,
+   "name": "OCG: BELKA: BIAŁO-SZARA",
+   "scene": "alpha_ocg_belka_bialo_szara",
+   "values": {
+    "title": "INFORMACJA DNIA"
+   }
+  },
+  {
+   "id": "alpha_p14032",
+   "number": 14032,
+   "name": "OCG: BELKA: CZERWONA",
+   "scene": "alpha_ocg_belka_czerwona",
+   "values": {
+    "title": "PILNE INFORMACJE"
+   }
+  },
+  {
+   "id": "alpha_p14033",
+   "number": 14033,
+   "name": "OCG: BELKA: GOŚĆ",
+   "scene": "alpha_ocg_belka_gosc",
+   "values": {
+    "title": "JAN KOWALSKI",
+    "subtitle": "Ekspert ds. Geopolityki"
+   }
+  },
+  {
+   "id": "alpha_p14034",
+   "number": 14034,
+   "name": "OCG: BELKA NORM",
+   "scene": "alpha_ocg_belka_norm",
+   "values": {
+    "title": "SYSTEM MULTILAYER GOTOWY"
+   }
+  },
+  {
+   "id": "alpha_p14215",
+   "number": 14215,
+   "name": "OCG: PASEK: SCROLL (Crawl)",
+   "scene": "alpha_ocg_pasek_scroll_crawl",
+   "values": {
+    "items": "KGHM MA NOWEGO PREZESA\nTRUMP ZAPOWIADA KOLEJNE CŁA"
+   }
+  },
+  {
+   "id": "alpha_p14114",
+   "number": 14114,
+   "name": "OCG: TAG: BIAŁYSTOK",
+   "scene": "alpha_ocg_tag_bialystok",
+   "values": {
+    "title": "BIAŁYSTOK"
+   }
+  },
+  {
+   "id": "alpha_p14115",
+   "number": 14115,
+   "name": "OCG: TAG: NA ŻYWO",
+   "scene": "alpha_ocg_tag_na_zywo",
+   "values": {
+    "title": "NA ŻYWO"
+   }
+  },
+  {
+   "id": "alpha_p14116",
+   "number": 14116,
+   "name": "OCG: TAG: POWTÓRKA",
+   "scene": "alpha_ocg_tag_powtorka",
+   "values": {
+    "title": "POWTÓRKA"
+   }
+  },
+  {
+   "id": "alpha_p14117",
+   "number": 14117,
+   "name": "OCG: TAG: WYDANIE SPECJALNE",
+   "scene": "alpha_ocg_tag_wydanie_specjalne",
+   "values": {
+    "title": "WYDANIE SPECJALNE"
+   }
+  },
+  {
+   "id": "alpha_p14501",
+   "number": 14501,
+   "name": "OCG: PASEK: WIADOMOŚCI ROTACYJNE (Wiper)",
+   "scene": "alpha_ocg_pasek_wiadomosci_rotacyjne_wiper",
+   "values": {}
+  },
+  {
+   "id": "alpha_p14216",
+   "number": 14216,
+   "name": "Republika Ticker (Cycling)",
+   "scene": "alpha_republika_ticker_cycling",
+   "values": {
+    "items": "Pierwsza wiadomość\nDruga wiadomość\nTrzecia wiadomość",
+    "wiper_text": "PILNE"
+   }
+  },
+  {
+   "id": "alpha_p14217",
+   "number": 14217,
+   "name": "Ticker Pionowy",
+   "scene": "alpha_ticker_pionowy",
+   "values": {
+    "items": "Przykładowa wiadomość pionowa nr 1\nKolejna ważna informacja\nTrzecia wiadomość tickera",
+    "wiper_text": "AKTUALNOŚCI"
+   }
+  }
+ ],
+ "playlists": []
+}

@@ -1,7 +1,7 @@
 // Paczki grafik .cgpack – jedna paczka = cała oprawa (sceny + strony + grafiki + czcionki):
 //   node tools/build-packs.mjs [katalog-wyjściowy]   (domyślnie examples/)
 // Źródła: examples/archiwum/ (dawne pliki .show.json i katalog BTB_CG).
-// → INFO24.cgpack, R7_NEWS.cgpack, BTB.cgpack, BTB_INFO24.cgpack (BTB* zawierają Bahnschrift – nie do dystrybucji).
+// → INFO24.cgpack, R7_NEWS.cgpack, BTB.cgpack, BTB_INFO24.cgpack, BTB_ALPHA.cgpack (BTB* zawierają Bahnschrift – nie do dystrybucji).
 import fs from 'node:fs';
 import path from 'node:path';
 import { register } from 'node:module';
@@ -59,6 +59,8 @@ const PACKS = [
   ['R7_NEWS.cgpack', () => read('R7_NEWS.show.json'), [path.join(ARCH, 'assets')]],
   ['BTB.cgpack', btb, [path.join(ARCH, 'BTB_CG/assets')]],
   ['BTB_INFO24.cgpack', btbInfo24, [path.join(ARCH, 'assets'), path.join(ARCH, 'BTB_CG/assets')]],
+  // grafiki z gałęzi alpha BTB CG System (szablony kodowe) – wynik tools/build-btb-alpha.mjs
+  ['BTB_ALPHA.cgpack', () => read('BTB_ALPHA/show.json'), [path.join(ARCH, 'BTB_ALPHA/assets'), path.join(ARCH, 'BTB_CG/assets')]],
 ];
 
 let bad = 0;
