@@ -396,7 +396,7 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 | Lewa | **Strony** (pole `nr` + Enter = wczytaj, szukaj, ⧉ Duplikuj, 🗑) i **Szablony** (＋ = nowa strona z wartościami domyślnymi) |
 | Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, warstwa, ● ON AIR, 🔒); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
 | Prawa | monitor **PGM** (rzeczywiste wyjście, wybór tła monitora), **Na antenie – warstwy** (⏭ continue, ⏏ out, ⇅ dock, Wdróż teraz), zakładki **Playlista / Rundown / Makra** |
-| Pasek górny | nazwa show, stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇩ Eksport show, ⇧ Import show, ✖ CLEAR ALL |
+| Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇩ Eksport show, ⇧ Import show, ✖ CLEAR ALL |
 
 ### 9.2 Praca ze stroną
 
@@ -441,6 +441,8 @@ TAKE strony z warstwy, na której już coś jest, zastępuje poprzednią grafik�
 - **Playlista (karuzela):** strony z czasami trwania, opcjonalnie w pętli; ▶ Start / ■ Stop. Odtwarza ją serwer – działa także po zamknięciu Trio.
 - **Rundown:** kolejka stron programu. Przeciąganie zmienia kolejność, notatki przy pozycjach, stany: ● na antenie, ▶ następna, ✓ odegrana. **NEXT** (F8) bierze następną pozycję; ↺ zeruje stany; import/eksport CSV (`numer;notatka`). Bez automatu czasowego – zawsze ręczne NEXT.
 - **Makra:** jedna komenda w wierszu, opcjonalnie z opóźnieniem: `CLEAR`, `TAKE 1001`, `+2.5 TAKE 3001`, `+6 OUT main,back`. **⇥ z anteny** tworzy makro z bieżącego stanu anteny (preset segmentu). Nowe makro przerywa poprzednie.
+
+- **Show na audycję:** lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Import show zastępuje show aktywny – żeby wczytać plik jako osobną audycję, utwórz najpierw nowy show i dopiero potem importuj.
 
 ### 9.6 ⚙ Stan systemu
 
@@ -596,7 +598,8 @@ vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
 
 | Ścieżka | Zawartość |
 |---|---|
-| `vizrs-data/show.json` | show (zapis przez plik tymczasowy + `fsync`) |
+| `vizrs-data/show.json` | aktywny show (zapis przez plik tymczasowy + `fsync`) |
+| `vizrs-data/shows/` | biblioteka show: `<id>.json` na audycję (każdy zapis aktywnego show trafia też tutaj), `.active` = id aktywnego |
 | `vizrs-data/assets/` | obrazy, wideo, fonty (png jpg jpeg gif webp svg mp4 webm ttf otf woff woff2; łącznie do 2 GB) |
 | `vizrs-data/backups/` | kopie: bieżące (20, nie częściej niż co 30 s), godzinowe (24), dzienne (14); czas UTC |
 | `vizrs-data/log.jsonl` | log audytowy komend |

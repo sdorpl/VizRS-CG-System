@@ -40,6 +40,10 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 | `GET /fonts` | rodziny fontów dostępnych offline (wbudowane) |
 | `GET\|PUT /animpresets` | biblioteka presetów animacji (Artist) |
 | `GET\|PUT /wordreplace` | lista zamian słów stanowiska (`{"@p":["Prezydent"]}`) |
+| `GET /shows` | biblioteka show: `{active, shows:[{id,name,scenes,pages}]}` |
+| `POST /shows/switch/<id>` | przełącza aktywny show (zdejmuje wszystko z anteny) |
+| `POST /shows` `{name, copy}` | nowy show (pusty albo kopia bieżącego), od razu aktywny |
+| `DELETE /shows/<id>` | usuwa nieaktywny show z biblioteki |
 | `GET /backups`, `POST /backups/restore/<nazwa>` | kopie zapasowe show |
 | `GET /locks`, `POST /lock/<rodzaj>/<id>?who=…`, `POST /unlock/<rodzaj>/<id>?who=…[&force=1]` | blokady edycji (45 s bez odświeżenia) |
 | `POST /report`, `GET\|DELETE /errors` | błędy scen zgłaszane przez wyjście (także „tekst nie mieści się (ściśnięcie poniżej N%)” – przepełnienie tekstu na antenie) |

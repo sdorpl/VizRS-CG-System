@@ -109,7 +109,8 @@
   <span class="brand">Viz<b>RS</b> Trio</span>
   <nav><a href="/artist">Artist</a><a href="/trio" class="on">Trio</a><a href="/output?checker=1&status=1" target="_blank">Wyjście ↗</a></nav>
   <span class="sep navsep"></span>
-  <b id="showName"></b>
+  <select id="showSel" title="Show / paczka grafiki audycji – przełączenie zdejmuje wszystko z anteny"></select>
+  <button id="bShowMenu" title="Nowy show, kopia bieżącego, usuwanie z listy">▾</button>
   <span id="conn" class="pill">łączenie…</span>
   <span id="saveErr" class="pill on" style="display:none"></span>
   <span id="errPill" class="pill on" style="display:none;cursor:pointer" title="Błędy scen na wyjściu – kliknij po szczegóły"></span>
@@ -277,7 +278,7 @@ const onAirLayer = (pid) => state.layers.find((l) => l.page?.id === pid);
 async function loadShow() {
   show = await api('GET', '/api/show');
   assets = await api('GET', '/api/assets').catch(() => []);
-  $('#showName').textContent = show.name || 'Show';
+  loadShows();
   if (!plId || !show.playlists.some((p) => p.id === plId)) plId = show.playlists[0]?.id || null;
   if (selId && !pageById(selId)) { selId = null; draft = null; }
   if (!selId && show.pages.length) selectPage(sortedPages()[0].id, true);
@@ -1141,6 +1142,40 @@ $('#bSys').onclick = openSys;
 $('#errPill').onclick = openSys;
 $('#sysModal').addEventListener('mousedown', (e) => { if (e.target.id === 'sysModal') $('#sysModal').classList.remove('open'); });
 addEventListener('vizrs-font-fail', (e) => toast(`Font „${e.detail.name}” niedostępny offline – użyto zastępczego`, true));
+
+// ------------------------------------------------------------ biblioteka show (paczka grafiki na audycję)
+let shows = { active: '', shows: [] };
+async function loadShows() {
+  shows = await api('GET', '/api/shows').catch(() => shows);
+  $('#showSel').innerHTML = shows.shows.map((s) => `<option value="${esc(s.id)}"${s.id === shows.active ? ' selected' : ''}>${esc(s.id === shows.active ? show.name || s.name : s.name)}</option>`).join('');
+}
+$('#showSel').onchange = async () => {
+  const id = $('#showSel').value, s = shows.shows.find((x) => x.id === id);
+  const onAir = state.layers.length ? ' Wszystko zejdzie z anteny.' : '';
+  if (!confirm(`Przełączyć na show „${s?.name || id}”?${onAir}`)) { $('#showSel').value = shows.active; return; }
+  try { await api('POST', '/api/shows/switch/' + encodeURIComponent(id)); selId = null; draft = null; dirtyPage = false; await loadShow(); toast('Show: ' + (s?.name || id)); }
+  catch (e) { toast(e.message, true); $('#showSel').value = shows.active; }
+};
+$('#bShowMenu').onclick = async () => {
+  const a = prompt('Show / paczka grafiki:\n1 – nowy pusty show\n2 – kopia bieżącego (te same szablony)\n3 – usuń show z listy', '2');
+  if (!a) return;
+  try {
+    if (a.trim() === '3') {
+      const other = shows.shows.filter((s) => s.id !== shows.active);
+      if (!other.length) return toast('Na liście jest tylko aktywny show', true);
+      const n = prompt('Który usunąć? Podaj numer:\n' + other.map((s, i) => `${i + 1} – ${s.name}`).join('\n'));
+      const s = other[parseInt(n) - 1]; if (!s) return;
+      if (!confirm(`Usunąć show „${s.name}” z dysku?`)) return;
+      await api('DELETE', '/api/shows/' + encodeURIComponent(s.id)); await loadShows(); toast('Usunięto: ' + s.name);
+      return;
+    }
+    if (a.trim() !== '1' && a.trim() !== '2') return;
+    const name = prompt('Nazwa nowego show (np. nazwa audycji):', a.trim() === '2' ? (show.name || 'Show') + ' – kopia' : '');
+    if (!name) return;
+    await api('POST', '/api/shows', { name, copy: a.trim() === '2' });
+    selId = null; draft = null; dirtyPage = false; await loadShow(); toast('Utworzono show: ' + name);
+  } catch (e) { toast(e.message, true); }
+};
 
 // ------------------------------------------------------------ show import/eksport
 $('#bExpShow').onclick = async () => {

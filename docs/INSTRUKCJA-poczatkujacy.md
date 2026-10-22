@@ -169,6 +169,7 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
 | Tekst za długi / ściśnięty | pod polem widać `ściśnięcie: 72%` albo `w1: 72%` – pomarańczowe = ściśnięte, czerwone = bardzo ściśnięte; **⚠ nie mieści się** = tekst wystaje poza belkę: skróć go albo podziel na wiersze (Enter). |
 | Inny font na antenie niż w Artist | używaj fontów wbudowanych (Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat) albo wgraj plik fontu do assets (Zasoby paczki → ＋ Wgraj i dołącz) i wybierz go w polu font; OBS pobiera go z serwera. |
 | „🔒 edytuje …” przy stronie | stronę edytuje inny operator; zapis wymaga potwierdzenia, blokada wygasa po 45 s. |
+| Każda audycja ma mieć własną grafikę | Trio → lista show w pasku górnym: wybierz audycję; **▾** → nowy show albo kopia bieżącego. |
 | Trzeba wrócić do wcześniejszej wersji show | ⚙ Stan → **Kopie zapasowe show** → Przywróć. |
 | Zdjąć wszystko natychmiast | **Shift+Esc** (CLEAR ALL). |
 

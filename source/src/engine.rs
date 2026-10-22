@@ -95,6 +95,8 @@ pub struct Engine {
     carousel_gen: AtomicU64,
     pub macro_gen: AtomicU64,
     id_ctr: AtomicU64,
+    /// Identyfikator aktywnego show w bibliotece `shows/` (plik `shows/<id>.json`).
+    active: Mutex<String>,
 }
 
 pub fn now_ms() -> u64 {
@@ -150,8 +152,15 @@ impl Engine {
             carousel_gen: AtomicU64::new(0),
             macro_gen: AtomicU64::new(0),
             id_ctr: AtomicU64::new(1),
+            active: Mutex::new(String::new()),
         });
         let show = e.inner.lk().show.clone();
+        let active = std::fs::read_to_string(e.data_dir.join("shows").join(".active"))
+            .ok()
+            .map(|s| s.trim().to_string())
+            .filter(|s| valid_show_id(s))
+            .unwrap_or_else(|| e.unique_show_id(show.str("name").unwrap_or("show")));
+        e.set_active(&active);
         e.save(&show);
         e
     }
@@ -184,6 +193,14 @@ impl Engine {
                     self.last_recent.store(now, Ordering::Relaxed);
                 }
                 crate::backup::rotate(&self.data_dir.join("backups"), &text, now, recent)
+            })
+            .and_then(|_| {
+                // kopia w bibliotece show (lista „Show / paczka” w Trio)
+                let id = self.active.lk().clone();
+                if id.is_empty() {
+                    return Ok(());
+                }
+                write_atomic(&self.data_dir.join("shows"), &format!("{id}.json"), &text)
             });
         let prev = std::mem::replace(&mut *self.save_err.lk(), r.err());
         if prev != *self.save_err.lk() {
@@ -213,6 +230,98 @@ impl Engine {
         let cur = self.show();
         self.save_with(&cur, true); // zachowaj bieżący stan jako najnowszą kopię (do cofnięcia przywrócenia)
         self.put_show(show, true)
+    }
+
+    // ---------------- biblioteka show (osobna paczka grafiki na audycję) ----------------
+
+    fn set_active(&self, id: &str) {
+        *self.active.lk() = id.to_string();
+        write_atomic(&self.data_dir.join("shows"), ".active", id).ok();
+    }
+
+    pub fn active_show(&self) -> String {
+        self.active.lk().clone()
+    }
+
+    /// Wolny identyfikator pliku dla nazwy (`Fakty Wieczór` → `fakty-wieczor`, `-2`, `-3`…).
+    fn unique_show_id(&self, name: &str) -> String {
+        let base = show_slug(name);
+        let dir = self.data_dir.join("shows");
+        (1..).map(|n| if n == 1 { base.clone() } else { format!("{base}-{n}") }).find(|id| !dir.join(format!("{id}.json")).exists()).unwrap_or(base)
+    }
+
+    /// Lista show w bibliotece: `{active, shows:[{id,name,scenes,pages}]}`.
+    pub fn shows(&self) -> Json {
+        let dir = self.data_dir.join("shows");
+        let mut list: Vec<(String, Json)> = std::fs::read_dir(&dir)
+            .map(|rd| {
+                rd.flatten()
+                    .filter_map(|e| {
+                        let f = e.file_name().to_string_lossy().to_string();
+                        let id = f.strip_suffix(".json").filter(|id| valid_show_id(id))?.to_string();
+                        let j = std::fs::read_to_string(e.path()).ok().and_then(|t| Json::parse(&t).ok())?;
+                        let name = j.str("name").unwrap_or(&id).to_string();
+                        let item = Json::obj().with("id", id.as_str()).with("name", name.as_str()).with("scenes", j.arr("scenes").len() as f64).with("pages", j.arr("pages").len() as f64);
+                        Some((name.to_lowercase(), item))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        list.sort_by(|a, b| a.0.cmp(&b.0));
+        Json::obj().with("active", self.active_show().as_str()).with("shows", Json::Arr(list.into_iter().map(|x| x.1).collect()))
+    }
+
+    /// Przełącza aktywny show na inny z biblioteki. Zdejmuje wszystko z anteny i podglądu
+    /// (sceny starego show nie istnieją w nowym); bieżący show jest już zapisany w bibliotece.
+    pub fn switch_show(&self, id: &str) -> Result<(), String> {
+        if !valid_show_id(id) {
+            return Err("niedozwolona nazwa show".into());
+        }
+        if id == self.active_show() {
+            return Ok(());
+        }
+        let text = std::fs::read_to_string(self.data_dir.join("shows").join(format!("{id}.json"))).map_err(|_| format!("brak show „{id}”"))?;
+        let show = Json::parse(&text).map_err(|e| format!("show „{id}” uszkodzony: {e}"))?;
+        validate::show(&show)?;
+        self.carousel_stop(false);
+        self.macro_gen.fetch_add(1, Ordering::SeqCst);
+        {
+            let mut inner = self.inner.lk();
+            inner.preview.clear();
+            inner.rundowns.clear();
+        }
+        self.clear();
+        self.set_active(id);
+        self.put_show(show, true)?;
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(())
+    }
+
+    /// Nowy show w bibliotece: kopia bieżącego (`copy`) albo pusty; od razu staje się aktywny.
+    pub fn new_show(&self, name: &str, copy: bool) -> Result<Json, String> {
+        let name = name.trim();
+        if name.is_empty() || name.chars().count() > 120 {
+            return Err("podaj nazwę show (do 120 znaków)".into());
+        }
+        let mut show = if copy { self.show() } else { Json::obj().with("scenes", Json::Arr(vec![])).with("pages", Json::Arr(vec![])) };
+        show.set("name", name.into());
+        show.set("rev", 0.0.into());
+        validate::show(&show)?;
+        let id = self.unique_show_id(name);
+        write_atomic(&self.data_dir.join("shows"), &format!("{id}.json"), &normalize_show(show).pretty()).map_err(|e| format!("zapis na dysk nieudany: {e}"))?;
+        self.switch_show(&id)?;
+        Ok(Json::obj().with("id", id.as_str()))
+    }
+
+    /// Usuwa show z biblioteki (nie aktywny – ten jest na antenie / w edycji).
+    pub fn delete_show(&self, id: &str) -> Result<(), String> {
+        if !valid_show_id(id) {
+            return Err("niedozwolona nazwa show".into());
+        }
+        if id == self.active_show() {
+            return Err("nie można usunąć aktywnego show – najpierw przełącz na inny".into());
+        }
+        std::fs::remove_file(self.data_dir.join("shows").join(format!("{id}.json"))).map_err(|_| format!("brak show „{id}”"))
     }
 
     // ---------------- zdarzenia ----------------
@@ -1116,6 +1225,48 @@ fn bump_rev(show: &mut Json) {
     show.set("rev", (r + 1.0).into());
 }
 
+/// Identyfikator show w bibliotece = nazwa pliku bez `.json` (ochrona przed ścieżkami).
+pub fn valid_show_id(id: &str) -> bool {
+    !id.is_empty() && id.len() <= 80 && !id.starts_with('-') && id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// Nazwa show → identyfikator pliku (polskie litery bez ogonków, reszta → `-`).
+pub fn show_slug(name: &str) -> String {
+    let mut out = String::new();
+    for c in name.to_lowercase().chars() {
+        let c = match c {
+            'ą' => 'a',
+            'ć' => 'c',
+            'ę' => 'e',
+            'ł' => 'l',
+            'ń' => 'n',
+            'ó' => 'o',
+            'ś' => 's',
+            'ź' | 'ż' => 'z',
+            c if c.is_ascii_alphanumeric() => c,
+            _ => '-',
+        };
+        if c != '-' || !(out.is_empty() || out.ends_with('-')) {
+            out.push(c);
+        }
+        if out.len() >= 60 {
+            break;
+        }
+    }
+    let out = out.trim_end_matches('-').to_string();
+    if out.is_empty() { "show".into() } else { out }
+}
+
+fn write_atomic(dir: &std::path::Path, file: &str, text: &str) -> Result<(), String> {
+    use std::io::Write;
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    let tmp = dir.join(format!("{file}.tmp"));
+    std::fs::File::create(&tmp)
+        .and_then(|mut f| f.write_all(text.as_bytes()).and_then(|_| f.sync_all()))
+        .and_then(|_| std::fs::rename(&tmp, dir.join(file)))
+        .map_err(|e| e.to_string())
+}
+
 fn normalize_show(mut show: Json) -> Json {
     if show.num("rev").is_none() {
         show.set("rev", 0.0.into());
@@ -1133,6 +1284,15 @@ fn normalize_show(mut show: Json) -> Json {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn show_slug_and_id() {
+        assert_eq!(super::show_slug("Fakty Wieczór – 19:00"), "fakty-wieczor-19-00");
+        assert_eq!(super::show_slug("Żółć"), "zolc");
+        assert_eq!(super::show_slug("!!!"), "show");
+        assert!(super::valid_show_id("info24-2"));
+        assert!(!super::valid_show_id("../x") && !super::valid_show_id(".active") && !super::valid_show_id(""));
+    }
+
     use super::*;
 
     const DEMO: &str = include_str!("../web/demo_show.json");

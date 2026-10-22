@@ -767,6 +767,12 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
         ("GET", ["fonts"]) => Response::json(&Json::Arr(fonts::families().into_iter().map(Json::from).collect())),
         ("GET", ["audit"]) => Response::json(&Json::Arr(engine.audit.tail(req.q("n").and_then(|n| n.parse().ok()).unwrap_or(100).min(1000)).into_iter().map(Json::from).collect())),
 
+        // ---------- biblioteka show (paczka grafiki na audycję) ----------
+        ("GET", ["shows"]) => Response::json(&engine.shows()),
+        ("POST", ["shows", "switch", id]) => res(engine.switch_show(id), |_| Response::json(&engine.shows())),
+        ("POST", ["shows"]) => res(engine.new_show(body.str("name").unwrap_or(""), matches!(body.get("copy"), Some(Json::Bool(true)))), |j| Response::json(&j)),
+        ("DELETE", ["shows", id]) => res(engine.delete_show(id), |_| Response::json(&engine.shows())),
+
         // ---------- kopie zapasowe show ----------
         ("GET", ["backups"]) => Response::json(&Json::Arr(engine.backups().into_iter().map(Json::from).collect())),
         ("POST", ["backups", "restore", name]) => res(engine.restore_backup(name), |_| Response::ok()),
@@ -1000,6 +1006,30 @@ mod tests {
         assert!(!d.join("x.png").exists());
         assert_eq!(call(&e, &cfg, "GET", "/assets/..%2fshow.json", "").0, 404);
         std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn shows_library() {
+        let (e, cfg, _d) = setup("shows");
+        let (c, b) = call(&e, &cfg, "GET", "/api/shows", "");
+        assert_eq!(c, 200);
+        let lib = Json::parse(&b).unwrap();
+        let first = lib.str("active").unwrap().to_string();
+        assert_eq!(lib.arr("shows").len(), 1);
+        let (c, b) = call(&e, &cfg, "POST", "/api/shows", r#"{"name":"Fakty Wieczór","copy":false}"#);
+        assert_eq!(c, 200, "{b}");
+        assert!(b.contains("fakty-wieczor"));
+        let (_, sh) = call(&e, &cfg, "GET", "/api/show", "");
+        assert!(sh.contains("Fakty Wieczór") && Json::parse(&sh).unwrap().arr("scenes").is_empty());
+        assert_eq!(call(&e, &cfg, "DELETE", "/api/shows/fakty-wieczor", "").0, 400); // aktywny
+        assert_eq!(call(&e, &cfg, "POST", &format!("/api/shows/switch/{first}"), "").0, 200);
+        let (_, sh) = call(&e, &cfg, "GET", "/api/show", "");
+        assert!(!Json::parse(&sh).unwrap().arr("scenes").is_empty());
+        assert_eq!(call(&e, &cfg, "POST", "/api/shows/switch/..%2fshow", "").0, 400);
+        assert_eq!(call(&e, &cfg, "POST", "/api/shows/switch/nie-ma", "").0, 400);
+        assert_eq!(call(&e, &cfg, "POST", "/api/shows", r#"{"name":"  "}"#).0, 400);
+        assert_eq!(call(&e, &cfg, "DELETE", "/api/shows/fakty-wieczor", "").0, 200);
+        assert_eq!(Json::parse(&call(&e, &cfg, "GET", "/api/shows", "").1).unwrap().arr("shows").len(), 1);
     }
 
     #[test]

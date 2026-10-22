@@ -2,6 +2,7 @@
 
 ## Niewydane – „Okna i serwer” (plan: `PLAN-natywne-i-serwer.md`)
 
+- **Osobny show na audycję:** biblioteka `vizrs-data/shows/`, lista wyboru w pasku Trio (przełączenie zdejmuje wszystko z anteny), ▾ nowy / kopia bieżącego / usuń; API `/api/shows`.
 - Artist: z interfejsu usunięto nazwy BTB (przycisk importu elementu to teraz **⇧ Element**, bez „BTB” w podpowiedziach, raportach i komunikatach).
 - **Artist jak program desktopowy:** panele zadokowane z rozdzielaczami (szerokość drzewa i właściwości, wysokość osi czasu; dwuklik = domyślnie; zapamiętane), płaskie paski narzędzi, pasek stanu z podpowiedziami skrótów panelu pod kursorem i wskaźnikiem połączenia, monochromatyczne ikony zamiast emoji (Artist i Trio), interfejs bez zaznaczania tekstu i kursora „rączki”. W oknie natywnym bez logo i zakładek stron (są w menu) i bez menu przeglądarki pod prawym przyciskiem (także Trio).
 - **Poprawka: pasek osi czasu Artist nie mieścił się na ekranie** (Full HD/3K ze skalowaniem – zoom i „Dopasuj” znikały za krawędzią): narzędzia jako ikony z podpowiedzią, edytor klucza w stałym pasku pod spodem, narzędzia sekwencji w pasku w tym samym miejscu; jeden wiersz od 1280 px szerokości.
