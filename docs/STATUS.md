@@ -9,6 +9,8 @@
 
 **Okna aplikacji i serwer** – [../PLAN-natywne-i-serwer.md](../PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
+**Kanał (branding emisji)** – [../PLAN-kanal.md](../PLAN-kanal.md): propozycja aplikacji `vizrs-channel` na wzór Viz Multichannel (harmonogram XMLTV, reguły, zdarzenia wtórne), etapy M0–M6; czeka na decyzje z §11.
+
 | Etap | Stan |
 |---|---|
 | N0 fundament CLI (`VIZRS_*`, `serve`, `--healthcheck`, blokada katalogu danych, token wymagany w sieci) | zrobione |

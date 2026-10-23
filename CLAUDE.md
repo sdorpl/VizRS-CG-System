@@ -11,7 +11,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 1. Przeczytaj [docs/STATUS.md](docs/STATUS.md) (bieżący etap, następne zadanie), `git log -5` i `git status`.
 2. Przeczytaj [docs/LUKI.md](docs/LUKI.md): znane braki, uszeregowane G1 (niezawodność) → G2 (wierność) → G3 (funkcje).
 3. Przy zmianie zachowania aplikacji przeczytaj właściwą sekcję [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) — w tym samym commicie ją zaktualizujesz.
-4. Przy tickerach: [PLAN-ticker.md](PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md).
+4. Przy tickerach: [PLAN-ticker.md](PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md); branding kanału (harmonogram): [PLAN-kanal.md](PLAN-kanal.md).
 
 ## Niepodważalne zasady
 
