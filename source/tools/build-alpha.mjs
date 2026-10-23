@@ -1,7 +1,7 @@
-// Paczka „BTB alpha” dla VizRS: grafiki z gałęzi alpha BTB CG System (szablony HTML/CSS/JS) odtworzone jako sceny VizRS.
-//   node tools/build-btb-alpha.mjs [katalog]   (domyślnie examples/archiwum/BTB_ALPHA)
-// Źródło: <katalog>/zrodlo.json – grafiki z bazy alpha + pomiar DOM każdej grafiki po wejściu na wyjściu BTB
-// (tools/measure-btb-alpha.cjs). Szablony kodowe nie mają sceny, więc scena powstaje z pomiaru: prostokąty, gradienty,
+// Paczka ALPHA dla VizRS: grafiki z gałęzi alpha oryginału (szablony HTML/CSS/JS) odtworzone jako sceny VizRS.
+//   node tools/build-alpha.mjs [katalog]   (domyślnie examples/archiwum/ALPHA)
+// Źródło: <katalog>/zrodlo.json – grafiki z bazy alpha + pomiar DOM każdej grafiki po wejściu na wyjściu oryginału
+// (tools/measure-alpha.cjs). Szablony kodowe nie mają sceny, więc scena powstaje z pomiaru: prostokąty, gradienty,
 // ramki, teksty, obrazy; tickery, zegary i belki rysowane na <canvas> są składane według kodu szablonu.
 // Każda grafika = strona; grafiki o identycznym wyglądzie (różny tylko tekst) dzielą jedną scenę.
 // Wynik: show.json (sceny + strony 14001–14501), assets/ (obrazy z data: URI).
@@ -14,14 +14,14 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB = pathToFileURL(path.join(HERE, '../web/')).href;
 register('data:text/javascript,' + encodeURIComponent(`export async function resolve(s, c, next) {
   return /^\\/[\\w.-]+\\.js$/.test(s) ? next(${JSON.stringify(WEB)} + s.slice(1), c) : next(s, c); }`));
-const io = await import('../web/btb-io.js');
-const DIR = path.resolve(process.argv[2] || path.join(HERE, '../../examples/archiwum/BTB_ALPHA'));
+const io = await import('../web/element-import.js');
+const DIR = path.resolve(process.argv[2] || path.join(HERE, '../../examples/archiwum/ALPHA'));
 const SRC = JSON.parse(fs.readFileSync(path.join(DIR, 'zrodlo.json'), 'utf8'));
 
 fs.rmSync(path.join(DIR, 'assets'), { recursive: true, force: true });
 fs.mkdirSync(path.join(DIR, 'assets'), { recursive: true });
 
-const L = await import('./btb-measure-lib.mjs');
+const L = await import('./measure-lib.mjs');
 L.setup({ io, dir: DIR });
 const { r1, color, gradient, px, BAHN, groupMotion, sceneTimes, dataAsset, visible, rectsOf, textOf, tickerNodes, genericNodes } = L;
 let uid = 0;
@@ -59,14 +59,14 @@ function ocgCanvas(tpl, title, sub) {
       { type: 'text', name: 'title', props: { x: 50, y: y + 5, w: 1515, h: 170, text: title, font: BAHN, size: 80, weight: '700', color: '#000000', valign: 'middle', textFit: 'squeeze', squeezeMin: 0.5 }, fields: { text: 'title' }, motion: { textIn: { type: 'fade', dur: 0.15, delay: 0.55 } } },
     ], fieldMeta: { title: { label: 'Tytuł' } }, values: { title } };
   }
-  if (tpl === 'tpl-ocg-wiper_news') { // widżet 190×170: zegar na jasnym tle + BTB INFO na bordo
+  if (tpl === 'tpl-ocg-wiper_news') { // widżet 190×170: zegar na jasnym tle + TV INFO na bordo
     const x = 100, y = 800;
     return { nodes: [
       { type: 'rect', name: 'widget-container', props: { x, y, w: 190, h: 170, color: '#000000', shadow: 10 } },
       { type: 'rect', name: 'clock-top', props: { x, y, w: 190, h: 82, color: '#f0f0f0', color2: '#c0c0c0', gradAngle: 135 }, motion: { bg: 'shimmer' } },
       { type: 'clock', name: 'zegar', props: { x, y, w: 190, h: 82, mode: 'time', format: 'HH:mm', font: BAHN, size: 65, weight: '400', color: '#000000', align: 'center', valign: 'middle' } },
       { type: 'rect', name: 'info-bottom', props: { x, y: y + 88, w: 190, h: 82, color: '#8b0000' } },
-      { type: 'text', name: 'btb', props: { x, y: y + 88, w: 118, h: 82, text: 'BTB', font: 'Arial', size: 38, weight: '700', color: '#ffffff', align: 'right', valign: 'middle', textFit: 'none' } },
+      { type: 'text', name: 'info', props: { x, y: y + 88, w: 118, h: 82, text: 'TV', font: 'Arial', size: 38, weight: '700', color: '#ffffff', align: 'right', valign: 'middle', textFit: 'none' } },
       { type: 'text', name: 'info', props: { x: x + 120, y: y + 88 + 6, w: 70, h: 82, text: 'INFO', font: 'Arial', size: 18, weight: '700', color: '#ffffff', align: 'left', valign: 'middle', textFit: 'none' } },
     ], fieldMeta: {}, values: {}, motion: { in: { type: 'pop', dur: 0.6, ease: 'back.out' }, out: { type: 'fade', dur: 0.4 }, origin: [0.5, 0.5] } };
   }
@@ -82,7 +82,7 @@ function ocgCanvas(tpl, title, sub) {
 // Republika Ticker (Cycling): w alpha CSS ukrywa pasek (display: none) – odtworzony wg reguł szablonu: pasek 1728×60 na 96/980, wiper, wiadomości po kolei
 function cycling(g) {
   const items = g.items || ['Pierwsza wiadomość', 'Druga wiadomość', 'Trzecia wiadomość'];
-  const text = io.btbItemsText(items);
+  const text = io.extItemsText(items);
   return { nodes: [
     { type: 'rect', name: 'rep-bottom-bar', props: { x: 96, y: 980, w: 1728, h: 60, color: '#002d5e' } },
     { type: 'ticker', name: 'ticker', props: { x: 96, y: 980, w: 1728, h: 60, tickerMode: 'roll', hold: 5, text, font: BAHN, size: 30, weight: '800', color: '#ffffff', upper: true,
@@ -99,7 +99,7 @@ const ORIGIN = (tpl) => (/na-zywo|city-bar|d6fcc3ac|tag_/.test(tpl) ? [0.5, 0.5]
 const nameOf = (g) => g.name.replace(/^SYN /, '').replace(/\s*\((Eksport|Szablon)\)/g, '').replace(/\s*\(\d\d:\d\d:\d\d\)/g, '').replace(/\s*\(kopia\)/g, '').trim();
 const strip = (n) => { const c = structuredClone(n); delete c.id; if (c.props) { delete c.props.text; if (c.type === 'text') delete c.props.w; } if (c.children) c.children = c.children.map(strip); return c; };
 
-const show = { name: 'BTB CG alpha – grafiki przeniesione', scenes: [], pages: [], playlists: [] };
+const show = { name: 'ALPHA – grafiki przeniesione', scenes: [], pages: [], playlists: [] };
 const bySig = new Map();
 const next = {};
 const report = [];
@@ -117,7 +117,7 @@ SRC.grafiki.forEach((g, i) => {
     built = genericNodes(g, els);
   }
   if (!built.nodes.length) { report.push(`pominięto „${g.name}”: brak elementów`); return; }
-  // grupa w położeniu z BTB; dzieci względem grupy
+  // grupa w położeniu z oryginału; dzieci względem grupy
   const xs = built.nodes.map((n) => n.props.x), ys = built.nodes.map((n) => n.props.y);
   const gx = Math.min(...xs), gy = Math.min(...ys);
   const gw = Math.max(...built.nodes.map((n) => n.props.x + n.props.w)) - gx, gh = Math.max(...built.nodes.map((n) => n.props.y + n.props.h)) - gy;

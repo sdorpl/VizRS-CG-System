@@ -1,6 +1,6 @@
 // Zgodność silników: Chromium (jak OBS/vMix) vs WebView okna natywnego (vizrs-shell: WebKitGTK / WebView2 / WKWebView).
 //   node tools/engines.js [ścieżka-do-vizrs] [ścieżka-do-vizrs-shell] [--json wynik.json]
-// Każda strona zestawów INFO24, R7 i BTB_PILNE jest brana na wyjście w obu silnikach; porównujemy dla każdego pola tekstowego
+// Każda strona zestawów INFO24, R7 i EXT_PILNE jest brana na wyjście w obu silnikach; porównujemy dla każdego pola tekstowego
 // ściśnięcie (scaleX), szerokość i wysokość w układzie 1920×1080. Różnica = Artist w oknie natywnym pokazałby co innego niż antena.
 // Uwaga: vizrs-shell otwiera na kilka minut widoczne okno „VizRS Wyjście” (test lokalny, poza CI).
 // Playwright: zmienna PLAYWRIGHT_DIR (katalog z node_modules/playwright) albo zwykłe `require('playwright')`.
@@ -10,7 +10,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
@@ -20,7 +20,7 @@ const JSON_OUT = jsonAt >= 0 ? args.splice(jsonAt, 2)[1] : null;
 const BIN = path.resolve(args[0] || path.join(__dirname, '../target/release/vizrs'));
 const SHELL = path.resolve(args[1] || path.join(__dirname, '../shell/target/release/vizrs-shell'));
 const ROOT = path.resolve(__dirname, '../..');
-const SETS = [['INFO24', 'examples/archiwum/INFO24.show.json'], ['R7', 'examples/archiwum/R7_NEWS.show.json'], ['BTB_PILNE', 'examples/archiwum/BTB_PILNE.show.json', 'examples/archiwum/BTB_CG/assets']];
+const SETS = [['INFO24', 'examples/archiwum/INFO24.show.json'], ['R7', 'examples/archiwum/R7_NEWS.show.json'], ['EXT_PILNE', 'examples/archiwum/PILNE.show.json', 'examples/archiwum/WZORCE/assets']];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Sonda wykonywana na stronie wyjścia (w obu silnikach ten sam kod). W powłoce wynik wraca przez window.ipc.

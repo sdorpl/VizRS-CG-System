@@ -1,5 +1,5 @@
 {
- "name": "BTB CG – elementy przeniesione",
+ "name": "WZORCE – elementy przeniesione",
  "scenes": [
   {
    "name": "Belka - PILNE",
@@ -112,7 +112,7 @@
      }
     }
    ],
-   "id": "btb_belka_-_pilne-new-wasm"
+   "id": "wz_belka_-_pilne-new-wasm"
   },
   {
    "name": "Belka - PILNE (Belka_-_PILNE-new.json)",
@@ -225,7 +225,7 @@
      }
     }
    ],
-   "id": "btb_belka_-_pilne-new"
+   "id": "wz_belka_-_pilne-new"
   },
   {
    "name": "Belka - PILNE (Belka_-_PILNE.cgpack)",
@@ -338,7 +338,7 @@
      }
     }
    ],
-   "id": "btb_belka_-_pilne"
+   "id": "wz_belka_-_pilne"
   },
   {
    "name": "Belka - PILNE (Belka_-_PILNE.json)",
@@ -451,7 +451,7 @@
      }
     }
    ],
-   "id": "btb_belka_-_pilne_json"
+   "id": "wz_belka_-_pilne_json"
   },
   {
    "name": "belka exp (18:26:40)",
@@ -556,7 +556,7 @@
      }
     }
    ],
-   "id": "btb_belka_exp_18_26_40"
+   "id": "wz_belka_exp_18_26_40"
   },
   {
    "name": "Belka glowna",
@@ -677,7 +677,7 @@
      }
     }
    ],
-   "id": "btb_belka_glowna"
+   "id": "wz_belka_glowna"
   },
   {
    "name": "Belka Miasto",
@@ -793,7 +793,7 @@
      ]
     }
    ],
-   "id": "btb_belka_miasto"
+   "id": "wz_belka_miasto"
   },
   {
    "name": "Belka pilne",
@@ -926,7 +926,7 @@
      }
     }
    ],
-   "id": "btb_belka_pilne"
+   "id": "wz_belka_pilne"
   },
   {
    "name": "Grafika - theme",
@@ -1012,7 +1012,7 @@
      }
     }
    ],
-   "id": "btb_grafika_-_theme"
+   "id": "wz_grafika_-_theme"
   },
   {
    "name": "MIASTO lewa",
@@ -1128,7 +1128,7 @@
      }
     }
    ],
-   "id": "btb_miasto_lewa"
+   "id": "wz_miasto_lewa"
   },
   {
    "name": "MIASTO prawa — Warszawa (odzyskana)",
@@ -1243,7 +1243,7 @@
      }
     }
    ],
-   "id": "btb_miasto_prawa_warszawa_odzyskana"
+   "id": "wz_miasto_prawa_warszawa_odzyskana"
   },
   {
    "name": "MIASTO prawa",
@@ -1359,7 +1359,7 @@
      }
     }
    ],
-   "id": "btb_miasto_prawa"
+   "id": "wz_miasto_prawa"
   },
   {
    "name": "NA ŻYWO lewa",
@@ -1489,7 +1489,7 @@
      }
     }
    ],
-   "id": "btb_na_zywo_lewa"
+   "id": "wz_na_zywo_lewa"
   },
   {
    "name": "NA ŻYWO lewo dol",
@@ -1619,7 +1619,7 @@
      }
     }
    ],
-   "id": "btb_na_zywo_lewo_dol"
+   "id": "wz_na_zywo_lewo_dol"
   },
   {
    "name": "NA ŻYWO prawo",
@@ -1749,7 +1749,7 @@
      }
     }
    ],
-   "id": "btb_na_zywo_prawo"
+   "id": "wz_na_zywo_prawo"
   },
   {
    "name": "PILNE (OCG)",
@@ -1847,7 +1847,7 @@
      }
     }
    ],
-   "id": "btb_pilne_ocg"
+   "id": "wz_pilne_ocg"
   },
   {
    "name": "Plakietka NA ŻYWO",
@@ -1970,7 +1970,7 @@
      ]
     }
    ],
-   "id": "btb_plakietka_na_zywo"
+   "id": "wz_plakietka_na_zywo"
   },
   {
    "name": "Republika Logo (01:07:36)",
@@ -2030,7 +2030,7 @@
      }
     }
    ],
-   "id": "btb_republika_logo_01_07_36"
+   "id": "wz_republika_logo_01_07_36"
   },
   {
    "name": "Republika Lower Third",
@@ -2154,7 +2154,7 @@
      }
     }
    ],
-   "id": "btb_republika_lower_third"
+   "id": "wz_republika_lower_third"
   },
   {
    "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
@@ -2287,7 +2287,7 @@
      }
     }
    ],
-   "id": "btb_ticker_tryb_whip_poziomy_pionowy"
+   "id": "wz_ticker_tryb_whip_poziomy_pionowy"
   },
   {
    "name": "Ticker (Whip / Poziomy / Pionowy)",
@@ -2386,7 +2386,7 @@
      }
     }
    ],
-   "id": "btb_ticker_whip_poziomy_pionowy"
+   "id": "wz_ticker_whip_poziomy_pionowy"
   },
   {
    "name": "Ticker - Pilne",
@@ -2484,7 +2484,7 @@
      }
     }
    ],
-   "id": "btb_ticker_-_pilne"
+   "id": "wz_ticker_-_pilne"
   },
   {
    "name": "TICKER PEŁNY EKRAN",
@@ -2502,7 +2502,7 @@
    },
    "nodes": [
     {
-     "id": "grp_btb-full",
+     "id": "grp_ext-full",
      "type": "group",
      "name": "TICKER PEŁNY EKRAN",
      "props": {
@@ -2516,7 +2516,7 @@
       {
        "id": "sh1",
        "type": "rect",
-       "name": "btb-fw-container",
+       "name": "ext-fw-container",
        "props": {
         "x": 0,
         "y": 0,
@@ -2529,7 +2529,7 @@
       {
        "id": "tk2",
        "type": "ticker",
-       "name": "btb-fw-container",
+       "name": "ext-fw-container",
        "props": {
         "x": 0,
         "y": 0,
@@ -2571,10 +2571,10 @@
      }
     }
    ],
-   "id": "btb_ticker_pelny_ekran"
+   "id": "wz_ticker_pelny_ekran"
   },
   {
-   "name": "tylko w btb info",
+   "name": "tylko w tv info",
    "layer": "badge",
    "width": 1920,
    "height": 1080,
@@ -2591,7 +2591,7 @@
     {
      "id": "grp_accbbc51",
      "type": "group",
-     "name": "tylko w btb info",
+     "name": "tylko w tv info",
      "props": {
       "x": 1560.1,
       "y": 49.8,
@@ -2663,7 +2663,7 @@
         "y": 12.2,
         "w": 900,
         "h": 26,
-        "text": "tylko w btb info",
+        "text": "tylko w tv info",
         "font": "Bahnschrift.ttf",
         "size": 24,
         "weight": "700",
@@ -2701,7 +2701,7 @@
      }
     }
    ],
-   "id": "btb_tylko_w_btb_info"
+   "id": "wz_tylko_w_tv_info"
   },
   {
    "name": "Whiper - Ticker - Pilne",
@@ -2799,7 +2799,7 @@
      }
     }
    ],
-   "id": "btb_whiper_-_ticker_-_pilne"
+   "id": "wz_whiper_-_ticker_-_pilne"
   },
   {
    "name": "Wizytówka - normalna",
@@ -2931,7 +2931,7 @@
      }
     }
    ],
-   "id": "btb_wizytowka_-_normalna"
+   "id": "wz_wizytowka_-_normalna"
   },
   {
    "name": "Wizytówka - PILNE",
@@ -3063,7 +3063,7 @@
      }
     }
    ],
-   "id": "btb_wizytowka_-_pilne"
+   "id": "wz_wizytowka_-_pilne"
   },
   {
    "name": "WYDANIE SPECJALNE",
@@ -3193,7 +3193,7 @@
      }
     }
    ],
-   "id": "btb_wydanie_specjalne"
+   "id": "wz_wydanie_specjalne"
   },
   {
    "name": "Z osoatniej chwili",
@@ -3309,7 +3309,7 @@
      }
     }
    ],
-   "id": "btb_z_osoatniej_chwili"
+   "id": "wz_z_osoatniej_chwili"
   },
   {
    "name": "Zegar",
@@ -3414,7 +3414,7 @@
      }
     }
    ],
-   "id": "btb_zegar"
+   "id": "wz_zegar"
   },
   {
    "name": "zegarek (kopia)",
@@ -3523,7 +3523,7 @@
      }
     }
    ],
-   "id": "btb_zegarek_kopia"
+   "id": "wz_zegarek_kopia"
   }
  ],
  "pages": [
@@ -3531,7 +3531,7 @@
    "id": "p8001",
    "number": 8001,
    "name": "Belka - PILNE",
-   "scene": "btb_belka_-_pilne-new-wasm",
+   "scene": "wz_belka_-_pilne-new-wasm",
    "values": {
     "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
    }
@@ -3540,7 +3540,7 @@
    "id": "p8002",
    "number": 8002,
    "name": "Belka - PILNE (Belka_-_PILNE-new.json)",
-   "scene": "btb_belka_-_pilne-new",
+   "scene": "wz_belka_-_pilne-new",
    "values": {
     "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
    }
@@ -3549,7 +3549,7 @@
    "id": "p8003",
    "number": 8003,
    "name": "Belka - PILNE (Belka_-_PILNE.cgpack)",
-   "scene": "btb_belka_-_pilne",
+   "scene": "wz_belka_-_pilne",
    "values": {
     "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
    }
@@ -3558,7 +3558,7 @@
    "id": "p8004",
    "number": 8004,
    "name": "Belka - PILNE (Belka_-_PILNE.json)",
-   "scene": "btb_belka_-_pilne_json",
+   "scene": "wz_belka_-_pilne_json",
    "values": {
     "title": "SIEPACZE KOALICJI 13 GRUDNIA ATAKUJĄ REPUBLIKĘ"
    }
@@ -3567,7 +3567,7 @@
    "id": "p8005",
    "number": 8005,
    "name": "belka exp (18:26:40)",
-   "scene": "btb_belka_exp_18_26_40",
+   "scene": "wz_belka_exp_18_26_40",
    "values": {
     "title": "Sample Title"
    }
@@ -3576,7 +3576,7 @@
    "id": "p8006",
    "number": 8006,
    "name": "Belka glowna",
-   "scene": "btb_belka_glowna",
+   "scene": "wz_belka_glowna",
    "values": {
     "tekst1": "TEST BELEK",
     "tekst2": "Font size"
@@ -3586,7 +3586,7 @@
    "id": "p8007",
    "number": 8007,
    "name": "Belka Miasto",
-   "scene": "btb_belka_miasto",
+   "scene": "wz_belka_miasto",
    "values": {
     "title": "WARSZAWA"
    }
@@ -3595,7 +3595,7 @@
    "id": "p8008",
    "number": 8008,
    "name": "Belka pilne",
-   "scene": "btb_belka_pilne",
+   "scene": "wz_belka_pilne",
    "values": {
     "tekst1": "KCOM MNIE ZNISZCZYĆ",
     "tekst2": "zmasowane ataki w stronę Barneja"
@@ -3605,7 +3605,7 @@
    "id": "p8009",
    "number": 8009,
    "name": "NA ŻYWO lewo dol",
-   "scene": "btb_na_zywo_lewo_dol",
+   "scene": "wz_na_zywo_lewo_dol",
    "values": {
     "title": "na żywo"
    }
@@ -3614,7 +3614,7 @@
    "id": "p8010",
    "number": 8010,
    "name": "Plakietka NA ŻYWO",
-   "scene": "btb_plakietka_na_zywo",
+   "scene": "wz_plakietka_na_zywo",
    "values": {
     "title": "NA ŻYWO"
    }
@@ -3623,7 +3623,7 @@
    "id": "p8011",
    "number": 8011,
    "name": "Republika Lower Third",
-   "scene": "btb_republika_lower_third",
+   "scene": "wz_republika_lower_third",
    "values": {
     "title": "MECHANIZM WARUNKOWOŚCI"
    }
@@ -3632,7 +3632,7 @@
    "id": "p8012",
    "number": 8012,
    "name": "Wizytówka - normalna",
-   "scene": "btb_wizytowka_-_normalna",
+   "scene": "wz_wizytowka_-_normalna",
    "values": {
     "tekst1": "Karol Nawrocki",
     "tekst2": "Prezydent RP"
@@ -3642,7 +3642,7 @@
    "id": "p8013",
    "number": 8013,
    "name": "Wizytówka - PILNE",
-   "scene": "btb_wizytowka_-_pilne",
+   "scene": "wz_wizytowka_-_pilne",
    "values": {
     "tekst1": "Karol Nawrocki",
     "tekst2": "Prezydent RP"
@@ -3652,7 +3652,7 @@
    "id": "p8014",
    "number": 8014,
    "name": "Z osoatniej chwili",
-   "scene": "btb_z_osoatniej_chwili",
+   "scene": "wz_z_osoatniej_chwili",
    "values": {
     "title": "Z OSTATNIEJ CHWILI"
    }
@@ -3661,7 +3661,7 @@
    "id": "p8101",
    "number": 8101,
    "name": "MIASTO lewa",
-   "scene": "btb_miasto_lewa",
+   "scene": "wz_miasto_lewa",
    "values": {
     "title": "BIAŁYSTOK"
    }
@@ -3670,7 +3670,7 @@
    "id": "p8102",
    "number": 8102,
    "name": "MIASTO prawa — Warszawa (odzyskana)",
-   "scene": "btb_miasto_prawa_warszawa_odzyskana",
+   "scene": "wz_miasto_prawa_warszawa_odzyskana",
    "values": {
     "title": "warszawa / trubunał konsytyucyjny bogdana święczkowskiego"
    }
@@ -3679,7 +3679,7 @@
    "id": "p8103",
    "number": 8103,
    "name": "MIASTO prawa",
-   "scene": "btb_miasto_prawa",
+   "scene": "wz_miasto_prawa",
    "values": {
     "title": "Łódź"
    }
@@ -3688,7 +3688,7 @@
    "id": "p8104",
    "number": 8104,
    "name": "NA ŻYWO lewa",
-   "scene": "btb_na_zywo_lewa",
+   "scene": "wz_na_zywo_lewa",
    "values": {
     "title": "na żywo"
    }
@@ -3697,7 +3697,7 @@
    "id": "p8105",
    "number": 8105,
    "name": "NA ŻYWO prawo",
-   "scene": "btb_na_zywo_prawo",
+   "scene": "wz_na_zywo_prawo",
    "values": {
     "title": "na żywo"
    }
@@ -3705,17 +3705,17 @@
   {
    "id": "p8106",
    "number": 8106,
-   "name": "tylko w btb info",
-   "scene": "btb_tylko_w_btb_info",
+   "name": "tylko w tv info",
+   "scene": "wz_tylko_w_tv_info",
    "values": {
-    "title": "tylko w btb info"
+    "title": "tylko w tv info"
    }
   },
   {
    "id": "p8107",
    "number": 8107,
    "name": "WYDANIE SPECJALNE",
-   "scene": "btb_wydanie_specjalne",
+   "scene": "wz_wydanie_specjalne",
    "values": {
     "title": "WYDANIE SPECJALNE"
    }
@@ -3724,9 +3724,9 @@
    "id": "p8201",
    "number": 8201,
    "name": "PILNE (OCG)",
-   "scene": "btb_pilne_ocg",
+   "scene": "wz_pilne_ocg",
    "values": {
-    "wiper_text": "BTB",
+    "wiper_text": "TV",
     "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
    }
   },
@@ -3734,7 +3734,7 @@
    "id": "p8202",
    "number": 8202,
    "name": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
-   "scene": "btb_ticker_tryb_whip_poziomy_pionowy",
+   "scene": "wz_ticker_tryb_whip_poziomy_pionowy",
    "values": {
     "introtext": "PILNE",
     "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\""
@@ -3744,7 +3744,7 @@
    "id": "p8203",
    "number": 8203,
    "name": "Ticker (Whip / Poziomy / Pionowy)",
-   "scene": "btb_ticker_whip_poziomy_pionowy",
+   "scene": "wz_ticker_whip_poziomy_pionowy",
    "values": {
     "introtext": "PILNE",
     "items": "PILNE|PRZYKŁADOWA WIADOMOŚĆ NR 1\nINFO|PRZYKŁADOWA WIADOMOŚĆ NR 2\nPRZYKŁADOWA WIADOMOŚĆ NR 3"
@@ -3754,9 +3754,9 @@
    "id": "p8204",
    "number": 8204,
    "name": "Ticker - Pilne",
-   "scene": "btb_ticker_-_pilne",
+   "scene": "wz_ticker_-_pilne",
    "values": {
-    "wiper_text": "BTB",
+    "wiper_text": "TV",
     "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
    }
   },
@@ -3764,7 +3764,7 @@
    "id": "p8205",
    "number": 8205,
    "name": "TICKER PEŁNY EKRAN",
-   "scene": "btb_ticker_pelny_ekran",
+   "scene": "wz_ticker_pelny_ekran",
    "values": {
     "items": "70. RAJD POLSKI: ROBERT KUBICA WYGRAŁ ETAP GÓRSKI PRZEDOSTATNIEGO DNIA\nWYNIKI NA ŻYWO: KUBICA AWANSOWAŁ NA PODIUM RAJDU POLSKI\nSPORTOWE EMOCJE: DRAMATYCZNA WALKA O WYNIK W OSTATNIM OKRĄŻENIU\nORGANIZATORZY RAJDU POTWIERDZAJĄ: REKORDOWA FREKWENCJA NA TRASIE"
    }
@@ -3773,9 +3773,9 @@
    "id": "p8206",
    "number": 8206,
    "name": "Whiper - Ticker - Pilne",
-   "scene": "btb_whiper_-_ticker_-_pilne",
+   "scene": "wz_whiper_-_ticker_-_pilne",
    "values": {
-    "wiper_text": "BTB",
+    "wiper_text": "TV",
     "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
    }
   },
@@ -3783,28 +3783,28 @@
    "id": "p8301",
    "number": 8301,
    "name": "Zegar",
-   "scene": "btb_zegar",
+   "scene": "wz_zegar",
    "values": {}
   },
   {
    "id": "p8302",
    "number": 8302,
    "name": "zegarek (kopia)",
-   "scene": "btb_zegarek_kopia",
+   "scene": "wz_zegarek_kopia",
    "values": {}
   },
   {
    "id": "p8401",
    "number": 8401,
    "name": "Grafika - theme",
-   "scene": "btb_grafika_-_theme",
+   "scene": "wz_grafika_-_theme",
    "values": {}
   },
   {
    "id": "p8402",
    "number": 8402,
    "name": "Republika Logo (01:07:36)",
-   "scene": "btb_republika_logo_01_07_36",
+   "scene": "wz_republika_logo_01_07_36",
    "values": {}
   }
  ],

@@ -1,7 +1,7 @@
-// Import elementów BTB CG do VizRS (F4.2) – tylko w tym kierunku: BTB jest bazą pomysłów, VizRS systemem docelowym.
-//   BTB `.json` (eksport v3 z BTB, goły element lub lista) i `.cgpack` (ZIP) → scena + strona VizRS, z raportem „co się nie przeniosło”
-// Moduł bez DOM (jedyna zależność: ticker-model.js) – działa w przeglądarce i w Node (testy: tests/vectors/btb.js).
-// Format: docs w BTB-CG `docs/edytor-kontrakt.md` (scene = { version, detached, frame:{w,h}, layers[] }).
+// Import elementów oryginału do VizRS (F4.2) – tylko w tym kierunku: oryginał jest bazą pomysłów, VizRS systemem docelowym.
+//   Oryginał `.json` (eksport v3 z oryginału, goły element lub lista) i `.cgpack` (ZIP) → scena + strona VizRS, z raportem „co się nie przeniosło”
+// Moduł bez DOM (jedyna zależność: ticker-model.js) – działa w przeglądarce i w Node (testy: tests/vectors/import.js).
+// Format: docs w oryginale `docs/edytor-kontrakt.md` (scene = { version, detached, frame:{w,h}, layers[] }).
 
 import { serializeTickerItems, parseTickerItems } from './ticker-model.js';
 import * as MO from './motion.js';
@@ -10,7 +10,7 @@ const EASES = { 'ease-in': 'in', 'ease-out': 'out', 'ease-in-out': 'inout', ease
 const round3 = (n) => Math.round(n * 1000) / 1000;
 const num = (v, d = 0) => (typeof v === 'number' && isFinite(v) ? v : d);
 
-/** Krzywa BTB (nazwa CSS albo cubic-bezier) → krzywa VizRS. */
+/** Krzywa oryginału (nazwa CSS albo cubic-bezier) → krzywa VizRS. */
 export function mapEase(e) {
   const s = String(e || '').trim();
   if (EASES[s]) return EASES[s];
@@ -36,7 +36,7 @@ const weightOf = (w) => {
   return isNaN(n) ? '700' : String(Math.max(300, Math.min(900, Math.round(n / 100) * 100)));
 };
 
-/** Format zegara BTB → VizRS. BTB: `HH:MM` i `HH:MM:SS` (MM = minuty) albo format rozszerzony
+/** Format zegara oryginału → VizRS. Oryginał: `HH:MM` i `HH:MM:SS` (MM = minuty) albo format rozszerzony
  *  z tokenami `dddd MMMM YYYY DD MM D HH mm ss` (MM = miesiąc). VizRS: `yyyy MM dd HH H mm ss`. */
 export function mapClockFormat(f, warn = () => {}) {
   const s = String(f || 'HH:MM:SS');
@@ -51,7 +51,7 @@ export function mapClockFormat(f, warn = () => {}) {
 }
 
 // ---------------------------------------------------------------- ZIP (.cgpack)
-/** Minimalny czytnik ZIP (stored + deflate przez DecompressionStream). Limity jak w BTB `pack-io.js`. */
+/** Minimalny czytnik ZIP (stored + deflate przez DecompressionStream). Limity `pack-io.js`. */
 export async function unzip(buf) {
   try { return await unzipRaw(buf); } catch (e) { if (e instanceof RangeError) throw new Error('uszkodzony plik ZIP'); throw e; }
 }
@@ -87,8 +87,8 @@ async function unzipRaw(buf) {
   return files;
 }
 
-/** Wczytuje plik BTB (`.json` jako tekst albo `.cgpack` jako bajty) → { elements, files }. */
-export async function readBtb(input, name = '') {
+/** Wczytuje plik oryginału (`.json` jako tekst albo `.cgpack` jako bajty) → { elements, files }. */
+export async function readElements(input, name = '') {
   if (typeof input === 'string') return { elements: normalizeElements(JSON.parse(input)), files: {} };
   const u8 = input instanceof Uint8Array ? input : new Uint8Array(input);
   if (u8[0] === 0x50 && u8[1] === 0x4b) {
@@ -108,8 +108,8 @@ export function normalizeElements(j) {
   throw new Error('to nie jest plik elementu (oczekiwano eksportu v3, elementu albo .cgpack)');
 }
 
-// ---------------------------------------------------------------- animacje (ruch BTB → node.motion)
-/** Krzywa BTB (CSS albo GSAP) → nazwa GSAP rozumiana przez web/motion.js (jak CGMotion.normalizeEase). */
+// ---------------------------------------------------------------- animacje (ruch oryginału → node.motion)
+/** Krzywa oryginału (CSS albo GSAP) → nazwa GSAP rozumiana przez web/motion.js (jak CGMotion.normalizeEase). */
 const CSS_EASE = {
   'ease-in-sine': 'sine.in', 'ease-out-sine': 'sine.out', 'ease-in-out-sine': 'sine.inOut', 'ease-in-quad': 'quad.in', 'ease-out-quad': 'quad.out',
   'ease-in-out-quad': 'quad.inOut', 'ease-in-cubic': 'cubic.in', 'ease-out-cubic': 'cubic.out', 'ease-in-out-cubic': 'cubic.inOut', 'bounce-in': 'bounce.in',
@@ -121,9 +121,9 @@ export function motionEase(e) {
   const v = CSS_EASE[s] || s;
   return v.length <= 60 && /^[A-Za-z0-9.(),\- ]+$/.test(v) ? v : undefined;
 }
-const BTB_TEXT_ALIAS = { blurIn: 'blur', blurOut: 'blur', slideReveal: 'slide-up', slideHide: 'hide' };
+const EXT_TEXT_ALIAS = { blurIn: 'blur', blurOut: 'blur', slideReveal: 'slide-up', slideHide: 'hide' };
 const rnd = (v) => Math.round(v * 1000) / 1000;
-/** Preset IN/OUT warstwy/elementu BTB → motion.in/out; nieznany typ → `fallback` z BTB albo przenikanie. */
+/** Preset IN/OUT warstwy/elementu oryginału → motion.in/out; nieznany typ → `fallback` z oryginału albo przenikanie. */
 export function motionSpec(m, warn, where) {
   if (!m || !m.type) return null;
   let type = m.type;
@@ -140,13 +140,13 @@ export function motionSpec(m, warn, where) {
   if (e) o.ease = e;
   return o;
 }
-/** Efekt tekstu BTB (`motion.text` / `textOut`) → motion.textIn/textOut. */
+/** Efekt tekstu oryginału (`motion.text` / `textOut`) → motion.textIn/textOut. */
 export function textSpec(t, kind, warn, where) {
   if (!t || !t.type || t.type === 'none') return null;
   const list = kind === 'in' ? MO.TEXT_IN : MO.TEXT_OUT;
-  let type = BTB_TEXT_ALIAS[t.type] || t.type;
+  let type = EXT_TEXT_ALIAS[t.type] || t.type;
   if (!list.includes(type)) {
-    const fb = BTB_TEXT_ALIAS[t.fallback] || t.fallback;
+    const fb = EXT_TEXT_ALIAS[t.fallback] || t.fallback;
     if (list.includes(fb)) type = fb;
     else { warn(`${where}: efekt tekstu „${t.type}” nie ma odpowiednika – użyto przenikania`); type = 'fade'; }
   }
@@ -160,7 +160,7 @@ export function textSpec(t, kind, warn, where) {
   if (e) o.ease = e;
   return o;
 }
-/** Pętla uwagi BTB → motion.loop. */
+/** Pętla uwagi oryginału → motion.loop. */
 export function loopSpec(l) {
   if (!l || !l.type || l.type === 'none' || !MO.LOOP_TYPES.includes(l.type)) return null;
   const o = { type: l.type };
@@ -170,14 +170,14 @@ export function loopSpec(l) {
   return o;
 }
 
-// ---------------------------------------------------------------- tickery (import z BTB)
+// ---------------------------------------------------------------- tickery (import z oryginału)
 const MODE_IN = { horizontal: 'crawl', scrolling: 'crawl', vertical: 'roll', whip: 'whip' };
 const SEP_IN = { skewed: 'skew', dot: 'dot', square: 'square', pipe: 'pipe' };
-/** Wiadomości elementu BTB (stringi albo {text, category}) → wiersze `KAT|treść`. */
-export function btbItemsText(items) {
+/** Wiadomości elementu oryginału (stringi albo {text, category}) → wiersze `KAT|treść`. */
+export function extItemsText(items) {
   return serializeTickerItems((items || []).map((i) => (i && typeof i === 'object' ? { cat: String(i.category || ''), color: '', text: String(i.text || '') } : { cat: '', color: '', text: String(i ?? '') })));
 }
-/** Ustawienia tickera z elementu BTB (tryb, prędkość, etykieta, kolory kategorii, separator, wiper). */
+/** Ustawienia tickera z elementu oryginału (tryb, prędkość, etykieta, kolory kategorii, separator, wiper). */
 function tickerSettings(el, layerBased) {
   const p = {};
   const f = el.fields || {};
@@ -197,9 +197,9 @@ function tickerSettings(el, layerBased) {
   return p;
 }
 
-// ---------------------------------------------------------------- import: element BTB → scena VizRS
+// ---------------------------------------------------------------- import: element oryginału → scena VizRS
 /**
- * @param el   element BTB (eksport v3)
+ * @param el   element oryginału (eksport v3)
  * @param opts { knownFonts?: string[], assetName?: (src)=>string|null }
  * @returns { scene, page: { name, values }, warnings: string[] }
  */
@@ -250,7 +250,7 @@ export function convertElement(el, opts = {}) {
 
   // --- ticker z szablonu kodowego przekształconego w scenę: warstwa ticker zginęła, został statyczny tekst pierwszej wiadomości.
   // Odtwarzamy węzeł ticker z `items` i ustawień elementu; wiper (kształt + tekst etykiety) przejmuje pas kategorii tickera.
-  // tylko typ TICKER: BTB zapisuje domyślne `items` („Wiadomość 1/2”) także w belkach, plakietkach i obrazach
+  // tylko typ TICKER: oryginał zapisuje domyślne `items` („Wiadomość 1/2”) także w belkach, plakietkach i obrazach
   const isTickerEl = el.type === 'TICKER';
   let tkPlan = null;
   if (isTickerEl && !sc.layers.some((l) => l.type === 'ticker')) {
@@ -270,7 +270,7 @@ export function convertElement(el, opts = {}) {
   }
 
   // --- warstwy
-  let freeText = 0; // warstwy tekstu bez pola BTB → pola tekst1, tekst2…
+  let freeText = 0; // warstwy tekstu bez pola oryginału → pola tekst1, tekst2…
   const layerById = new Map(sc.layers.map((l) => [l.id, l]));
   const toNode = (l) => {
     const name = String(l.name || l.id).replace(/^(Kształt|Tekst|Obraz|Ticker|Zegar)\s*—\s*/i, '') || l.id;
@@ -329,10 +329,10 @@ export function convertElement(el, opts = {}) {
         if (num(f.letterSpacing)) p.spacing = f.letterSpacing;
         p.lineHeight = num(f.lineHeight, 1.15);
         if (f.shadow && f.shadow !== 'none') p.shadow = 8;
-        // ściskanie jak w BTB (renderer: tryb `squeeze` – tylko scaleX do granicy, font bez zmian)
+        // ściskanie (renderer: tryb `squeeze` – tylko scaleX do granicy, font bez zmian)
         p.textFit = l.squash ? 'squeeze' : 'none';
-        // granica ściśnięcia jak w BTB: 0 = bez granicy (w VizRS najmniejsze dozwolone 0,3); brak granicy w zapisie to element
-        // sprzed M7 – BTB migruje go (upgrade-minsquash.js) do minSquash 0, więc też bez granicy (nowe warstwy BTB zapisują 0,8 jawnie)
+        // granica ściśnięcia: 0 = bez granicy (w VizRS najmniejsze dozwolone 0,3); brak granicy w zapisie to element
+        // sprzed M7 – oryginał migruje go (upgrade-minsquash.js) do minSquash 0, więc też bez granicy (nowe warstwy oryginału zapisują 0,8 jawnie)
         if (l.squash) p.squeezeMin = num(l.minSquash) > 0 ? Math.max(0.3, Math.min(1, num(l.minSquash))) : 0.3;
         // wnętrze tła pod tekstem: od lewej krawędzi tekstu do prawej krawędzi tła minus ten sam margines co z lewej
         const plateInner = () => {
@@ -341,12 +341,12 @@ export function convertElement(el, opts = {}) {
           return plate ? num(plate.x) + num(plate.w) - num(l.x) - (num(l.x) - num(plate.x)) : 0;
         };
         if (l.autoW) {
-          // BTB: warstwa rośnie z tekstem do maxW (tło za nią); dłuższy tekst ściskamy w maxW, zamiast wypychać plakietkę poza ekran
+          // oryginał: warstwa rośnie z tekstem do maxW (tło za nią); dłuższy tekst ściskamy w maxW, zamiast wypychać plakietkę poza ekran
           p.w = round3(num(l.maxW, num(l.w)));
           if (!l.squash) { p.textFit = 'squeeze'; p.squeezeMin = 0.5; }
         }
         if (l.squash && el.type === 'BADGE' && !l.autoW) {
-          // BADGE w BTB ściska tekst wg długości (> 25 znaków → 25/len, min. 0,5), a nie do szerokości warstwy;
+          // BADGE w oryginale ściska tekst wg długości (> 25 znaków → 25/len, min. 0,5), a nie do szerokości warstwy;
           // w VizRS: ściskanie do wnętrza tła z tym samym marginesem, z tą samą granicą 0,5
           p.squeezeMin = 0.5;
           const inner = plateInner();
@@ -355,12 +355,12 @@ export function convertElement(el, opts = {}) {
         }
         let fid = l.field ? String(l.field).toLowerCase().replace(/[^\w.\-]/g, '_') + (l.line ? `_l${l.line}` : '') : '';
         if (!fid) {
-          // BTB edytuje takie warstwy w edytorze WYSIWYG; w VizRS operator zmienia tekst w polu strony
+          // Oryginał edytuje takie warstwy w edytorze WYSIWYG; w VizRS operator zmienia tekst w polu strony
           freeText++;
           fid = 'tekst' + freeText;
           while (fid in fields) fid += '_';
           fieldMeta[fid] = { label: `Tekst ${freeText}` };
-          // szerokość = szerokość tekstu przykładowego z BTB; przy wyrównaniu do lewej rozszerzamy do krawędzi tła,
+          // szerokość = szerokość tekstu przykładowego z oryginału; przy wyrównaniu do lewej rozszerzamy do krawędzi tła,
           // żeby dłuższy tekst nie był ściskany do szerokości przykładu (przy środku/prawej zmieniłoby to położenie)
           const inner = p.align === 'left' && !l.autoW ? plateInner() : 0;
           if (inner > num(l.w) + 1) p.w = round3(inner);
@@ -396,7 +396,7 @@ export function convertElement(el, opts = {}) {
         break;
       }
       case 'ticker': {
-        // BTB: „treść␣[odstęp gap]sep[odstęp gap]” – odstęp w px przybliżony spacjami (~0,26 em)
+        // oryginał: „treść␣[odstęp gap]sep[odstęp gap]” – odstęp w px przybliżony spacjami (~0,26 em)
         const sep = String(l.separator ?? '•'), gapN = Math.max(1, Math.round(num(l.gap, 48) / (num(l.font?.size, 32) * 0.18)));
         p.sep = sep ? ' '.repeat(gapN + 1) + sep + ' '.repeat(gapN) : ' '.repeat(gapN);
         tickerNode(node, l.font || {}, true);
@@ -413,9 +413,9 @@ export function convertElement(el, opts = {}) {
     const p = node.props;
     node.type = 'ticker';
     Object.assign(p, tickerSettings(el, layerBased));
-    // warstwa ticker sceny BTB pokazuje same treści (bez kategorii) i startuje z taśmą od lewej krawędzi
+    // warstwa ticker sceny oryginału pokazuje same treści (bez kategorii) i startuje z taśmą od lewej krawędzi
     const its = layerBased ? (el.items || []).map((i) => (i && typeof i === 'object' ? String(i.text || '') : String(i ?? ''))) : el.items;
-    p.text = btbItemsText(its) || 'Wiadomość 1\nWiadomość 2';
+    p.text = extItemsText(its) || 'Wiadomość 1\nWiadomość 2';
     if (layerBased) p.crawlFrom = 'left';
     p.font = f.family || 'Inter'; p.size = num(f.size, 32); p.weight = weightOf(f.weight); p.color = toHex(f.color || '#ffffff');
     if (f.transform === 'uppercase') p.upper = true;
@@ -427,7 +427,7 @@ export function convertElement(el, opts = {}) {
   }
   for (const l of sc.layers) { if (tkPlan?.drop.has(l.id)) continue; const n = toNode(l); if (n) nodes.push(n); }
 
-  // --- animacje: ruch BTB (presety IN/OUT, efekty tekstu, pętle, „po warstwie”) → node.motion 1:1 (web/motion.js)
+  // --- animacje: ruch oryginału (presety IN/OUT, efekty tekstu, pętle, „po warstwie”) → node.motion 1:1 (web/motion.js)
   const group = { id: 'grp_' + (el.id || 'el').slice(0, 8), type: 'group', name: String(el.name || 'element').slice(0, 60), props: { x: gx, y: gy, w: W, h: H }, anim: {}, fields: {}, children: nodes };
   if (scale !== 1) group.props.scale = scale;
   const an = el.animation || {};
@@ -436,7 +436,7 @@ export function convertElement(el, opts = {}) {
   setMotion(group, 'out', motionSpec(an.out, warn, 'element'));
   setMotion(group, 'loop', loopSpec(an.loop));
   const textLayers = sc.layers.filter((l) => l.type === 'text' && idMap.get(l.id));
-  const afterIds = new Map(); // węzeł → id warstwy BTB, po której startuje (dla wejścia)
+  const afterIds = new Map(); // węzeł → id warstwy oryginału, po której startuje (dla wejścia)
   for (const l of sc.layers) {
     const n = idMap.get(l.id); if (!n) continue;
     const m = l.motion || {};
@@ -461,7 +461,7 @@ export function convertElement(el, opts = {}) {
   for (const [n, id] of afterIds) { const tg = idMap.get(id); if (tg && tg !== n) n.motion.after = tg.id; }
   // stałe efekty tła kształtów (shimmer, pulse, glow, scanline)
   for (const l of sc.layers) { const n = idMap.get(l.id); if (n && l.type === 'shape' && MO.BG_TYPES.includes(l.effect) && l.effect !== 'none') setMotion(n, 'bg', l.effect); }
-  // ruch całego elementu w BTB działa na `.cg-scene` (punkt odniesienia: lewy górny róg) wewnątrz kontenera z położeniem i skalą layoutu,
+  // ruch całego elementu w oryginale działa na `.cg-scene` (punkt odniesienia: lewy górny róg) wewnątrz kontenera z położeniem i skalą layoutu,
   // więc przesunięcia wjazdu też są skalowane; przy skali ≠ 1 ruch idzie do wewnętrznej grupy (zewnętrzna = layout)
   let root = group;
   if (group.motion) {
@@ -473,7 +473,7 @@ export function convertElement(el, opts = {}) {
       root = group;
     }
   }
-  // wejście elementu: warstwy startują po nim (w BTB faza elementu i warstw biegnie razem – zostawiamy równolegle)
+  // wejście elementu: warstwy startują po nim (w oryginale faza elementu i warstw biegnie razem – zostawiamy równolegle)
   const all = [group, ...(group.children[0]?.id === group.id + '_ruch' ? [group.children[0]] : []), ...nodes];
   const shifts = MO.sequenceShifts([root]);
   let stop = 0, outL = 0;

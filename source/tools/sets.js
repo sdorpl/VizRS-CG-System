@@ -6,26 +6,26 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 const ROOT = path.resolve(__dirname, '../..');
-// [nazwa, plik show.json albo katalog z elementami BTB CG (.json v3 / .cgpack)]
+// [nazwa, plik show.json albo katalog z elementami oryginału (.json v3 / .cgpack)]
 const SETS = [
   ['INFO24', path.join(ROOT, 'examples/archiwum/INFO24.show.json')],
   ['R7', path.join(ROOT, 'examples/archiwum/R7_NEWS.show.json')],
-  ['BTB', path.join(ROOT, 'source/tests/fixtures/btb')],
-  ['BTB-PILNE', path.join(ROOT, 'examples/archiwum/BTB_PILNE.show.json')],
+  ['WZORCE', path.join(ROOT, 'source/tests/fixtures/import')],
+  ['PILNE', path.join(ROOT, 'examples/archiwum/PILNE.show.json')],
 ];
 const KNOWN_FONTS = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
 
-// Import szablonów BTB CG (.json v3 / .cgpack) do pustego show – ta sama ścieżka co „Import BTB” w Artist.
-async function importBtb(B, dir) {
-  const io = await import(pathToFileURL(path.join(ROOT, 'source/web/btb-io.js')).href);
+// Import szablonów oryginału (.json v3 / .cgpack) do pustego show – ta sama ścieżka co „⇧ Element” w Artist.
+async function importElements(B, dir) {
+  const io = await import(pathToFileURL(path.join(ROOT, 'source/web/element-import.js')).href);
   const post = async (url, body, raw) => {
     const r = await fetch(B + url, { method: 'POST', body: raw ? body : JSON.stringify(body), headers: raw ? {} : { 'Content-Type': 'application/json' } });
     const j = await r.json().catch(() => ({}));
@@ -35,7 +35,7 @@ async function importBtb(B, dir) {
   const warnings = {};
   for (const name of fs.readdirSync(dir).filter((n) => /\.(json|cgpack)$/i.test(n)).sort()) {
     const buf = fs.readFileSync(path.join(dir, name));
-    const { elements, files } = await io.readBtb(name.endsWith('.json') ? buf.toString('utf8') : buf, name);
+    const { elements, files } = await io.readElements(name.endsWith('.json') ? buf.toString('utf8') : buf, name);
     for (const el of elements) {
       const used = new Set();
       const r = io.convertElement(el, {
@@ -63,7 +63,7 @@ async function startSet(BIN, setName, file) {
   const B = `http://127.0.0.1:${port}`;
   try {
     for (let i = 0; i < 60; i++) { try { await fetch(B + '/api/state'); break; } catch (e) { await sleep(100); } }
-    const notes = isDir ? await importBtb(B, file) : {};
+    const notes = isDir ? await importElements(B, file) : {};
     const show = await fetch(B + '/api/show').then((r) => r.json());
     return { B, show, notes, stop };
   } catch (e) { stop(); throw e; }

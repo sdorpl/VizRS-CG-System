@@ -1,4 +1,4 @@
-// Galeria wszystkich grafik zestawów przykładowych (INFO24, R7, paczka BTB_CG, belka BTB wielowierszowa):
+// Galeria wszystkich grafik zestawów przykładowych (INFO24, R7, paczka WZORCE, belka PILNE wielowierszowa):
 //   node tools/gallery.js [ścieżka-do-vizrs] [--out katalog]
 // Każda strona jest brana osobno na czyste wyjście, zrzut po zakończeniu animacji wejścia.
 // Wynik (poza repo, domyślnie <tmp>/vizrs-galeria): <ZESTAW>-<numer>.png, arkusze <ZESTAW>-arkusz.png i przegląd index.html.
@@ -9,7 +9,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
@@ -22,10 +22,10 @@ const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && args[i - 1] 
 const SETS = [
   ['INFO24', 'examples/archiwum/INFO24.show.json'],
   ['R7', 'examples/archiwum/R7_NEWS.show.json'],
-  ['BTB_CG', 'examples/archiwum/BTB_CG/show.json', 'examples/archiwum/BTB_CG/assets'],
-  ['BTB_PILNE', 'examples/archiwum/BTB_PILNE.show.json', 'examples/archiwum/BTB_CG/assets'],
-  ['BTB_ALPHA', 'examples/archiwum/BTB_ALPHA/show.json', 'examples/archiwum/BTB_CG/assets', 'examples/archiwum/BTB_ALPHA/assets'],
-  ['BTB_TRIO', 'examples/archiwum/BTB_TRIO/show.json', 'examples/archiwum/BTB_CG/assets', 'examples/archiwum/BTB_TRIO/assets'],
+  ['EXT_CG', 'examples/archiwum/WZORCE/show.json', 'examples/archiwum/WZORCE/assets'],
+  ['EXT_PILNE', 'examples/archiwum/PILNE.show.json', 'examples/archiwum/WZORCE/assets'],
+  ['EXT_ALPHA', 'examples/archiwum/ALPHA/show.json', 'examples/archiwum/WZORCE/assets', 'examples/archiwum/ALPHA/assets'],
+  ['EXT_TRIO', 'examples/archiwum/DOCK/show.json', 'examples/archiwum/WZORCE/assets', 'examples/archiwum/DOCK/assets'],
 ];
 const BG = 'radial-gradient(ellipse at 60% 35%, #56657a 0%, #2b3442 45%, #15191f 100%)';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
@@ -125,25 +125,25 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     sc = await saved();
     ok(sc.fieldMeta.tytul && sc.fieldMeta.tytul.maxChars === 15 && sc.fieldMeta.tytul.upper === true && sc.fieldMeta.tytul.help === 'wpisz krótko', 'reguły pola zapisane w fieldMeta', sc.fieldMeta);
     ok(Array.isArray(sc.dock) && sc.dock[0].target === 'page:3001', 'powiązanie dock zapisane w scenie', sc.dock);
-    // import BTB CG
-    const FXD = path.join(__dirname, '../fixtures/btb');
-    const importBtb = async (file) => {
+    // import elementu
+    const FXD = path.join(__dirname, '../fixtures/import');
+    const importElements = async (file) => {
       await pg.keyboard.press('Escape');
-      const [fc] = await Promise.all([pg.waitForEvent('filechooser'), pg.click('#bImpBtb')]);
+      const [fc] = await Promise.all([pg.waitForEvent('filechooser'), pg.click('#bImpEl')]);
       await fc.setFiles(path.join(FXD, file)); await sleep(1500);
     };
     const nBefore = (await api('/api/show')).scenes.length;
-    await importBtb('na_zywo_lewa.json');
-    ok(await pg.locator('#rep').count() === 1, 'import BTB: okno raportu konwersji');
+    await importElements('na_zywo_lewa.json');
+    ok(await pg.locator('#rep').count() === 1, 'import elementu: okno raportu konwersji');
     await pg.click('#repOk');
     let sh = await api('/api/show');
     const imported = sh.scenes.find((x) => x.name === 'NA ŻYWO lewa' || /ŻYWO/i.test(x.name));
-    ok(sh.scenes.length === nBefore + 1 && !!imported, 'import BTB (.json): scena zapisana na serwerze (walidacja przeszła)', sh.scenes.map((x) => x.name));
-    ok(imported && imported.nodes[0].type === 'group' && sh.pages.some((p) => p.scene === imported.id && p.values.title === 'na żywo'), 'import BTB: strona z wartością pola title');
-    await importBtb('belka_pilne.cgpack');
+    ok(sh.scenes.length === nBefore + 1 && !!imported, 'import elementu (.json): scena zapisana na serwerze (walidacja przeszła)', sh.scenes.map((x) => x.name));
+    ok(imported && imported.nodes[0].type === 'group' && sh.pages.some((p) => p.scene === imported.id && p.values.title === 'na żywo'), 'import elementu: strona z wartością pola title');
+    await importElements('belka_pilne.cgpack');
     await pg.click('#repOk').catch(() => {});
     sh = await api('/api/show');
-    ok(sh.scenes.length === nBefore + 2, 'import BTB (.cgpack): ZIP rozpakowany, scena dodana', sh.scenes.length);
+    ok(sh.scenes.length === nBefore + 2, 'import elementu (.cgpack): ZIP rozpakowany, scena dodana', sh.scenes.length);
 
     // presety tickerów i panel węzła ticker (tylko właściwości bieżącego trybu, edytor wiadomości próbnych)
     await pg.goto(B + '/artist?scene=at'); await sleep(1000);

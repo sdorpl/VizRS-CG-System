@@ -1,10 +1,10 @@
-/* Kopia text-model.js z BTB-CG-System-alpha (commit f40f334, gałąź v0.2.x): wspólny model tekstu (sanityzacja HTML, RichText v1, typografia PL,
- * reguły pola, zamiana słów, tokeny pisowni). NIE EDYTUJ RĘCZNIE – odświeżaj: tools/sync-btb.sh. Zgodność pilnują wspólne wektory tests/vectors/*.json. */
+/* Kopia text-model.js z oryginalnego systemu CG (commit f40f334, gałąź v0.2.x): wspólny model tekstu (sanityzacja HTML, RichText v1, typografia PL,
+ * reguły pola, zamiana słów, tokeny pisowni). NIE EDYTUJ RĘCZNIE – odświeżaj: tools/sync-text-model.sh. Zgodność pilnują wspólne wektory tests/vectors/*.json. */
 /**
  * text-model.js — wspólny model tekstu (M3.2): sanityzacja HTML, tekst/linie, RichText v1 ↔ HTML.
  *
  * Jedna implementacja logiki w dwóch językach: ten plik (Node + przeglądarka, bez DOM — własny tokenizer) i `src/text.rs`
- * w BTB CG Editor. Zgodność pilnują wspólne wektory `test-fixtures/text/*.json` (Node: `test-text-model.js`, Rust: `cargo test`).
+ * w oryginale. Zgodność pilnują wspólne wektory `test-fixtures/text/*.json` (Node: `test-text-model.js`, Rust: `cargo test`).
  *
  * RichText v1:  { v: 1, blocks: [ { align?: 'left'|'center'|'right', lh?: 0.5…3 (interlinia bloku, mnożnik), runs: [ { t: 'tekst', m?: marks } | { br: true } ] } ] }
  * marks:        { weight?: 100–900, italic?, underline?, strike?, color?, bg?, family?, size? (px), tracking? (em), transform?, squash? (0–1), padding? (CSS, np. '0 8px'), radius? (CSS, np. '6px') }
@@ -209,7 +209,7 @@
     const canon = (m) => Object.fromEntries(Object.keys(m).sort().map((k) => [k, m[k]]));
     const sameMarks = (a, b) => JSON.stringify(canon(a || {})) === JSON.stringify(canon(b || {}));
 
-    /** Interlinia bloku z `style` (tylko liczba bez jednostki, 0,5–3; zaokrąglenie do 0,01) albo null. Lustro: btb-cgeditor `text::block_lh`. */
+    /** Interlinia bloku z `style` (tylko liczba bez jednostki, 0,5–3; zaokrąglenie do 0,01) albo null. Lustro: `text::block_lh` w oryginale. */
     function blockLh(style) {
         const m = /(?:^|;)\s*line-height:\s*(\d+(?:\.\d+)?)\s*(?=;|$)/i.exec(style || '');
         if (!m) return null;
@@ -348,7 +348,7 @@
     /**
      * Reguły pola przy zapisie (`ocgInputs[].text`): `upperCase` (wersaliki w treści), zakresy `size` (px), `letterSpacing` (em), `lineHeight`
      * (mnożnik bloku) — wartości spoza zakresu są przycinane. Bez reguł HTML wraca bez zmian; z regułami — kanoniczny (toRich → toHtml).
-     * Lustro: `text::field_rules` w btb-cgeditor, wektory `test-fixtures/text/field-rules.json`.
+     * Lustro: `text::field_rules` w oryginale, wektory `test-fixtures/text/field-rules.json`.
      */
     function fieldRules(html, rules) {
         const r = rules || {};
@@ -428,7 +428,7 @@
     /**
      * Słowa tekstu do sprawdzania pisowni: [{ word, form, start, end }] (indeksy w znakach Unicode, `end` wyłącznie). Słowo = litery (z łącznikiem lub apostrofem
      * między literami); pomijane: jednoliterowe, przyległe do cyfry, skrót wersalikami do 4 liter (TVP, PAP). `form` = co sprawdzać: wersaliki dłuższe niż
-     * 4 litery (nagłówki) sprawdzamy małymi literami. Lustro: `text::spell_tokens` w btb-cgeditor, wektory `test-fixtures/text/spell-tokens.json`.
+     * 4 litery (nagłówki) sprawdzamy małymi literami. Lustro: `text::spell_tokens` w oryginale, wektory `test-fixtures/text/spell-tokens.json`.
      */
     function spellTokens(text) {
         const cs = Array.from(String(text == null ? '' : text));

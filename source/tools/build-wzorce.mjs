@@ -1,6 +1,6 @@
-// Paczka „BTB CG” dla VizRS: każdy element z katalogu wzorców BTB CG konwertowany osobno (web/btb-io.js) → examples/archiwum/BTB_CG/
-//   node tools/build-btb-pack.mjs [katalog-wzorców] [katalog-wyjściowy]
-//   BTB_CG_DIR = BTB CG System (pliki /uploads/… i font Bahnschrift), domyślnie ~/Nextcloud/GitHub/BTB-CG-System-alpha
+// Paczka WZORCE dla VizRS: każdy element z katalogu wzorców oryginału konwertowany osobno (web/element-import.js) → examples/archiwum/WZORCE/
+//   node tools/build-wzorce.mjs [katalog-wzorców] [katalog-wyjściowy]
+//   CG_SRC_DIR = katalog oryginalnego systemu CG (pliki /uploads/… i font Bahnschrift)
 // Wynik: show.json (sceny + strony, numeracja wg rodzaju elementu), assets/ (obrazy, fonty), konwersja.json (ostrzeżenia).
 import fs from 'fs';
 import os from 'os';
@@ -9,15 +9,15 @@ import { pathToFileURL } from 'url';
 import { fileURLToPath } from 'url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SRC = path.resolve(process.argv[2] || path.join(os.homedir(), 'Nextcloud/GitHub/btb-cgeditor/CG elements converted'));
-const OUT = path.resolve(process.argv[3] || path.join(HERE, '../../examples/archiwum/BTB_CG'));
-const BTB = path.resolve(process.env.BTB_CG_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'));
-const io = await import(pathToFileURL(path.join(HERE, '../web/btb-io.js')).href);
+const SRC = path.resolve(process.argv[2] || (() => { throw new Error('podaj katalog elementów (CG_ELEMENTS)'); })());
+const OUT = path.resolve(process.argv[3] || path.join(HERE, '../../examples/archiwum/WZORCE'));
+const ORIG = path.resolve(process.env.CG_SRC_DIR || (() => { throw new Error('ustaw CG_SRC_DIR (katalog oryginalnego systemu CG)'); })());
+const io = await import(pathToFileURL(path.join(HERE, '../web/element-import.js')).href);
 
 const OFFLINE = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
-// fonty BTB dostępne jako pliki: rodzina → [plik w BTB, nazwa zasobu VizRS]
+// fonty oryginału dostępne jako pliki: rodzina → [plik w ORIG, nazwa zasobu VizRS]
 const FONT_FILES = { Bahnschrift: ['font/BAHNSCHRIFT.TTF', 'Bahnschrift.ttf'] };
-// rodzaj elementu BTB → [pierwszy numer strony, warstwa VizRS]; osobne warstwy pozwalają łączyć belkę, plakietkę, ticker i zegar na antenie
+// rodzaj elementu oryginału → [pierwszy numer strony, warstwa VizRS]; osobne warstwy pozwalają łączyć belkę, plakietkę, ticker i zegar na antenie
 const KIND = { LOWER_THIRD: [8001, 'main'], BADGE: [8101, 'badge'], TICKER: [8201, 'ticker'], CLOCK: [8301, 'clock'], IMAGE: [8401, 'logo'] };
 
 const slug = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').replace(/[^\w-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase();
@@ -26,13 +26,13 @@ fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'assets'), { recursive: true });
 const copyAsset = (from, name) => { fs.copyFileSync(from, path.join(OUT, 'assets', name)); return name; };
 
-const show = { name: 'BTB CG – elementy przeniesione', scenes: [], pages: [], playlists: [] };
+const show = { name: 'WZORCE – elementy przeniesione', scenes: [], pages: [], playlists: [] };
 const report = [];
 const next = {};
 const names = new Set();
 for (const file of fs.readdirSync(SRC).filter((f) => /\.(json|cgpack)$/i.test(f)).sort((a, b) => a.localeCompare(b, 'pl'))) {
   const buf = fs.readFileSync(path.join(SRC, file));
-  const { elements, files } = await io.readBtb(/\.cgpack$/i.test(file) ? new Uint8Array(buf) : buf.toString('utf8'), file);
+  const { elements, files } = await io.readElements(/\.cgpack$/i.test(file) ? new Uint8Array(buf) : buf.toString('utf8'), file);
   elements.forEach((el, i) => {
     const r = io.convertElement(el, {
       knownFonts: [...OFFLINE, 'Arial', ...Object.keys(FONT_FILES)],
@@ -40,14 +40,14 @@ for (const file of fs.readdirSync(SRC).filter((f) => /\.(json|cgpack)$/i.test(f)
         const k = Object.keys(files).find((n) => n === src || n === src.replace(/^\//, ''));
         if (k) { const n = k.split('/').pop(); fs.writeFileSync(path.join(OUT, 'assets', n), files[k]); return n; }
         const up = src.match(/^\/?uploads\/([\w.-]+)$/);
-        if (up && fs.existsSync(path.join(BTB, 'uploads', up[1]))) return copyAsset(path.join(BTB, 'uploads', up[1]), up[1]);
+        if (up && fs.existsSync(path.join(ORIG, 'uploads', up[1]))) return copyAsset(path.join(ORIG, 'uploads', up[1]), up[1]);
         return null;
       },
     });
-    // fonty z plików BTB → zasób VizRS (renderer ładuje rodzinę o nazwie pliku z /assets)
+    // fonty z plików oryginału → zasób VizRS (renderer ładuje rodzinę o nazwie pliku z /assets)
     const walk = (n) => {
       const ff = FONT_FILES[n.props.font];
-      if (ff && fs.existsSync(path.join(BTB, ff[0]))) n.props.font = copyAsset(path.join(BTB, ff[0]), ff[1]);
+      if (ff && fs.existsSync(path.join(ORIG, ff[0]))) n.props.font = copyAsset(path.join(ORIG, ff[0]), ff[1]);
       (n.children || []).forEach(walk);
     };
     r.scene.nodes.forEach(walk);
@@ -60,8 +60,8 @@ for (const file of fs.readdirSync(SRC).filter((f) => /\.(json|cgpack)$/i.test(f)
     if (names.has(name)) name = `${name} (${file})`.slice(0, 100);
     names.add(name);
     // ten sam rdzeń nazwy (Belka_-_PILNE.json i .cgpack) → różne id, inaczej strony wskazują jedną scenę
-    let id = ('btb_' + slug(stem)).slice(0, 50);
-    if (show.scenes.some((s) => s.id === id)) id = ('btb_' + slug(stem)).slice(0, 44) + '_' + slug(path.extname(file).slice(1));
+    let id = ('wz_' + slug(stem)).slice(0, 50);
+    if (show.scenes.some((s) => s.id === id)) id = ('wz_' + slug(stem)).slice(0, 44) + '_' + slug(path.extname(file).slice(1));
     show.scenes.push({ ...r.scene, id, name, layer });
     show.pages.push({ id: 'p' + number, number, name, scene: id, values: r.page.values });
     report.push({ file, element: el.name, type: el.type || '', scene: id, page: number, layer, warnings: r.warnings });

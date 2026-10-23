@@ -32,8 +32,8 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 
 - **Dane z zewnątrz są wrogie.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
 - **Nie wywalaj serwera:** błędy przez `Result`, blokady odporne na zatrucie (`lk()`), wolny klient SSE jest odłączany. Antena działa dalej, nawet gdy zapis na dysk się nie uda.
-- **Import tylko do VizRS.** Elementy z zewnętrznego edytora CG są importowane (`web/btb-io.js`); eksportu z VizRS do innych formatów nie ma i nie przywracamy go. `.cgpack` to własny format VizRS.
-- **Wspólny model tekstu:** `web/text-model.js` to kopia zewnętrznego modułu; zgodność pilnują wektory `source/tests/vectors/*.json` i `source/tools/sync-btb.sh --check`. Nie zmieniaj go tylko po jednej stronie.
+- **Import tylko do VizRS.** Elementy z zewnętrznego edytora CG są importowane (`web/element-import.js`); eksportu z VizRS do innych formatów nie ma i nie przywracamy go. `.cgpack` to własny format VizRS.
+- **Wspólny model tekstu:** `web/text-model.js` to kopia zewnętrznego modułu; zgodność pilnują wektory `source/tests/vectors/*.json` i `source/tools/sync-text-model.sh <katalog oryginału> --check` (albo `CG_SRC_DIR`). Nie zmieniaj go tylko po jednej stronie.
 
 **Dokumentacja**
 
@@ -67,7 +67,7 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test
 cargo build --release
-node tests/vectors/run.js && node tests/vectors/btb.js && node tests/motion.js   # wektory tekstu, import, ruch
+node tests/vectors/run.js && node tests/vectors/import.js && node tests/motion.js   # wektory tekstu, import, ruch
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
 node tests/e2e/artist.js target/release/vizrs     # Artist
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
@@ -81,7 +81,7 @@ node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell   
 node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell     # zgodność WebView z Chromium
 ```
 
-- Playwright nie jest zależnością repo: `PLAYWRIGHT_DIR` wskazuje katalog z `node_modules/playwright` (domyślną ścieżkę ustala `tests/e2e/run.js`).
+- Playwright nie jest zależnością repo: `PLAYWRIGHT_DIR` wskazuje katalog z `node_modules/playwright` (bez niej: zwykłe `require('playwright')`).
 - Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzymaj poza repo).
 
 ## 5. Struktura
@@ -116,7 +116,7 @@ node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell     
 | `ticker-model.js`, `ticker-items.js` | model wiadomości tickera; edytor listy wiadomości (Trio i Artist) |
 | `motion.js` | ruch z presetów (`node.motion`): krzywe GSAP, presety IN/OUT, efekty tekstu, pętle uwagi, sekwencja `after` – czyste funkcje, rysuje `renderer.js` |
 | `cgpack.js` | paczka `.cgpack` (sceny + strony + grafiki + czcionki): zapis ZIP, odczyt, instalacja plików |
-| `btb-io.js` | import elementów z zewnętrznego edytora (`.json` v3, `.cgpack`) |
+| `element-import.js` | import elementów z zewnętrznego edytora (`.json` v3, `.cgpack`) |
 | `demo_show.json` | show startowy (INFO24) |
 
 **Pozostałe**
@@ -125,7 +125,7 @@ node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell     
 |---|---|
 | `source/shell/` | `vizrs-shell` – okno natywne Artist/Trio (tao + wry: WebKitGTK / WebView2 / WKWebView), menu, „Zapisz jako”, pisownia pl; osobny workspace z zależnościami |
 | `source/tests/` | `vectors/` (wektory tekstu i tickera), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
-| `source/tools/` | `build-packs.mjs` (paczki przykładowe), `gallery.js` (galeria zrzutów), `engines.js`, `out_choreo.py`, `render_video.py`, `sync-btb.sh` |
+| `source/tools/` | `build-packs.mjs` (paczki przykładowe), `gallery.js` (galeria zrzutów), `engines.js`, `out_choreo.py`, `render_video.py`, `sync-text-model.sh` |
 | `examples/` | paczki przykładowe `.cgpack` (lista: `examples/README.md`); `archiwum/` – źródła paczek i pliki używane przez testy |
 | `deploy/` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, skróty okien (Linux `.desktop`, Windows `.ps1`), AppImage |
 | `Dockerfile` | obraz `scratch` ze statyczną binarką musl |

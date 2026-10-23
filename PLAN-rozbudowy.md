@@ -1,6 +1,6 @@
 # PLAN ROZBUDOWY VizRS (v1.0 → v2.0)
 
-Status: **wdrożony w całości** (2026-10-19, wydanie 2.0.0) – szczegóły i odstępstwa w `docs/STATUS.md` i `docs/LUKI.md`. Podstawa: [RAPORT-analiza-VizRS-vs-BTB.md](RAPORT-analiza-VizRS-vs-BTB.md) (numery #1–#26 odnoszą się do jego propozycji).
+Status: **wdrożony w całości** (2026-10-19, wydanie 2.0.0) – szczegóły i odstępstwa w `docs/STATUS.md` i `docs/LUKI.md`. Podstawa: [RAPORT-analiza-porownawcza.md](RAPORT-analiza-porownawcza.md) (numery #1–#26 odnoszą się do jego propozycji).
 Wzorce organizacyjne: plany M1–M7 w `BTB-CG-System-alpha` (gałąź `TRIO`: `docs/plans/`, `docs/gaps.md`) i zasady `btb-cgeditor` (`CLAUDE.md`, `docs/LUKI.md`, `PROPOZYCJE-FUNKCJI.md`).
 
 ## 1. Cel i kryterium ukończenia

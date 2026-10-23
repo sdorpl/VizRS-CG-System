@@ -1,6 +1,6 @@
-// Wspólne wektory testowe modelu tekstu (F4.1): ten sam zestaw JSON co w BTB-CG (Node) i btb-cgeditor (Rust).
-//   node tests/vectors/run.js        – sprawdza web/text-model.js (kopia z BTB-CG) względem wektorów
-// Wektory i kopię odświeża tools/sync-btb.sh; rozjazd z BTB wykrywa `tools/sync-btb.sh --check`.
+// Wspólne wektory testowe modelu tekstu (F4.1): ten sam zestaw JSON co w oryginale (Node i Rust).
+//   node tests/vectors/run.js        – sprawdza web/text-model.js (kopia z oryginału) względem wektorów
+// Wektory i kopię odświeża tools/sync-text-model.sh; rozjazd z oryginału wykrywa `tools/sync-text-model.sh --check`.
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');

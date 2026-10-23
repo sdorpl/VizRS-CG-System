@@ -1,9 +1,9 @@
-// Paczka „BTB TRIO” dla VizRS: grafiki z gałęzi TRIO BTB CG System (szablony HTML/CSS/JS) odtworzone jako sceny VizRS
+// Paczka DOCK dla VizRS: grafiki z gałęzi TRIO oryginału (szablony HTML/CSS/JS) odtworzone jako sceny VizRS
 // razem z powiązaniami (dokowanie `layout.attachedToGraphicId*` → `scene.dock`).
-//   node tools/build-btb-trio.mjs [katalog]   (domyślnie examples/archiwum/BTB_TRIO)
-// Źródło: <katalog>/zrodlo.json – grafiki z db.json gałęzi TRIO + pomiar DOM każdej grafiki na wyjściu BTB
-// (tools/measure-btb-alpha.cjs, serwer BTB z gałęzi TRIO). Obrazy z `/uploads/` czyta z katalogu uploads/ repozytorium BTB (BTB_REPO; pliki są poza gitem).
-// Każda grafika = strona na własnej warstwie `z<N>_…` (N = warstwa BTB), więc – jak w BTB – wszystkie mogą być na wizji naraz.
+//   node tools/build-dock.mjs [katalog]   (domyślnie examples/archiwum/DOCK)
+// Źródło: <katalog>/zrodlo.json – grafiki z db.json gałęzi TRIO + pomiar DOM każdej grafiki na wyjściu oryginału
+// (tools/measure-alpha.cjs, serwer oryginału z gałęzi TRIO). Obrazy z `/uploads/` czyta z katalogu uploads/ repozytorium oryginału (SRC_REPO; pliki są poza gitem).
+// Każda grafika = strona na własnej warstwie `z<N>_…` (N = warstwa oryginału), więc – – wszystkie mogą być na wizji naraz.
 // Wynik: show.json (sceny + strony 15001–15401), konwersja.json, assets/.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,22 +15,22 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB = pathToFileURL(path.join(HERE, '../web/')).href;
 register('data:text/javascript,' + encodeURIComponent(`export async function resolve(s, c, next) {
   return /^\\/[\\w.-]+\\.js$/.test(s) ? next(${JSON.stringify(WEB)} + s.slice(1), c) : next(s, c); }`));
-const io = await import('../web/btb-io.js');
-const DIR = path.resolve(process.argv[2] || path.join(HERE, '../../examples/archiwum/BTB_TRIO'));
-const BTB_REPO = process.env.BTB_REPO || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha');
+const io = await import('../web/element-import.js');
+const DIR = path.resolve(process.argv[2] || path.join(HERE, '../../examples/archiwum/DOCK'));
+const SRC_REPO = process.env.CG_SRC_DIR || '.';
 const SRC = JSON.parse(fs.readFileSync(path.join(DIR, 'zrodlo.json'), 'utf8'));
-const L = await import('./btb-measure-lib.mjs');
+const L = await import('./measure-lib.mjs');
 L.setup({ io, dir: DIR });
 const { r1, BAHN, groupMotion, sceneTimes, dataAsset, visible, tickerNodes, genericNodes } = L;
 
 fs.rmSync(path.join(DIR, 'assets'), { recursive: true, force: true });
 fs.mkdirSync(path.join(DIR, 'assets'), { recursive: true });
 
-// obraz z /uploads/ serwera BTB → data: URI
+// obraz z /uploads/ serwera oryginału → data: URI
 function uploadUri(src) {
   const m = /\/uploads\/([\w.-]+\.(png|webp|jpe?g|gif|svg))$/.exec(src || '');
   if (!m) return src;
-  const buf = fs.readFileSync(path.join(BTB_REPO, 'uploads', m[1]));
+  const buf = fs.readFileSync(path.join(SRC_REPO, 'uploads', m[1]));
   const mime = m[2] === 'svg' ? 'svg+xml' : m[2] === 'jpg' ? 'jpeg' : m[2];
   return `data:image/${mime};base64,${buf.toString('base64')}`;
 }
@@ -45,7 +45,7 @@ function prepare(g, els) {
   return { g, els };
 }
 
-// animacje elementów szablonu (`data-cg-anim` w html_template – cgmotion BTB) dla plakietek miast: tło wipe, tekst clip
+// animacje elementów szablonu (`data-cg-anim` w html_template – cgmotion oryginału) dla plakietek miast: tło wipe, tekst clip
 function cgAnim(g, nodes) {
   if (!/data-cg-anim="wipe/.test(g.html || '') && !/miasto|chwili/i.test(g.name)) return;
   for (const n of nodes) {
@@ -63,10 +63,10 @@ const slug = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l
 const nameOf = (g) => g.name.replace(/\s*\(kopia\)/g, '').replace(/osoatniej/, 'ostatniej').trim();
 const strip = (n) => { const c = structuredClone(n); delete c.id; if (c.props) { delete c.props.text; if (c.type === 'text') delete c.props.w; } if (c.children) c.children = c.children.map(strip); return c; };
 
-const show = { name: 'BTB CG TRIO – grafiki przeniesione', scenes: [], pages: [], playlists: [] };
+const show = { name: 'DOCK – grafiki przeniesione', scenes: [], pages: [], playlists: [] };
 const report = [];
 const origin = {};
-const pageOf = {}; // id grafiki BTB → numer strony
+const pageOf = {}; // id grafiki oryginału → numer strony
 const built = [];
 const next = {};
 SRC.grafiki.forEach((g0, i) => {
@@ -79,8 +79,8 @@ SRC.grafiki.forEach((g0, i) => {
   }
   if (!b.nodes.length) { report.push(`pominięto „${g.name}”: brak elementów`); return; }
   const tk = b.nodes.find((n) => n.type === 'ticker');
-  if (tk && els.some((e) => /btb-fw-sep/.test(e.cls))) Object.assign(tk.props, { sepStyle: 'dot', sepColor: '#ffffff80' }); // kropka 6 px, krycie 0,5
-  if (tk && tk.props.tickerMode === 'crawl') tk.props.crawlFrom = 'left'; // BTB: taśma od razu pełna, pierwsza wiadomość od lewej
+  if (tk && els.some((e) => /[a-z]+-fw-sep/.test(e.cls))) Object.assign(tk.props, { sepStyle: 'dot', sepColor: '#ffffff80' }); // kropka 6 px, krycie 0,5
+  if (tk && tk.props.tickerMode === 'crawl') tk.props.crawlFrom = 'left'; // oryginał: taśma od razu pełna, pierwsza wiadomość od lewej
   cgAnim(g, b.nodes);
   next[kind] = next[kind] ?? KIND[kind][0];
   const number = next[kind]++;
@@ -89,8 +89,8 @@ SRC.grafiki.forEach((g0, i) => {
   built.push({ g, b, kind, number });
 });
 
-// powiązania: BTB `attachedToGraphicId` (oś Y) / `attachedToGraphicIdX` (oś X), tryb „stały odstęp” (manual) –
-// gdy którykolwiek rodzic jest na wizji, dziecko przesuwa się o attachOffset w 0,6 s (renderer BTB: transition 0.6s)
+// powiązania z oryginału: `attachedToGraphicId` (oś Y) / `attachedToGraphicIdX` (oś X), tryb „stały odstęp” (manual) –
+// gdy którykolwiek rodzic jest na wizji, dziecko przesuwa się o attachOffset w 0,6 s (renderer oryginał: transition 0.6s)
 function dockOf(g) {
   const out = [];
   const lay = g.layout || {};

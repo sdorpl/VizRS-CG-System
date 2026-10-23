@@ -1,5 +1,5 @@
 {
-  "comment": "Zamiana słów (Viz Word Replace): CGText.wordReplaceFind / text::word_replace_find. Zmiana = oba języki + node test-word-replace.js --update + kopia do btb-cgeditor/tests/text/.",
+  "comment": "Zamiana słów (Word Replace): CGText.wordReplaceFind / text::word_replace_find. Zmiana = oba języki + node test-word-replace.js --update + kopia do edytor/tests/text/.",
   "cases": [
     {
       "name": "klucz na początku linii",

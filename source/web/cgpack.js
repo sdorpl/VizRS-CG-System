@@ -4,8 +4,8 @@
 //   scenes.json    { scenes:[…], pages:[…] }       – sceny jak w show.json, strony wskazują `scene` = id sceny z paczki
 //   assets/<nazwa> – pliki z katalogu assets (obrazy, wideo, fonty) użyte przez sceny lub dołączone (`scene.packAssets`)
 //
-// Format własny VizRS (inny `_type` niż paczka elementu BTB `cg_element_pack`). Paczki BTB czyta `btb-io.js`.
-import { unzip } from '/btb-io.js';
+// Format własny VizRS (inny `_type` niż zewnętrzna paczka elementu `cg_element_pack`). Paczki elementów czyta `element-import.js`.
+import { unzip } from '/element-import.js';
 
 export const PACK_TYPE = 'vizrs_pack';
 export const PACK_VERSION = 1;
@@ -115,7 +115,7 @@ export async function buildPack({ scenes, pages = [], known, fetchAsset, generat
   return { blob: await zip(files), missing, assets };
 }
 
-/** Czy bajty to paczka VizRS (true), paczka BTB (`'btb'`) czy coś innego (false). */
+/** Czy bajty to paczka VizRS (true), paczka elementu (`'ext'`) czy coś innego (false). */
 export async function packKind(u8) {
   if (!(u8[0] === 0x50 && u8[1] === 0x4b)) return false;
   const files = await unzip(u8);
@@ -123,10 +123,10 @@ export async function packKind(u8) {
     try {
       const m = JSON.parse(new TextDecoder().decode(files['manifest.json']));
       if (m._type === PACK_TYPE) return true;
-      if (m._type === 'cg_element_pack') return 'btb';
+      if (m._type === 'cg_element_pack') return 'ext';
     } catch { /* niżej */ }
   }
-  return files['element.json'] ? 'btb' : false;
+  return files['element.json'] ? 'ext' : false;
 }
 
 /** Czyta i sprawdza paczkę VizRS → { manifest, scenes, pages, assets: Map<nazwa, Uint8Array> }. Rzuca Error z opisem. */

@@ -45,7 +45,7 @@ Szablon pilnego paska (`tpl-urgent-ocg-wiper`) dodatkowo **zmniejsza font**, gdy
 - Squeeze per wiadomość w roll/wipe (scaleX do 0,6, potem zmniejszenie fontu) – odpowiednik `adjustFontSize` z BTB.
 - Animacja liczona z czasu (`now - wallStart`), więc działa z `tools/render_video.py` (podmieniony `performance.now`).
 - Trio: pole tickera to zwykła `textarea` (6 wierszy) – operator wpisuje `KAT#kolor|treść` ręcznie.
-- Import z BTB ([btb-io.js:261](source/web/btb-io.js#L261)): bierze tylko `items[].text`, **gubi kategorie**, tryb zawsze `crawl`.
+- Import z BTB ([element-import.js:261](source/web/element-import.js#L261)): bierze tylko `items[].text`, **gubi kategorie**, tryb zawsze `crawl`.
 
 ### 2.1 Różnice do zamknięcia
 | # | BTB | VizRS | Priorytet |
@@ -101,12 +101,12 @@ Szablon pilnego paska (`tpl-urgent-ocg-wiper`) dodatkowo **zmniejsza font**, gdy
 1. Komendy TCP/HTTP na liście wiadomości strony, z automatycznym UPDATE, gdy strona jest na antenie: `TICKER <nr> ADD KAT|treść`, `TICKER <nr> DEL <i>`, `TICKER <nr> SET <i> KAT|treść`, `TICKER <nr> CLEAR`. Składnia istniejących komend bez zmian (Z10).
 2. (Opcja) źródło zewnętrzne: URL z JSON/RSS i interwał odświeżania na poziomie strony; serwer pobiera i robi UPDATE – BTB tego nie ma, to pozycja z listy życzeń, nie z parytetu.
 
-### T6. Import z BTB (btb-io.js) – P1
+### T6. Import z BTB (element-import.js) – P1
 1. `items[{text, category}]` → wiersze `KAT|treść`; `CATEGORY_COLORS` → `catColors`; `introText` / `WIPER_TEXT` → `label`.
 2. Tryby: `horizontal` → `crawl`; `vertical` → `roll` (`speed` BTB w sekundach → `hold`); `whip` → `whip` (po T2.3; do tego czasu → `wipe` z ostrzeżeniem w raporcie importu).
 3. `separatorStyle` → `sepStyle`; `wiper.bgColor`/`textColor`/`fontSize`/`fontFamily` → `catBg`/`catFg`/rozmiar i font etykiety.
 4. Element `TICKER` **bez** warstwy `ticker` w scenie (jak `ticker-unified.json` po konwersji) → budujemy węzeł ticker z `items` i ustawień elementu, zamiast przenosić statyczny tekst, i dopisujemy ostrzeżenie do raportu.
-5. Wektory testowe w `tests/vectors/btb.js` na podstawie trzech szablonów z `BTB-CG-System-alpha/templates`.
+5. Wektory testowe w `tests/vectors/import.js` na podstawie trzech szablonów z `BTB-CG-System-alpha/templates`.
 
 ### T7. Testy i dokumentacja
 - Wektory JS (`tests/vectors/run.js`): parser/serializer (z `\|`, z kolorem, bez kategorii), mapa `catColors`, kolejność koloru.

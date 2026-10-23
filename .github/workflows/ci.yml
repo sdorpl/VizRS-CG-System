@@ -23,9 +23,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Wspólne wektory tekstu i konwersja BTB
+      - name: Wspólne wektory tekstu i import elementów
         shell: bash
-        run: node tests/vectors/run.js && node tests/vectors/btb.js && node tests/motion.js
+        run: node tests/vectors/run.js && node tests/vectors/import.js && node tests/motion.js
       - run: cargo build --release
       - name: Wersja i suma kontrolna
         shell: bash

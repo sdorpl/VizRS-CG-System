@@ -3,7 +3,7 @@
   "file": "Belka_-_PILNE-new-wasm.json",
   "element": "Belka - PILNE",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_-_pilne-new-wasm",
+  "scene": "wz_belka_-_pilne-new-wasm",
   "page": 8001,
   "layer": "main",
   "warnings": []
@@ -12,7 +12,7 @@
   "file": "Belka_-_PILNE-new.json",
   "element": "Belka - PILNE",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_-_pilne-new",
+  "scene": "wz_belka_-_pilne-new",
   "page": 8002,
   "layer": "main",
   "warnings": []
@@ -21,7 +21,7 @@
   "file": "Belka_-_PILNE.cgpack",
   "element": "Belka - PILNE",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_-_pilne",
+  "scene": "wz_belka_-_pilne",
   "page": 8003,
   "layer": "main",
   "warnings": []
@@ -30,7 +30,7 @@
   "file": "Belka_-_PILNE.json",
   "element": "Belka - PILNE",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_-_pilne_json",
+  "scene": "wz_belka_-_pilne_json",
   "page": 8004,
   "layer": "main",
   "warnings": []
@@ -39,7 +39,7 @@
   "file": "belka_exp__18_26_40_.json",
   "element": "belka exp (18:26:40)",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_exp_18_26_40",
+  "scene": "wz_belka_exp_18_26_40",
   "page": 8005,
   "layer": "main",
   "warnings": []
@@ -48,19 +48,19 @@
   "file": "Belka_glowna.json",
   "element": "Belka glowna",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_glowna",
+  "scene": "wz_belka_glowna",
   "page": 8006,
   "layer": "main",
   "warnings": [
-   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
-   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+   "warstwa tekstu „span” bez pola w oryginale – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w oryginale – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
   ]
  },
  {
   "file": "Belka_Miasto.json",
   "element": "Belka Miasto",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_miasto",
+  "scene": "wz_belka_miasto",
   "page": 8007,
   "layer": "main",
   "warnings": [
@@ -71,19 +71,19 @@
   "file": "Belka_pilne.json",
   "element": "Belka pilne",
   "type": "LOWER_THIRD",
-  "scene": "btb_belka_pilne",
+  "scene": "wz_belka_pilne",
   "page": 8008,
   "layer": "main",
   "warnings": [
-   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
-   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+   "warstwa tekstu „span” bez pola w oryginale – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w oryginale – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
   ]
  },
  {
   "file": "Grafika_-_theme.json",
   "element": "Grafika - theme",
   "type": "IMAGE",
-  "scene": "btb_grafika_-_theme",
+  "scene": "wz_grafika_-_theme",
   "page": 8401,
   "layer": "logo",
   "warnings": [
@@ -94,7 +94,7 @@
   "file": "MIASTO_lewa.json",
   "element": "MIASTO lewa",
   "type": "BADGE",
-  "scene": "btb_miasto_lewa",
+  "scene": "wz_miasto_lewa",
   "page": 8101,
   "layer": "badge",
   "warnings": []
@@ -103,7 +103,7 @@
   "file": "MIASTO_prawa_—_Warszawa_(odzyskana).json",
   "element": "MIASTO prawa — Warszawa (odzyskana)",
   "type": "BADGE",
-  "scene": "btb_miasto_prawa_warszawa_odzyskana",
+  "scene": "wz_miasto_prawa_warszawa_odzyskana",
   "page": 8102,
   "layer": "badge",
   "warnings": [
@@ -114,7 +114,7 @@
   "file": "MIASTO_prawa.json",
   "element": "MIASTO prawa",
   "type": "BADGE",
-  "scene": "btb_miasto_prawa",
+  "scene": "wz_miasto_prawa",
   "page": 8103,
   "layer": "badge",
   "warnings": []
@@ -123,7 +123,7 @@
   "file": "NA_ŻYWO_lewa.json",
   "element": "NA ŻYWO lewa",
   "type": "BADGE",
-  "scene": "btb_na_zywo_lewa",
+  "scene": "wz_na_zywo_lewa",
   "page": 8104,
   "layer": "badge",
   "warnings": []
@@ -132,7 +132,7 @@
   "file": "NA_ŻYWO_lewo_dol.json",
   "element": "NA ŻYWO lewo dol",
   "type": "LOWER_THIRD",
-  "scene": "btb_na_zywo_lewo_dol",
+  "scene": "wz_na_zywo_lewo_dol",
   "page": 8009,
   "layer": "main",
   "warnings": []
@@ -141,7 +141,7 @@
   "file": "NA_ŻYWO_prawo.json",
   "element": "NA ŻYWO prawo",
   "type": "BADGE",
-  "scene": "btb_na_zywo_prawo",
+  "scene": "wz_na_zywo_prawo",
   "page": 8105,
   "layer": "badge",
   "warnings": []
@@ -150,18 +150,18 @@
   "file": "PILNE__OCG_.json",
   "element": "PILNE (OCG)",
   "type": "TICKER",
-  "scene": "btb_pilne_ocg",
+  "scene": "wz_pilne_ocg",
   "page": 8201,
   "layer": "ticker",
   "warnings": [
-   "ticker: kod szablonu BTB (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
+   "ticker: kod szablonu (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
   ]
  },
  {
   "file": "Plakietka_NA_ŻYWO.json",
   "element": "Plakietka NA ŻYWO",
   "type": "LOWER_THIRD",
-  "scene": "btb_plakietka_na_zywo",
+  "scene": "wz_plakietka_na_zywo",
   "page": 8010,
   "layer": "main",
   "warnings": [
@@ -172,7 +172,7 @@
   "file": "Republika_Logo__01_07_36_.json",
   "element": "Republika Logo (01:07:36)",
   "type": "IMAGE",
-  "scene": "btb_republika_logo_01_07_36",
+  "scene": "wz_republika_logo_01_07_36",
   "page": 8402,
   "layer": "logo",
   "warnings": []
@@ -181,7 +181,7 @@
   "file": "Republika_Lower_Third.json",
   "element": "Republika Lower Third",
   "type": "LOWER_THIRD",
-  "scene": "btb_republika_lower_third",
+  "scene": "wz_republika_lower_third",
   "page": 8011,
   "layer": "main",
   "warnings": []
@@ -190,7 +190,7 @@
   "file": "Ticker__Tryb__Whip___Poziomy___Pionowy_.json",
   "element": "Ticker (Tryb: Whip / Poziomy / Pionowy)",
   "type": "TICKER",
-  "scene": "btb_ticker_tryb_whip_poziomy_pionowy",
+  "scene": "wz_ticker_tryb_whip_poziomy_pionowy",
   "page": 8202,
   "layer": "ticker",
   "warnings": []
@@ -199,38 +199,38 @@
   "file": "Ticker__Whip___Poziomy___Pionowy_.json",
   "element": "Ticker (Whip / Poziomy / Pionowy)",
   "type": "TICKER",
-  "scene": "btb_ticker_whip_poziomy_pionowy",
+  "scene": "wz_ticker_whip_poziomy_pionowy",
   "page": 8203,
   "layer": "ticker",
   "warnings": [
-   "ticker: kod szablonu BTB (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
+   "ticker: kod szablonu (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
   ]
  },
  {
   "file": "Ticker_-_Pilne.json",
   "element": "Ticker - Pilne",
   "type": "TICKER",
-  "scene": "btb_ticker_-_pilne",
+  "scene": "wz_ticker_-_pilne",
   "page": 8204,
   "layer": "ticker",
   "warnings": [
-   "ticker: kod szablonu BTB (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
+   "ticker: kod szablonu (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
   ]
  },
  {
   "file": "TICKER_PEŁNY_EKRAN.json",
   "element": "TICKER PEŁNY EKRAN",
   "type": "TICKER",
-  "scene": "btb_ticker_pelny_ekran",
+  "scene": "wz_ticker_pelny_ekran",
   "page": 8205,
   "layer": "ticker",
   "warnings": []
  },
  {
-  "file": "tylko_w_btb_info.json",
-  "element": "tylko w btb info",
+  "file": "tylko_w_tv_info.json",
+  "element": "tylko w tv info",
   "type": "BADGE",
-  "scene": "btb_tylko_w_btb_info",
+  "scene": "wz_tylko_w_tv_info",
   "page": 8106,
   "layer": "badge",
   "warnings": []
@@ -239,42 +239,42 @@
   "file": "Whiper_-_Ticker_-_Pilne.json",
   "element": "Whiper - Ticker - Pilne",
   "type": "TICKER",
-  "scene": "btb_whiper_-_ticker_-_pilne",
+  "scene": "wz_whiper_-_ticker_-_pilne",
   "page": 8206,
   "layer": "ticker",
   "warnings": [
-   "ticker: kod szablonu BTB (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
+   "ticker: kod szablonu (tryby whip/poziomy/pionowy) odtworzony jako węzeł ticker VizRS – sprawdź wygląd w Artist"
   ]
  },
  {
   "file": "Wizytówka_-_normalna.json",
   "element": "Wizytówka - normalna",
   "type": "LOWER_THIRD",
-  "scene": "btb_wizytowka_-_normalna",
+  "scene": "wz_wizytowka_-_normalna",
   "page": 8012,
   "layer": "main",
   "warnings": [
-   "warstwa tekstu „strong” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
-   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+   "warstwa tekstu „strong” bez pola w oryginale – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w oryginale – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
   ]
  },
  {
   "file": "Wizytówka_-_PILNE.json",
   "element": "Wizytówka - PILNE",
   "type": "LOWER_THIRD",
-  "scene": "btb_wizytowka_-_pilne",
+  "scene": "wz_wizytowka_-_pilne",
   "page": 8013,
   "layer": "main",
   "warnings": [
-   "warstwa tekstu „strong” bez pola w BTB – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
-   "warstwa tekstu „span” bez pola w BTB – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
+   "warstwa tekstu „strong” bez pola w oryginale – dodano pole „tekst1”, szerokość do krawędzi tła (1590 px)",
+   "warstwa tekstu „span” bez pola w oryginale – dodano pole „tekst2”, szerokość do krawędzi tła (1590 px)"
   ]
  },
  {
   "file": "WYDANIE_SPECJALNE.json",
   "element": "WYDANIE SPECJALNE",
   "type": "BADGE",
-  "scene": "btb_wydanie_specjalne",
+  "scene": "wz_wydanie_specjalne",
   "page": 8107,
   "layer": "badge",
   "warnings": []
@@ -283,7 +283,7 @@
   "file": "Z_osoatniej_chwili.json",
   "element": "Z osoatniej chwili",
   "type": "LOWER_THIRD",
-  "scene": "btb_z_osoatniej_chwili",
+  "scene": "wz_z_osoatniej_chwili",
   "page": 8014,
   "layer": "main",
   "warnings": []
@@ -292,7 +292,7 @@
   "file": "Zegar.json",
   "element": "Zegar",
   "type": "CLOCK",
-  "scene": "btb_zegar",
+  "scene": "wz_zegar",
   "page": 8301,
   "layer": "clock",
   "warnings": []
@@ -301,7 +301,7 @@
   "file": "zegarek__kopia_.json",
   "element": "zegarek (kopia)",
   "type": "CLOCK",
-  "scene": "btb_zegarek_kopia",
+  "scene": "wz_zegarek_kopia",
   "page": 8302,
   "layer": "clock",
   "warnings": []

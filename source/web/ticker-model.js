@@ -1,4 +1,4 @@
-// Model wiadomości tickera – wspólny dla renderera, Trio, Artist, konwertera BTB i testów (bez DOM, działa w Node).
+// Model wiadomości tickera – wspólny dla renderera, Trio, Artist, importu elementów i testów (bez DOM, działa w Node).
 // Zapis w show: jedna wiadomość w wierszu, `KAT#kolor|treść` (kategoria i kolor opcjonalne).
 // `\|` w treści = dosłowny znak `|` (potrzebne tylko w wiadomości bez kategorii). Te same reguły: src/ticker.rs.
 

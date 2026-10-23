@@ -1,4 +1,4 @@
-// VizRS – ruch na wzór BTB CG (presety IN/OUT, efekty tekstu, pętle uwagi)
+// VizRS – ruch (presety IN/OUT, efekty tekstu, pętle uwagi)
 //
 // Model węzła (opcjonalny, obok kluczy `anim`):
 //   node.motion = {
@@ -9,9 +9,9 @@
 //     loop:    { type, dur, amp, color },                 // pętla uwagi – gra na wizji, gdy grafika stoi (zegar ścienny)
 //     after:   'id węzła',                                // sekwencja: wejście zaczyna się po wejściu wskazanego węzła
 //     origin:  [x, y],                                    // punkt odniesienia skali/obrotu (ułamki pola), gdy preset go nie ustala
-//     bg:      'shimmer' | 'pulse' | 'glow' | 'scanline'  // stały efekt tła kształtu (gra cały czas, jak w BTB)
+//     bg:      'shimmer' | 'pulse' | 'glow' | 'scanline'  // stały efekt tła kształtu (gra cały czas)
 //   }
-// Semantyka jak w BTB CG (`cgmotion.js`, btb-cgeditor `src/anim.rs`): źródła ruchu składają się z kluczami –
+// Semantyka (`cgmotion.js`, oryginał `src/anim.rs`): źródła ruchu składają się z kluczami –
 // przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą.
 // Moduł bez DOM – liczy stan; rysuje `renderer.js`.
 
@@ -47,7 +47,7 @@ const ALIAS = {
   spring: 'back.out(1.4)', 'spring-soft': 'back.out(0.8)', 'spring-hard': 'back.out(2.2)', overshoot: 'back.out(1.7)', broadcast: 'power3.out',
   'back-in': 'back.in', 'back-out': 'back.out', 'bounce-out': 'bounce.out', 'elastic-out': 'elastic.out',
 };
-/** Krzywa o nazwie GSAP (`power2.out`, `back.out(1.7)`, `bounce.out`, `cubic-bezier(…)`, aliasy BTB) → wartość dla x ∈ [0, 1]. */
+/** Krzywa o nazwie GSAP (`power2.out`, `back.out(1.7)`, `bounce.out`, `cubic-bezier(…)`, aliasy oryginału) → wartość dla x ∈ [0, 1]. */
 export function ease(name, x) {
   x = Math.min(1, Math.max(0, +x || 0));
   name = String(name ?? '');
@@ -85,7 +85,7 @@ export function ease(name, x) {
   }
 }
 
-// ---------------------------------------------------------------- katalogi (nazwy jak w BTB CG; etykiety dla Artist)
+// ---------------------------------------------------------------- katalogi (nazwy; etykiety dla Artist)
 export const ANIM_TYPES = ['none', 'slide', 'fade', 'zoom', 'zoom-in', 'pop', 'wipe', 'wipe-y', 'clip', 'blur', 'flip', 'flip-x', 'rotate', 'skew', 'drop', 'glitch', 'slide-overshoot', 'split-reveal', 'mask-diag', 'shutter', 'bar-grow', 'rgb-split'];
 export const ANIM_LABELS = {
   none: 'brak (od razu)', slide: 'wjazd', fade: 'przenikanie', zoom: 'zoom', 'zoom-in': 'zoom z bliska', pop: 'wyskok', wipe: 'przesłona pozioma',
@@ -398,7 +398,7 @@ export const scrambleChar = (i, t) => SCRAMBLE[Math.abs(Math.floor(Math.sin((i +
 // ---------------------------------------------------------------- pętle uwagi (CGMotion.ATTENTION_PRESETS)
 const yoyo = (t, d) => { const ph = (t / d) % 2; const lin = ph <= 1 ? ph : 2 - ph; return 0.5 - 0.5 * Math.cos(PI * lin); };
 /**
- * Stan pętli w chwili t (s zegara ściennego od wejścia na wizję). `amp` – siła jak „amplituda” w inspektorze BTB
+ * Stan pętli w chwili t (s zegara ściennego od wejścia na wizję). `amp` – siła jak „amplituda” w inspektorze oryginału
  * (pulse/heartbeat: % skali, wobble: stopnie, breathe: % krycia); puste = domyślna.
  * Zwraca { tx, ty, sx, sy, rot, opacity, glow (0..1), shine (pozycja 0..1 lub -1), underline [od, do] lub null }.
  */
@@ -480,7 +480,7 @@ export function textFxActive(m, t, outStart, shift = 0) {
   return false;
 }
 
-// ---------------------------------------------------------------- presety → klucze (jak „Presety na klucze” w BTB CG Editor)
+// ---------------------------------------------------------------- presety → klucze 
 /** Krzywa GSAP → krzywa kluczy VizRS (EASES w renderer.js), gdy przebieg jest identyczny; inaczej null (próbkowanie). */
 const KEY_EASE = { 'power2.out': 'out', 'cubic.out': 'out', 'ease-out': 'out', '': 'out', 'power2.in': 'in', 'cubic.in': 'in', 'ease-in': 'in', 'power2.inOut': 'inout', 'cubic.inOut': 'inout', 'ease-in-out': 'inout', linear: 'linear', none: 'linear', 'back.out': 'back', 'back-out': 'back' };
 /** Typy, w których każda wartość zależy liniowo od krzywej głównej – wystarczą dwa klucze z tą samą krzywą. */
@@ -491,7 +491,7 @@ const UNKEYABLE = new Set(['wipe', 'wipe-y', 'flip', 'flip-x', 'rotate', 'mask-d
 /**
  * Zamienia presety wejścia/wyjścia węzła na klucze. `rest` – wartości spoczynkowe właściwości (x, y, opacity, scale, rotation, skewX,
  * blur, clipL…), `outStart` – ostatni stop, `shift` – przesunięcie sekwencji. Zwraca { anim: {prop: [klucze]}, done: ['in','out'], skipped: [opisy] }.
- * Pętle i efekty tekstu zostają presetami (jak w BTB).
+ * Pętle i efekty tekstu zostają presetami ().
  */
 export function motionToKeys(m, { rest, outStart, shift = 0 }) {
   const anim = {}, done = [], skipped = [];
@@ -535,14 +535,14 @@ export function motionToKeys(m, { rest, outStart, shift = 0 }) {
   return { anim, done, skipped };
 }
 
-// ---------------------------------------------------------------- stałe efekty tła kształtu (BTB `layer.effect`: shimmer, pulse, glow, scanline)
+// ---------------------------------------------------------------- stałe efekty tła kształtu (oryginału `layer.effect`: shimmer, pulse, glow, scanline)
 export const BG_TYPES = ['none', 'shimmer', 'pulse', 'glow', 'scanline'];
 export const BG_LABELS = { none: 'brak', shimmer: 'połysk tła (ciągły)', pulse: 'pulsowanie krycia', glow: 'świecenie (cień w kolorze)', scanline: 'linie skanowania' };
 const CSS_EASE_FN = 'cubic-bezier(0.25,0.1,0.25,1)', CSS_EASE_IO = 'cubic-bezier(0.42,0,0.58,1)';
 /** Klatka kluczowa CSS 0% → 50% → 100% z krzywą ease-in-out (jak `animation: … ease-in-out infinite`). */
 const yoyoCss = (t, d) => { const ph = (t % d) / d; return ph < 0.5 ? ease(CSS_EASE_IO, ph * 2) : 1 - ease(CSS_EASE_IO, (ph - 0.5) * 2); };
 /**
- * Stan efektu tła w chwili t (s od wejścia na wizję; gra cały czas, także w trakcie IN/OUT – jak animacja CSS w BTB).
+ * Stan efektu tła w chwili t (s od wejścia na wizję; gra cały czas, także w trakcie IN/OUT – jak animacja CSS w oryginale).
  * Zwraca { opacity (mnożnik), glow (px rozmycia cienia lub 0), shimmer (pozycja lewej krawędzi w % lub null), scan (przesunięcie px lub null) }.
  */
 export function bgState(type, t, baseOpacity = 1) {

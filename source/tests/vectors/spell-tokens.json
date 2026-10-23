@@ -1,5 +1,5 @@
 {
-  "comment": "Podział na słowa do sprawdzania pisowni: CGText.spellTokens / text::spell_tokens. Zmiana = oba języki + node test-spell-tokens.js --update + kopia do btb-cgeditor/tests/text/.",
+  "comment": "Podział na słowa do sprawdzania pisowni: CGText.spellTokens / text::spell_tokens. Zmiana = oba języki + node test-spell-tokens.js --update + kopia do edytor/tests/text/.",
   "cases": [
     {
       "text": "Zażółć gęślą jaźń",

@@ -1,9 +1,9 @@
 #!/bin/sh
-# Odświeża wspólny model tekstu i wektory testowe z BTB-CG (F4.1). Użycie: tools/sync-btb.sh [katalog BTB-CG] [--check]
+# Odświeża wspólny model tekstu i wektory testowe z oryginału (F4.1). Użycie: tools/sync-text-model.sh [katalog oryginału] [--check]
 # --check: tylko porównuje (kod wyjścia 1 przy rozjeździe), nic nie kopiuje.
 set -e
 cd "$(dirname "$0")/.."
-B="$HOME/Nextcloud/GitHub/BTB-CG-System-alpha"
+B="${CG_SRC_DIR:-}"
 CHECK=0
 for a in "$@"; do case "$a" in --check) CHECK=1;; *) B="$a";; esac; done
 [ -f "$B/text-model.js" ] || { echo "Brak $B/text-model.js"; exit 2; }

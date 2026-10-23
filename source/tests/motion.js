@@ -19,7 +19,7 @@ const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
   ok(near(MO.ease('spring', 0.5), MO.ease('back.out(1.4)', 0.5)), 'alias spring = back.out(1.4)');
   ok(near(MO.ease('power2.out', 2), 1) && near(MO.ease('power2.out', -1), 0), 'krzywa przycina postęp do [0, 1]');
 
-  // presety: IN na końcu i OUT na początku = stan neutralny (glitch OUT skacze od razu – jak w BTB); IN na początku ukrywa
+  // presety: IN na końcu i OUT na początku = stan neutralny (glitch OUT skacze od razu –); IN na początku ukrywa
   const neutral = (s) => near(s.tx, 0) && near(s.ty, 0) && near(s.sx, 1) && near(s.sy, 1) && near(s.rot, 0) && near(s.skew, 0) && near(s.opacity, 1) && near(s.blur, 0)
     && near(s.flipX, 0) && near(s.flipY, 0) && near(s.shutter, 1) && near(s.rgb, 0) && (!s.clip || (near(s.clip[0], 0) && near(s.clip[1], 0) && near(s.clip[2], 1) && near(s.clip[3], 1))) && (s.diag < 0 || near(s.diag, 1));
   for (const type of MO.ANIM_TYPES) {

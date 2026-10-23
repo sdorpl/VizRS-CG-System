@@ -1,4 +1,4 @@
-// E2E ruchu na wzór BTB (node.motion): panel „Ruch” w Artist, dopasowanie stopu i długości, odtwarzanie na /output
+// E2E ruchu (node.motion): panel „Ruch” w Artist, dopasowanie stopu i długości, odtwarzanie na /output
 // (wejście, efekt tekstu, pętla, wyjście):  node tests/e2e/motion.js [ścieżka-do-vizrs]
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }

@@ -1,5 +1,5 @@
 // Generowane przez tools/gen_fonts.py – nie edytuj ręcznie.
-// Fonty OFL-1.1 (@fontsource), pakiet z BTB-CG; licencje w web/fonts/*/LICENSE.txt.
+// Fonty OFL-1.1 (@fontsource), pakiet z oryginału; licencje w web/fonts/*/LICENSE.txt.
 
 pub struct Face {
     pub family: &'static str,

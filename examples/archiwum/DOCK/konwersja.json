@@ -1,5 +1,5 @@
 {
- "zrodlo": "github.com/sdorpl/BTB-CG-System gałąź TRIO (511ec91), db.json",
+ "zrodlo": "oryginał gałąź TRIO (511ec91), db.json",
  "uwagi": [
   "„Z osoatniej chwili”: pominięto powiązanie z grafikami spoza bazy (6f6d9625-5a3a-460f-9d45-07a44145a92b)",
   "„Ozdobnik - img”: pominięto powiązanie z grafikami spoza bazy (trio-1791990217537, 6f6d9625-5a3a-460f-9d45-07a44145a92b, trio-1791828767640)"
@@ -15,7 +15,7 @@
   "15104": "5: NA ŻYWO lewa",
   "15105": "6: NA ŻYWO prawo",
   "15106": "7: NA ŻYWO lewo dol",
-  "15107": "8: tylko w btb info",
+  "15107": "8: tylko w tv info",
   "15108": "9: WYDANIE SPECJALNE",
   "15109": "17: MIASTO prawa",
   "15201": "0: TICKER PEŁNY EKRAN",
@@ -60,7 +60,7 @@
    ]
   },
   {
-   "scena": "tylko w btb info",
+   "scena": "tylko w tv info",
    "dock": [
     {
      "target": "page:15105",

@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
@@ -405,7 +405,7 @@ async function waitUp() {
     ok((await dockTf()) === '0,0', 'dock: po zdjęciu grafiki scena wraca na miejsce', await dockTf());
     await api('/api/clear');
 
-    // --- ściskanie tekstu (squeeze jak w BTB): wskaźnik w Trio, ostrzeżenie po przekroczeniu squeezeMin ---
+    // --- ściskanie tekstu (squeeze): wskaźnik w Trio, ostrzeżenie po przekroczeniu squeezeMin ---
     await trio.reload(); await sleep(900);
     await trio.fill('#filter', '1102'); await sleep(200);
     await trio.click('#pages .item'); await sleep(500);

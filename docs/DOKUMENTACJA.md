@@ -612,7 +612,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 - Przywrócenie: Trio → ⚙ Stan → Kopie zapasowe → Przywróć (stan sprzed przywrócenia trafia do najnowszej kopii) albo `POST /api/backups/restore/<nazwa>`.
 - Nieudany zapis: czerwony znacznik w Trio, API zwraca 500; antena działa dalej.
 
-Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README.md)) – po jednym `.cgpack` na oprawę, ze wszystkimi scenami, stronami, grafikami i czcionkami: **INFO24.cgpack** (demo wbudowane, strony 1001–5001), **R7_NEWS.cgpack** (strony 7001–7505), **BTB.cgpack** (31 wzorców i belka wielowierszowa, strony 8001–8506), **BTB_INFO24.cgpack** (INFO24 w innej stylistyce, strony 9001–13001), **BTB_ALPHA.cgpack** (58 scen, strony 14001–14501), **BTB_TRIO.cgpack** (18 scen z powiązaniami, strony 15001–15401); te cztery paczki zawierają font Bahnschrift – nie do dystrybucji. Wczytanie: Trio → nowy show (▾), potem Artist → ⇧ Import → plik `.cgpack` (§8.6). Paczka nie przenosi playlist. Dawne pliki `.show.json` są w `examples/archiwum/` (źródło paczek i testów).
+Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README.md)) – po jednym `.cgpack` na oprawę, ze wszystkimi scenami, stronami, grafikami i czcionkami: **INFO24.cgpack** (demo wbudowane, strony 1001–5001), **R7_NEWS.cgpack** (strony 7001–7505), **WZORCE.cgpack** (31 wzorców i belka wielowierszowa, strony 8001–8506), **INFO24_ALT.cgpack** (INFO24 w innej stylistyce, strony 9001–13001), **ALPHA.cgpack** (58 scen, strony 14001–14501), **DOCK.cgpack** (18 scen z powiązaniami, strony 15001–15401); te cztery paczki zawierają font Bahnschrift – nie do dystrybucji. Wczytanie: Trio → nowy show (▾), potem Artist → ⇧ Import → plik `.cgpack` (§8.6). Paczka nie przenosi playlist. Dawne pliki `.show.json` są w `examples/archiwum/` (źródło paczek i testów).
 
 ## 15. Testy i narzędzia
 
@@ -620,27 +620,29 @@ Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README
 cd source
 cargo clippy --all-targets -- -D warnings
 cargo test                                           # silnik, API, JSON, walidacja, kopie
-node tests/vectors/run.js && node tests/vectors/btb.js   # wektory tekstu i tickera, konwersja importu
+node tests/vectors/run.js && node tests/vectors/import.js   # wektory tekstu i tickera, konwersja importu
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
 node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja
 node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
-node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porównanie importu z oryginałem (--frames: klatki wejścia)
+node tests/e2e/import-visual.js target/release/vizrs <katalog> [--frames]  # porównanie importu z oryginałem (--frames: klatki wejścia)
 ```
 
 | Narzędzie | Do czego |
 |---|---|
-| `tools/sync-btb.sh [--check]` | odświeżenie `text-model.js` i wektorów ze źródła, wykrycie rozjazdu |
-| `tools/build-btb-pack.mjs` | odbudowa źródeł paczki `BTB.cgpack` w `examples/archiwum/` |
-| `tools/measure-btb-alpha.cjs`, `tools/build-btb-alpha.mjs` | pomiar DOM grafik z szablonów HTML/CSS/JS, potem sceny i strony (źródło paczki `BTB_ALPHA.cgpack`) |
-| `tools/build-btb-trio.mjs`, `tools/btb-measure-lib.mjs` | sceny, strony i powiązania `scene.dock` z pomiaru (źródło paczki `BTB_TRIO.cgpack`); wspólne funkcje pomiar → węzły |
-| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` z `examples/archiwum/` |
+| `tools/sync-text-model.sh [katalog] [--check]` | odświeżenie `text-model.js` i wektorów ze źródła, wykrycie rozjazdu |
+| `tools/build-wzorce.mjs` | odbudowa źródeł paczki `WZORCE.cgpack` w `examples/archiwum/` |
+| `tools/measure-alpha.cjs`, `tools/build-alpha.mjs` | pomiar DOM grafik z szablonów HTML/CSS/JS, potem sceny i strony (źródło paczki `ALPHA.cgpack`) |
+| `tools/build-dock.mjs`, `tools/measure-lib.mjs` | sceny, strony i powiązania `scene.dock` z pomiaru (źródło paczki `DOCK.cgpack`); wspólne funkcje pomiar → węzły |
+| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `WZORCE.cgpack`, `INFO24_ALT.cgpack`, `ALPHA.cgpack`, `DOCK.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |
 | `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne |
 | `tools/gen_fonts.py` | wbudowane fonty (`fonts_data.rs`) |
+
+Narzędzia korzystające z oryginalnego systemu CG (`sync-text-model.sh`, `build-wzorce.mjs`, `build-dock.mjs`, `measure-alpha.cjs`, `tests/e2e/import-visual.js`) czytają jego katalog ze zmiennej `CG_SRC_DIR`.
 
 CI: `.github/workflows/ci.yml` (Linux, macOS, Windows).
 

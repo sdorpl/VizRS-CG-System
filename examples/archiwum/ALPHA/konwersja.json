@@ -1,5 +1,5 @@
 {
- "zrodlo": "github.com/sdorpl/BTB-CG-System gałąź alpha, database.sqlite + templates/",
+ "zrodlo": "oryginał gałąź alpha, database.sqlite + templates/",
  "uwagi": [
   "pominięto „Lw  (21:17:23)”: szablon republika-composite nie istnieje w bazie alpha albo grafika nic nie rysuje",
   "pominięto „Republika Ticker (21:02:59)”: szablon modern-ticker nie istnieje w bazie alpha albo grafika nic nie rysuje",
@@ -52,7 +52,7 @@
   "14107": "30: NA ŻYWO lewa",
   "14108": "31: NA ŻYWO prawo",
   "14109": "32: NA ŻYWO lewo dol",
-  "14110": "33: tylko w btb info",
+  "14110": "33: tylko w tv info",
   "14111": "34: WYDANIE SPECJALNE",
   "14112": "35: Plakietka NA ŻYWO (19:21:29)",
   "14113": "61: SYN NA ŻYWO lewa (Eksport)",

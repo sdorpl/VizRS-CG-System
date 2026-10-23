@@ -1,5 +1,5 @@
 {
- "name": "BTB CG TRIO – grafiki przeniesione",
+ "name": "DOCK – grafiki przeniesione",
  "scenes": [
   {
    "id": "trio_ticker_pelny_ekran",
@@ -865,9 +865,9 @@
    ]
   },
   {
-   "id": "trio_tylko_w_btb_info",
-   "name": "tylko w btb info",
-   "layer": "z1_tylko_w_btb_info",
+   "id": "trio_tylko_w_tv_info",
+   "name": "tylko w tv info",
+   "layer": "z1_tylko_w_tv_info",
    "width": 1920,
    "height": 1080,
    "stops": [
@@ -883,7 +883,7 @@
     {
      "id": "grp",
      "type": "group",
-     "name": "tylko w btb info",
+     "name": "tylko w tv info",
      "props": {
       "x": 1597,
       "y": 50,
@@ -934,7 +934,7 @@
         "y": 14,
         "w": 223,
         "h": 24,
-        "text": "tylko w btb info",
+        "text": "tylko w tv info",
         "font": "Bahnschrift.ttf",
         "size": 24,
         "weight": "700",
@@ -1866,7 +1866,7 @@
         "squeezeMin": 0.6,
         "upper": true,
         "hold": 6,
-        "label": "BTB",
+        "label": "TV",
         "catW": 127,
         "catBg": "#901414",
         "catFg": "#ffffff",
@@ -1996,10 +1996,10 @@
   {
    "id": "trio_p15107",
    "number": 15107,
-   "name": "tylko w btb info – tylko w btb info",
-   "scene": "trio_tylko_w_btb_info",
+   "name": "tylko w tv info – tylko w tv info",
+   "scene": "trio_tylko_w_tv_info",
    "values": {
-    "title": "tylko w btb info"
+    "title": "tylko w tv info"
    }
   },
   {
@@ -2056,7 +2056,7 @@
    "scene": "trio_ticker_pilne",
    "values": {
     "items": "PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nPREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nRUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nSZEF ZWIĄZKÓW ZAWODOWYCH POLICJI ALARMUJE: LUDZIE LICZYLI NA ŚRODKI Z \"SAFE\"\nPILNE: ZMASOWANY ATAK USA NA IRAŃSKĄ WYSPĘ. \"JEDNO Z NAJSILNIEJSZYCH BOMBARDOWAŃ\"\nTEHERAN ZAPOWIADA ODWET. REŻIM WŚCIEKŁY PO DZIAŁANIACH STANÓW ZJEDNOCZONYCH\nUSA OFERUJĄ GIGANTYCZNĄ NAGRODĘ ZA INFORMACJE O PRZYWÓDCACH IRANU\nKONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
-    "wiper_text": "BTB"
+    "wiper_text": "TV"
    }
   },
   {

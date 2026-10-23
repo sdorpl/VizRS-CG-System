@@ -1,5 +1,5 @@
 {
-  "comment": "Reguły pola przy zapisie: CGText.fieldRules (text-model.js) i text::field_rules (btb-cgeditor/src/text.rs). Zmiana = oba języki + node test-field-rules.js --update + kopia do btb-cgeditor/tests/text/.",
+  "comment": "Reguły pola przy zapisie: CGText.fieldRules (text-model.js) i text::field_rules (edytor/src/text.rs). Zmiana = oba języki + node test-field-rules.js --update + kopia do edytor/tests/text/.",
   "cases": [
     {
       "name": "bez reguł — bez zmian",

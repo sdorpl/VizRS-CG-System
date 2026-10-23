@@ -140,7 +140,7 @@
   <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
   <button id="bPack" title="Paczka belek .cgpack: wybrane sceny + strony + grafiki + czcionki w jednym pliku">⇩ Paczka</button>
   <button id="bImp" title="Import sceny (.json) albo paczki belek (.cgpack)">⇧ Import</button>
-    <button id="bImpBtb" title="Importuj element zewnętrzny (.json eksport v3 lub paczka elementu .cgpack) jako scenę + stronę">⇧ Element</button>
+    <button id="bImpEl" title="Importuj element zewnętrzny (.json eksport v3 lub paczka elementu .cgpack) jako scenę + stronę">⇧ Element</button>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
   <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
@@ -222,7 +222,7 @@
 <input type="file" id="fileIn" hidden>
 
 <script type="module">
-import * as BTB from '/btb-io.js';
+import * as EXT from '/element-import.js';
 import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
 import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
@@ -443,7 +443,7 @@ function renderProps() {
   }
 }
 
-/** Ruch jak w BTB CG (node.motion): presety IN/OUT, efekt tekstu, pętla uwagi – bez kluczy, liczone przez renderer. */
+/** Ruch (node.motion): presety IN/OUT, efekt tekstu, pętla uwagi – bez kluczy, liczone przez renderer. */
 function motionForm(n) {
   const m = n.motion || {};
   const opt = (list, v, lab) => list.map((x) => `<option value="${x}" ${x === (v || 'none') ? 'selected' : ''}>${esc(lab ? lab(x) : x)}</option>`).join('');
@@ -1076,7 +1076,7 @@ const DEFAULTS = {
   clock: { w: 300, h: 80, size: 48, color: '#ffffff', font: 'Roboto Mono', align: 'center' },
   ticker: { w: 1920, h: 70, text: 'Pierwsza wiadomość\nDruga wiadomość', size: 32, color: '#ffffff' },
 };
-/** Presety tickerów (jak „Paski i tickery” w edytorze BTB): grupa z tłem i węzłem ticker z polem `news`. */
+/** Presety tickerów: grupa z tłem i węzłem ticker z polem `news`. */
 const TICKER_PRESETS = {
   full: { name: 'Ticker pełny ekran (crawl)', g: { x: 0, y: 1010, w: 1920, h: 70 }, nodes: [
     { type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 1920, h: 70, color: '#0b1a33' } },
@@ -1573,7 +1573,7 @@ $('#bImp').onclick = () => {
       if (/\.cgpack$/i.test(f.name)) {
         const u8 = new Uint8Array(await f.arrayBuffer());
         const kind = await PACK.packKind(u8);
-        if (kind === 'btb') return importBtbFile(f);
+        if (kind === 'ext') return importElementFile(f);
         if (!kind) throw new Error('to nie jest paczka .cgpack');
         return importPack(u8);
       }
@@ -1670,7 +1670,7 @@ async function importPack(u8) {
   showReport(`Zaimportowano paczkę: ${ids.size} scen, ${pages} stron, ${uploaded.length} nowych plików${fonts.length ? ` (czcionki: ${fonts.join(', ')})` : ''}${skipped.length ? `, ${skipped.length} plików już było` : ''}`, report);
 }
 
-// ------------------------------------------------------------ BTB CG: import elementów
+// ------------------------------------------------------------ import elementów zewnętrznych
 function showReport(title, lines) {
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center';
@@ -1682,20 +1682,20 @@ function showReport(title, lines) {
   d.querySelector('#repOk').onclick = () => d.remove();
   d.addEventListener('mousedown', (e) => { if (e.target === d) d.remove(); });
 }
-$('#bImpBtb').onclick = () => {
+$('#bImpEl').onclick = () => {
   const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
-  fi.onchange = () => { if (fi.files[0]) importBtbFile(fi.files[0]); };
+  fi.onchange = () => { if (fi.files[0]) importElementFile(fi.files[0]); };
   fi.click();
 };
-async function importBtbFile(f) {
+async function importElementFile(f) {
   try {
     if (!(await confirmLeave())) return;
     const isZip = /\.cgpack$/i.test(f.name);
-    const { elements, files } = await BTB.readBtb(isZip ? new Uint8Array(await f.arrayBuffer()) : await f.text(), f.name);
+    const { elements, files } = await EXT.readElements(isZip ? new Uint8Array(await f.arrayBuffer()) : await f.text(), f.name);
     const report = []; let made = 0, last = null;
     for (const el of elements) {
       const used = new Set();
-      const r = BTB.convertElement(el, {
+      const r = EXT.convertElement(el, {
         knownFonts: [...FONTS, 'Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'],
         assetName: (src) => { const k = Object.keys(files || {}).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
       });

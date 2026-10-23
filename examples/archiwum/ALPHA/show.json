@@ -1,5 +1,5 @@
 {
- "name": "BTB CG alpha – grafiki przeniesione",
+ "name": "ALPHA – grafiki przeniesione",
  "scenes": [
   {
    "id": "alpha_pilne_ocg",
@@ -53,7 +53,7 @@
         "w": 1650,
         "h": 40,
         "tickerMode": "whip",
-        "text": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBTB INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
+        "text": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nTV INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA",
         "font": "Bahnschrift.ttf",
         "size": 30,
         "weight": "600",
@@ -1764,8 +1764,8 @@
    ]
   },
   {
-   "id": "alpha_tylko_w_btb_info",
-   "name": "tylko w btb info",
+   "id": "alpha_tylko_w_tv_info",
+   "name": "tylko w tv info",
    "layer": "badge",
    "width": 1920,
    "height": 1080,
@@ -1782,7 +1782,7 @@
     {
      "id": "grp",
      "type": "group",
-     "name": "tylko w btb info",
+     "name": "tylko w tv info",
      "props": {
       "x": 1597,
       "y": 50,
@@ -1833,7 +1833,7 @@
         "y": 14,
         "w": 223,
         "h": 24,
-        "text": "tylko w btb info",
+        "text": "tylko w tv info",
         "font": "Bahnschrift.ttf",
         "size": 24,
         "weight": "700",
@@ -5508,13 +5508,13 @@
       {
        "id": "tx5",
        "type": "text",
-       "name": "btb",
+       "name": "info",
        "props": {
         "x": 0,
         "y": 88,
         "w": 118,
         "h": 82,
-        "text": "BTB",
+        "text": "TV",
         "font": "Arial",
         "size": 38,
         "weight": "700",
@@ -5757,7 +5757,7 @@
    "name": "PILNE (OCG)",
    "scene": "alpha_pilne_ocg",
    "values": {
-    "items": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBTB INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+    "items": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nTV INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
    }
   },
   {
@@ -5999,10 +5999,10 @@
   {
    "id": "alpha_p14110",
    "number": 14110,
-   "name": "tylko w btb info – tylko w btb info",
-   "scene": "alpha_tylko_w_btb_info",
+   "name": "tylko w tv info – tylko w tv info",
+   "scene": "alpha_tylko_w_tv_info",
    "values": {
-    "title": "tylko w btb info"
+    "title": "tylko w tv info"
    }
   },
   {
@@ -6229,7 +6229,7 @@
    "name": "PILNE (OCG)",
    "scene": "alpha_pilne_ocg",
    "values": {
-    "items": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nBTB INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
+    "items": "POLSKA|PREMIER D. TUSK OSTRO O WECIE: \"PREZES PIS POPROWADZIŁ GO JAK ZA RĄCZKĘ\"\nśWIAT|PILNE: PREZYDENT K. NAWROCKI WETUJE USTAWĘ WS. PROGRAMU \"SAFE\"\nBIZNES|RUCH RZĄDU W ODPOWIEDZI NA WETO. JEST NOWA UCHWAŁA I UPOWAŻNIENIA DLA MINISTRÓW\nNOWA KATEGORIA|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA\nTV INFO|KONGRESMENI USA ALARMUJĄ: ZAWIESZENIE SANKCJI NA ROSYJSKĄ ROPĘ FINANSUJE MACHINĘ WOJENNĄ PUTINA"
    }
   },
   {

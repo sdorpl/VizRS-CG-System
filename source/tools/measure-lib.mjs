@@ -1,6 +1,6 @@
-// Wspólne funkcje konwersji pomiaru DOM wyjścia BTB CG (tools/measure-btb-alpha.cjs) na węzły VizRS:
-// kolory i gradienty CSS, fonty, ruch grupy, prostokąty, teksty, tickery. Używają: build-btb-alpha.mjs, build-btb-trio.mjs.
-// Przed użyciem: setup({ io: moduł web/btb-io.js, dir: katalog wyjściowy (obrazy z data: URI → <dir>/assets) }).
+// Wspólne funkcje konwersji pomiaru DOM wyjścia oryginału (tools/measure-alpha.cjs) na węzły VizRS:
+// kolory i gradienty CSS, fonty, ruch grupy, prostokąty, teksty, tickery. Używają: build-alpha.mjs, build-dock.mjs.
+// Przed użyciem: setup({ io: moduł web/element-import.js, dir: katalog wyjściowy (obrazy z data: URI → <dir>/assets) }).
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -38,7 +38,7 @@ export function shadowBlur(s) {
   const m = /\)\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+([\d.]+)px/.exec(s || '');
   return m ? +m[3] : 0;
 }
-// font BTB → VizRS: Bahnschrift z pliku (paczka), reszta po nazwie
+// font oryginału → VizRS: Bahnschrift z pliku (paczka), reszta po nazwie
 export function fontOf(fam) {
   const first = String(fam || '').split(',')[0].replace(/["']/g, '').trim();
   if (/bahnschrift/i.test(first)) return BAHN;
@@ -51,7 +51,7 @@ export function parseFont(f) {
     upper: tt === 'uppercase', italic: style === 'italic', lineHeight: lh === 'lhnormal' ? 1.2 : r1(px(lh.slice(2)) / px(size) * 100) / 100 };
 }
 
-// ---------------------------------------------------------------- ruch (animacja BTB grafiki → motion grupy)
+// ---------------------------------------------------------------- ruch (animacja oryginału grafiki → motion grupy)
 export function groupMotion(g, origin) {
   const warn = () => {};
   const a = g.animation || {};
@@ -121,7 +121,7 @@ export function rectsOf(e, name) {
   return out;
 }
 
-/** Tekst: pole do szerokości tła (tekst BTB jest w jednym wierszu, nowrap), wyśrodkowany gdy BTB go centruje. */
+/** Tekst: pole do szerokości tła (tekst oryginał jest w jednym wierszu, nowrap), wyśrodkowany gdy oryginał go centruje. */
 export function textOf(e, bgs, field, scale = 1) {
   const f = parseFont(e.font);
   f.size = r1(f.size * scale); f.spacing = r1(f.spacing * scale);
@@ -129,7 +129,7 @@ export function textOf(e, bgs, field, scale = 1) {
   let x = e.x, w = e.w + 8, align = 'left';
   if (host) {
     const cx = e.x + e.w / 2, hx = host.x + host.w / 2;
-    // wyśrodkowany przez BTB: środki zgodne, a pole tekstu węższe od tła (zegar zawsze na środku swojego pola)
+    // wyśrodkowany w oryginale: środki zgodne, a pole tekstu węższe od tła (zegar zawsze na środku swojego pola)
     const centred = Math.abs(cx - hx) < 4 && (field === null || (host.w > e.w + 12 && e.w < host.w * 0.8));
     if (centred) { x = host.x; w = host.w; align = 'center'; }
     else w = Math.max(e.w + 8, host.x + host.w - e.x - 20);
@@ -147,7 +147,7 @@ export function textOf(e, bgs, field, scale = 1) {
 }
 
 // ---------------------------------------------------------------- rodziny szablonów
-export const TICKER_BOX = /utk-container|btb-fw-container|news-container-v8|rep-bottom-bar|ticker-vert-container|sub-ticker-v8/;
+export const TICKER_BOX = /utk-container|[a-z]+-fw-container|news-container-v8|rep-bottom-bar|ticker-vert-container|sub-ticker-v8/;
 export const MODE = { horizontal: 'crawl', scrolling: 'crawl', vertical: 'roll', whip: 'whip' };
 export const SEP = { skewed: 'skew', dot: 'dot', square: 'square', pipe: 'pipe' };
 
@@ -157,13 +157,13 @@ export function tickerNodes(g, els) {
   const nodes = rectsOf(box, 'tło paska');
   const wiper = els.find((e) => /utk-wiper$|wiper-v8$|ticker-vert-label/.test(e.cls.trim()));
   const wtext = els.find((e) => /wiper-text|ticker-vert-label/.test(e.cls) && e.text);
-  const item = els.find((e) => /utk-item|utk-h-item|btb-fw-item|utk-msg|utk-ticker-item|news-text-v8|ticker-item|ticker-vert-item|utk-msg-box|utk-single-text/.test(e.cls) && e.text);
+  const item = els.find((e) => /utk-item|utk-h-item|[a-z]+-fw-item|utk-msg|utk-ticker-item|news-text-v8|ticker-item|ticker-vert-item|utk-msg-box|utk-single-text/.test(e.cls) && e.text);
   const sep = els.find((e) => /sep/.test(e.cls));
   const f = item ? parseFont(item.font) : { font: BAHN, size: 30, weight: '600', color: '#ffffff', upper: true };
   const tpl = g.templateId;
   let mode = MODE[g.tickerMode] || null;
   if (!mode) mode = /news-container-v8/.test(box.cls) ? 'whip' : /ticker-vert/.test(box.cls) ? 'roll' : 'crawl';
-  const p = { x: box.x, y: box.y, w: box.w, h: box.h, tickerMode: mode, text: io.btbItemsText(g.items || []), font: f.font, size: f.size, weight: f.weight,
+  const p = { x: box.x, y: box.y, w: box.w, h: box.h, tickerMode: mode, text: io.extItemsText(g.items || []), font: f.font, size: f.size, weight: f.weight,
     color: f.color, textFit: 'squeeze-shrink', squeezeMin: 0.6 };
   if (f.upper) p.upper = true;
   if (f.spacing) p.spacing = f.spacing;
@@ -186,7 +186,7 @@ export function tickerNodes(g, els) {
     if (wr) { if (els.some((e) => /gleam/.test(e.cls))) wr.motion = { bg: 'shimmer' }; nodes.push(wr); }
     p.x = wiper.x + wiper.w; p.w = box.x + box.w - p.x;
   }
-  if (mode === 'crawl' && p.label !== undefined) p.text = io.btbItemsText((g.items || []).map((x) => (x && typeof x === 'object' ? x.text : x)));
+  if (mode === 'crawl' && p.label !== undefined) p.text = io.extItemsText((g.items || []).map((x) => (x && typeof x === 'object' ? x.text : x)));
   if (/sub-ticker-v8/.test(box.cls)) Object.assign(p, { color: '#000000', size: 30, weight: '400', font: BAHN, upper: true, sepStyle: 'square', sepColor: '#7f0000', speed: 80 });
   const t = { type: 'ticker', name: 'ticker', props: p, fields: { text: 'items' } };
   if (p.label !== undefined && g.templateId !== 'vertical-ticker') t.fields.label = 'wiper_text';
@@ -231,7 +231,7 @@ export function genericNodes(g, els) {
     }
     if (e.text) texts.push(e);
   }
-  // pola: pierwszy tekst = TITLE, drugi = SUBTITLE (jak ocgInputs szablonów BTB)
+  // pola: pierwszy tekst = TITLE, drugi = SUBTITLE (jak ocgInputs szablonów oryginału)
   texts.forEach((e, i) => {
     const clock = /rep-clock|current-time/.test(e.cls);
     if (clock) {

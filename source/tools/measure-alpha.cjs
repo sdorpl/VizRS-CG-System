@@ -1,18 +1,18 @@
-// Pomiar grafik BTB CG (gałęzie alpha i TRIO, szablony HTML/CSS/JS) → examples/archiwum/BTB_ALPHA/zrodlo.json dla tools/build-btb-alpha.mjs
-// (TRIO: plik wyjściowy examples/archiwum/BTB_TRIO/zrodlo.json → tools/build-btb-trio.mjs).
-//   1. serwer BTB alpha na kopii bazy:  PORT=3999 DATABASE_URL=kopia.sqlite node server.js   (w katalogu BTB-CG-System, gałąź alpha)
-//   2. node tools/measure-btb-alpha.cjs [adres=http://localhost:3999] [plik-wyjściowy]
+// Pomiar grafik oryginału (gałęzie alpha i TRIO, szablony HTML/CSS/JS) → examples/archiwum/ALPHA/zrodlo.json dla tools/build-alpha.mjs
+// (TRIO: plik wyjściowy examples/archiwum/DOCK/zrodlo.json → tools/build-dock.mjs).
+//   1. serwer oryginału (alpha) na kopii bazy:  PORT=3999 DATABASE_URL=kopia.sqlite node server.js   (w katalogu oryginału, gałąź alpha)
+//   2. node tools/measure-alpha.cjs [adres=http://localhost:3999] [plik-wyjściowy]
 // Każda grafika (i każdy szablon bez grafiki – z ustawieniami domyślnymi szablonu) wchodzi osobno na output.html;
-// po 3 s zapisywane są prostokąty, tła, ramki, teksty i obrazy z DOM. Playwright i socket.io-client: PLAYWRIGHT_DIR (node_modules BTB).
+// po 3 s zapisywane są prostokąty, tła, ramki, teksty i obrazy z DOM. Playwright i socket.io-client: PLAYWRIGHT_DIR (node_modules oryginału).
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const NM = path.join(process.env.PLAYWRIGHT_DIR || path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha'), 'node_modules');
+const NM = path.join(process.env.PLAYWRIGHT_DIR || process.env.CG_SRC_DIR || '.', 'node_modules');
 const { chromium } = require(path.join(NM, 'playwright'));
 const io = require(path.join(NM, 'socket.io-client'));
 const URL = process.argv[2] || 'http://localhost:3999';
-const OUT = path.resolve(process.argv[3] || path.join(__dirname, '../../examples/archiwum/BTB_ALPHA/zrodlo.json'));
+const OUT = path.resolve(process.argv[3] || path.join(__dirname, '../../examples/archiwum/ALPHA/zrodlo.json'));
 const KEEP = ['id', 'name', 'type', 'templateId', 'title', 'subtitle', 'introText', 'items', 'animation', 'style', 'layout', 'wiper', 'tickerMode',
   'separatorStyle', 'speed', 'accentColor', 'url', 'sideImage', 'titleHtml', 'groupId', 'fields'];
 
@@ -73,7 +73,7 @@ function measure() {
     console.error(i, all[i].name, pomiar[i].length);
   }
   s.emit('updateState', st);
-  const zrodlo = { zrodlo: process.env.BTB_ZRODLO || 'github.com/sdorpl/BTB-CG-System gałąź alpha, database.sqlite + templates/',
+  const zrodlo = { zrodlo: process.env.CG_ZRODLO || 'oryginał, gałąź alpha, database.sqlite + templates/',
     szablony: Object.fromEntries((st.templates || []).map((t) => [t.id, t.name])),
     grafiki: all.map((g) => Object.fromEntries(KEEP.filter((k) => k in g).map((k) => [k, g[k]]))), pomiar };
   fs.writeFileSync(OUT, JSON.stringify(zrodlo, null, 0) + '\n');
