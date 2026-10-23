@@ -9,7 +9,7 @@
 
 **Okna aplikacji i serwer** – [../PLAN-natywne-i-serwer.md](../PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
-**Kanał (branding emisji)** – [../PLAN-kanal.md](../PLAN-kanal.md): propozycja aplikacji `vizrs-channel` na wzór Viz Multichannel (harmonogram XMLTV, reguły, zdarzenia wtórne), etapy M0–M6; czeka na decyzje z §11.
+**Playout kanału** – [../PLAN-kanal.md](../PLAN-kanal.md): „VizRS Playout” w osobnym repozytorium, własny playout wideo na bazie ffplayout + branding VizRS sterowany playlistą (decyzje 2026-10-23, §11–§12); XMLTV później.
 
 | Etap | Stan |
 |---|---|

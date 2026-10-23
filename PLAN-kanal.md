@@ -1,6 +1,6 @@
-# PLAN: VizRS Channel – branding kanału sterowany harmonogramem (na wzór Viz Multichannel)
+# PLAN: VizRS Playout – emisja kanału z brandingiem sterowanym harmonogramem (na wzór Viz Multichannel)
 
-> Status (2026-10-23): **propozycja, czeka na decyzję** (§11). Wzór: [Viz Multichannel 4.2 – User Interface](https://docs.vizrt.com/viz-multichannel-guide/4.2/User_Interface.html), [Playlists](https://docs.vizrt.com/viz-multichannel-guide/4.2/Playlists.html), [Rules](https://docs.vizrt.com/viz-multichannel-guide/4.2/Rules.html), [Actions](https://docs.vizrt.com/viz-multichannel-guide/4.2/Actions.html), [Templates, Pages and Pilot Data Elements](https://docs.vizrt.com/viz-multichannel-guide/4.2/Templates,_Pages_and_Pilot_Data_Elements.html).
+> Status (2026-10-23): **decyzje podjęte (§11)** – osobne repozytorium „VizRS Playout”, własny playout wideo na bazie ffplayout, XMLTV później. Tam, gdzie §0–§10 mówią o `vizrs-channel`, Tunarr/ErsatzTV i binarce w tym samym crate, obowiązuje §11–§12. Wzór: [Viz Multichannel 4.2 – User Interface](https://docs.vizrt.com/viz-multichannel-guide/4.2/User_Interface.html), [Playlists](https://docs.vizrt.com/viz-multichannel-guide/4.2/Playlists.html), [Rules](https://docs.vizrt.com/viz-multichannel-guide/4.2/Rules.html), [Actions](https://docs.vizrt.com/viz-multichannel-guide/4.2/Actions.html), [Templates, Pages and Pilot Data Elements](https://docs.vizrt.com/viz-multichannel-guide/4.2/Templates,_Pages_and_Pilot_Data_Elements.html).
 > Powiązane: [docs/LUKI.md](docs/LUKI.md) #12 (rundown bez automatu), [docs/API.md](docs/API.md), [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md).
 
 ## 0. Streszczenie
@@ -162,8 +162,17 @@ Reguły uruchamiają się przy imporcie, przy aktualizacji i na żądanie („Ur
 
 Zamknięcie M3 zamyka też LUKI #12 dla brandingu. Rundown studyjny w Trio zostaje ręczny.
 
-## 11. Decyzje do podjęcia
-1. **Osobna binarka w tym samym crate** (rekomendacja: wspólne moduły, zero zależności) czy osobny workspace jak `shell/`?
-2. **Nazwa**: `vizrs-channel` / „VizRS Channel” (rekomendacja) czy „Multichannel”/„MCR”?
-3. Pierwsze źródło harmonogramu: **Tunarr czy ErsatzTV**? Od tego zależą wektory testowe M1 i sposób oznaczania przerw.
-4. Klatkaż kanału (25 fps PL) i czy offsety w UI pokazywać w klatkach (`hh:mm:ss:ff`), jak w Vizrt.
+## 11. Decyzje (2026-10-23)
+1. **Osobne repozytorium** (nie binarka w crate `vizrs`, nie workspace w `source/`). Zasada „zero zależności” dotyczy rdzenia VizRS, w nowym repo zależności ustala się osobno (ffplayout używa wielu crate'ów). Z VizRS rozmawia tylko przez protokół: TCP 6100, `/api/*`, SSE `/events`.
+2. **Nazwa: „VizRS Playout”** (binarka/repo `vizrs-playout`).
+3. **Własny playout na podstawie [ffplayout](https://github.com/ffplayout/ffplayout)** zamiast Tunarr/ErsatzTV jako źródła sygnału. Harmonogram = playlisty playoutu (zdarzenia główne znamy dokładnie, z klatką, bo to my odtwarzamy klip). **XMLTV później** – najpierw jako eksport EPG z playlisty, import zewnętrzny jako opcja (dawne M1).
+4. **Klatkaż i zapis czasu** – do potwierdzenia, wyjaśnienie niżej. Rekomendacja: 25 fps, czas w UI jako `hh:mm:ss:ff`, wewnętrznie w klatkach.
+
+> Wyjaśnienie pkt 4: telewizja w Polsce nadaje 25 klatek na sekundę. Vizrt pokazuje czasy i przesunięcia nie w milisekundach, lecz w formacie *godziny:minuty:sekundy:klatki*, np. `00:00:05:12` = 5 s i 12 klatek (12 × 40 ms). Pytanie brzmi: czy w VizRS Playout liczymy i pokazujemy czas w klatkach (dokładnie jak w emisji, każde zdarzenie trafia w konkretną klatkę), czy w zwykłych sekundach/ms. Przy własnym playoucie klatki są naturalne, bo ffmpeg i tak koduje klatka po klatce.
+
+## 12. Kierunek po decyzjach: playout na bazie ffplayout
+
+- **ffplayout** (Rust + ffmpeg): playlisty dzienne JSON, tryb ciągły, wypełniacze, wyjście HLS/RTMP/SRT/dekklink, panel WWW. **Licencja GPL-3.0** – jeśli kopiujemy lub forkujemy kod, repo „VizRS Playout” musi być na GPL-3.0. Do ustalenia: fork czy własna implementacja inspirowana ffplayout.
+- **Grafika VizRS na sygnale**: playout zna czas każdej klatki, więc reguły (§4) liczy względem zdarzeń z własnej playlisty, a komendy wysyła do `vizrs` (TCP 6100). Do rozstrzygnięcia w P0: jak nałożyć `/output` (strona przeglądarki) na wideo w ffmpeg – (a) zewnętrzny mikser (OBS/vMix) bierze wideo z playoutu i `/output`, (b) renderowanie `/output` bezgłowym Chromium do strumienia z kanałem alfa i filtr `overlay` w ffmpeg, (c) zrzut klatek przez SSE/WebSocket. Rekomendacja na start: (a), docelowo (b).
+- **Etapy (zamiast M0–M6)**: P0 repo, licencja, prototyp nakładki; P1 odtwarzanie playlisty dnia (ffmpeg, wypełniacz, wyjście SRT/HLS); P2 reguły i zdarzenia wtórne → `vizrs`; P3 UI (układ jak §8); P4 log emisji, EPG/XMLTV (eksport, potem import); P5 branding (`BRANDING.cgpack`), Docker compose `vizrs` + `vizrs-playout`.
+- **W tym repo** zostają tylko drobne dodatki do rdzenia z §9 i dokumentacja współpracy.
