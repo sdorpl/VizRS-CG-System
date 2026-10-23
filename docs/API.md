@@ -20,7 +20,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 |---|---|
 | `GET\|POST /take/<strony>[?pole=wartość…]` | TAKE; lista po przecinku `1001,3001`; wartości z query lub `{"values":{…}}` |
 | `GET\|POST /arm/<strony>` | uzbrojenie na wyjściu Preview (`/output?bus=preview`) |
-| `POST /preview/clear` | czyści Preview |
+| `GET\|POST /preview/clear` | czyści Preview |
 | `GET\|POST /continue/<warstwy\|strony>` | CONTINUE (lista po przecinku) |
 | `GET\|POST /out/<warstwy\|strony>` | OUT (lista po przecinku) |
 | `GET\|POST /clear` | zdejmuje wszystko |
@@ -45,7 +45,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 | `POST /shows` `{name, copy}` | nowy show (pusty albo kopia bieżącego), od razu aktywny |
 | `DELETE /shows/<id>` | usuwa nieaktywny show z biblioteki |
 | `GET /backups`, `POST /backups/restore/<nazwa>` | kopie zapasowe show |
-| `GET /locks`, `POST /lock/<rodzaj>/<id>?who=…`, `POST /unlock/<rodzaj>/<id>?who=…[&force=1]` | blokady edycji (45 s bez odświeżenia) |
+| `GET /locks`, `POST\|PUT /lock/<rodzaj>/<id>?who=…`, `POST\|DELETE /unlock/<rodzaj>/<id>?who=…[&force=1]` | blokady edycji (45 s bez odświeżenia) |
 | `POST /report`, `GET\|DELETE /errors` | błędy scen zgłaszane przez wyjście (także „tekst nie mieści się (ściśnięcie poniżej N%)” – przepełnienie tekstu na antenie) |
 | `GET /audit[?n=100]` | ostatnie komendy z logu audytowego |
 

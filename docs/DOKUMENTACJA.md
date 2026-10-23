@@ -615,7 +615,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 - Przywrócenie: Trio → ⚙ Stan → Kopie zapasowe → Przywróć (stan sprzed przywrócenia trafia do najnowszej kopii) albo `POST /api/backups/restore/<nazwa>`.
 - Nieudany zapis: czerwony znacznik w Trio, API zwraca 500; antena działa dalej.
 
-Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README.md)) – po jednym `.cgpack` na oprawę, ze wszystkimi scenami, stronami, grafikami i czcionkami: **INFO24.cgpack** (demo wbudowane, strony 1001–5001), **R7_NEWS.cgpack** (strony 7001–7505), **BTB.cgpack** (31 wzorców BTB CG i belka wielowierszowa, strony 8001–8506, z fontem Bahnschrift – nie do dystrybucji). Wczytanie: Trio → nowy show (▾), potem Artist → ⇧ Import → plik `.cgpack` (§8.6). Paczka nie przenosi playlist. Dawne pliki `.show.json` i katalog `BTB_CG/` są w `examples/archiwum/` (źródło paczek i testów).
+Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README.md)) – po jednym `.cgpack` na oprawę, ze wszystkimi scenami, stronami, grafikami i czcionkami: **INFO24.cgpack** (demo wbudowane, strony 1001–5001), **R7_NEWS.cgpack** (strony 7001–7505), **BTB.cgpack** (31 wzorców BTB CG i belka wielowierszowa, strony 8001–8506), **BTB_INFO24.cgpack** (INFO24 w stylistyce BTB, strony 9001–13001), **BTB_ALPHA.cgpack** (58 scen z gałęzi alpha BTB CG, strony 14001–14501), **BTB_TRIO.cgpack** (18 scen z gałęzi TRIO BTB CG z powiązaniami, strony 15001–15401); paczki BTB* zawierają font Bahnschrift – nie do dystrybucji. Wczytanie: Trio → nowy show (▾), potem Artist → ⇧ Import → plik `.cgpack` (§8.6). Paczka nie przenosi playlist. Dawne pliki `.show.json` i katalog `BTB_CG/` są w `examples/archiwum/` (źródło paczek i testów).
 
 ## 15. Testy i narzędzia
 
@@ -639,7 +639,7 @@ node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porów
 | `tools/build-btb-pack.mjs` | odbudowa `examples/archiwum/BTB_CG` ze wzorców BTB CG |
 | `tools/measure-btb-alpha.cjs`, `tools/build-btb-alpha.mjs` | grafiki gałęzi alpha BTB CG (szablony HTML/CSS/JS): pomiar DOM na wyjściu działającego serwera BTB → `examples/archiwum/BTB_ALPHA/zrodlo.json`, potem sceny i strony → `BTB_ALPHA/show.json` (paczka `BTB_ALPHA.cgpack`) |
 | `tools/build-btb-trio.mjs`, `tools/btb-measure-lib.mjs` | grafiki gałęzi TRIO BTB CG z powiązaniami: pomiar tym samym skryptem → `examples/archiwum/BTB_TRIO/zrodlo.json`, sceny, strony i `scene.dock` → `BTB_TRIO/show.json` (paczka `BTB_TRIO.cgpack`); wspólne funkcje pomiar → węzły w `btb-measure-lib.mjs` |
-| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack` z `examples/archiwum/` |
+| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |
 | `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne |
