@@ -31,7 +31,8 @@ jobs:
         shell: bash
         run: |
           ./target/release/vizrs --version
-          (sha256sum target/release/vizrs* 2>/dev/null || shasum -a 256 target/release/vizrs) | head -1
+          bin=target/release/vizrs; [ -f "$bin.exe" ] && bin="$bin.exe"
+          if command -v sha256sum >/dev/null; then sha256sum "$bin"; else shasum -a 256 "$bin"; fi
       - uses: actions/upload-artifact@v4
         with:
           name: vizrs-${{ matrix.os }}
