@@ -9,7 +9,7 @@
 
 **Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
-**Playout kanału** – [plany/PLAN-kanal.md](plany/PLAN-kanal.md): „VizRS Playout” w osobnym repozytorium, własny playout wideo na bazie ffplayout + branding VizRS sterowany playlistą (decyzje 2026-10-23, §11–§12); XMLTV później.
+**Playout kanału** – [plany/PLAN-kanal.md](plany/PLAN-kanal.md): własny playout na bazie ffplayout („VizRS Playout”, repo `VizRS ffPlayout System`) **porzucony 2026-10-24** – repozytorium zostaje jako archiwum i wzorzec. Kanał z grafiką VizRS: **VirtRS CG Playout** (sidecar dla ErsatzTV, `../VirtRS CG Playout`) – komendy na start klipu, reklamy bez grafiki, wtapianie `/output` bezgłowym Chromium.
 
 | Etap | Stan |
 |---|---|

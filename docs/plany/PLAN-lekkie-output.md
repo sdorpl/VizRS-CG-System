@@ -4,7 +4,7 @@ Status: **L1–L4 wdrożone** (2026-10-24): `?fps=N`, `?fx=step` (efekty ruchowe
 wskazówki w DOKUMENTACJA §10 i instrukcji; test klatek screencastu w `tests/e2e/motion.js`. L5 (wskaźnik w Artist) – później.
 Decyzje z §6: osobne parametry `fps` i `fx=step` (bez `lite=1`); w L2 efekty ruchowe wyłączone.
 Dotyczy wypalania `/output` w obraz kanału przez bezgłowy Chromium bez GPU: VirtRS CG Playout (ErsatzTV)
-i VizRS ffPlayout System. Docelowo Oracle Cloud Free, Ampere A1 (arm64, do 4 OCPU), gdzie grafika ma się
+(wcześniej także VizRS ffPlayout System – od 2026-10-24 archiwum). Docelowo Oracle Cloud Free, Ampere A1 (arm64, do 4 OCPU), gdzie grafika ma się
 zmieścić w ok. 1,5 OCPU obok kodowania x264. OBS, vMix i okno `vizrs output` zostają bez zmian. Wszystko,
 co niżej, włącza się parametrem adresu.
 
@@ -141,9 +141,9 @@ Artist mógłby wskazywać sceny z animacją ciągłą w stanie ustalonym (`blin
 - VirtRS CG Playout: `output_url` / `VIZRS_OUTPUT_URL` dostaje `&fps=25` (i ewentualnie
   `&fx=step`). Sidecar nie zmienia adresu sam, bo klatkaż kanału zna dopiero z danych ErsatzTV,
   a jedna strona przechwytywania obsługuje wszystkie kanały danego rozmiaru.
-- VizRS ffPlayout System: tak samo, z klatkażu kanału (plan: 25 kl./s, opcja 50).
+- VizRS ffPlayout System: archiwum od 2026-10-24, bez zmian.
 - Po wdrożeniu parametry trafiają do `docs/API.md` (sekcja „Wyjście `/output`”) i do dokumentacji
-  obu playoutów.
+  VirtRS CG Playout.
 
 ## 6. Decyzje do podjęcia
 

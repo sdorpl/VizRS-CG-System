@@ -1,5 +1,7 @@
 # PLAN: VizRS Playout – emisja kanału z brandingiem sterowanym harmonogramem (na wzór Viz Multichannel)
 
+> **Aktualizacja 2026-10-24: realizacja w ffplayout porzucona.** Repozytorium `VizRS ffPlayout System` zostaje jako archiwum i wzorzec (§12 opisuje je historycznie). Kanał z grafiką VizRS realizuje **VirtRS CG Playout** – sidecar dla ErsatzTV (komendy TCP na start klipu, reklamy bez grafiki, wtapianie `/output`), bez reguł i zdarzeń wtórnych z §4–§6.
+
 > Status (2026-10-23): **decyzje podjęte (§11)** – osobne repozytorium „VizRS Playout”, własny playout wideo na bazie ffplayout, XMLTV później. Tam, gdzie §0–§10 mówią o `vizrs-channel`, Tunarr/ErsatzTV i binarce w tym samym crate, obowiązuje §11–§12. Wzór: [Viz Multichannel 4.2 – User Interface](https://docs.vizrt.com/viz-multichannel-guide/4.2/User_Interface.html), [Playlists](https://docs.vizrt.com/viz-multichannel-guide/4.2/Playlists.html), [Rules](https://docs.vizrt.com/viz-multichannel-guide/4.2/Rules.html), [Actions](https://docs.vizrt.com/viz-multichannel-guide/4.2/Actions.html), [Templates, Pages and Pilot Data Elements](https://docs.vizrt.com/viz-multichannel-guide/4.2/Templates,_Pages_and_Pilot_Data_Elements.html).
 > Powiązane: [docs/LUKI.md](../LUKI.md) #12 (rundown bez automatu), [docs/API.md](../API.md), [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md).
 
