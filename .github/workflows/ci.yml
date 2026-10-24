@@ -72,23 +72,23 @@ jobs:
       - name: Test dymny kontenera
         run: |
           docker image ls vizrs:ci --format 'rozmiar obrazu: {{.Size}}'
-          docker run -d --name v -p 8088:8088 -e VIZRS_TOKEN=ci-token vizrs:ci
+          docker run -d --name vizrs-ci -p 8088:8088 -e VIZRS_TOKEN=ci-token vizrs:ci
           for i in $(seq 1 30); do
-            s=$(docker inspect -f '{{.State.Health.Status}}' v); echo "health: $s"
+            s=$(docker inspect -f '{{.State.Health.Status}}' vizrs-ci); echo "health: $s"
             [ "$s" = healthy ] && break; sleep 2
           done
-          [ "$(docker inspect -f '{{.State.Health.Status}}' v)" = healthy ]
+          [ "$(docker inspect -f '{{.State.Health.Status}}' vizrs-ci)" = healthy ]
           curl -fsS -H 'X-Token: ci-token' http://127.0.0.1:8088/health
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8088/api/state)" = 401
           curl -fsS -o /dev/null 'http://127.0.0.1:8088/output?token=ci-token'
           curl -fsS -H 'X-Token: ci-token' -X POST http://127.0.0.1:8088/api/take/1001
-          docker restart v && sleep 2
+          docker restart vizrs-ci && sleep 2
           curl -fsS -H 'X-Token: ci-token' http://127.0.0.1:8088/api/show | grep -q '"pages"'
           # bez tokenu kontener (bind 0.0.0.0) nie startuje
           ! docker run --rm vizrs:ci
           # SIGTERM obsłużony przez VizRS (PID 1 bez --init) – bez czekania 10 s na SIGKILL
-          start=$(date +%s); docker stop v; t=$(( $(date +%s) - start )); echo "docker stop: $t s"; [ "$t" -lt 5 ]
-          docker logs v | tail -20
+          start=$(date +%s); docker stop vizrs-ci; t=$(( $(date +%s) - start )); echo "docker stop: $t s"; [ "$t" -lt 5 ]
+          docker logs vizrs-ci | tail -20
 
   # okno natywne vizrs-shell (osobny workspace z zależnościami; rdzeń vizrs bez zmian)
   shell:
