@@ -446,6 +446,19 @@ export function loopState(spec, t) {
   return o;
 }
 
+/**
+ * Stan pętli w trybie schodkowym (lekkie `/output?fx=step`): pętle „w miejscu” próbkowane 4 razy na pełny okres,
+ * pętle ruchowe, połysk i podkreślenie w pozycji spoczynkowej.
+ */
+export function loopStateStep(spec, t) {
+  const D = (d) => (num(spec?.dur, 0) > 0 ? +spec.dur : d);
+  // yoyo: dur to pół okresu (tam i z powrotem); flash – jedno mrugnięcie; heartbeat – samo uderzenie (potem cisza)
+  const period = { pulse: () => 2 * D(0.8), breathe: () => 2 * D(3), glow: () => 2 * D(1.5), flash: () => D(0.5), heartbeat: () => 0.64 }[spec?.type];
+  if (!period) return loopState(null, 0);
+  const q = period() / 4;
+  return loopState(spec, Math.floor(t / q) * q);
+}
+
 // ---------------------------------------------------------------- kompozycja
 /** Składa stany (IN · OUT): przesunięcia, obrót, pochylenie, rozmycie, RGB sumują się; skala i krycie mnożą; maski – część wspólna. */
 export function compose(a, b) {
@@ -652,4 +665,12 @@ export function bgState(type, t, baseOpacity = 1) {
     case 'scanline': o.scan = ((t % 1) / 1) * 3; break;
   }
   return o;
+}
+/** Okres efektu tła próbkowanego w trybie schodkowym; `shimmer` i `scanline` są wtedy wyłączone. */
+const BG_STEP = { pulse: 1.6, glow: 2 };
+/** Stan efektu tła w trybie schodkowym (lekkie `/output?fx=step`): 4 stany na okres albo brak efektu. */
+export function bgStateStep(type, t, baseOpacity = 1) {
+  const d = BG_STEP[type];
+  if (!d) return bgState('none', 0);
+  return bgState(type, Math.floor(t / (d / 4)) * (d / 4), baseOpacity);
 }

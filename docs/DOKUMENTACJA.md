@@ -467,6 +467,25 @@ OBS: Źródła → **+** → **Przeglądarka** → `http://localhost:8088/output
 | `?checker=1` | szachownica (podgląd); bez `bg` tło jak monitor PGM w Trio |
 | `?status=1` | pasek stanu połączenia |
 | `?token=…` | token przy `--token` |
+| `?fps=25` | lekkie wyjście: animacje najwyżej N klatek/s (klatkaż kanału) |
+| `?fx=step` | lekkie wyjście: efekty uwagi schodkami (tabela niżej) |
+
+**Lekkie wyjście (bezgłowy Chromium bez GPU).** Playout kanału przechwytuje `/output` przez DevTools (`Page.startScreencast`): każda klatka, w której cokolwiek się zmieniło, to odczyt, kodowanie i dekodowanie całego obrazu 1920×1080 (ok. 4% CPU na każdą klatkę na sekundę). Koszt zależy więc od liczby zmienionych klatek, a nie od wielkości grafiki – mrugająca kropka kosztuje tyle co przewijany pasek. Strona statyczna (belka, podpis, logo, zegar bez sekund) po wejściu nie zmienia obrazu i nie kosztuje nic.
+
+- `?fps=N` – pętla animacji rysuje najwyżej N razy na sekundę (1–120). Tempo animacji się nie zmienia, rzadsze jest tylko próbkowanie. Ticker crawl przy `fps=25` kosztuje ok. 45% mniej niż przy 60 Hz. Nie dotyczy wideo w węźle `image` – film gra we własnym tempie.
+- `?fx=step` – efekty liczone z zegara zmieniają obraz tylko kilka razy na okres:
+
+| Efekt | Domyślnie | `fx=step` |
+|---|---|---|
+| `blink` | płynne krycie | 2 stany (pełne i 0,15) |
+| `motion.loop`: `pulse`, `breathe`, `glow`, `flash`, `heartbeat` | płynnie | 4 próbki na okres |
+| `motion.loop`: `float`, `bounce`, `wobble`, `shake`, `shine`, `underline-sweep` | płynnie | wyłączone (pozycja spoczynkowa) |
+| `motion.bg`: `pulse`, `glow` | płynnie | 4 próbki na okres |
+| `motion.bg`: `shimmer`, `scanline` | płynnie | wyłączone |
+
+Wygląd z `fx=step` różni się od OBS, dlatego to świadomy wybór kanału; podgląd: `/output?fx=step&checker=1`. Adres dla playoutu kanału 25 kl./s: `/output?fps=25&fx=step`. Bez stron na antenie pętla animacji zasypia (w każdym trybie).
+
+Wskazówki dla scen kanału wypalanego: ticker w trybie `roll` albo `wipe` kosztuje ok. 4 razy mniej niż `crawl` (między zmianami wiadomości obraz stoi); `blink`, pętle uwagi i efekty tła na grafikach wiszących godzinami (logo, „Na żywo”) to stały koszt pełnego klatkażu – lepiej z nich zrezygnować albo użyć `fx=step`; zegar `HH:mm` zmienia obraz raz na minutę, z sekundami raz na sekundę (oba tanie); rotacja `cycle` kosztuje głównie w czasie przejścia; wideo w grafice nie nadaje się na kanał wypalany.
 
 ## 11. Sterowanie zewnętrzne
 
@@ -628,7 +647,7 @@ node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwrig
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
 node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja
-node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output)
+node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output, klatki lekkiego wyjścia ?fps/?fx=step)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
 node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porównanie z BTB CG (--frames: klatki wejścia)
 node tests/e2e/app.js target/release/vizrs          # okna aplikacji (udawana przeglądarka)

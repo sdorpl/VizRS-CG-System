@@ -30,6 +30,7 @@
 | Ticker | T1 model i parser (`ticker-model.js`, `ticker.rs`, wspólne wektory), T2 renderer (ciągłość przy UPDATE, whip, separatory, błysk, squeeze), T3 edytor wiadomości w Trio, T4 Artist (panel trybu, presety, reguły pola), T5.1 komendy `TICKER`/`/api/ticker`/OSC, T6 import z BTB, T7 testy | [plany/PLAN-ticker.md](plany/PLAN-ticker.md), `web/ticker-*.js`, `src/ticker.rs` |
 | Tekst | ściskanie jak w BTB (`squeeze` do `squeezeMin` bez zmiany fontu, `squeeze-shrink`), wskaźnik i ostrzeżenie w Trio, dopasowanie wiadomości tickera, import BTB (granice, pola dla warstw bez pola) | `renderer.js`, `trio.html`, `btb-io.js`, `validate.rs` |
 | Paczki i ruch | paczka belek `.cgpack` (sceny + strony + grafiki + czcionki, czcionki z serwera na /output); ruch jak w BTB CG bez kluczy (`node.motion`: 22 presety IN/OUT, 31 efektów tekstu, 11 pętli, krzywe GSAP); import BTB przenosi ruch 1:1; prosty tryb sekwencji w Artist (kaskada, po kolei, na klucze i z kluczy) | `web/cgpack.js`, `web/motion.js`, `artist.html`, `renderer.js`, `btb-io.js` |
+| Lekkie wyjście | `/output?fps=N` (pętla w klatkażu kanału), `?fx=step` (efekty uwagi schodkami), uśpienie pętli bez stron, wskazówki dla scen kanału; L5 (wskaźnik w Artist) – LUKI #20 | [plany/PLAN-lekkie-output.md](plany/PLAN-lekkie-output.md), `renderer.js`, `motion.js`, `output.html` |
 | F4 | F4.1 wspólne wektory (`tools/sync-btb.sh`), F4.2 konwerter BTB (`btb-io.js`, `.cgpack`), F4.3 blokady edycji, F4.4 `deploy/`, runbook | `tests/vectors`, `web/btb-io.js`, `deploy/`, `docs/` |
 
 ## Następne zadanie

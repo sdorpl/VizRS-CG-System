@@ -67,3 +67,4 @@ Zdarzenia: `snapshot` (stan startowy; osobny z `bus:"preview"`), `take`, `contin
 
 ## Wyjście `/output`
 `?layers=main,front` · `?bg=%2300ff00` · `?w=1280&h=720` · `?checker=1` · `?status=1` · `?bus=preview` · `?mode=fill` (kolor na czerni) · `?mode=key` (alfa jako luma). Fill + Key = dwa źródła przeglądarki dla ATEM/Tricastera.
+Lekkie wyjście dla bezgłowego Chromium (playout kanału): `?fps=25` (animacje najwyżej N kl./s) · `?fx=step` (efekty uwagi schodkami, efekty ruchowe wyłączone); szczegóły w DOKUMENTACJA §10.

@@ -1,6 +1,7 @@
 # VizRS – historia zmian
 
 ## Niewydane
+- **Lekkie `/output` dla bezgłowego Chromium** (playout kanału na serwerze bez GPU, plan `docs/plany/PLAN-lekkie-output.md`): `?fps=N` – pętla animacji w klatkażu kanału (ticker crawl przy 25 kl./s ok. 45% taniej), `?fx=step` – miganie i pętle uwagi schodkami, efekty ruchowe wyłączone (kropka „Na żywo” z ~180% CPU do poziomu grafiki statycznej). Bez stron na antenie pętla animacji zasypia. Wskazówki dla scen kanału w DOKUMENTACJA §10; test klatek screencastu w `tests/e2e/motion.js`.
 - **Dokumentacja uporządkowana:** plany i raport przeniesione do `docs/plany/` (spis z ich stanem), README skrócony do wprowadzenia i spisu, opis Render.com w RUNBOOK, elementy dodatkowe i strony demo w `examples/README.md`, brakujące testy i narzędzia (`app.js`, `shell.js`, `engines.js`, `video.js`) w DOKUMENTACJA §15.
 - **Artist, tryb sekwencji – ◇ Z kluczy:** zamiana kluczy wejścia/wyjścia elementu na presety ruchu (odwrotność „◆ Na klucze”), z propozycją przybliżenia, gdy klucze nie pasują dokładnie.
 - **Zajęty port – fallback:** gdy domyślny port 8088 jest zajęty (np. serwer `./start-linux.sh` na innym katalogu danych), serwer `vizrs`, okna `vizrs artist|trio` i okno natywne / AppImage używają następnego wolnego portu (komunikat na starcie) zamiast kończyć się błędem; jawny `--port` / `VIZRS_PORT` bez zmian.

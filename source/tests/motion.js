@@ -90,6 +90,14 @@ const near = (a, b, e = 1e-3) => Math.abs(a - b) < e;
   ok(near(MO.loopState({ type: 'pulse', amp: 10 }, 0.8).sx, 1.1), 'pulse: siła = % skali');
   ok(MO.loopState({ type: 'shine', dur: 1 }, 0.5).shine > 0 && MO.loopState({ type: 'shine', dur: 1 }, 2).shine === -1, 'shine: przejazd i przerwa');
 
+  // tryb schodkowy (lekkie /output?fx=step): kilka stanów na okres, ruch wyłączony
+  const vals = (f) => new Set(Array.from({ length: 300 }, (_, i) => JSON.stringify(f(i / 100)))).size;
+  ok(vals((t) => MO.loopStateStep({ type: 'pulse' }, t)) <= 4 && MO.loopStateStep({ type: 'pulse' }, 0.85).sx > 1.03, 'schodki: pulse – najwyżej 4 stany, szczyt w połowie okresu');
+  ok(vals((t) => MO.loopStateStep({ type: 'breathe', dur: 2 }, t)) <= 4 && MO.loopStateStep({ type: 'breathe', dur: 2 }, 2.1).opacity < 0.7, 'schodki: breathe z własnym okresem');
+  ok(['float', 'bounce', 'wobble', 'shake', 'shine', 'underline-sweep'].every((type) => vals((t) => MO.loopStateStep({ type }, t)) === 1 && MO.loopStateStep({ type }, 0.5).shine === -1), 'schodki: pętle ruchowe, połysk i podkreślenie wyłączone');
+  ok(vals((t) => MO.bgStateStep('pulse', t, 1)) <= 4 && vals((t) => MO.bgStateStep('glow', t)) <= 4, 'schodki: tło pulse i glow – najwyżej 4 stany');
+  ok(MO.bgStateStep('shimmer', 1).shimmer == null && MO.bgStateStep('scanline', 1).scan == null, 'schodki: shimmer i scanline wyłączone');
+
   // presety → klucze
   const rest = { x: 100, y: 50, opacity: 1, scale: 1, skewX: 0, blur: 0, clipL: 0, clipT: 0, clipR: 0, clipB: 0 };
   const k1 = MO.motionToKeys({ in: { type: 'slide', dir: 'left', dur: 0.5, ease: 'power2.out' }, out: { type: 'fade', dur: 0.4, delay: 0.1, ease: 'power2.in' } }, { rest, outStart: 2 });

@@ -138,6 +138,38 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     ok(k1.motion?.in?.type === 'fade' && k1.motion.in.delay === 0.3 && k1.motion.in.dur === 0.4 && k1.motion.in.ease === 'power2.out'
       && k1.motion.out?.type === 'slide' && k1.motion.out.dir === 'right' && k1.motion.out.ease === 'power2.in' && !k1.anim.opacity && !k1.anim.x && k1.anim.rotation?.length === 2 && k1.props.opacity === 1,
     'Z kluczy: przenikanie i wyjazd → presety, obrót zostaje kluczami', k1);
+
+    // lekkie /output (?fps=N, ?fx=step): liczba klatek screencastu DevTools, jak w przechwytywaniu playoutu kanału
+    const lite = { id: 'lite', name: 'Lekkie', layer: 'main', width: 1920, height: 1080, duration: 0, stops: [], fieldMeta: {}, nodes: [
+      { id: 'dot', type: 'rect', name: 'kropka', props: { x: 100, y: 100, w: 14, h: 14, color: '#e00', blink: 1 } },
+      { id: 'tk', type: 'ticker', name: 'ticker', fields: { text: 'ticker' }, props: { x: 0, y: 1000, w: 1920, h: 60, size: 36, color: '#fff', speed: 120, text: 'Pierwsza wiadomość | Druga wiadomość | Trzecia wiadomość' } }] };
+    await api('/api/scenes', { method: 'POST', body: JSON.stringify(lite) });
+    const pBlink = await api('/api/pages', { method: 'POST', body: JSON.stringify({ scene: 'lite', number: 1600, values: { ticker: '' } }) });
+    const pCrawl = await api('/api/pages', { method: 'POST', body: JSON.stringify({ scene: 'lite', number: 1601, values: { ticker: 'Pierwsza wiadomość | Druga wiadomość | Trzecia wiadomość' } }) });
+    await pg.close(); await out.close();   // inne karty nie podbierają czasu procesora
+    const frames = async (query, number) => {
+      const p = await ctx.newPage();
+      p.on('pageerror', (e) => errs.push('lite: ' + e.message));
+      await p.goto(B + '/output' + query); await sleep(500);
+      await api('/api/take/' + number); await sleep(800);
+      const cdp = await ctx.newCDPSession(p);
+      let n = 0;
+      cdp.on('Page.screencastFrame', (f) => { n++; cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {}); });
+      await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 20, maxWidth: 480, maxHeight: 270 });
+      await sleep(2000);
+      await cdp.send('Page.stopScreencast');
+      await api('/api/out/main'); await sleep(300);
+      await p.close();
+      return n / 2;
+    };
+    // kropka bez tickera (pole puste → ticker nic nie rysuje): płynnie 60 Hz, ?fx=step – dwa stany na okres 1 s
+    const blink = await frames('', 1600), blinkStep = await frames('?fx=step', 1600);
+    const crawl = await frames('', 1601), crawl25 = await frames('?fps=25', 1601), crawl25s = await frames('?fps=25&fx=step', 1601);
+    console.log(`     kl./s: blink ${blink}, blink fx=step ${blinkStep}, crawl ${crawl}, crawl fps=25 ${crawl25}, crawl fps=25&fx=step ${crawl25s}`);
+    ok(blink > 30, 'Miganie płynne: obraz zmienia się w każdej klatce', blink);
+    ok(blinkStep <= 3, '?fx=step: miganie zmienia obraz najwyżej kilka razy na sekundę', blinkStep);
+    ok(crawl > 28, 'Ticker crawl bez parametru: pełny klatkaż przeglądarki', crawl);
+    ok(crawl25 >= 18 && crawl25 <= 27 && crawl25s <= 27, '?fps=25: ticker crawl około 25 kl./s', [crawl25, crawl25s]);
     ok(errs.length === 0, 'Bez błędów JS', errs);
   } catch (e) {
     console.error(e); failures++;

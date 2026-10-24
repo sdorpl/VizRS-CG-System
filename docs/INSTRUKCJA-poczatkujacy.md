@@ -106,6 +106,8 @@ Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości �
 
 Mikser z kluczowaniem (ATEM, Tricaster): dwa źródła – `/output?mode=fill` i `/output?mode=key`.
 
+Kanał wypalany na serwerze bez karty graficznej (playout kanału): adres `/output?fps=25&fx=step` – animacje w klatkażu kanału, miganie i pętle uwagi schodkami. Na takim kanale ticker lepiej w trybie `roll` albo `wipe` niż `crawl`, a na grafikach wiszących godzinami (logo, „Na żywo”) unikaj migania i pętli – liczy się, jak często obraz się zmienia, a nie jak duża jest grafika.
+
 ## 7. Ticker
 
 1. Wczytaj stronę z tickerem (w INFO24: *3001*).

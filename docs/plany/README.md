@@ -9,5 +9,6 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-ticker.md](PLAN-ticker.md) | wdrożony (2.0.0), poza T5.2 | tickery na wzór BTB CG (T1–T7) |
 | [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md) | N0–N4.1 wdrożone (2.0.1), reszta czeka | okna aplikacji, okno natywne `vizrs-shell`, VPS/Docker |
 | [PLAN-kanal.md](PLAN-kanal.md) | decyzje podjęte, realizacja w osobnym repo | VizRS Playout – branding kanału sterowany harmonogramem (Viz Multichannel) |
+| [PLAN-lekkie-output.md](PLAN-lekkie-output.md) | L1–L4 wdrożone (2026-10-24), L5 później | lekkie `/output` dla bezgłowego Chromium bez GPU (Ampere A1): `?fps=N`, schodkowe efekty, wskazówki dla scen kanału |
 
 Założenia Z1–Z10 z planu rozbudowy obowiązują przy każdej nowej funkcji.

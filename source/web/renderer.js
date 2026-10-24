@@ -568,15 +568,34 @@ function tickerSegment(x, o) {
 const easeIO = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
 
 // ------------------------------------------------------------------ globalna pętla animacji
+// Pętla działa tylko, gdy są sceny; bez nich zasypia i budzi ją pierwszy nowy ScenePlayer.
 const players = new Set();
-let last = 0;
+let last = 0, nextAt = 0, running = false, FPS = 0, STEP = false;
 function loop(now) {
+  if (!players.size) { running = false; last = 0; return; }
+  if (FPS) {
+    // termin następnej klatki (a nie odstęp od poprzedniej): przy 60 Hz i 25 kl./s na zmianę co 2 i 3 klatki
+    if (now < nextAt - 1000 / 120) { requestAnimationFrame(loop); return; }
+    nextAt = Math.max(nextAt + 1000 / FPS, now);
+  }
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
   last = now;
   for (const p of [...players]) p.tick(dt, now);
   requestAnimationFrame(loop);
 }
-if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(loop);
+function wake() {
+  if (running || typeof requestAnimationFrame === 'undefined') return;
+  running = true;
+  requestAnimationFrame(loop);
+}
+/**
+ * Lekkie wyjście dla bezgłowego Chromium (`/output?fps=25&fx=step`): `fps` – pętla animacji najwyżej N razy na sekundę
+ * (tempo bez zmian, rzadsze próbkowanie), `step` – efekty uwagi schodkami zamiast płynnie. Domyślnie (0, false) jak dotąd.
+ */
+export function setOutputMode({ fps = 0, step = false } = {}) {
+  FPS = fps > 0 ? Math.min(120, Math.max(1, +fps)) : 0;
+  STEP = !!step;
+}
 
 // ------------------------------------------------------------------ odtwarzacz sceny
 export class ScenePlayer {
@@ -608,6 +627,7 @@ export class ScenePlayer {
     this.build();
     this.apply(0);
     players.add(this);
+    wake();
   }
 
   get stops() { return [...(this.scene.stops || [])].sort((a, b) => a - b); }
@@ -1140,8 +1160,9 @@ export class ScenePlayer {
     if (!hold) it.loopT0 = null;
     const k = 1 - Math.exp(-Math.min(dt, 1) * 8);
     it.loopW = (it.loopW ?? 0) + ((hold ? 1 : 0) - (it.loopW ?? 0)) * (dt >= 1 ? 1 : k);
+    if (STEP && Math.abs(it.loopW - (hold ? 1 : 0)) < 0.01) it.loopW = hold ? 1 : 0;   // bez nieskończonego dochodzenia do celu
     const w = it.loopW;
-    const s = MO.loopState(m.loop, it.loopT0 == null ? 0 : (now - it.loopT0) / 1000);
+    const s = (STEP ? MO.loopStateStep : MO.loopState)(m.loop, it.loopT0 == null ? 0 : (now - it.loopT0) / 1000);
     const out = { tx: s.tx * w, ty: s.ty * w, rot: s.rot * w, sx: 1 + (s.sx - 1) * w, sy: 1 + (s.sy - 1) * w, opacity: 1 - (1 - s.opacity) * w, glow: s.glow * w,
       color: m.loop.color || (m.loop.type === 'underline-sweep' ? 'rgba(255,255,255,0.9)' : m.loop.type === 'shine' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.6)'),
       amp: m.loop.type === 'glow' && +m.loop.amp > 0 ? +m.loop.amp / 8 : 1 };
@@ -1175,7 +1196,7 @@ export class ScenePlayer {
 
   /** Stały efekt tła kształtu (motion.bg, jak `layer.effect` w BTB): gra od wejścia na wizję, także w trakcie IN/OUT. */
   bgFx(it, type, now, baseOp) {
-    const s = MO.bgState(type, (now - this.wallStart) / 1000, baseOp);
+    const s = (STEP ? MO.bgStateStep : MO.bgState)(type, (now - this.wallStart) / 1000, baseOp);
     if (s.shimmer != null || s.scan != null) {
       let o = it.bgEl;
       if (!o || o.type !== type) {
@@ -1391,7 +1412,10 @@ export class ScenePlayer {
       const bg = m?.bg && m.bg !== 'none' ? this.bgFx(it, m.bg, now, p('opacity')) : null;
       let op = p('opacity') * (it.cyOp ?? 1) * (mo ? mo.opacity : 1) * (lp ? lp.opacity : 1) * (bg ? bg.opacity : 1);
       const bl = p('blink');
-      if (bl > 0) op *= 0.15 + 0.85 * (0.5 + 0.5 * Math.cos((now / 1000) * 2 * Math.PI / bl));
+      if (bl > 0) {
+        const c = Math.cos((now / 1000) * 2 * Math.PI / bl);
+        op *= STEP ? (c >= 0 ? 1 : 0.15) : 0.15 + 0.85 * (0.5 + 0.5 * c);
+      }
       st.opacity = op;
       st.visibility = op <= 0.001 ? 'hidden' : 'visible';
       const rot = p('rotation') + (mo ? mo.rot : 0) + (lp ? lp.rot : 0);
