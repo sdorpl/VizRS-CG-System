@@ -46,15 +46,16 @@ const probe = (kind) => {
     ok(!!h1, 'serwer uruchomiony przez powłokę działa po zamknięciu okna (czeka na --idle-exit)');
     ok(fs.existsSync(path.join(data, '.vizrs.lock')), 'serwer trzyma blokadę katalogu danych');
 
-    // 2. Trio dołącza do tego samego serwera (ta sama instancja)
+    // 2. Trio dołącza do tego samego serwera (ta sama instancja). Podłączone „wyjście” trzyma serwer:
+    //    start WebKitGTK na runnerze CI trwa dłużej niż --idle-exit (10 s) i serwer kończył się w trakcie.
+    obs = http.get(`http://127.0.0.1:${PORT}/events`);
+    obs.on('error', () => {});
     const t = probe('trio');
     ok(t.title === 'VizRS Trio' && t.conn === 'połączono' && t.pages > 0, 'Trio w oknie natywnym dołącza do działającego serwera', t);
     const h2 = await health();
     ok(h2 && h1 && h2.instance === h1.instance, 'to ten sam serwer (instance)', [h1?.instance, h2?.instance]);
 
-    // 3. „OBS” podłączony – serwer żyje dłużej niż --idle-exit; po odłączeniu kończy pracę
-    obs = http.get(`http://127.0.0.1:${PORT}/events`);
-    obs.on('error', () => {});
+    // 3. „OBS” (podłączony w kroku 2) – serwer żyje dłużej niż --idle-exit; po odłączeniu kończy pracę
     await sleep(14000);
     ok(!!(await health()), 'z podłączonym wyjściem serwer działa dalej');
     obs.destroy();
