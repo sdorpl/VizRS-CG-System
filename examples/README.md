@@ -13,7 +13,23 @@ Paczka nie przenosi playlist.
 | `BTB_TRIO.cgpack` | 18 – grafiki z gałęzi TRIO BTB CG System z **powiązaniami (dock)**: belki (główna, PILNE, wizytówki), plakietki NA ŻYWO / MIASTO / WYDANIE SPECJALNE, 4 tickery, zegar, ozdobnik; każda na własnej warstwie `z<N>_…` | 15001–15004 belki, 15101–15109 plakietki, 15201–15204 tickery, 15301 zegar, 15401 ozdobnik | `Bahnschrift.ttf`, logo |
 | `BTB_INFO24.cgpack` | 16 – zestaw INFO24 w stylistyce BTB (czerwień, żółty akcent, granat, Bahnschrift), generowany z `INFO24.show.json` | 9001–13001 (INFO24 + 8000) | `Bahnschrift.ttf`, `tlo_hashtag.jpg` |
 
-INFO24 to także demo wbudowane w serwer (`source/web/demo_show.json`). Fonty INFO24 i R7 (Barlow, Oswald, …) są wbudowane w serwer.
+INFO24 to także demo wbudowane w serwer (`source/web/demo_show.json`): 1001–1003 belki (info / pilne / z wyróżnieniem), 1101–1102 podpisy,
+2001 bug NA ŻYWO, 2101 odliczanie, 3001–3004 tickery, 4101 „pilne” z logo i zegarem, 4001 tytuł, 5001 wynik. Marka INFO24 jest fikcyjna.
+Istniejący `vizrs-data/show.json` nie jest nadpisywany – demo zobaczysz z pustym katalogiem (`--data nowy-katalog`).
+
+### Elementy dodatkowe INFO24 i R7
+
+| Element | INFO24 | R7 | Opis |
+|---|---|---|---|
+| Kafel z kodem QR (lewy/prawy) | 1401, 1402 | 7501, 7502 | węzeł **Kod QR** – w Trio wpisujesz adres, kod generuje się sam (bez internetu) |
+| Belka-hashtag z tłem | 1403 | 7503 | obraz lub wideo w tle paska, plakietka dopasowana do tekstu |
+| NA ŻYWO z 2-wierszowym miejscem | 1404 | 7504 | Enter w polu „Miejsce” = drugi wiersz, każdy ściskany osobno |
+| Rotujący kafel programu | 1405 | 7505 | programy i godziny w kolejnych liniach, „rotacja wierszy (s)” |
+| Tickery `crawl` / `roll` / `wipe` | 3001 i 3004 / 3002 / 3003 | 7301 i 7304 / 7302 / 7303 | tryby opisane w [DOKUMENTACJA §7](../docs/DOKUMENTACJA.md#7-ticker) |
+
+Belka wielowierszowa w `BTB.cgpack` (8501–8506): „PILNE” 1–3 wiersze w układzie TVP, `squeeze-lines` z łamaniem „wypełniaj” (`lineBreak: fill`, `fillSqueeze` 90%).
+
+Podgląd wszystkich stron: `node source/tools/gallery.js`; zapisana galeria: [../media/galeria/index.html](../media/galeria/index.html). Fonty INFO24 i R7 (Barlow, Oswald, …) są wbudowane w serwer.
 
 **BTB.cgpack, BTB_INFO24.cgpack, BTB_ALPHA.cgpack i BTB_TRIO.cgpack zawierają font Microsoftu Bahnschrift – nie dystrybuuj tych paczek.** Opis wzorców i znane różnice względem BTB CG:
 [archiwum/BTB_CG/README.md](archiwum/BTB_CG/README.md). Względem 31 wzorców: dołączona belka wielowierszowa,

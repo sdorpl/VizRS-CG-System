@@ -51,6 +51,22 @@ Bez tokenu kontener nie wystartuje (nasłuch `0.0.0.0`); świadomie bez tokenu: 
 
 **Drugi kanał** = drugi kontener z własnym wolumenem i własną domeną (w `Caddyfile` drugi blok z `reverse_proxy vizrs2:8088`).
 
+## Render.com (plan darmowy)
+W repo są `Dockerfile`, `render.yaml` i `deploy/render/start.sh`.
+1. Render → **New → Blueprint** → wybierz repozytorium (plan `free`).
+2. Podaj **`VIZRS_TOKEN`** (znaki `A-Z a-z 0-9 - _ .`) – bez niego usługa nie wystartuje.
+3. OBS: `https://<nazwa>.onrender.com/output?token=TOKEN`, Trio: `https://<nazwa>.onrender.com/trio?token=TOKEN`.
+
+Ograniczenia darmowego planu:
+- **brak trwałego dysku** – po restarcie, uśpieniu lub deployu show wraca do `deploy/render/seed/show.json` (brak pliku = show demo). Gotowy show pobierz (`GET /api/show`), zapisz tam, zacommituj i zrób deploy;
+- **usypianie po 15 min bez ruchu** (budzenie ~1 min) – przed programem otwórz Trio; żeby nie zasypiało, ustaw zewnętrzny ping co 10 min (np. UptimeRobot, cron-job.org) na `https://<nazwa>.onrender.com/` (wystarczy dowolna odpowiedź, nawet 401);
+- 750 h pracy miesięcznie na konto, TCP :6100 i OSC niedostępne – Companion przez HTTP API.
+
+Do realnej anteny lepszy plan płatny z dyskiem – komentarz w `render.yaml`.
+
+## Usługa Windows
+[../deploy/vizrs-windows.md](../deploy/vizrs-windows.md) (NSSM). Linux: `deploy/vizrs.service` (systemd), macOS: `deploy/pl.vizrs.plist` (launchd).
+
 ## Lista kontrolna przed emisją (OBS / vMix / Tricaster / ATEM)
 - [ ] OBS: źródło Przeglądarka `http://host:8088/output?token=…` (token wyjścia, jeśli ustawiony), 1920×1080, „Odśwież, gdy scena aktywna”.
 - [ ] Test TAKE/CONTINUE/OUT każdej używanej strony; test `UPDATE` na antenie.

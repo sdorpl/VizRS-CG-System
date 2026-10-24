@@ -1,6 +1,6 @@
 # PLAN: VizRS w oknie systemowym (Artist, Trio) i jako serwer bez GUI (VPS, Docker)
 
-> Status (2026-10-20): **N0–N3 i N4.1 (okno natywne Artist `vizrs-shell`) zrealizowane na gałęzi `test/natywne-serwer`**; N4.2–N4.5 i N5 czekają na decyzję. Stan: [docs/STATUS.md](docs/STATUS.md).
+> Status: **N0–N3 i N4.1 (okno natywne `vizrs-shell`) wdrożone** (wydanie 2.0.1, 2026-10-22, gałąź `main`); N4.2–N4.5 i N5 czekają na decyzję (LUKI #17–#19). Stan: [docs/STATUS.md](../STATUS.md).
 
 ### Realizacja i odstępstwa od planu
 - Decyzje z §9 przyjęte wg rekomendacji: wariant A (Chromium `--app`, zero zależności), najpierw serwer (N0–N2), potem okna (N3), obraz `scratch`, Caddy w compose, dwie role tokenów (operator / wyjście), kanał = kontener.
@@ -10,7 +10,7 @@
 - Windows/macOS: kod okien, sygnałów i `vizrs-app` sprawdzony kompilacją (`cargo clippy --target …`); uruchomienie – do sprawdzenia na tych systemach (LUKI #18). Obraz Docker sprawdza job CI `docker` (lokalnie brak Dockera).
 - Dodatkowo: Artist subskrybuje `/events` (wskaźnik połączenia) – serwer okna wie, że Artist jest otwarty.
 - **N4.1 (decyzja użytkownika: Artist jako natywne okno powłoki, zależności dozwolone):** `source/shell/` – tao + wry + muda + rfd. Obawa z §3 o wierność WebKitGTK sprawdzona pomiarem (`tools/engines.js`): jedyne różnice (3/82 pól, zbędne ściśnięcie do 90%) wynikały z **błędu renderera** (pomiar tekstu przed wczytaniem odmiany fontu, bez ponownego pomiaru, gdy przeglądarka nie zgłasza `loadingdone`) – poprawionego w rendererze, co pomaga też OBS. Po poprawce 82/82 zgodnych, więc Artist na Linuksie może działać w WebKitGTK. Powłoka uruchamia serwer jako osobny proces z `--idle-exit` (zamiast wkompilowania).
-> Powiązane: [PLAN-rozbudowy.md](PLAN-rozbudowy.md), [docs/LUKI.md](docs/LUKI.md) (G1 #1 TLS, #2 wątki), [deploy/](deploy/), [docs/RUNBOOK.md](docs/RUNBOOK.md).
+> Powiązane: [PLAN-rozbudowy.md](PLAN-rozbudowy.md), [docs/LUKI.md](../LUKI.md) (G1 #1 TLS, #2 wątki), [deploy/](../../deploy/), [docs/RUNBOOK.md](../RUNBOOK.md).
 
 ## 0. Streszczenie
 

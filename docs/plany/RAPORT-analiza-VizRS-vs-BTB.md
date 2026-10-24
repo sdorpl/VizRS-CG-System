@@ -1,5 +1,7 @@
 # VizRS 1.0.0 — analiza działania i porównanie z BTB CG System (TRIO) oraz BTB CG Editor
 
+> **Dokument archiwalny** – opisuje wersję 1.0.0. Propozycje z raportu zrealizował [PLAN-rozbudowy.md](PLAN-rozbudowy.md) (wydanie 2.0.0); aktualne braki: [../LUKI.md](../LUKI.md).
+
 Data: 2026-10-19. Zakres: test działania binarki `bin/linux-x86_64/vizrs`, przegląd kodu `source/`,
 porównanie z `BTB-CG-System-alpha` (gałąź `TRIO`, odczyt przez `git show`, bez zmiany drzewa roboczego) i `btb-cgeditor`.
 

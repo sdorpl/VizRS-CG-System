@@ -11,7 +11,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 1. Przeczytaj [docs/STATUS.md](docs/STATUS.md) (bieżący etap, następne zadanie), `git log -5` i `git status`.
 2. Przeczytaj [docs/LUKI.md](docs/LUKI.md): znane braki, uszeregowane G1 (niezawodność) → G2 (wierność) → G3 (funkcje).
 3. Przy zmianie zachowania aplikacji przeczytaj właściwą sekcję [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) — w tym samym commicie ją zaktualizujesz.
-4. Przy tickerach: [PLAN-ticker.md](PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md); playout kanału (osobne repo VizRS Playout): [PLAN-kanal.md](PLAN-kanal.md).
+4. Plany i analizy są w [docs/plany/](docs/plany/README.md). Przy tickerach: [PLAN-ticker.md](docs/plany/PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](docs/plany/PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](docs/plany/PLAN-natywne-i-serwer.md); playout kanału (osobne repo VizRS Playout): [PLAN-kanal.md](docs/plany/PLAN-kanal.md).
 
 ## Niepodważalne zasady
 
@@ -26,6 +26,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 - **Dane z zewnątrz są wrogie.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
 - **Nie wywalaj serwera:** błędy przez `Result`, blokady odporne na zatrucie (`lk()`), wolny klient SSE jest odłączany. Antena ma działać dalej, nawet gdy zapis na dysk się nie uda.
 - **Wspólny model tekstu z BTB:** `web/text-model.js` to kopia modułu BTB-CG; zgodność pilnują wektory `source/tests/vectors/*.json` i `source/tools/sync-btb.sh --check`. Nie zmieniaj go tylko po jednej stronie.
+- **Gdzie co opisywać:** README tylko wprowadza i odsyła; opis działania tylko w `docs/DOKUMENTACJA.md` (nie powielaj go w README ani w planach); wdrożenie i awarie – `docs/RUNBOOK.md`; paczki – `examples/README.md`; nowy plan – `docs/plany/` + wiersz w `docs/plany/README.md`.
 - **Dokumentacja razem z kodem:** commit zmieniający zachowanie (UI, skróty, format show, API, opcje CLI) aktualizuje w tym samym commicie `docs/DOKUMENTACJA.md`, a gdy dotyczy codziennej pracy — także `docs/INSTRUKCJA-poczatkujacy.md`; API → `docs/API.md`; zmiany wydania → `CHANGELOG.md` (sekcja „Niewydane”); zamknięta luka → wiersz z `docs/LUKI.md`.
 
 ## Uruchamianie
@@ -98,7 +99,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
 | `source/tools/` | `sync-btb.sh`, `build-btb-pack.mjs`, `out_choreo.py`, `render_video.py`, `gallery.js` (galeria zrzutów stron) |
 | `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json`, `BTB_CG/`, `BTB_ALPHA/`, `BTB_TRIO/`, `assets/` (używane przez testy) |
-| `deploy/` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, skróty okien (Linux `.desktop`, Windows `.ps1`) |
+| `deploy/` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
+| `docs/` | dokumentacja (spis: `docs/README.md`); `docs/plany/` – plany i raport (dokumenty projektowe, nie opis bieżącego działania) |
 | `Dockerfile` | obraz `scratch` ze statyczną binarką musl |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |
 | `vizrs-data/` | dane użytkownika (`show.json`, `assets/`, `backups/`, `log.jsonl`) — w `.gitignore`; przy pustym katalogu serwer wczytuje demo |

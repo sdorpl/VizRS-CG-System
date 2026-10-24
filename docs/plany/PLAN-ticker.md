@@ -39,13 +39,13 @@ Szablon pilnego paska (`tpl-urgent-ocg-wiper`) dodatkowo **zmniejsza font**, gdy
 
 ## 2. Stan VizRS (2.0.0)
 
-- Węzeł `ticker` w drzewie sceny ([renderer.js:90](source/web/renderer.js#L90)) z trybami `crawl`, `roll` (góra–dół), `wipe` (maska z „wycieraczką”).
-- Wiadomości = wiersze tekstu pola `text`; kategoria w składni `KAT#kolor|treść` ([parseTickerItem](source/web/renderer.js#L439)).
+- Węzeł `ticker` w drzewie sceny ([renderer.js:90](../../source/web/renderer.js#L90)) z trybami `crawl`, `roll` (góra–dół), `wipe` (maska z „wycieraczką”).
+- Wiadomości = wiersze tekstu pola `text`; kategoria w składni `KAT#kolor|treść` ([parseTickerItem](../../source/web/renderer.js#L439)).
 - Właściwości: `hold`, `speed`, `sep`, `sepColor`, `catW`, `catBg`, `catFg` + typografia. Każdą można podpiąć jako pole kontrolne (np. `tickerMode` jako select dla operatora).
 - Squeeze per wiadomość w roll/wipe (scaleX do 0,6, potem zmniejszenie fontu) – odpowiednik `adjustFontSize` z BTB.
 - Animacja liczona z czasu (`now - wallStart`), więc działa z `tools/render_video.py` (podmieniony `performance.now`).
 - Trio: pole tickera to zwykła `textarea` (6 wierszy) – operator wpisuje `KAT#kolor|treść` ręcznie.
-- Import z BTB ([btb-io.js:261](source/web/btb-io.js#L261)): bierze tylko `items[].text`, **gubi kategorie**, tryb zawsze `crawl`.
+- Import z BTB ([btb-io.js:261](../../source/web/btb-io.js#L261)): bierze tylko `items[].text`, **gubi kategorie**, tryb zawsze `crawl`.
 
 ### 2.1 Różnice do zamknięcia
 | # | BTB | VizRS | Priorytet |

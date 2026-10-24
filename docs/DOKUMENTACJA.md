@@ -631,6 +631,9 @@ node tests/motion.js                                 # ruch: krzywe, presety, ef
 node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
 node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porównanie z BTB CG (--frames: klatki wejścia)
+node tests/e2e/app.js target/release/vizrs          # okna aplikacji (udawana przeglądarka)
+node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell   # okno natywne w działaniu
+node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell     # zgodność WebView okna z Chromium (0 różnic)
 ```
 
 | Narzędzie | Do czego |
@@ -641,9 +644,12 @@ node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porów
 | `tools/build-btb-trio.mjs`, `tools/btb-measure-lib.mjs` | grafiki gałęzi TRIO BTB CG z powiązaniami: pomiar tym samym skryptem → `examples/archiwum/BTB_TRIO/zrodlo.json`, sceny, strony i `scene.dock` → `BTB_TRIO/show.json` (paczka `BTB_TRIO.cgpack`); wspólne funkcje pomiar → węzły w `btb-measure-lib.mjs` |
 | `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
+| `tools/video.js [vizrs] [--only R7,BTB] [--fps 25]` | film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080), nagrywany klatka po klatce w czasie wirtualnym; wymaga ffmpeg. Lista paczek: `tools/sets.js` |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |
-| `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne |
+| `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne (np. IN, potem OUT zwolnione 2,5×) |
 | `tools/gen_fonts.py` | wbudowane fonty (`fonts_data.rs`) |
+
+Pełna bramka przed commitem: [../CLAUDE.md](../CLAUDE.md#testy-bramka-przed-commitem). Zapisana galeria: `media/galeria/index.html`, film: `media/vizrs_WSZYSTKIE_PACZKI.mp4`.
 
 CI: `.github/workflows/ci.yml` (Linux, macOS, Windows).
 

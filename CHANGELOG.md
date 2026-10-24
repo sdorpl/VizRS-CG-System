@@ -1,6 +1,7 @@
 # VizRS – historia zmian
 
 ## Niewydane
+- **Dokumentacja uporządkowana:** plany i raport przeniesione do `docs/plany/` (spis z ich stanem), README skrócony do wprowadzenia i spisu, opis Render.com w RUNBOOK, elementy dodatkowe i strony demo w `examples/README.md`, brakujące testy i narzędzia (`app.js`, `shell.js`, `engines.js`, `video.js`) w DOKUMENTACJA §15.
 - **Artist, tryb sekwencji – ◇ Z kluczy:** zamiana kluczy wejścia/wyjścia elementu na presety ruchu (odwrotność „◆ Na klucze”), z propozycją przybliżenia, gdy klucze nie pasują dokładnie.
 - **Zajęty port – fallback:** gdy domyślny port 8088 jest zajęty (np. serwer `./start-linux.sh` na innym katalogu danych), serwer `vizrs`, okna `vizrs artist|trio` i okno natywne / AppImage używają następnego wolnego portu (komunikat na starcie) zamiast kończyć się błędem; jawny `--port` / `VIZRS_PORT` bez zmian.
 - **Zatrzymanie serwera (SIGTERM, Ctrl+C) przy zamkniętym wyjściu konsoli:** komunikat „zatrzymanie” nie blokuje już zakończenia procesu.
@@ -8,7 +9,7 @@
 
 ## 2.0.1 (2026-10-22) – „Okna i serwer”
 
-### Okna i serwer (plan: `PLAN-natywne-i-serwer.md`)
+### Okna i serwer (plan: `docs/plany/PLAN-natywne-i-serwer.md`)
 
 - **Okno natywne: Plik → Połącz z serwerem…** (Ctrl+Shift+K, `vizrs-shell connect`): adres i token serwera zdalnego (VPS) wpisywane w oknie; przed przełączeniem sprawdzenie tokenu (serwery `http://`), potem wszystkie okna przechodzą na ten serwer. Lista zapisanych serwerów (`connections.json` w katalogu konfiguracji, token tylko na życzenie, plik tylko dla właściciela), „łącz przy uruchomieniu” (`--local` – mimo to serwer lokalny), powrót do serwera lokalnego. Strony serwera nie mogą przełączyć okien (komunikat przyjmuje tylko wbudowane okno połączenia).
 - **Wydania na GitHub** (`.github/workflows/release.yml`, znacznik `v*` albo ręcznie): archiwa Windows/macOS/Linux (`vizrs`, `vizrs-app`, `vizrs-shell`, paczki `.cgpack`), **AppImage VizRS Artist i VizRS Trio** (`deploy/appimage/`), **obraz Docker serwera** `ghcr.io/sdorpl/vizrs` (amd64, arm64), `SHA256SUMS.txt`.
@@ -40,7 +41,7 @@
 - `--trust-proxy` (adres klienta z `X-Forwarded-For` za Caddy/nginx), `--log-stdout` (log audytowy na standardowe wyjście), obsługa **SIGTERM/SIGINT** i zdarzeń konsoli Windows bez zależności (natychmiastowy `docker stop`, zwolnienie blokady katalogu danych). Compose ustawia token wyjścia, `VIZRS_TRUST_PROXY` i `VIZRS_LOG_STDOUT`.
 - **Docker i VPS:** `Dockerfile` (statyczna binarka musl na `scratch`, ~3 MB, użytkownik 10001, `HEALTHCHECK` przez `vizrs --healthcheck`, wolumen `/data`, TCP 6100 wyłączony), `deploy/docker-compose.yml` z Caddy (automatyczny HTTPS), `deploy/nginx-vizrs.conf`, `deploy/env.example`; RUNBOOK „VPS i Docker”; job CI `docker` (budowa, healthy, token, restart z zachowaniem show). `VIZRS_GIT_HASH` dla `--version` przy budowie bez `.git`.
 
-### Ticker (plan: `PLAN-ticker.md`)
+### Ticker (plan: `docs/plany/PLAN-ticker.md`)
 - **Ruch jak w BTB CG – efekty wizualne bez kluczy** (`node.motion`, `web/motion.js`): 22 presety wejścia/wyjścia (m.in. przesłony, maska ukośna, żaluzja, odwrócenia 3D, glitch, rozdzielenie RGB, rosnący pasek, spadanie), 31 efektów tekstu (całość, słowa, znaki, linie, maszyna do pisania z kursorem, szyfrowanie, licznik liczby), 11 pętli uwagi (pulsowanie, bicie serca, połysk, poświata, podkreślenie…), krzywe GSAP (`back.out(1.7)`, `bounce.out`, `elastic.out`, `cubic-bezier`, aliasy `spring`/`overshoot`/`broadcast`). Ten sam renderer w Artist, Trio i OBS; składanie z kluczami jak w BTB.
 - Przykład `examples/BTB_PILNE.show.json` przebudowany na nowej scenie z paczki BTB_CG (ruch `node.motion`: zoom elementu z lewego górnego rogu, odsłonięcie tekstu, świecenie paska) z zachowanym układem 1–3 wierszy (`squeeze-lines`, `fill`).
 - **Belki BTB dopasowane do VizRS:** paczka `examples/BTB_CG` przebudowana nowym konwerterem (31 scen z `node.motion` zamiast kluczy). Stałe efekty tła kształtów BTB (`motion.bg`: połysk, pulsowanie, świecenie, linie skanowania), punkt odniesienia ruchu (`motion.origin`, ruch elementu z lewego górnego rogu), ruch elementu ze skalą layoutu w wewnętrznej grupie, efekty tekstu z wartościami `cgmotion.js` (maski `inset`, rozmycie 20/14 px, `hide` od lewej, szyfrowanie wg postępu całego tekstu), domyślne czasy efektu tekstu jak w BTB. `btb-visual.js --frames`: klatki 25/50/75% wejścia – 31/31 zgodnych z oryginałem.
@@ -100,7 +101,7 @@
 - `rev` i konflikty (409), walidacja schematu, odroczone wdrożenie szablonu („Wdróż teraz”), izolacja błędów węzłów i raport do serwera, odtwarzanie po ponownym połączeniu bez migotania, wbudowane fonty offline, `/health`, log audytowy, okno ⚙ Stan, zrzuty wzorcowe Outputu.
 
 ## 1.1.0 (2026-10-19) – „Bezpieczny”
-Wydanie bezpieczeństwa i niezawodności (plan: `PLAN-rozbudowy.md`, etapy F0 i F1; szczegóły w `docs/STATUS.md`).
+Wydanie bezpieczeństwa i niezawodności (plan: `docs/plany/PLAN-rozbudowy.md`, etapy F0 i F1; szczegóły w `docs/STATUS.md`).
 - **Domyślnie nasłuch lokalny** (`--bind`, domyślnie 127.0.0.1) – **zmiana zachowania**: dla dostępu z sieci użyj `--bind 0.0.0.0 --token …`.
 - `--token`: token dla UI/SSE/API/TCP (`Authorization: Bearer`, `X-Token`, `?token=`, ciasteczko, `AUTH` w TCP).
 - Blokada żądań z obcych witryn (CSRF: `Sec-Fetch-Site`, `Origin`); usunięte nagłówki `Access-Control-Allow-*: *`.
