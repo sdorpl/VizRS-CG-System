@@ -48,8 +48,11 @@ const probe = (kind) => {
 
     // 2. Trio dołącza do tego samego serwera (ta sama instancja). Podłączone „wyjście” trzyma serwer:
     //    start WebKitGTK na runnerze CI trwa dłużej niż --idle-exit (10 s) i serwer kończył się w trakcie.
-    obs = http.get(`http://127.0.0.1:${PORT}/events`);
-    obs.on('error', () => {});
+    //    probe() używa spawnSync (blokuje pętlę zdarzeń), więc najpierw czekamy na odpowiedź /events.
+    obs = await new Promise((res) => {
+      const req = http.get(`http://127.0.0.1:${PORT}/events`, () => res(req));
+      req.on('error', () => res(req));
+    });
     const t = probe('trio');
     ok(t.title === 'VizRS Trio' && t.conn === 'połączono' && t.pages > 0, 'Trio w oknie natywnym dołącza do działającego serwera', t);
     const h2 = await health();
