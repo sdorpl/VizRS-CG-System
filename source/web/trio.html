@@ -247,7 +247,7 @@
 <input type="file" id="fileIn" hidden>
 
 <script type="module">
-import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor } from '/renderer.js';
+import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor, DEFAULT_TZ } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -1094,13 +1094,13 @@ $('#mcRun').onclick = async () => { await $('#mcSave').onclick(); const m = curM
 $('#mcStop').onclick = () => act(() => api('POST', '/api/macro/stop'), 'Makro');
 $('#mcFromAir').onclick = () => {
   if (!state.layers.length) return toast('Antena jest czysta – nie ma czego zapisać', true);
-  const n = prompt('Nazwa presetu (makra) z bieżącego stanu anteny', 'Preset ' + new Date().toLocaleTimeString('pl-PL')); if (!n) return;
+  const n = prompt('Nazwa presetu (makra) z bieżącego stanu anteny', 'Preset ' + new Date().toLocaleTimeString('pl-PL', { timeZone: DEFAULT_TZ })); if (!n) return;
   newMacro(n, [{ delay: 0, cmd: 'CLEAR' }, ...state.layers.map((l) => ({ delay: 0, cmd: 'TAKE ' + l.page.number }))]);
 };
 setTab(tab);
 
 // ------------------------------------------------------------ stan systemu
-const fmtT = (ms) => new Date(ms).toLocaleString('pl-PL');
+const fmtT = (ms) => new Date(ms).toLocaleString('pl-PL', { timeZone: DEFAULT_TZ });
 async function openSys() {
   const [h, errs, bks, aud, fonts] = await Promise.all([
     api('GET', '/health').catch(() => ({})), api('GET', '/api/errors').catch(() => []),

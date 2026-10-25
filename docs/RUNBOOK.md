@@ -10,7 +10,7 @@
 
 ## Odtworzenie danych
 - ⚙ Stan → „Kopie zapasowe show” → wybierz kopię → **Przywróć** (stan sprzed przywrócenia trafia do najnowszej kopii bieżącej).
-- Ręcznie: pliki w `vizrs-data/backups/` (`show-RRRRMMDD-GGMMSS.json` = bieżące, `…-GG.json` = godzinowe, `…RRRRMMDD.json` = dzienne, UTC) – skopiuj jako `vizrs-data/show.json` przy zatrzymanym serwerze.
+- Ręcznie: pliki w `vizrs-data/backups/` (`show-RRRRMMDD-GGMMSS.json` = bieżące, `…-GG.json` = godzinowe, `…RRRRMMDD.json` = dzienne, czas warszawski) – skopiuj jako `vizrs-data/show.json` przy zatrzymanym serwerze.
 - Uszkodzony `show.json` przy starcie: serwer zapisuje go jako `show.json.bak` i wczytuje demo.
 
 ## Dwóch operatorów

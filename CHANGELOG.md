@@ -3,6 +3,7 @@
 ## Niewydane
 
 - **Zegar w strefie Europe/Warsaw:** nowa właściwość zegara `tz` (strefa IANA, domyślnie `Europe/Warsaw`, `local` = strefa komputera) – godzina i odliczanie do daty nie zależą już od strefy komputera z OBS ani serwera (np. kontener w UTC).
+- **Czas warszawski wszędzie:** czasy w Trio (⚙ Stan: błędy scen, log audytowy; domyślna nazwa presetu) i nazwy kopii zapasowych (`show-RRRRMMDD-GG….json`, dotąd UTC) liczone w strefie Europe/Warsaw z regułą zmiany czasu UE.
 
 ## 2.0.5 (2026-10-24) – „Lekkie wyjście”
 

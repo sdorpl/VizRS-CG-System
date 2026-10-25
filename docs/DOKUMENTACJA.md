@@ -628,7 +628,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 | `vizrs-data/show.json` | aktywny show (zapis przez plik tymczasowy + `fsync`) |
 | `vizrs-data/shows/` | biblioteka show: `<id>.json` na audycję (każdy zapis aktywnego show trafia też tutaj), `.active` = id aktywnego |
 | `vizrs-data/assets/` | obrazy, wideo, fonty (png jpg jpeg gif webp svg mp4 webm ttf otf woff woff2; łącznie do 2 GB) |
-| `vizrs-data/backups/` | kopie: bieżące (20, nie częściej niż co 30 s), godzinowe (24), dzienne (14); czas UTC |
+| `vizrs-data/backups/` | kopie: bieżące (20, nie częściej niż co 30 s), godzinowe (24), dzienne (14); czas warszawski (Europe/Warsaw); w godzinie cofnięcia zegara jesienią pliki z tej godziny nadpisują się |
 | `vizrs-data/log.jsonl` | log audytowy komend |
 
 - Brak `show.json` → serwer wczytuje demo INFO24. Uszkodzony `show.json` → zapisany jako `show.json.bak`, wczytane demo.
