@@ -188,6 +188,12 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
         if let Some(v) = opt(p, "fillSqueeze") {
             num_in(v, "props.fillSqueeze", 0.0, 1.0)?;
         }
+        // strefa zegara (renderer.js: PROPS.tz) – nazwa IANA, np. Europe/Warsaw, albo `local`
+        match opt(p, "tz") {
+            None => {}
+            Some(Json::Str(z)) if z.len() <= 64 && z.chars().all(|c| c.is_ascii_alphanumeric() || "/_+-".contains(c)) => {}
+            Some(_) => return Err("props.tz: oczekiwano nazwy strefy IANA (np. Europe/Warsaw)".into()),
+        }
     }
     if n.str("type") == Some("ticker") {
         if let Some(p) = opt(n, "props") {
@@ -718,6 +724,10 @@ mod tests {
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":3}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":1.5}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"squeezeMin":"0.5"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"clock","props":{"tz":"Europe/Warsaw"}}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"clock","props":{"tz":"local"}}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"clock","props":{"tz":"<script>"}}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"clock","props":{"tz":2}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"squeeze-lines","lineBreak":"fill","fillSqueeze":0.9}}]}"#)).is_ok());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"lineBreak":"wrap"}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"fillSqueeze":2}}]}"#)).is_err());

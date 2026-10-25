@@ -69,6 +69,7 @@ export const PROPS = {
   format: { t: 'string', d: 'HH:mm:ss', g: 'Zegar', label: 'format' },
   seconds: { t: 'num', d: 300, g: 'Zegar', label: 'start (s)' },
   target: { t: 'string', d: '2027-01-01 00:00:00', g: 'Zegar', label: 'cel (data)' },
+  tz: { t: 'string', d: 'Europe/Warsaw', g: 'Zegar', label: 'strefa czasowa' },
 
   speed: { t: 'num', d: 140, g: 'Ticker', anim: 1, label: 'prędkość px/s' },
   sep: { t: 'string', d: '   •   ', g: 'Ticker', label: 'separator' },
@@ -98,7 +99,7 @@ export const TYPES = {
   text: { label: 'Tekst', icon: 'T', props: [...COMMON, 'text', 'cycle', ...TEXT_STYLE, 'hlColor', 'hlText'] },
   qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', 'radius', 'shadow'] },
   image: { label: 'Obraz/wideo', icon: '▨', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
-  clock: { label: 'Zegar', icon: '◷', props: [...COMMON, 'mode', 'format', 'seconds', 'target', ...TEXT_STYLE] },
+  clock: { label: 'Zegar', icon: '◷', props: [...COMMON, 'mode', 'format', 'seconds', 'target', 'tz', ...TEXT_STYLE] },
   ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'labelSize', 'labelWeight', 'gleam', 'textFit', 'squeezeMin', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
 };
 
@@ -291,11 +292,48 @@ function watchFont(spec) {
 // Tekst w apostrofach jest dosłowny, np.  D 'dni' HH:mm:ss
 const pad = (n, l = 2) => String(Math.floor(n)).padStart(l, '0');
 const plDays = (d) => `${d} ${d === 1 ? 'dzień' : 'dni'}`;
-export function fmtClock(fmt, mode, secs) {
+// Strefa czasowa zegara (`tz`): nazwa IANA, domyślnie Europe/Warsaw – niezależnie od strefy komputera z OBS/serwerem;
+// `local` = strefa komputera. Nieznana nazwa → domyślna.
+export const DEFAULT_TZ = 'Europe/Warsaw';
+const tzFmts = new Map();
+function tzFmt(tz) {
+  tz = String(tz || '').trim() || DEFAULT_TZ;
+  if (tz === 'local' || typeof Intl === 'undefined') return null;
+  if (!tzFmts.has(tz)) {
+    let f = null;
+    try { f = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }); } catch (_) { f = tz === DEFAULT_TZ ? null : tzFmt(DEFAULT_TZ); }
+    tzFmts.set(tz, f);
+  }
+  return tzFmts.get(tz);
+}
+/** Data i godzina chwili `ms` w strefie `tz`: { y, M, d, h, m, s }. */
+export function zoneParts(ms, tz) {
+  const f = tzFmt(tz);
+  if (!f) { const d = new Date(ms); return { y: d.getFullYear(), M: d.getMonth() + 1, d: d.getDate(), h: d.getHours(), m: d.getMinutes(), s: d.getSeconds() }; }
+  const o = {};
+  for (const p of f.formatToParts(new Date(ms))) o[p.type] = +p.value;
+  return { y: o.year, M: o.month, d: o.day, h: o.hour % 24, m: o.minute, s: o.second };
+}
+/** Czas „yyyy-MM-dd HH:mm:ss” jako godzina ścienna w strefie `tz` → ms od epoki (NaN, gdy nie da się odczytać).
+ *  Tekst z jawnym przesunięciem (`Z`, `+02:00`) idzie wprost do Date.parse. */
+export function zoneTime(str, tz) {
+  str = String(str ?? '').trim().replace(' ', 'T');
+  if (/(Z|[+-]\d\d:?\d\d)$/i.test(str)) return Date.parse(str);
+  const m = /^(\d{4})-(\d\d)-(\d\d)(?:T(\d\d):(\d\d)(?::(\d\d))?)?$/.exec(str);
+  if (!m) return Date.parse(str);
+  if (!tzFmt(tz)) return new Date(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)).getTime();
+  const wall = Date.UTC(+m[1], m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+  const off = (t) => { const p = zoneParts(t, tz); return Date.UTC(p.y, p.M - 1, p.d, p.h, p.m, p.s) - t; };
+  let t = wall - off(wall);
+  t = wall - off(t); // druga próba – poprawne przesunięcie przy zmianie czasu
+  return t;
+}
+
+export function fmtClock(fmt, mode, secs, tz) {
   const parts = String(fmt || '').split(/('[^']*')/);
   if (mode === 'time') {
-    const d = new Date();
-    const map = { yyyy: d.getFullYear(), dd: pad(d.getDate()), MM: pad(d.getMonth() + 1), HH: pad(d.getHours()), H: d.getHours(), mm: pad(d.getMinutes()), ss: pad(d.getSeconds()) };
+    const d = zoneParts(Date.now(), tz);
+    const map = { yyyy: d.y, dd: pad(d.d), MM: pad(d.M), HH: pad(d.h), H: d.h, mm: pad(d.m), ss: pad(d.s) };
     return parts.map((s, i) => (i % 2 ? s.slice(1, -1) : s.replace(/yyyy|dd|MM|HH|H|mm|ss/g, (k) => map[k]))).join('');
   }
   secs = Math.max(0, secs);
@@ -1304,8 +1342,8 @@ export class ScenePlayer {
             let secs = 0;
             if (mode === 'up') secs = el_s;
             else if (mode === 'down') secs = p('seconds') - el_s;
-            else if (mode === 'target') { const tg = Date.parse(String(p('target')).trim().replace(' ', 'T')); secs = isNaN(tg) ? 0 : (tg - Date.now()) / 1000; }
-            text = fmtClock(p('format') || 'HH:mm:ss', mode, secs);
+            else if (mode === 'target') { const tg = zoneTime(p('target'), p('tz')); secs = isNaN(tg) ? 0 : (tg - Date.now()) / 1000; }
+            text = fmtClock(p('format') || 'HH:mm:ss', mode, secs, p('tz'));
           } else text = String(p('text') ?? '');
           it.cyOp = 1;
           const cyc = n.type === 'text' ? p('cycle') : 0;

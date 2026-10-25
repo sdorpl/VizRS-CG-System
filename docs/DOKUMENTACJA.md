@@ -133,7 +133,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 | `text` | Tekst | tekst, styl tekstu, rotacja wierszy, kolory `[[wyróżnienia]]` | nie |
 | `qr` | Kod QR | tekst (adres), kolor, tło kodu, zaokrąglenie, cień | nie |
 | `image` | Obraz/wideo | plik, dopasowanie, zaokrąglenie, cień, zapętl wideo, autofollow | nie |
-| `clock` | Zegar | tryb, format, start, cel, styl tekstu | nie |
+| `clock` | Zegar | tryb, format, start, cel, strefa czasowa, styl tekstu | nie |
 | `ticker` | Ticker | wiadomości, tryb, czasy, separator, kategorie, etykieta, styl tekstu | nie |
 
 ### 4.3 Właściwości
@@ -161,6 +161,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 - tryb `time`: `yyyy MM dd HH H mm ss`;
 - tryby licznikowe: `Dn` („3 dni”), `D`, `HH`, `H`, `mm`, `ss`, `S` (dziesiąte);
 - tekst w apostrofach jest dosłowny: `D 'dni' HH:mm:ss`.
+- `tz` – strefa czasowa (nazwa IANA), domyślnie **`Europe/Warsaw`**, niezależnie od strefy komputera z OBS czy serwera (np. kontener w UTC); `local` = strefa komputera, nieznana nazwa → domyślna. Dotyczy godziny w trybie `time` i daty `target` (czytanej jako czas w tej strefie; jawne przesunięcie `Z`/`+02:00` ma pierwszeństwo).
 
 **Ticker:** patrz [§7](#7-ticker).
 

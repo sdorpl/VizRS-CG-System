@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Zegar w strefie Europe/Warsaw:** nowa właściwość zegara `tz` (strefa IANA, domyślnie `Europe/Warsaw`, `local` = strefa komputera) – godzina i odliczanie do daty nie zależą już od strefy komputera z OBS ani serwera (np. kontener w UTC).
+
 ## 2.0.5 (2026-10-24) – „Lekkie wyjście”
 
 - **Jeden numer wersji dla pakietu VizRS:** serwer z Trio i Artist (`vizrs`), okno natywne `vizrs-shell` (dotąd 0.1.0) i VirtRS CG Playout mają wersję 2.0.5. Wydanie zawiera zmiany 2.0.2 (niżej – 2.0.2 nie miało osobnego wydania) oraz:
