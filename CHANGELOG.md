@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Taśma crawla przesuwana przez playout kanału:** `/output` wystawia `window.vizrsTape` (`state`, `external`, `film`) – VirtRS CG Playout (opcja `tape`) przesuwa stojący crawl sam, a Chromium rysuje taśmę raz na jej okno zamiast w każdej klatce. Strona oddaje taśmę tylko, gdy crawl stoi i nic nie maluje nad jego oknem (tekst według liter, nie pola); bez wywołań nic się nie zmienia (DOKUMENTACJA §10).
+
 ## 2.0.6 (2026-10-25) – „Czas warszawski”
 
 - **Zegar w strefie Europe/Warsaw:** nowa właściwość zegara `tz` (strefa IANA, domyślnie `Europe/Warsaw`, `local` = strefa komputera) – godzina i odliczanie do daty nie zależą już od strefy komputera z OBS ani serwera (np. kontener w UTC).

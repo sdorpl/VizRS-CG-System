@@ -603,6 +603,20 @@ function tickerSegment(x, o) {
   seg.appendChild(sp);
   return seg;
 }
+/** Dokleja odcinki taśmy crawla, aż wypełnią okno przy przesunięciu `d` (z zapasem 40 px). */
+function crawlFill(tk, d) {
+  const items = tk.items, n = items.length;
+  for (let guard = 0; n && tk.cursor - d < tk.vw + 40 && guard < 200; guard++) {
+    const idx = tk.nextIdx % n, x = items[idx];
+    const el = tk.segOf(x);
+    el.style.left = tk.cursor + 'px';
+    tk.tape.appendChild(el);
+    const sw = Math.max(1, el.offsetWidth);
+    tk.segs.push({ el, item: x, idx, pos: tk.cursor, w: sw });
+    tk.cursor += sw;
+    tk.nextIdx = (idx + 1) % n;
+  }
+}
 const easeIO = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
 
 // ------------------------------------------------------------------ globalna pętla animacji
@@ -611,7 +625,7 @@ const players = new Set();
 let last = 0, nextAt = 0, running = false, FPS = 0, STEP = false;
 function loop(now) {
   if (!players.size) { running = false; last = 0; return; }
-  if (FPS) {
+  if (FPS && !TAPE.film) {
     // termin następnej klatki (a nie odstęp od poprzedniej): przy 60 Hz i 25 kl./s na zmianę co 2 i 3 klatki
     if (now < nextAt - 1000 / 120) { requestAnimationFrame(loop); return; }
     nextAt = Math.max(nextAt + 1000 / FPS, now);
@@ -619,6 +633,7 @@ function loop(now) {
   const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
   last = now;
   for (const p of [...players]) p.tick(dt, now);
+  if (TAPE.on) tapeFrame();
   requestAnimationFrame(loop);
 }
 function wake() {
@@ -634,6 +649,131 @@ export function setOutputMode({ fps = 0, step = false } = {}) {
   FPS = fps > 0 ? Math.min(120, Math.max(1, +fps)) : 0;
   STEP = !!step;
 }
+
+// ------------------------------------------------------------------ taśma crawla rysowana poza stroną (sidecar)
+// Bezgłowy Chromium sidecara (VirtRS CG Playout) zamiast zrzucać ekran w każdej klatce przewijania prosi o „film”:
+// raz na kilka sekund jedno okno taśmy (sama taśma, reszta strony ukryta), a taśmę na antenie przesuwa sam nad
+// statycznym tłem. Strona ukrywa wtedy swoją taśmę, ale tylko gdy crawl stoi w miejscu: niezmienione położenie,
+// pełne krycie przodków, bez filtra, maski i przycięcia, nic nad nim. Inaczej rysuje ją sama, jak zawsze.
+// Interfejs `window.vizrsTape` (output.html) – DOKUMENTACJA §10; bez wywołań nie kosztuje nic.
+let tapeSeq = 0;
+const TAPE = { on: false, ext: new Set(), film: null, filmed: false };
+function crawlsOnAir() {
+  const out = [];
+  for (const pl of players) for (const it of pl.items || []) if (!pl.dead && it.vis && it.tk?.mode === 'crawl' && it.tk.rect) out.push(it);
+  return out;
+}
+const layerOf = (el) => +(el.closest('.vz-layer')?.style.zIndex || 0);
+/** Crawl stoi: to samo położenie co w poprzedniej klatce, przodkowie bez efektów, żaden element nad nim. */
+function crawlSteady(it, r) {
+  const tk = it.tk, q = tk.prevRect;
+  if (it.pin != null || !q || [q.x - r.x, q.y - r.y, q.width - r.width, q.height - r.height].some((v) => Math.abs(v) > 0.01)) return false;
+  for (let e = tk.clip; e && e !== document.body; e = e.parentElement) {
+    const cs = getComputedStyle(e);
+    if (cs.opacity !== '1' || cs.filter !== 'none' || cs.clipPath !== 'none' || (cs.maskImage || 'none') !== 'none'
+      || cs.mixBlendMode !== 'normal' || cs.visibility !== 'visible') return false;
+  }
+  const z = layerOf(it.el);
+  for (const pl of players) for (const o of pl.items || []) {
+    if (pl.dead || !o.vis || o === it || o.el.contains(it.el) || it.el.contains(o.el)) continue;
+    const oz = layerOf(o.el);
+    if (oz !== z ? oz < z : !(it.el.compareDocumentPosition(o.el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+    if (paintsOver(o.el, r)) return false;
+  }
+  return true;
+}
+const meets = (b, r) => b.width > 0 && b.height > 0 && b.right > r.left && b.left < r.right && b.bottom > r.top && b.top < r.bottom;
+/**
+ * Element maluje coś w prostokącie `r`: własne pole (tło, ramka, obraz), tekst – według prostokątów linii, nie pola
+ * elementu (pole tekstu bywa dużo większe od liter, np. napis nad belką tickera) – albo potomek. Cieni nie liczy:
+ * cień pola przylegającego do okna crawla (etykieta, zegar) zachodzi na taśmę ledwie widocznym brzegiem.
+ */
+function paintsOver(el, r) {
+  const cs = getComputedStyle(el);
+  if (cs.display === 'none') return false;
+  const shown = cs.visibility === 'visible', box = /^(img|canvas|svg|video|iframe)$/i.test(el.tagName);
+  const own = box || cs.backgroundImage !== 'none' || !/^rgba\(.*,\s*0\)$|^transparent$/.test(cs.backgroundColor)
+    || ['Top', 'Right', 'Bottom', 'Left'].some((s) => parseFloat(cs[`border${s}Width`]) > 0);
+  if (shown && own && meets(el.getBoundingClientRect(), r)) return true;
+  if (box) return false;
+  for (const n of el.childNodes) {
+    if (n.nodeType === Node.TEXT_NODE) {
+      if (!shown || !n.data.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      for (const b of range.getClientRects()) if (meets(b, r)) return true;
+    } else if (n.nodeType === Node.ELEMENT_NODE && paintsOver(n, r)) return true;
+  }
+  return false;
+}
+/** Po każdej klatce: położenie taśm, film zamówiony na tę klatkę albo ukrycie taśmy, którą rysuje sidecar. */
+function tapeFrame() {
+  if (TAPE.filmed) {
+    TAPE.filmed = false;
+    document.documentElement.classList.remove('vz-film');
+    for (const el of document.querySelectorAll('.vz-film-tape')) el.classList.remove('vz-film-tape');
+  }
+  const film = TAPE.film;
+  TAPE.film = null;
+  for (const it of [...players].flatMap((pl) => (pl.dead ? [] : pl.items || []))) {
+    const tk = it.tk;
+    if (!it.vis || tk?.mode !== 'crawl') continue;
+    const r = tk.clip.getBoundingClientRect();
+    tk.k = tk.clip.offsetWidth ? r.width / tk.clip.offsetWidth : 1;
+    const S = it.strip.style;
+    tk.key = [tk.styleKey, S.color, S.textShadow, tk.k.toFixed(6), r.height.toFixed(3), tk.vw].join('|');
+    tk.hidden = TAPE.ext.has(tk.uid) && crawlSteady(it, r);
+    if (tk.hidden) tk.tape.style.visibility = 'hidden';
+    tk.prevRect = r;
+    tk.rect = r;
+    if (film && film.id === tk.uid) {
+      ensureTapeCss();
+      const d = film.s / tk.k - tk.shift;
+      crawlFill(tk, d);
+      tk.tape.style.transform = `translateX(${tk.vw - d}px)`;
+      tk.tape.classList.add('vz-film-tape');
+      TAPE.filmed = true;
+    }
+  }
+  if (TAPE.filmed) document.documentElement.classList.add('vz-film');
+}
+let tapeCss = false;
+function ensureTapeCss() {
+  if (tapeCss) return;
+  tapeCss = true;
+  const st = document.createElement('style');
+  st.textContent = 'html.vz-film *{visibility:hidden!important}html.vz-film .vz-film-tape,html.vz-film .vz-film-tape *{visibility:visible!important}';
+  document.head.appendChild(st);
+}
+/**
+ * Interfejs taśmy dla sidecara (przez DevTools `Runtime.evaluate`). Przesunięcie `s` jest w pikselach ekranu:
+ * kolumna X okna crawla pokazuje punkt taśmy X + s, więc film przy `s` przesunięty o całkowitą różnicę daje antenę.
+ */
+export const tapeApi = {
+  version: 1,
+  /** Crawle na antenie: `id`, okno (`x`, `y`, `w`, `h` w px strony), `s`, `hidden` (taśmę rysuje sidecar), `key` (zmiana = nowe filmy). */
+  state() {
+    TAPE.on = true;
+    return {
+      crawls: crawlsOnAir().map((it) => {
+        const tk = it.tk, r = tk.rect;
+        return { id: tk.uid, x: r.x, y: r.y, w: r.width, h: r.height, s: (tk.d + tk.shift) * tk.k, hidden: !!tk.hidden, key: tk.key };
+      }),
+    };
+  },
+  /** Sidecar rysuje taśmę `id` (`on`), strona ją ukrywa, gdy crawl stoi; `false` – strona rysuje ją sama. */
+  external(id, on) {
+    TAPE.on = true;
+    if (on) TAPE.ext.add(id); else TAPE.ext.delete(id);
+    return true;
+  },
+  /** Następna klatka to film: tylko taśma `id` przy przesunięciu `s`, reszta strony ukryta; kolejna wraca do zwykłej. */
+  film(id, s) {
+    TAPE.on = true;
+    TAPE.film = { id, s: +s };
+    return true;
+  },
+};
 
 // ------------------------------------------------------------------ odtwarzacz sceny
 export class ScenePlayer {
@@ -1005,7 +1145,8 @@ export class ScenePlayer {
       lab.appendChild(labT);
       const gl = gleamEl(lab);
       it.strip.appendChild(clip); it.strip.appendChild(lab);
-      tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null, fresh: true };
+      tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null, fresh: true,
+        uid: ++tapeSeq, shift: 0, vw: 0, segOf: null };
     }
     const styleKey = [up, p('sep'), p('sepStyle'), p('sepColor'), catBg, p('catFg'), p('catColors'), font, p('size'), p('weight'), p('italic'), p('spacing'), fe].join('|');
     const segOf = (x) => tickerSegment(x, { up, sep: p('sep'), sepStyle: p('sepStyle'), sepColor: p('sepColor'), colors, catBg, catFg: p('catFg') });
@@ -1031,6 +1172,7 @@ export class ScenePlayer {
       gleamAt(tk.gl, p('gleam'), now);
     }
     const vw = Math.max(1, w - labW);
+    tk.vw = vw; tk.segOf = segOf;
     // podgląd jednej wiadomości (Trio)
     if (it.pin != null && n) {
       const x = items[Math.max(0, Math.min(n - 1, it.pin))];
@@ -1052,22 +1194,13 @@ export class ScenePlayer {
     if (!tk.segs.length) tk.cursor = Math.max(tk.cursor, tk.d); // pusta taśma: start od prawej krawędzi
     // crawlFrom=left: pierwsza wiadomość od lewej krawędzi, taśma od razu pełna (jak warstwa ticker w BTB CG)
     if (tk.fresh) { tk.fresh = false; if (p('crawlFrom') === 'left') tk.cursor = tk.d - vw; }
-    for (let guard = 0; n && tk.cursor - tk.d < vw + 40 && guard < 200; guard++) {
-      const idx = tk.nextIdx % n, x = items[idx];
-      const el = segOf(x);
-      el.style.left = tk.cursor + 'px';
-      tk.tape.appendChild(el);
-      const sw = Math.max(1, el.offsetWidth);
-      tk.segs.push({ el, item: x, idx, pos: tk.cursor, w: sw });
-      tk.cursor += sw;
-      tk.nextIdx = (idx + 1) % n;
-    }
+    crawlFill(tk, tk.d);
     while (tk.segs.length && tk.segs[0].pos + tk.segs[0].w < tk.d - vw) tk.segs.shift().el.remove();
     // przesunięcie układu, żeby współrzędne nie rosły bez końca (precyzja kompozytora)
     if (tk.d > 50000) {
       const off = tk.segs.length ? tk.segs[0].pos : tk.d;
       for (const sg of tk.segs) { sg.pos -= off; sg.el.style.left = sg.pos + 'px'; }
-      tk.d -= off; tk.cursor -= off;
+      tk.d -= off; tk.cursor -= off; tk.shift += off;
     }
     tk.tape.style.transform = `translateX(${vw - tk.d}px)`;
   }

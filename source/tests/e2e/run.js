@@ -518,6 +518,53 @@ async function waitUp() {
     const exp = 150 * (a2.t - a1.t) / 1000;
     ok(a1.x !== null && a2.x < a1.x && Math.abs((a1.x - a2.x) - exp) < exp * 0.5 + 40 && a2.first === a1.first, 'UPDATE tickera na antenie: przewijanie płynie dalej (bez skoku)', [a1, a2, exp]);
     ok((await api('/api/ticker/3001')).items.length >= 3, '/api/ticker: lista wiadomości strony');
+    // taśma crawla dla playoutu kanału (window.vizrsTape): stan, oddanie taśmy, film jednej klatki
+    {
+      const frames = (n) => new Promise((r) => { const f = (k) => (k ? requestAnimationFrame(() => f(k - 1)) : r()); f(n); });
+      const st = await out.evaluate(async (fr) => { vizrsTape.state(); await eval(fr)(3); return vizrsTape.state(); }, frames.toString());
+      const c = st.crawls[0];
+      ok(st.crawls.length === 1 && c.w > 500 && c.h > 0 && Number.isFinite(c.s) && !c.hidden && !!c.key, 'vizrsTape.state(): crawl na antenie z oknem i przesunięciem', st);
+      const hid = await out.evaluate(async ([id, fr]) => {
+        vizrsTape.external(id, true); await eval(fr)(3);
+        return { c: vizrsTape.state().crawls[0], vis: document.querySelector('.vz-ticker > div > div > div').style.visibility };
+      }, [c.id, frames.toString()]);
+      ok(hid.c.hidden && hid.vis === 'hidden' && hid.c.s > c.s, 'vizrsTape.external: stojący crawl – taśmę ukrywa strona, przesunięcie rośnie', hid);
+      const film = await out.evaluate(async ([id, fr]) => {
+        const t = document.querySelector('.vz-ticker > div > div > div');
+        const s = vizrsTape.state().crawls[0].s + 400;
+        vizrsTape.film(id, s); await eval(fr)(1);
+        const during = { cls: document.documentElement.classList.contains('vz-film'), tape: getComputedStyle(t).visibility, label: getComputedStyle(document.querySelector('.vz-rect')).visibility, tf: t.style.transform };
+        await eval(fr)(1);
+        return { during, after: document.documentElement.classList.contains('vz-film'), tape: getComputedStyle(t).visibility };
+      }, [c.id, frames.toString()]);
+      ok(film.during.cls && film.during.tape === 'visible' && film.during.label === 'hidden' && !film.after && film.tape === 'hidden',
+        'vizrsTape.film: jedna klatka z samą taśmą, potem zwykła', film);
+      const back = await out.evaluate(async ([id, fr]) => { vizrsTape.external(id, false); await eval(fr)(2); return { c: vizrsTape.state().crawls[0], vis: document.querySelector('.vz-ticker > div > div > div').style.visibility }; }, [c.id, frames.toString()]);
+      ok(!back.c.hidden && back.vis === 'visible', 'vizrsTape.external(false): strona znów rysuje taśmę', back);
+      // element za crawlem: liczy się to, co maluje nad oknem – litery napisu nad belką nie, prostokąt tak
+      const withNode = async (node) => {
+        const show = await api('/api/show');
+        const scn = show.scenes.find((x) => x.id === show.pages.find((p) => p.number === 3001).scene);
+        const find = (ns) => { for (const n of ns) { if (n.type === 'ticker') return [n, ns]; const f = n.children && find(n.children); if (f) return f; } };
+        const [cr, sib] = find(scn.nodes);
+        const original = JSON.parse(JSON.stringify(scn));
+        sib.splice(sib.indexOf(cr) + 1, 0, { ...node, props: { x: cr.props.x, y: cr.props.y - 88, w: 400, h: 100, ...node.props } });
+        await fetch(B + '/api/scenes/' + scn.id, { method: 'PUT', headers: { 'X-Token': TOKEN }, body: JSON.stringify(scn) });
+        await api('/api/clear'); await sleep(300);
+        await api('/api/take/3001'); await sleep(2500);
+        const res = await out.evaluate(async (fr) => {
+          const id = vizrsTape.state().crawls[0]?.id; vizrsTape.external(id, true); await eval(fr)(3);
+          const c = vizrsTape.state().crawls[0]; vizrsTape.external(id, false); return c;
+        }, frames.toString());
+        const cur = (await api('/api/show')).scenes.find((x) => x.id === original.id);
+        await fetch(B + '/api/scenes/' + cur.id, { method: 'PUT', headers: { 'X-Token': TOKEN }, body: JSON.stringify({ ...original, rev: cur.rev }) });
+        return res;
+      };
+      const txt = await withNode({ id: 'e2e_nad', type: 'text', name: 'nad', props: { text: 'NAD BELKĄ', size: 30, color: '#ffffff' } });
+      ok(txt?.hidden === true, 'vizrsTape: pole napisu nad belką zachodzi na okno crawla, litery nie – taśma oddana', txt);
+      const rect = await withNode({ id: 'e2e_rect', type: 'rect', name: 'rect', props: { color: '#00ff00' } });
+      ok(rect?.hidden === false, 'vizrsTape: prostokąt nad oknem crawla – taśmę rysuje strona', rect);
+    }
     await api('/api/clear');
 
     // --- tekst zmierzony przed wczytaniem fontu mierzy się ponownie także bez zdarzenia `loadingdone` (jak w WebKit) ---

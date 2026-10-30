@@ -486,6 +486,16 @@ OBS: Źródła → **+** → **Przeglądarka** → `http://localhost:8088/output
 
 Wygląd z `fx=step` różni się od OBS, dlatego to świadomy wybór kanału; podgląd: `/output?fx=step&checker=1`. Adres dla playoutu kanału 25 kl./s: `/output?fps=25&fx=step`. Bez stron na antenie pętla animacji zasypia (w każdym trybie).
 
+**Taśma crawla przesuwana przez playout (`window.vizrsTape`).** Przewijany crawl zmienia obraz w każdej klatce, choć taśma tylko się przesuwa. Playout kanału (VirtRS CG Playout, opcja `tape`) może ją przesuwać sam: wtedy Chromium rysuje taśmę tylko raz na jej okno („film”), a nie w każdej klatce. `/output` wystawia do tego interfejs dla DevTools (`Runtime.evaluate`); bez wywołań nic nie zmienia i nic nie kosztuje (OBS, Trio, Artist):
+
+| Wywołanie | Działanie |
+|---|---|
+| `vizrsTape.state()` | crawle na antenie po ostatniej klatce: `{crawls:[{id, x, y, w, h, s, hidden, key}]}` – okno crawla w px strony, przesunięcie taśmy `s` w px ekranu (kolumna X okna pokazuje punkt X + s taśmy), `hidden` = w tej klatce taśmę rysuje playout, `key` zmienia się ze zmianą wyglądu taśmy (styl, kolor, font, rozmiar) |
+| `vizrsTape.external(id, on)` | `true`: strona ukrywa taśmę crawla `id`, gdy ten stoi; `false`: rysuje ją sama |
+| `vizrsTape.film(id, s)` | następna klatka to film: tylko taśma crawla `id` przy przesunięciu `s`, reszta strony ukryta; kolejna klatka wraca do zwykłej |
+
+Strona ukrywa taśmę tylko wtedy, gdy crawl stoi: okno w tym samym miejscu co w poprzedniej klatce, przodkowie z pełnym kryciem, bez filtra, maski, `clip-path` i trybu mieszania, a żaden inny widoczny węzeł (wyższa warstwa albo dalej w scenie) nie maluje nad oknem: liczy się tło, ramka i obraz węzła oraz linie jego tekstu, nie całe pole (napis nad belką, którego pole sięga okna, nie przeszkadza); cienie sąsiadów (etykieta, zegar przy oknie) się nie liczą. W przeciwnym razie (wejście i wyjście sceny, `dock`, element na tickerze, podgląd wiadomości `pin`) rysuje ją sama w tej samej klatce, więc ruch nie przerywa się. Identyfikator `id` zmienia się, gdy taśma powstaje od nowa (nowy TAKE, zmiana trybu tickera). Interfejs ma `version: 1`.
+
 Wskazówki dla scen kanału wypalanego: ticker w trybie `roll` albo `wipe` kosztuje ok. 4 razy mniej niż `crawl` (między zmianami wiadomości obraz stoi); `blink`, pętle uwagi i efekty tła na grafikach wiszących godzinami (logo, „Na żywo”) to stały koszt pełnego klatkażu – lepiej z nich zrezygnować albo użyć `fx=step`; zegar `HH:mm` zmienia obraz raz na minutę, z sekundami raz na sekundę (oba tanie); rotacja `cycle` kosztuje głównie w czasie przejścia; wideo w grafice nie nadaje się na kanał wypalany.
 
 ## 11. Sterowanie zewnętrzne

@@ -19,7 +19,7 @@
 <div id="box"><div id="stage"></div></div>
 <div id="status">brak połączenia z VizRS</div>
 <script type="module">
-  import { LayerHost, ScenePlayer, connectEvents, fitStage, ensureFont, setOutputMode } from '/renderer.js';
+  import { LayerHost, ScenePlayer, connectEvents, fitStage, ensureFont, setOutputMode, tapeApi } from '/renderer.js';
   // Parametry URL:
   //   ?layers=main,front   – renderuj tylko wybrane warstwy (osobne źródła w OBS)
   //   ?w=1920&h=1080       – rozdzielczość kanału
@@ -32,6 +32,8 @@
   //   ?fx=step             – lekkie wyjście: miganie i efekty uwagi schodkami, efekty ruchowe wyłączone
   const q = new URLSearchParams(location.search);
   setOutputMode({ fps: +q.get('fps') || 0, step: q.get('fx') === 'step' });
+  // taśma crawla rysowana przez sidecar VirtRS CG Playout (DevTools); bez wywołań nic nie zmienia
+  window.vizrsTape = tapeApi;
   const W = +q.get('w') || 1920, H = +q.get('h') || 1080;
   if (q.get('bg')) document.body.style.background = q.get('bg');
   if (q.get('checker')) document.body.classList.add('checker');
