@@ -2,6 +2,9 @@
 
 ## Niewydane
 
+- **Trio, kolory kategorii tickera:** wybór koloru w okienku (pole barwy, odcień, `#hex`, próbki, podgląd plakietki z ostrzeżeniem o kontraście, powrót do koloru sceny) zamiast dopisywania `#kolor` do nazwy; także w edytorze wiadomości w Artist.
+- **Logika kolorów:** kolor należy do kategorii – wybór obejmuje jej wszystkie wiadomości na stronie, a wiadomości bez `#kolor` (też z `TICKER ADD`) przejmują kolor kategorii; wiadomość bez kategorii w `roll`/`wipe`/`whip` bierze kolor etykiety z mapy `catColors` (tak jak `crawl`); zmiana koloru na taśmie crawla działa od razu; zmiana nazwy kategorii nie gubi koloru. Kolory o długości nieznanej CSS (`#12345`) nie są już uznawane za kolor.
+
 ## 2.0.7 (2026-10-30) – „Taśma”
 
 - **Taśma crawla przesuwana przez playout kanału:** `/output` wystawia `window.vizrsTape` (`state`, `external`, `film`) – VirtRS CG Playout (opcja `tape`) przesuwa stojący crawl sam, a Chromium rysuje taśmę raz na jej okno zamiast w każdej klatce. Strona oddaje taśmę tylko, gdy crawl stoi i nic nie maluje nad jego oknem (tekst według liter, nie pola); bez wywołań nic się nie zmienia (DOKUMENTACJA §10).

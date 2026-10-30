@@ -439,7 +439,7 @@ function mountTickers(s) {
     const pr = node?.props || {};
     const ed = mountTickerEditor(host, {
       value: ta.value,
-      catColors: pr.catColors || '', catBg: pr.catBg || PROPS.catBg.d,
+      catColors: pr.catColors || '', catBg: pr.catBg || PROPS.catBg.d, catFg: pr.catFg || PROPS.catFg.d, label: pr.label || '',
       rules: rulesOf(fid),
       onChange: (v) => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); },
       onHover: (i) => pv?.tickerPin(fid, i),

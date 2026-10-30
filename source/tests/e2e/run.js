@@ -506,6 +506,22 @@ async function waitUp() {
     await trio.click('[data-view="groups"]'); await sleep(200);
     ok((await trio.locator('.tkx-card').count()) >= 2, 'Trio: widok grup po kategoriach');
     await trio.click('[data-view="list"]');
+    // kolor należy do kategorii: wybór w okienku obejmuje wszystkie jej wiadomości, „ze sceny” go zdejmuje
+    const tkVal = () => trio.evaluate(() => document.querySelector('[data-tk]').value);
+    await trio.locator('.tkx-cat').nth(1).fill('SPORT'); await trio.locator('.tkx-txt').nth(1).click();
+    await trio.locator('.tkx-dot').first().click();
+    ok(await trio.locator('.cpk').isVisible(), 'Trio: pole koloru otwiera okienko wyboru');
+    await trio.fill('.cpk-hex', '#1f8a4c');
+    let tv = (await tkVal()).split('\n');
+    ok(tv[0].startsWith('SPORT#1f8a4c|') && tv[1].startsWith('SPORT#1f8a4c|'), 'Trio: kolor obowiązuje całą kategorię', tv.slice(0, 2));
+    await trio.locator('.cpk-sv').click({ position: { x: 40, y: 30 } });
+    ok(!(await tkVal()).startsWith('SPORT#1f8a4c|'), 'Trio: pole barwy zmienia kolor na bieżąco');
+    await trio.click('.cpk-reset');
+    ok((await tkVal()).startsWith('SPORT|'), 'Trio: „ze sceny” usuwa własny kolor', (await tkVal()).split('\n')[0]);
+    await trio.keyboard.press('Escape');
+    ok((await trio.locator('.cpk').count()) === 0, 'Trio: Esc zamyka okienko koloru');
+    await trio.locator('.tkx-cat').nth(1).fill('');
+    await trio.locator('.tkx-txt').nth(1).click(); await sleep(100);
     // ciągłość crawla: zmiana wiadomości na antenie nie zaczyna przewijania od nowa
     await api('/api/clear'); await sleep(300);
     await api('/api/take/3001'); await sleep(2500);

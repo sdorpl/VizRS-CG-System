@@ -294,6 +294,10 @@ SPORT#1f8a4c|treść z własnym kolorem kategorii
 sama treść (bez kategorii)        \|  = znak |
 ```
 
+Kolor plakietki: kolor wiadomości > kolor tej kategorii na liście (pierwszy podany; wiadomości kategorii bez `#kolor` go przejmują, także te dodane przez `TICKER ADD`) > mapa sceny `catColors` > `catBg`. Wiadomość bez kategorii ma kolor etykiety `label` z tych samych źródeł. Kolor: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`.
+
+W edytorze wiadomości (Trio, Artist) kwadrat przy kategorii otwiera wybór koloru: pole barwy, odcień, `#hex`, próbki (w użyciu, paleta, ostatnie), podgląd plakietki z ostrzeżeniem o słabym kontraście i **ze sceny** (usuwa własny kolor). Wybór obowiązuje wszystkie wiadomości kategorii na stronie; kolor równy scenowemu nie jest zapisywany. Zmiana nazwy kategorii przejmuje kolor kategorii docelowej. Wiadomość bez kategorii nie ma wyboru koloru.
+
 | Tryb (`tickerMode`) | Działanie |
 |---|---|
 | `crawl` | klasyczne przewijanie poziome (`speed` px/s, `crawlFrom` `right`/`left`); kategorie jako plakietki, opcjonalnie stała etykieta po lewej |

@@ -1,7 +1,8 @@
 // Edytor wiadomości tickera – wspólny dla Trio (pole strony) i Artist (wiadomości próbne).
 // Widoki: lista (kategoria + treść), grupy po kategoriach (przeciąganie między grupami) i tekst surowy.
 // Wynik zawsze trafia do pola jako wiersze `KAT#kolor|treść` (ticker-model.js), więc reszta systemu się nie zmienia.
-import { parseTickerItems, serializeTickerItems, parseCatColors, catColorOf, checkTickerItems, TICKER_LIMITS } from '/ticker-model.js';
+import { parseTickerItems, serializeTickerItems, parseCatColors, pageCatColors, catColorOf, checkTickerItems, TICKER_LIMITS } from '/ticker-model.js';
+import { openColorPicker, normHex } from '/color-picker.js';
 
 const STYLE = `
 .tkx { border: 1px solid var(--line, #333); border-radius: 4px; background: var(--panel2, #1b1d21); }
@@ -10,13 +11,16 @@ const STYLE = `
 .tkx-bar button.on { background: var(--acc, #f0a020); color: #1a1100; border-color: var(--acc, #f0a020); font-weight: 700; }
 .tkx-bar .tkx-info { margin-left: auto; color: var(--dim, #888); font: 11px var(--mono, monospace); }
 .tkx-body { padding: 4px; display: flex; flex-direction: column; gap: 3px; max-height: 340px; overflow: auto; }
-.tkx-row { display: grid; grid-template-columns: 22px 10px minmax(70px, 130px) 1fr auto auto auto auto; gap: 4px; align-items: center; border-radius: 3px; }
+.tkx-row { display: grid; grid-template-columns: 22px 18px minmax(70px, 130px) 1fr auto auto auto auto; gap: 4px; align-items: center; border-radius: 3px; }
 .tkx-row.g { grid-template-columns: 22px 1fr auto auto auto; }
 .tkx-row:hover { background: rgba(255,255,255,.04); }
 .tkx-row.over { outline: 1px dashed var(--acc, #f0a020); }
 .tkx-row.drag { opacity: .4; }
 .tkx-n { font: 11px var(--mono, monospace); color: var(--dim, #888); text-align: right; cursor: grab; user-select: none; }
-.tkx-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); }
+.tkx .tkx-dot { width: 18px; height: 18px; min-width: 0; padding: 0; border-radius: 4px; border: 1px solid rgba(255,255,255,.35); }
+.tkx .tkx-dot:not(:disabled) { cursor: pointer; } .tkx .tkx-dot:not(:disabled):hover { outline: 1px solid var(--acc, #f0a020); }
+.tkx .tkx-dot:disabled { opacity: .45; border-style: dashed; }
+.tkx .tkx-dot.mix { outline: 1px dashed var(--acc, #f0a020); outline-offset: 1px; }
 .tkx input, .tkx select { width: 100%; min-width: 0; }
 .tkx-txt { font-size: 15px; padding: 4px 6px; }
 .tkx-meta { font: 10px var(--mono, monospace); color: var(--dim, #888); white-space: nowrap; display: flex; gap: 4px; }
@@ -25,7 +29,7 @@ const STYLE = `
 .tkx-add { align-self: flex-start; font-size: 11px; padding: 2px 10px; }
 .tkx-card { border: 1px solid var(--line, #333); border-radius: 4px; padding: 3px; display: flex; flex-direction: column; gap: 3px; }
 .tkx-card.over { outline: 1px dashed var(--acc, #f0a020); }
-.tkx-chead { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 6px; align-items: center; padding: 2px 4px; }
+.tkx-chead { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 6px; align-items: center; padding: 2px 4px; }
 .tkx-chead input { font-weight: 700; }
 .tkx-raw { width: 100%; min-height: 140px; font: 13px var(--mono, monospace); resize: vertical; }
 .tkx-err { color: #ff6a66; font-size: 11px; padding: 0 6px 4px; }
@@ -38,7 +42,7 @@ const VIEWS = { list: 'Lista', groups: 'Grupy', raw: 'Tekst' };
 
 /**
  * @param host element, w którym powstaje edytor
- * @param o { value, onChange(text), catColors, catBg, rules: {maxItems, maxChars, cats, upper, readonly}, onHover(i|null) }
+ * @param o { value, onChange(text), catColors, catBg, catFg, label, rules: {maxItems, maxChars, cats, upper, readonly}, onHover(i|null) }
  * @returns { setValue(text), setSqueeze(arr|null), setOptions(o), focus(), el }
  */
 export function mountTickerEditor(host, o = {}) {
@@ -67,11 +71,48 @@ export function mountTickerEditor(host, o = {}) {
     o.onChange?.(v);
     status();
   };
-  const dot = (x) => (x.cat || x.color ? catColorOf(x, colors(), o.catBg || '#c8102e') : 'transparent');
+  const up = (s) => String(s ?? '').trim().toUpperCase();
+  const sceneColor = (cat) => catColorOf({ cat }, colors(), o.catBg || '#c8102e', o.label);
+  const dot = (x) => (x.cat || x.color || o.label ? catColorOf(x, { ...colors(), ...pageCatColors(items) }, o.catBg || '#c8102e', o.label) : 'transparent');
+  /** Pole koloru: kolor ma kategoria, więc wiadomość bez kategorii wyboru nie ma (chyba że niesie stary kolor do zdjęcia). */
+  const swatch = (x, attr) => {
+    const off = R().readonly || !(x.cat || x.color);
+    const mix = x.mix ? ' mix' : '';
+    const tip = R().readonly ? 'Kolor kategorii' : off ? 'Wpisz kategorię, aby wybrać jej kolor' : x.mix ? 'Wiadomości tej kategorii mają różne kolory – wybór ujednolici je' : `Kolor kategorii ${x.cat || ''}`.trim();
+    return `<button type="button" class="tkx-dot${mix}" data-a="color" ${attr} style="background:${esc(dot(x))}" title="${esc(tip)}" ${off ? 'disabled' : ''}></button>`;
+  };
+  const paintDots = () => root.querySelectorAll('.tkx-dot').forEach((d) => {
+    const x = d.dataset.i != null ? items[+d.dataset.i] : groups().find((g) => g.cat === d.dataset.cat);
+    if (x) d.style.background = dot(x);
+  });
+  /** Kolor należy do kategorii: obowiązuje wszystkie jej wiadomości; kolor równy scenowemu nie jest nadpisaniem. */
+  function setCatColor(cat, c) {
+    const k = up(cat), base = sceneColor(cat);
+    const color = !c || (normHex(c) && normHex(c) === normHex(base)) ? '' : c;
+    for (const x of items) if (up(x.cat) === k) x.color = color;
+    paintDots(); emit();
+  }
+  function pickColor(btn, cat) {
+    const color = pageCatColors(items)[up(cat)] || items.find((x) => up(x.cat) === up(cat))?.color || '';
+    openColorPicker(btn, {
+      value: color, base: sceneColor(cat), label: cat || o.label || 'kategoria', fg: o.catFg,
+      palette: [...new Set(Object.values({ ...colors(), ...pageCatColors(items) }))],
+      onInput: (c) => { if (root.isConnected) setCatColor(cat, c); },
+    });
+  }
+  /** Po zmianie nazwy kategorii: kolor wpisany > kolor tej kategorii na liście > mapa sceny > dotychczasowy. */
+  function settleCat(list, typed, was) {
+    const k = up(list[0]?.cat);
+    if (typed) { for (const x of items) if (up(x.cat) === k) x.color = typed; return; }
+    if (k === up(was)) return;
+    const rest = items.filter((x) => up(x.cat) === k && !list.includes(x));
+    const color = !k ? '' : rest.length ? rest.find((x) => x.color)?.color || '' : colors()[k] ? '' : list[0].color;
+    for (const x of list) x.color = color;
+  }
   const catCtl = (x, i) => {
     const ro = R().readonly ? 'disabled' : '';
-    if (R().cats?.length) return `<select class="tkx-cat" data-i="${i}" ${ro}><option value=""></option>${R().cats.map((c) => `<option ${c.toUpperCase() === x.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
-    return `<input class="tkx-cat" data-i="${i}" list="${id}-cats" value="${esc(x.cat + (x.color || ''))}" placeholder="kategoria" ${ro}>`;
+    if (R().cats?.length) return `<select class="tkx-cat" data-i="${i}" data-was="${esc(x.cat)}" ${ro}><option value=""></option>${R().cats.map((c) => `<option ${c.toUpperCase() === x.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
+    return `<input class="tkx-cat" data-i="${i}" data-was="${esc(x.cat)}" list="${id}-cats" value="${esc(x.cat)}" placeholder="kategoria" ${ro}>`;
   };
   const meta = (x, i) => {
     const n = Array.from(x.text).length, mc = maxChars();
@@ -81,12 +122,19 @@ export function mountTickerEditor(host, o = {}) {
   };
   const txt = (x, i) => `<input class="tkx-txt" data-i="${i}" value="${esc(x.text)}" maxlength="${isFinite(maxChars()) ? maxChars() : ''}" placeholder="treść wiadomości" spellcheck="true" lang="pl" ${R().readonly ? 'readonly' : ''}>`;
   const btns = (i, g) => R().readonly ? '<span></span><span></span>' : `${g ? '' : `<button data-a="up" data-i="${i}" title="W górę (Ctrl+↑)">↑</button><button data-a="down" data-i="${i}" title="W dół (Ctrl+↓)">↓</button>`}<button data-a="del" data-i="${i}" title="Usuń wiadomość">✕</button>`;
-  const row = (x, i) => `<div class="tkx-row" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij, aby przenieść">${i + 1}</span><span class="tkx-dot" style="background:${esc(dot(x))}"></span>${catCtl(x, i)}${txt(x, i)}${meta(x, i)}${btns(i)}</div>`;
+  const row = (x, i) => `<div class="tkx-row" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij, aby przenieść">${i + 1}</span>${swatch(x, `data-i="${i}"`)}${catCtl(x, i)}${txt(x, i)}${meta(x, i)}${btns(i)}</div>`;
   const grow = (x, i) => `<div class="tkx-row g" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij do innej grupy">${i + 1}</span>${txt(x, i)}${meta(x, i)}<span></span>${btns(i, true)}</div>`;
 
   function groups() {
     const map = new Map();
-    items.forEach((x, i) => { const k = x.cat.toUpperCase(); if (!map.has(k)) map.set(k, { cat: x.cat, color: x.color, idx: [] }); map.get(k).idx.push(i); });
+    items.forEach((x, i) => {
+      const k = x.cat.toUpperCase();
+      if (!map.has(k)) map.set(k, { cat: x.cat, color: '', mix: false, idx: [] });
+      const g = map.get(k);
+      g.idx.push(i);
+      if (x.color && !g.color) g.color = x.color;
+      else if (x.color && x.color.toLowerCase() !== g.color.toLowerCase()) g.mix = true;
+    });
     return [...map.values()];
   }
   /** Ułożenie listy w kolejności grup (widok grup zmienia kolejność wiadomości na antenie). */
@@ -99,13 +147,13 @@ export function mountTickerEditor(host, o = {}) {
     if (view === 'list') {
       body = items.map(row).join('') + (ro ? '' : `<button class="tkx-add" data-a="add" ${full ? 'disabled' : ''}>＋ wiadomość</button>`);
     } else if (view === 'groups') {
-      body = groups().map((g) => `<div class="tkx-card" data-cat="${esc(g.cat)}"><div class="tkx-chead"><span class="tkx-dot" style="background:${esc(dot(g))}"></span>${R().cats?.length
+      body = groups().map((g) => `<div class="tkx-card" data-cat="${esc(g.cat)}"><div class="tkx-chead">${swatch(g, `data-cat="${esc(g.cat)}"`)}${R().cats?.length
         ? `<select class="tkx-cname" data-cat="${esc(g.cat)}" ${ro ? 'disabled' : ''}><option value=""></option>${R().cats.map((c) => `<option ${c.toUpperCase() === g.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>`
-        : `<input class="tkx-cname" data-cat="${esc(g.cat)}" list="${id}-cats" value="${esc(g.cat + (g.color || ''))}" placeholder="(bez kategorii)" ${ro ? 'disabled' : ''}>`}<span class="tkx-meta">${g.idx.length}</span>${ro ? '' : `<button data-a="gdel" data-cat="${esc(g.cat)}" title="Usuń grupę z wiadomościami">✕</button>`}</div>
+        : `<input class="tkx-cname" data-cat="${esc(g.cat)}" list="${id}-cats" value="${esc(g.cat)}" placeholder="(bez kategorii)" ${ro ? 'disabled' : ''}>`}<span class="tkx-meta">${g.idx.length}</span>${ro ? '' : `<button data-a="gdel" data-cat="${esc(g.cat)}" title="Usuń grupę z wiadomościami">✕</button>`}</div>
         ${g.idx.map((i) => grow(items[i], i)).join('')}${ro ? '' : `<button class="tkx-add" data-a="gadd" data-cat="${esc(g.cat)}" data-color="${esc(g.color)}" ${full ? 'disabled' : ''}>＋ wiadomość</button>`}</div>`).join('') +
         (ro ? '' : `<button class="tkx-add" data-a="newgroup" ${full ? 'disabled' : ''}>＋ grupa</button>`);
     } else {
-      body = `<textarea class="tkx-raw" spellcheck="true" lang="pl" ${ro ? 'readonly' : ''}>${esc(serializeTickerItems(items))}</textarea><div class="tkx-help">Jedna wiadomość w wierszu. Kategoria: <code>KAT|treść</code>, z kolorem: <code>KAT#c00|treść</code>.</div>`;
+      body = `<textarea class="tkx-raw" spellcheck="true" lang="pl" ${ro ? 'readonly' : ''}>${esc(serializeTickerItems(items))}</textarea><div class="tkx-help">Jedna wiadomość w wierszu. Kategoria: <code>KAT|treść</code>, z kolorem: <code>KAT#c00|treść</code> (kolor obowiązuje całą kategorię).</div>`;
     }
     root.innerHTML = `<div class="tkx-bar">${Object.entries(VIEWS).map(([k, l]) => `<button data-view="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('')}<span class="tkx-info"></span></div>
       <div class="tkx-body">${body}</div><div class="tkx-err"></div><datalist id="${id}-cats">${allCats().map((c) => `<option value="${esc(c)}">`).join('')}</datalist>`;
@@ -124,13 +172,14 @@ export function mountTickerEditor(host, o = {}) {
   const newItem = (cat = '', color = '') => ({ cat, color, text: '' });
   const insert = (at, x) => { if (items.length >= maxItems()) return false; items.splice(at, 0, x); return true; };
   const move = (i, j) => { if (j < 0 || j >= items.length || i === j) return; const [x] = items.splice(i, 1); items.splice(j, 0, x); };
-  const catParse = (v) => { const m = String(v).trim().match(/^(.*?)(#[0-9a-fA-F]{3,8})?$/); return { cat: (m[1] || '').trim(), color: m[2] || '' }; };
+  const catParse = (v) => { const it = parseTickerItems(`${String(v).trim().replace(/[|\n]/g, ' ')}|x`)[0]; return { cat: it?.cat || '', color: it?.color || '' }; };
 
   root.addEventListener('click', (e) => {
     const vb = e.target.closest('[data-view]');
     if (vb) { view = vb.dataset.view; try { localStorage.setItem('vizrs.tkView', view); } catch { /* ignoruj */ } render(); return; }
     const b = e.target.closest('[data-a]'); if (!b) return;
     const i = +b.dataset.i, a = b.dataset.a;
+    if (a === 'color') { pickColor(b, b.dataset.i != null ? items[i].cat : b.dataset.cat); return; }
     if (a === 'add') { if (insert(items.length, newItem())) render({ i: items.length - 1 }); return; }
     if (a === 'up') { move(i, i - 1); emit(); render(); return; }
     if (a === 'down') { move(i, i + 1); emit(); render(); return; }
@@ -173,20 +222,24 @@ export function mountTickerEditor(host, o = {}) {
       emit(); return;
     }
     if (el.classList.contains('tkx-cat')) {
-      Object.assign(items[i], catParse(el.value));
-      const d = el.parentElement.querySelector('.tkx-dot'); if (d) d.style.background = dot(items[i]);
-      emit(); return;
+      const c = catParse(el.value);
+      items[i].cat = c.cat; if (c.color) items[i].color = c.color;
+      paintDots(); emit(); return;
     }
   });
   root.addEventListener('change', (e) => {
     const el = e.target;
     if (el.classList.contains('tkx-cname')) {
       // zmiana nazwy grupy = zmiana kategorii wszystkich jej wiadomości
-      const from = el.dataset.cat.toUpperCase(), c = catParse(el.value);
-      for (const x of items) if (x.cat.toUpperCase() === from) { x.cat = c.cat; x.color = c.color; }
+      const from = el.dataset.cat.toUpperCase(), c = catParse(el.value), list = items.filter((x) => x.cat.toUpperCase() === from);
+      for (const x of list) x.cat = c.cat;
+      settleCat(list, c.color, el.dataset.cat);
       regroup(); emit(); render(); return;
     }
-    if (el.classList.contains('tkx-cat') && view === 'list') render();
+    if (el.classList.contains('tkx-cat') && view === 'list') {
+      settleCat([items[+el.dataset.i]], catParse(el.value).color, el.dataset.was);
+      emit(); render();
+    }
   });
   root.addEventListener('keydown', (e) => {
     const el = e.target;

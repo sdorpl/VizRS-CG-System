@@ -120,6 +120,22 @@
     "color": "",
     "text": "Pusta kategoria"
    }
+  },
+  {
+   "in": "X#12345|Długość spoza CSS to nie kolor",
+   "out": {
+    "cat": "X#12345",
+    "color": "",
+    "text": "Długość spoza CSS to nie kolor"
+   }
+  },
+  {
+   "in": "X#abcd|Krótki z alfą",
+   "out": {
+    "cat": "X",
+    "color": "#abcd",
+    "text": "Krótki z alfą"
+   }
   }
  ],
  "serialize": [
@@ -203,6 +219,15 @@
    },
    "out": "K|dwa wiersze",
    "roundtrip": "dwa wiersze"
+  },
+  {
+   "in": {
+    "cat": "X",
+    "color": "#12345",
+    "text": "a"
+   },
+   "out": "X|a",
+   "roundtrip": "a"
   }
  ],
  "items": [

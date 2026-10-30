@@ -1,5 +1,5 @@
 import { qrSvg } from '/qr.js';
-import { parseTickerItems, parseCatColors, catColorOf, labelOf, continuation, TICKER_MODES, SEP_STYLES } from '/ticker-model.js';
+import { parseTickerItems, parseCatColors, pageCatColors, catColorOf, labelOf, continuation, TICKER_MODES, SEP_STYLES } from '/ticker-model.js';
 export { parseTickerItem, serializeTickerItem, parseTickerItems, serializeTickerItems, parseCatColors, checkTickerItems } from '/ticker-model.js';
 import { hasMarkup, parseMarkup, stripMarkup, carryLines } from '/richtext.js';
 import * as MO from '/motion.js';
@@ -927,7 +927,7 @@ export class ScenePlayer {
   /** Wiadomości węzła (parsowane tylko po zmianie tekstu). */
   tickerItems(it, p) {
     const raw = String(p('text') ?? '');
-    if (it.tkRaw !== raw) { it.tkRaw = raw; it.tkItems = parseTickerItems(stripMarkup(raw)); }
+    if (it.tkRaw !== raw) { it.tkRaw = raw; it.tkItems = parseTickerItems(stripMarkup(raw)); it.tkPage = pageCatColors(it.tkItems); it.tkColors = it.tkItems.map((x) => x.color).join(); }
     return it.tkItems;
   }
 
@@ -962,7 +962,7 @@ export class ScenePlayer {
     const mode = p('tickerMode');
     const n = items.length;
     const up = p('upper'), font = p('font'), w = it.w, h = it.h;
-    const label = String(p('label') || ''), colors = parseCatColors(p('catColors')), catBg = p('catBg');
+    const label = String(p('label') || ''), colors = { ...parseCatColors(p('catColors')), ...it.tkPage }, catBg = p('catBg');
     const catW = label || items.some((x) => x.cat) ? Math.max(0, p('catW')) : 0;
     it.tkCatW = catW;
     ensureFont(font, this.opts.assetBase);
@@ -1007,14 +1007,14 @@ export class ScenePlayer {
     }
     it.wiper.style.display = 'none';
     const lab = (x) => (x ? labelOf(x, label) : '');
-    const labKey = (x) => lab(x) + '#' + (x ? catColorOf(x, colors, catBg) : '');
+    const labKey = (x) => lab(x) + '#' + (x ? catColorOf(x, colors, catBg, label) : '');
     const fillLabel = (sl, x) => {
       const k = labKey(x);
       if (sl.lk === k) return;
       sl.lk = k;
       const l = lab(x);
       sl.catT.textContent = up ? l.toUpperCase() : l;
-      sl.cat.style.background = l ? catColorOf(x, colors, catBg) : 'transparent';
+      sl.cat.style.background = l ? catColorOf(x, colors, catBg, label) : 'transparent';
     };
     const fill = (sl, x) => {
       fillLabel(sl, x);
@@ -1095,7 +1095,7 @@ export class ScenePlayer {
       // wipe: odsłonięcie w lewo->prawo, na końcu zmazanie; krawędź maski prowadzi "wycieraczka"
       const T = Math.min(0.45, hold * 0.25);
       const bw = w - catW;
-      it.wiper.style.background = catColorOf(cur, colors, catBg);
+      it.wiper.style.background = catColorOf(cur, colors, catBg, label);
       const wipeEdge = (u) => { it.wiper.style.display = 'block'; it.wiper.style.left = (catW + u * bw - 3) + 'px'; };
       if (ph < T && tk.prev) {
         const u = easeIO(ph / T);
@@ -1119,7 +1119,7 @@ export class ScenePlayer {
   tickerCrawl(it, p, now, fe, items) {
     const n = items.length;
     const up = p('upper'), font = p('font'), w = it.w;
-    const label = String(p('label') || ''), colors = parseCatColors(p('catColors')), catBg = p('catBg');
+    const label = String(p('label') || ''), colors = { ...parseCatColors(p('catColors')), ...it.tkPage }, catBg = p('catBg');
     const labW = label ? Math.max(0, p('catW')) : 0;
     ensureFont(font, this.opts.assetBase);
     const S = it.strip.style;
@@ -1148,7 +1148,7 @@ export class ScenePlayer {
       tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null, fresh: true,
         uid: ++tapeSeq, shift: 0, vw: 0, segOf: null };
     }
-    const styleKey = [up, p('sep'), p('sepStyle'), p('sepColor'), catBg, p('catFg'), p('catColors'), font, p('size'), p('weight'), p('italic'), p('spacing'), fe].join('|');
+    const styleKey = [up, p('sep'), p('sepStyle'), p('sepColor'), catBg, p('catFg'), p('catColors'), it.tkColors, font, p('size'), p('weight'), p('italic'), p('spacing'), fe].join('|');
     const segOf = (x) => tickerSegment(x, { up, sep: p('sep'), sepStyle: p('sepStyle'), sepColor: p('sepColor'), colors, catBg, catFg: p('catFg') });
     if (tk.styleKey !== styleKey) {
       tk.styleKey = styleKey;
@@ -1156,6 +1156,7 @@ export class ScenePlayer {
       // przerysuj to, co jest na taśmie, w nowym stylu i ułóż od nowa od pierwszej pozycji
       let pos = tk.segs[0]?.pos ?? tk.cursor;
       for (const sg of tk.segs) {
+        sg.item = items.find((x) => x.text === sg.item.text && x.cat === sg.item.cat) || sg.item; // kolor mógł się zmienić
         const el = segOf(sg.item);
         sg.el.replaceWith(el); sg.el = el;
         el.style.left = pos + 'px'; sg.pos = pos; sg.w = Math.max(1, el.offsetWidth); pos += sg.w;
