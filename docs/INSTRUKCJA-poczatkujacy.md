@@ -114,6 +114,7 @@ Kanał wypalany na serwerze bez karty graficznej (playout kanału): adres `/outp
 2. Pole wiadomości to lista: kategoria + treść. **Enter** dodaje wiadomość, **Ctrl+↑↓** przesuwa, ✕ usuwa. Wklejenie kilku wierszy tworzy kilka wiadomości.
 3. Najechanie myszą na wiadomość pokazuje ją w podglądzie.
 4. Na antenie **UPDATE** (F4) dokłada zmiany bez restartu przewijania.
+5. Kolor kategorii: kliknij kwadrat przed nazwą kategorii i wybierz kolor (pole barwy, `#hex` albo próbka) – zmieni się we wszystkich wiadomościach tej kategorii na stronie. **ze sceny** wraca do koloru z szablonu, **Esc** lub **Enter** zamyka okienko.
 
 Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|Treść`, bez kategorii – sama treść.
 

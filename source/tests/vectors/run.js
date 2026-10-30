@@ -31,7 +31,7 @@ wr.parse.forEach((c) => {
 load('spell-tokens').cases.forEach((c) => check('spellTokens: ' + JSON.stringify(c.text).slice(0, 30), eq(T.spellTokens(c.text), c.expect)));
 
 // model wiadomości tickera (web/ticker-model.js) – te same wektory sprawdza src/ticker.rs
-import(pathToFileURL(path.join(__dirname, '../../web/ticker-model.js')).href).then((K) => {
+import(pathToFileURL(path.join(__dirname, '../../web/ticker-model.js')).href).then(async (K) => {
   const tk = load('ticker');
   tk.parse.forEach((c) => check('ticker parse: ' + c.in, eq(K.parseTickerItem(c.in), c.out), K.parseTickerItem(c.in)));
   tk.serialize.forEach((c) => {
@@ -44,6 +44,14 @@ import(pathToFileURL(path.join(__dirname, '../../web/ticker-model.js')).href).th
   const map = K.parseCatColors('pilne=#e00000; INFO = #0050c0;zle;');
   check('parseCatColors', eq(map, { PILNE: '#e00000', INFO: '#0050c0' }), map);
   check('catColorOf: kolor wiadomości > mapa > domyślny', K.catColorOf({ cat: 'PILNE', color: '#123' }, map, '#fff') === '#123' && K.catColorOf({ cat: 'Pilne' }, map, '#fff') === '#e00000' && K.catColorOf({ cat: 'X' }, map, '#fff') === '#fff');
+  check('catColorOf: wiadomość bez kategorii ma kolor etykiety', K.catColorOf({ cat: '' }, { INFO: '#00f' }, '#fff', 'INFO') === '#00f' && K.catColorOf({ cat: 'X' }, { INFO: '#00f' }, '#fff', 'INFO') === '#fff');
+  const pc = K.pageCatColors(K.parseTickerItems('SPORT#111|a\nsport|b\nsport#222|c\n#333|d\nKRAJ|e'));
+  check('pageCatColors: pierwszy kolor kategorii, bez kategorii pustych', eq(pc, { SPORT: '#111' }), pc);
+  check('kategoria dziedziczy kolor z listy, kolor wiadomości wygrywa', K.catColorOf({ cat: 'sport' }, { SPORT: '#e00', ...pc }, '#fff') === '#111' && K.catColorOf({ cat: 'SPORT', color: '#222' }, pc, '#fff') === '#222');
+  const CP = await import(pathToFileURL(path.join(__dirname, '../../web/color-picker.js')).href);
+  check('normHex: rozwinięcie i odrzucanie', CP.normHex('#AbC') === '#aabbcc' && CP.normHex('#abcd') === '#aabbccdd' && CP.normHex('#12345') === '' && CP.normHex('red') === '');
+  for (const c of ['#c8102e', '#1f8a4c', '#0050c0', '#ffffff', '#000000', '#808080']) check('hsv w obie strony: ' + c, CP.hsvToHex(CP.hexToHsv(c)) === c, CP.hsvToHex(CP.hexToHsv(c)));
+  check('contrast: biały/czarny 21, ten sam kolor 1', Math.abs(CP.contrast('#fff', '#000') - 21) < 0.01 && CP.contrast('#c00', '#c00') === 1);
   check('labelOf: kategoria albo etykieta domyślna', K.labelOf({ cat: 'A' }, 'INFO') === 'A' && K.labelOf({ cat: '' }, 'INFO') === 'INFO');
   const I = (s) => K.parseTickerItems(s);
   check('continuation: bieżąca zostaje', eq(K.continuation(I('a\nb\nc'), 1, I('x\nb\ny')), { cur: 1, next: 2 }));

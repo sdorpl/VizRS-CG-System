@@ -33,7 +33,7 @@ fn unesc(s: &str) -> String {
 }
 
 fn is_color(s: &str) -> bool {
-    s.starts_with('#') && (4..=9).contains(&s.len()) && s[1..].bytes().all(|c| c.is_ascii_hexdigit())
+    s.starts_with('#') && matches!(s.len(), 4 | 5 | 7 | 9) && s[1..].bytes().all(|c| c.is_ascii_hexdigit())
 }
 
 pub fn parse_item(line: &str) -> Item {

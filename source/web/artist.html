@@ -123,7 +123,7 @@
   .empty { padding: 30px; text-align: center; color: var(--dim); }
   .prtk { padding: 4px 8px; }
   .prtk .prtk-h { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 3px; }
-  .prtk .tkx-row { grid-template-columns: 18px 8px minmax(52px, 80px) 1fr auto auto auto auto; gap: 3px; }
+  .prtk .tkx-row { grid-template-columns: 18px 18px minmax(52px, 80px) 1fr auto auto auto auto; gap: 3px; }
   .prtk .tkx-txt { font-size: 13px; padding: 2px 4px; }
 </style>
 </head>
@@ -437,7 +437,7 @@ function renderProps() {
   if (host) {
     const ta = $('textarea[data-p="text"]', el);
     mountTickerEditor(host, {
-      value: ta.value, catColors: propAt(n, 'catColors', t, null), catBg: propAt(n, 'catBg', t, null), rules: scene.fieldMeta?.[n.fields?.text] || {},
+      value: ta.value, catColors: propAt(n, 'catColors', t, null), catBg: propAt(n, 'catBg', t, null), catFg: propAt(n, 'catFg', t, null), label: propAt(n, 'label', t, null), rules: scene.fieldMeta?.[n.fields?.text] || {},
       onChange: (v) => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); },
       onHover: (i) => player.tickerPin(n.id, i),
     });

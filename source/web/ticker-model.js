@@ -5,6 +5,10 @@
 export const TICKER_MODES = ['crawl', 'roll', 'wipe', 'whip'];
 export const SEP_STYLES = ['text', 'dot', 'square', 'pipe', 'skew'];
 export const TICKER_LIMITS = { items: 200, chars: 500 };
+const HEX = '#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})';
+const HEX_ONLY = new RegExp(`^${HEX}$`), HEX_END = new RegExp(`^(.*?)(${HEX})$`);
+/** Kolor w zapisie wiadomości: #rgb, #rgba, #rrggbb albo #rrggbbaa (inne długości CSS odrzuca). */
+export const isHexColor = (s) => HEX_ONLY.test(String(s ?? ''));
 
 /** Indeks pierwszego `|`, przed którym nie stoi `\`. */
 function splitAt(line) {
@@ -19,8 +23,8 @@ export function parseTickerItem(line) {
   const i = splitAt(line);
   if (i < 0) return { cat: '', color: '', text: unesc(line.trim()) };
   let cat = line.slice(0, i).trim(), color = '';
-  const m = cat.match(/^(.*?)#([0-9a-fA-F]{3,8})$/);
-  if (m) { cat = m[1].trim(); color = '#' + m[2]; }
+  const m = cat.match(HEX_END);
+  if (m) { cat = m[1].trim(); color = m[2]; }
   return { cat: unesc(cat), color, text: unesc(line.slice(i + 1).trim()) };
 }
 
@@ -28,7 +32,7 @@ export function parseTickerItem(line) {
 export function serializeTickerItem(it) {
   const text = String(it?.text ?? '').replace(/\s*\n\s*/g, ' ').trim();
   const cat = String(it?.cat ?? '').replace(/[|\n]/g, ' ').trim();
-  const color = /^#[0-9a-fA-F]{3,8}$/.test(it?.color || '') ? it.color : '';
+  const color = isHexColor(it?.color) ? it.color : '';
   if (!cat && !color) return text.replace(/\|/g, '\\|');
   return `${cat}${color}|${text}`;
 }
@@ -58,10 +62,20 @@ export function formatCatColors(map) {
   return Object.entries(map || {}).map(([k, v]) => `${k}=${v}`).join('; ');
 }
 
-/** Kolor plakietki: kolor z wiadomości > mapa kategorii > kolor domyślny. */
-export function catColorOf(item, map, fallback) {
+/** Kolory kategorii ustawione na liście: pierwszy kolor danej kategorii obowiązuje jej wiadomości bez koloru. */
+export function pageCatColors(list) {
+  const out = {};
+  for (const it of list || []) {
+    const k = String(it?.cat ?? '').trim().toUpperCase();
+    if (k && it.color && !out[k]) out[k] = it.color;
+  }
+  return out;
+}
+
+/** Kolor plakietki: kolor z wiadomości > mapa kategorii > kolor domyślny. Wiadomość bez kategorii ma kolor etykiety `label`. */
+export function catColorOf(item, map, fallback, label) {
   if (item?.color) return item.color;
-  const k = String(item?.cat ?? '').trim().toUpperCase();
+  const k = String(item?.cat || label || '').trim().toUpperCase();
   return (k && map?.[k]) || fallback;
 }
 
