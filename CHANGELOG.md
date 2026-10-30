@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 2.0.8 (2026-10-30) – „Kolory”
+
 - **Trio, kolory kategorii tickera:** wybór koloru w okienku (pole barwy, odcień, `#hex`, próbki, podgląd plakietki z ostrzeżeniem o kontraście, powrót do koloru sceny) zamiast dopisywania `#kolor` do nazwy; także w edytorze wiadomości w Artist.
 - **Logika kolorów:** kolor należy do kategorii – wybór obejmuje jej wszystkie wiadomości na stronie, a wiadomości bez `#kolor` (też z `TICKER ADD`) przejmują kolor kategorii; wiadomość bez kategorii w `roll`/`wipe`/`whip` bierze kolor etykiety z mapy `catColors` (tak jak `crawl`); zmiana koloru na taśmie crawla działa od razu; zmiana nazwy kategorii nie gubi koloru. Kolory o długości nieznanej CSS (`#12345`) nie są już uznawane za kolor.
 

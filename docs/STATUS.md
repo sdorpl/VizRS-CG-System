@@ -5,7 +5,7 @@
 > **Ostatnia aktualizacja:** 2026-10-24
 
 ## Bieżący etap
-**Wydanie 2.0.7 „Taśma”** (2026-10-30: taśma crawla przesuwana przez playout kanału – `window.vizrsTape` na `/output`; 2.0.6 „Czas warszawski” – 2026-10-25: zegary, czasy w Trio i nazwy kopii zapasowych w strefie Europe/Warsaw; 2.0.5 „Lekkie wyjście” – 2026-10-24: jeden numer wersji dla Trio, Artist, okna natywnego i VirtRS CG Playout; lekkie `/output` – `?fps=N`, `?fx=step`; 2.0.1 „Okna i serwer” – 2026-10-22; 2.0.0 „Studio” – wdrożone wszystkie etapy planu F0–F4, patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
+**Wydanie 2.0.8 „Kolory”** (2026-10-30: wybór koloru kategorii tickera w okienku, kolor przypisany do kategorii; 2.0.7 „Taśma” – 2026-10-30: taśma crawla przesuwana przez playout kanału – `window.vizrsTape` na `/output`; 2.0.6 „Czas warszawski” – 2026-10-25: zegary, czasy w Trio i nazwy kopii zapasowych w strefie Europe/Warsaw; 2.0.5 „Lekkie wyjście” – 2026-10-24: jeden numer wersji dla Trio, Artist, okna natywnego i VirtRS CG Playout; lekkie `/output` – `?fps=N`, `?fx=step`; 2.0.1 „Okna i serwer” – 2026-10-22; 2.0.0 „Studio” – wdrożone wszystkie etapy planu F0–F4, patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
 **Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
