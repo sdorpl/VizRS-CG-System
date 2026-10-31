@@ -2,10 +2,10 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [plany/PLAN-rozbudowy.md](plany/PLAN-rozbudowy.md), raport: [plany/RAPORT-analiza-VizRS-vs-BTB.md](plany/RAPORT-analiza-VizRS-vs-BTB.md).
 >
-> **Ostatnia aktualizacja:** 2026-10-24
+> **Ostatnia aktualizacja:** 2026-10-31
 
 ## Bieżący etap
-**Wydanie 2.0.8 „Kolory”** (2026-10-30: wybór koloru kategorii tickera w okienku, kolor przypisany do kategorii; 2.0.7 „Taśma” – 2026-10-30: taśma crawla przesuwana przez playout kanału – `window.vizrsTape` na `/output`; 2.0.6 „Czas warszawski” – 2026-10-25: zegary, czasy w Trio i nazwy kopii zapasowych w strefie Europe/Warsaw; 2.0.5 „Lekkie wyjście” – 2026-10-24: jeden numer wersji dla Trio, Artist, okna natywnego i VirtRS CG Playout; lekkie `/output` – `?fps=N`, `?fx=step`; 2.0.1 „Okna i serwer” – 2026-10-22; 2.0.0 „Studio” – wdrożone wszystkie etapy planu F0–F4, patrz niżej). Kolejne prace wynikają z [LUKI.md](LUKI.md).
+**Wydanie 2.0.8 „Kolory”** (2026-10-30). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
 **Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
@@ -29,7 +29,7 @@
 | F3 | F3.1 reguły pól, F3.2 tekst sformatowany, F3.3 Word Replace (+ pisownia przeglądarki), F3.4 dock, F3.5 markery/zoom/kopiuj-wklej/ramka/DnD w drzewie, F3.6 presety animacji, F3.7 edycja w podglądzie | `artist.html`, `trio.html`, `richtext.js`, `renderer.js` |
 | Ticker | T1 model i parser (`ticker-model.js`, `ticker.rs`, wspólne wektory), T2 renderer (ciągłość przy UPDATE, whip, separatory, błysk, squeeze), T3 edytor wiadomości w Trio, T4 Artist (panel trybu, presety, reguły pola), T5.1 komendy `TICKER`/`/api/ticker`/OSC, T6 import z BTB, T7 testy | [plany/PLAN-ticker.md](plany/PLAN-ticker.md), `web/ticker-*.js`, `src/ticker.rs` |
 | Tekst | ściskanie jak w BTB (`squeeze` do `squeezeMin` bez zmiany fontu, `squeeze-shrink`), wskaźnik i ostrzeżenie w Trio, dopasowanie wiadomości tickera, import BTB (granice, pola dla warstw bez pola) | `renderer.js`, `trio.html`, `btb-io.js`, `validate.rs` |
-| Paczki i ruch | paczka belek `.cgpack` (sceny + strony + grafiki + czcionki, czcionki z serwera na /output); ruch jak w BTB CG bez kluczy (`node.motion`: 22 presety IN/OUT, 31 efektów tekstu, 11 pętli, krzywe GSAP); import BTB przenosi ruch 1:1; prosty tryb sekwencji w Artist (kaskada, po kolei, na klucze i z kluczy) | `web/cgpack.js`, `web/motion.js`, `artist.html`, `renderer.js`, `btb-io.js` |
+| Paczki i ruch | paczka belek `.cgpack` (sceny + strony + grafiki + czcionki, czcionki z serwera na /output); ruch jak w BTB CG bez kluczy (`node.motion`: 21 presetów IN/OUT, 30 efektów tekstu na wejściu i 26 na wyjściu, 11 pętli, krzywe GSAP); import BTB przenosi ruch 1:1; prosty tryb sekwencji w Artist (kaskada, po kolei, na klucze i z kluczy) | `web/cgpack.js`, `web/motion.js`, `artist.html`, `renderer.js`, `btb-io.js` |
 | Lekkie wyjście | `/output?fps=N` (pętla w klatkażu kanału), `?fx=step` (efekty uwagi schodkami), uśpienie pętli bez stron, wskazówki dla scen kanału; L5 (wskaźnik w Artist) – LUKI #20 | [plany/PLAN-lekkie-output.md](plany/PLAN-lekkie-output.md), `renderer.js`, `motion.js`, `output.html` |
 | F4 | F4.1 wspólne wektory (`tools/sync-btb.sh`), F4.2 konwerter BTB (`btb-io.js`, `.cgpack`), F4.3 blokady edycji, F4.4 `deploy/`, runbook | `tests/vectors`, `web/btb-io.js`, `deploy/`, `docs/` |
 

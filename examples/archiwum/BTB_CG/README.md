@@ -11,6 +11,8 @@
 
 ## Wczytanie
 
+Do pracy używaj paczki [`BTB.cgpack`](../../README.md). Ten katalog to jej źródło; bezpośrednio wczytasz go tak:
+
 1. Skopiuj `assets/*` do `vizrs-data/assets/` (albo wgraj w Artist → Zasoby).
 2. Trio → **⇧ Import show** → `show.json` (**zastępuje** bieżący show); albo uruchom `vizrs --data <kopia tego katalogu>`.
 

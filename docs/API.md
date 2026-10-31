@@ -1,10 +1,10 @@
 # VizRS – API (HTTP, TCP, OSC, webhook)
 
-Wszystkie ścieżki HTTP zaczynają się od `/api`. Metody `GET` działają tam, gdzie wpisano „GET” (Companion / Stream Deck).
+W tabelach ścieżki HTTP podano bez przedrostka `/api` (`/take/1001` = `/api/take/1001`). Bez przedrostka działają tylko `/health`, `/events` i `/output`. Metody `GET` działają tam, gdzie wpisano „GET” (Companion / Stream Deck).
 Przy `--token`: nagłówek `Authorization: Bearer <token>`, `X-Token: <token>` albo `?token=<token>`. Żądania z obcych witryn są odrzucane (403).
 Token wyjścia (`--output-token`) daje tylko odczyt: `GET /output`, skrypty/style, `/fonts/*`, `/assets/*`, `/events`, `/health`, `GET /api/assets`, `POST /api/report`; wszystko inne → 403.
 Po 5 nieudanych próbach tokenu z jednego adresu odpowiedzi 401 są opóźniane (do 3 s).
-Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna albo token wyjścia poza odczytem · `409` konflikt rewizji (`rev`) lub blokady · `500` błąd zapisu na dysk · `503` za dużo połączeń (łącznie albo z jednego adresu).
+Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna albo token wyjścia poza odczytem · `409` konflikt rewizji (`rev`) lub blokady · `413` treść żądania ponad 64 MB · `500` błąd zapisu na dysk · `503` za dużo połączeń (łącznie albo z jednego adresu).
 
 ## Show, strony, sceny, playlisty, rundowny, makra
 | Metoda i ścieżka | Opis |
@@ -36,7 +36,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 ## Zasoby i narzędzia
 | Ścieżka | Opis |
 |---|---|
-| `GET /assets`, `POST /assets?name=plik.png`, `DELETE /assets/<nazwa>` | obrazy/wideo/fonty (dozwolone: png jpg jpeg gif webp svg mp4 webm ttf otf woff woff2; limit 2 GB łącznie) |
+| `GET /assets`, `POST /assets?name=plik.png`, `DELETE /assets/<nazwa>` | obrazy/wideo/fonty (dozwolone: png jpg jpeg gif webp svg mp4 webm ttf otf woff woff2; plik do 64 MB, łącznie do 2 GB) |
 | `GET /fonts` | rodziny fontów dostępnych offline (wbudowane) |
 | `GET\|PUT /animpresets` | biblioteka presetów animacji (Artist) |
 | `GET\|PUT /wordreplace` | lista zamian słów stanowiska (`{"@p":["Prezydent"]}`) |

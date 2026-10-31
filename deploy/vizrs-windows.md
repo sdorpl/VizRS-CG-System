@@ -10,5 +10,5 @@ nssm set VizRS AppStdout C:\VizRS\vizrs.log
 nssm start VizRS
 ```
 
-Bez NSSM: skrót do `start-windows.bat` w folderze „Autostart” (`shell:startup`).
-Dostęp z innego komputera: `--bind 0.0.0.0` + `VIZRS_TOKEN`, a w Zaporze Windows otwórz port 8088 (i 6100/UDP OSC, jeśli używasz).
+Bez NSSM: skrót do `start-windows.bat serve` w folderze „Autostart” (`shell:startup`); sam `start-windows.bat` otwiera okno Trio.
+Dostęp z innego komputera: `--bind 0.0.0.0` + `VIZRS_TOKEN`, a w Zaporze Windows otwórz port TCP 8088, a jeśli ich używasz, także TCP 6100 (komendy) i port UDP z `--osc`.

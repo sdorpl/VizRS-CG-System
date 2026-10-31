@@ -3,6 +3,7 @@
 ## Niewydane
 
 - **Kolor etykiety tickera w Trio:** wiadomości bez kategorii ustawiają kolor etykiety (np. PILNE), także stałej etykiety crawla; bez kategorii i etykiety kwadrat koloru przenosi do pola kategorii zamiast być zablokowany.
+- **Dokumentacja uporządkowana i sprawdzona z kodem:** poprawione liczby presetów ruchu (21 IN/OUT, 30 + 26 efektów tekstu), nazwa grupy **Ruch – bez kluczy**, zasady skrótów stron, limit 64 MB na plik i kod 413; sekcje `4.4a` i `8.3a` w DOKUMENTACJA dostały zwykłe numery, a „Show na audycję” własną sekcję 9.6; powtórzenia usunięte z README i DOKUMENTACJA §11, §14, §16; `SZYBKI_START.txt` zaktualizowany (paczki `.cgpack`, okno natywne).
 
 ## 2.0.8 (2026-10-30) – „Kolory”
 
@@ -67,7 +68,7 @@
 - `--trust-proxy` (adres klienta z `X-Forwarded-For` za Caddy/nginx), `--log-stdout` (log audytowy na standardowe wyjście), obsługa **SIGTERM/SIGINT** i zdarzeń konsoli Windows bez zależności (natychmiastowy `docker stop`, zwolnienie blokady katalogu danych). Compose ustawia token wyjścia, `VIZRS_TRUST_PROXY` i `VIZRS_LOG_STDOUT`.
 - **Docker i VPS:** `Dockerfile` (statyczna binarka musl na `scratch`, ~3 MB, użytkownik 10001, `HEALTHCHECK` przez `vizrs --healthcheck`, wolumen `/data`, TCP 6100 wyłączony), `deploy/docker-compose.yml` z Caddy (automatyczny HTTPS), `deploy/nginx-vizrs.conf`, `deploy/env.example`; RUNBOOK „VPS i Docker”; job CI `docker` (budowa, healthy, token, restart z zachowaniem show). `VIZRS_GIT_HASH` dla `--version` przy budowie bez `.git`.
 
-### Ticker (plan: `docs/plany/PLAN-ticker.md`)
+### Grafika: tickery, ruch, paczki, tekst (plan tickerów: `docs/plany/PLAN-ticker.md`)
 - **Ruch jak w BTB CG – efekty wizualne bez kluczy** (`node.motion`, `web/motion.js`): 22 presety wejścia/wyjścia (m.in. przesłony, maska ukośna, żaluzja, odwrócenia 3D, glitch, rozdzielenie RGB, rosnący pasek, spadanie), 31 efektów tekstu (całość, słowa, znaki, linie, maszyna do pisania z kursorem, szyfrowanie, licznik liczby), 11 pętli uwagi (pulsowanie, bicie serca, połysk, poświata, podkreślenie…), krzywe GSAP (`back.out(1.7)`, `bounce.out`, `elastic.out`, `cubic-bezier`, aliasy `spring`/`overshoot`/`broadcast`). Ten sam renderer w Artist, Trio i OBS; składanie z kluczami jak w BTB.
 - Przykład `examples/BTB_PILNE.show.json` przebudowany na nowej scenie z paczki BTB_CG (ruch `node.motion`: zoom elementu z lewego górnego rogu, odsłonięcie tekstu, świecenie paska) z zachowanym układem 1–3 wierszy (`squeeze-lines`, `fill`).
 - **Belki BTB dopasowane do VizRS:** paczka `examples/BTB_CG` przebudowana nowym konwerterem (31 scen z `node.motion` zamiast kluczy). Stałe efekty tła kształtów BTB (`motion.bg`: połysk, pulsowanie, świecenie, linie skanowania), punkt odniesienia ruchu (`motion.origin`, ruch elementu z lewego górnego rogu), ruch elementu ze skalą layoutu w wewnętrznej grupie, efekty tekstu z wartościami `cgmotion.js` (maski `inset`, rozmycie 20/14 px, `hide` od lewej, szyfrowanie wg postępu całego tekstu), domyślne czasy efektu tekstu jak w BTB. `btb-visual.js --frames`: klatki 25/50/75% wejścia – 31/31 zgodnych z oryginałem.

@@ -1,6 +1,6 @@
 # LUKI – znane braki (uszeregowane: niezawodność → wierność → funkcje)
 
-Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki dopisuj od razu, z kolejnym wolnym numerem (numery nie są używane ponownie – #9 dotyczył eksportu do BTB, który usunięto).
+Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki dopisuj od razu, z kolejnym wolnym numerem (numery nie są używane ponownie – #9 dotyczył eksportu do BTB, który usunięto; wyjątek z przeszłości: #17 w CHANGELOG przy 2.0.1 to zamknięta luka o przepełnieniu tekstu, nie obecna pozycja).
 
 ## G1 – niezawodność i bezpieczeństwo
 | # | Luka | Uwagi |
@@ -9,7 +9,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 2 | Wątek na połączenie (limit 512, nie pula) | wystarcza dla studia; pula przy większej skali |
 | 3 | `PUT /api/show` (import) nadal zastępuje cały show | chronione `rev`/`force`, kopiami i walidacją; brak scalania |
 | 4 | Blokady edycji są miękkie (ostrzeżenie + potwierdzenie) | zamierzone – operator może przejąć |
-| 5 | CI macOS/Windows nieuruchamiane lokalnie | pierwszy przebieg pokaże ewentualne różnice |
+| 5 | Testy macOS/Windows działają tylko w CI, nie lokalnie | CI przechodzi na trzech systemach; działanie okien: #18 |
 
 ## G2 – wierność
 | # | Luka | Uwagi |

@@ -121,6 +121,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 - `props` – wartości stałe; `anim` – ścieżki kluczy (`t` czas w s, `v` wartość, `e` krzywa **do następnego klucza**); ścieżka ma pierwszeństwo przed `props`.
 - `fields` – mapa właściwość → nazwa pola kontrolnego; wartość ze strony (`values`) ma pierwszeństwo przed animacją.
 - `showIf` – węzeł widoczny tylko, gdy pole wariantu ma jedną z wartości (`"info"` albo `"info,pilne"`).
+- `motion` – ruch opisany presetami, bez kluczy (§4.5).
 - Kolejność w drzewie: niżej na liście = wyżej na ekranie.
 
 ### 4.2 Typy węzłów
@@ -155,6 +156,8 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 
 **Tekst** (`text`, `clock`; częściowo `ticker`): `font`, `size`, `weight` (300–900), `italic`, `upper`, `spacing`, `lineHeight`, `align`, `valign`, `textFit`, `maxLines`, `squeezeMin`, `lineBreak`, `fillSqueeze`, `padX`, `hlColor`/`hlText` (kolory `[[wyróżnienia]]`), `cycle` (rotacja wierszy co N s z przenikaniem).
 
+**Kod QR:** `text` (adres), `color`, `qrBg` (tło kodu), `radius`, `shadow`.
+
 **Obraz:** `src` (plik z assets albo adres `http(s)://`), `fitMode` `contain`/`cover`/`fill`, `loop` (wideo `.mp4`/`.webm`/`.mov`).
 
 **Zegar:** `mode` – `time` (godzina), `up` (stoper od `seconds`), `down` (odliczanie od `seconds`), `target` (do daty `target`); `format`:
@@ -175,7 +178,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 - **Presety animacji** – biblioteka zestawów kluczy (czasy względne) wspólna dla stanowiska (`/api/animpresets`): zapis z węzła, wstawienie od bieżącego czasu, import/eksport pliku.
 - **Wyjście (OUT)** jest projektowane w scenie (klucze za ostatnim stop pointem). Dla gotowych zestawów `tools/out_choreo.py` generuje wyjścia całego show: teksty gasną z odjazdem, tła zmazują się maską zgodnie z wejściem.
 
-### 4.4a Ruch jak w BTB CG (presety bez kluczy)
+### 4.5 Ruch bez kluczy (presety jak w BTB CG)
 
 Obok kluczy węzeł może mieć **ruch opisany presetami** – tak jak zakładka „Ruch” w BTB CG Editor (`node.motion`, moduł `web/motion.js`, ta sama semantyka co `cgmotion.js` i btb-cgeditor `anim.rs`). Renderer liczy go z czasu sceny, więc działa jednakowo w Artist (przewijanie osi), w podglądzie Trio i na wyjściu OBS.
 
@@ -189,31 +192,31 @@ Obok kluczy węzeł może mieć **ruch opisany presetami** – tak jak zakładka
 | `origin` | `[x, y]` (0–1) | punkt odniesienia skali/obrotu ruchu, gdy preset go nie ustala (Artist: „punkt ruchu”); import BTB: `[0, 0]` dla ruchu całego elementu |
 | `bg` | `shimmer`, `pulse`, `glow`, `scanline` | stały efekt tła kształtu jak `effect` warstwy BTB (Artist: „efekt tła”) – gra od wejścia na wizję, także w trakcie IN/OUT |
 
-- **Presety IN/OUT (22):** wjazd, przenikanie, zoom, zoom z bliska, wyskok, przesłony pozioma i pionowa, przycięcie, rozmycie, odwrócenia X/Y (3D), obrót, skos, spadanie, glitch, wjazd z przeskokiem, rozsunięcie, maska ukośna, żaluzja, rosnący pasek, rozdzielenie RGB.
-- **Efekty tekstu (31):** wartości jak `cgmotion.js` na antenie BTB (maski `inset`, rozmycie 20 px całości i 14 px jednostek, przesunięcia 50/40 px): całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
+- **Presety IN/OUT (21):** wjazd, przenikanie, zoom, zoom z bliska, wyskok, przesłony pozioma i pionowa, przycięcie, rozmycie, odwrócenia X/Y (3D), obrót, skos, spadanie, glitch, wjazd z przeskokiem, rozsunięcie, maska ukośna, żaluzja, rosnący pasek, rozdzielenie RGB.
+- **Efekty tekstu (30 na wejściu, 26 na wyjściu):** wartości jak `cgmotion.js` na antenie BTB (maski `inset`, rozmycie 20 px całości i 14 px jednostek, przesunięcia 50/40 px): całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Wyjście ma te same grupy bez odsłonięcia, maszyny do pisania, szyfrowania i licznika; zamiast `clip-up` są `clip-down` i `hide`. Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
 - **Pętle uwagi (11):** pulsowanie, oddychanie, bicie serca, unoszenie, podskakiwanie, chwianie, drżenie, błyski, poświata, połysk, przesuwane podkreślenie. Wchodzą płynnie po wejściu i schodzą przed wyjściem; siła: pulsowanie/bicie serca – % skali, chwianie – stopnie, oddychanie – % krycia, unoszenie/podskakiwanie/drżenie – px.
 - **Krzywe (nazwy GSAP):** `power2.out` (domyślna), `power2.in`, `power2.inOut`, `power3.out`, `power4.out`, `expo.out`, `sine.inOut`, `linear`, `back.out`, `back.in`, `bounce.out`, `elastic.out` oraz aliasy BTB `spring`, `overshoot`, `broadcast`; przyjmowane są też `back.out(2)` i `cubic-bezier(…)`.
 - **Składanie z kluczami** (jak w BTB): przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą, maski dają część wspólną.
 - Wyjście gra tylko, gdy scena ma stop point i czas po nim. Artist podpowiada **⟲ Dopasuj stop i długość** (stop po najdłuższym wejściu, długość = stop + najdłuższe wyjście).
 - Walidacja (`validate.rs`): typy z list, kierunki, czasy 0–60 s, krzywa tylko z liter, cyfr i `.(),-`, nieznane pola odrzucane.
 
-### 4.5 Warianty
+### 4.6 Warianty
 
 Pole wyboru na poziomie sceny (`fieldMeta.<pole> = {type: "select", options: [...], default}`), np. `styl = info, pilne`. Węzły mają „widoczny gdy” (`showIf`). W Trio wariant to rząd przycisków.
 
-### 4.6 Powiązania (dock)
+### 4.7 Powiązania (dock)
 
 `scene.dock = [{ target, dx, dy, dur }]` – scena przesuwa się o (`dx`, `dy`) w czasie `dur` s, gdy na antenie jest wskazana grafika:
 `layer:<warstwa>`, `page:<numer>` albo `scene:<nazwa>`; kilka celów rozdzielonych `|` (np. `page:15001|page:15002`) – przesunięcie raz, gdy na antenie jest którykolwiek. Przykład: belka unosi się o 90 px, gdy na warstwie `back` jest ticker.
 Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warstwa>/off`). Stan jest odtwarzany po odświeżeniu wyjścia.
 
-### 4.7 Fonty
+### 4.8 Fonty
 
 - Wbudowane offline: **Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat** (`/fonts/fonts.css`).
 - Fonty systemowe (Arial, Verdana…) – bez ładowania.
 - Inne nazwy z Google Fonts ładują się z internetu (na antenie lepiej tego unikać).
 - Własny font: wgraj `.ttf/.otf/.woff/.woff2` do assets i wpisz w polu „font” nazwę pliku, np. `MojFont.ttf`. Font wgrany, gdy Trio lub wyjście są już otwarte, wczyta się sam w ciągu kilkunastu sekund (bez odświeżania strony).
-- **Font jedzie z serwerem, nie z komputerem OBS:** wyjście `/output` pobiera wszystkie fonty z assets z serwera VizRS zaraz po otwarciu (i sprawdza nowe co 30 s), więc komputer renderujący nie musi mieć fontu zainstalowanego, a pierwszy TAKE nie czeka na pobranie. Fonty przenosi między stanowiskami paczka belek `.cgpack` (§8.6).
+- **Font jedzie z serwerem, nie z komputerem OBS:** wyjście `/output` pobiera wszystkie fonty z assets z serwera VizRS zaraz po otwarciu (i sprawdza nowe co 30 s), więc komputer renderujący nie musi mieć fontu zainstalowanego, a pierwszy TAKE nie czeka na pobranie. Fonty przenosi między stanowiskami paczka belek `.cgpack` (§8.7).
 
 ## 5. Pola kontrolne i reguły pól
 
@@ -323,33 +326,33 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 | Obszar | Zawartość |
 |---|---|
-| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.6), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ Element (import elementu BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W oknie natywnym (`vizrs-shell`) bez logo i zakładek Artist / Trio / Wyjście – są w menu okna |
+| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.7), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ Element (import elementu BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W oknie natywnym (`vizrs-shell`) bez logo i zakładek Artist / Trio / Wyjście – są w menu okna |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, kosz; przeciąganie zmienia rodzica z zachowaniem położenia |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny |
 | Właściwości (prawo) | grupy: Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker; „widoczny gdy”; presety animacji |
-| Oś czasu (dół) | pasek: czas, ⏮, ▶ Take, ⏭ Continue, ⏏ Out, ▶/⏸, ＋ Stop, Dł. (długość sceny), ≣ Sekwencja, ▾ marker (M), ⧉ / ⎘ kopiuj / wklej klucze, suwak powiększenia, ↔ dopasuj. Pod nim stały **pasek klucza** (czas, wartość, krzywa i usunięcie zaznaczonego klucza), a w trybie sekwencji w tym miejscu **pasek sekwencji** (§8.3a) – oś czasu nie przeskakuje |
+| Oś czasu (dół) | pasek: czas, ⏮, ▶ Take, ⏭ Continue, ⏏ Out, ▶/⏸, ＋ Stop, Dł. (długość sceny), ≣ Sekwencja, ▾ marker (M), ⧉ / ⎘ kopiuj / wklej klucze, suwak powiększenia, ↔ dopasuj. Pod nim stały **pasek klucza** (czas, wartość, krzywa i usunięcie zaznaczonego klucza), a w trybie sekwencji w tym miejscu **pasek sekwencji** (§8.4) – oś czasu nie przeskakuje |
 | Pasek stanu (dół okna) | podpowiedź ze skrótami panelu pod kursorem; wskaźnik **połączono / brak połączenia** z serwerem |
 
 Panele są zadokowane jak w programie desktopowym: szerokość drzewa i właściwości oraz wysokość osi czasu zmienia się przeciągnięciem rozdzielacza (dwuklik = rozmiar domyślny); rozmiary są zapamiętane w przeglądarce / oknie. Pasek osi czasu mieści się w jednym wierszu od szerokości strony 1280 px (np. ekran Full HD przy skali 150%, 3K przy 200%). Interfejs nie zaznacza tekstu poza polami edycji; w oknie natywnym prawy przycisk nie otwiera menu przeglądarki (w polach tekstowych zostaje: kopiuj, wklej, pisownia).
 
 ### 8.2 Ustawienia sceny (kliknij puste tło kanwy)
 
-Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery (⏹ = stop point z markera), **powiązania (dock)**, **warianty** (＋ Wariant), **pola kontrolne** (etykieta w Trio + ⚙ reguły), **zasoby paczki** (grafiki i czcionki, §8.6) i **＋ Utwórz stronę w Trio**.
+Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery (⏹ = stop point z markera), **powiązania (dock)**, **warianty** (＋ Wariant), **pola kontrolne** (etykieta w Trio + ⚙ reguły), **zasoby paczki** (grafiki i czcionki, §8.7) i **＋ Utwórz stronę w Trio**.
 
-Właściwości węzła mają grupę **Ruch (jak w BTB CG)**: wejście, wyjście, tekst IN/OUT (tekst i zegar), pętla – z czasem, opóźnieniem, kierunkiem, krzywą, odstępem i kolejnością jednostek (§4.4a).
+Właściwości węzła mają grupę **Ruch – bez kluczy**: wejście, wyjście, tekst IN/OUT (tekst i zegar), pętla – z czasem, opóźnieniem, kierunkiem, krzywą, odstępem i kolejnością jednostek (§4.5).
 
 ### 8.3 Klucze animacji
 
 - **◆** przy właściwości = klucz w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy lub aktualizuje klucz automatycznie.
-- Dwuklik na ścieżce = nowy klucz. Klik w klucz → edytor: czas, wartość, krzywa do następnego klucza, 🗑.
+- Dwuklik na ścieżce = nowy klucz. Klik w klucz → pasek klucza: czas, wartość, krzywa do następnego klucza, usunięcie.
 - Zaznaczanie wielu kluczy: Shift+klik albo Shift+przeciągnięcie ramką; Ctrl+C / Ctrl+V kopiuje je na zaznaczony węzeł od bieżącego czasu.
 - Stop point: ＋ Stop w bieżącym czasie; ▼ na linijce przeciągasz, dwuklik usuwa.
 - Marker: **M** albo dwuklik na linijce; klik = skok, dwuklik = zmiana nazwy / usunięcie.
 - Zoom osi: suwak, Ctrl+kółko, ↔ dopasuj.
 
-### 8.3a Tryb sekwencji (prosty, jak „Ruch” w BTB CG Editor)
+### 8.4 Tryb sekwencji (prosty, jak „Ruch” w BTB CG Editor)
 
-Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu bez kluczy (§4.4a). Wybór jest pamiętany na stanowisku.
+Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu bez kluczy (§4.5). Wybór jest pamiętany na stanowisku.
 
 - **Wiersz na element** (z wcięciem wg drzewa): niebieski pasek – wejście, pomarańczowy – wyjście (za ostatnim stop pointem), cienkie paski pod nimi – efekt tekstu IN/OUT, kreskowane tło – pętla uwagi (od końca wejścia do wyjścia). Etykieta pokazuje „↳ węzeł” (wchodzi po nim) i ◆N (węzeł ma też klucze).
 - **Przeciągnij pasek** – zmienia opóźnienie; **przeciągnij krawędź** – czas trwania (Shift = co 0,05 s). Klik w pasek zaznacza element i ustawia głowicę na jego starcie; klik w puste miejsce przewija czas.
@@ -363,7 +366,7 @@ Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu 
   - **⟲ Dopasuj** – stop point po najdłuższym wejściu, długość = stop + najdłuższe wyjście.
 - W panelu **Ruch** węzła pole **po węźle** ustawia sekwencję ręcznie.
 
-### 8.4 Skróty Artist
+### 8.5 Skróty Artist
 
 | Skrót | Działanie |
 |---|---|
@@ -377,11 +380,11 @@ Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu 
 | Ctrl+C / Ctrl+V (na osi czasu) | kopiuj / wklej klucze |
 | strzałki (Shift = ×10) | przesuń zaznaczony węzeł o 1 px (10 px) |
 
-### 8.5 Zmiana szablonu, który jest na antenie
+### 8.6 Zmiana szablonu, który jest na antenie
 
 Zapis sceny nie zmienia grafiki na antenie: warstwa dostaje znacznik **⏳ nowa wersja** w Trio, a operator wybiera moment **Wdróż teraz** (`/api/deploy/<warstwa>` – podmiana bez ponownej animacji). Kolejny TAKE używa już nowej wersji.
 
-### 8.6 Paczka belek (.cgpack)
+### 8.7 Paczka belek (.cgpack)
 
 Paczka przenosi belki między stanowiskami i serwerami jednym plikiem – razem z grafikami i czcionkami.
 
@@ -389,7 +392,7 @@ Paczka przenosi belki między stanowiskami i serwerami jednym plikiem – razem 
 - Do paczki trafiają pliki z assets, których scena używa (obrazy i wideo w `src`, fonty w `font`, odnośniki `/assets/…` w tekstach, wartości stron) oraz **dołączone** ręcznie.
 - **Zasoby paczki** w ustawieniach sceny: lista „Używane” (wykryte) i „Dołączone” (`scene.packAssets`, × odłącza). **＋ Wgraj i dołącz** wgrywa nowy plik (grafika, wideo, czcionka TTF/OTF/WOFF/WOFF2) do assets i dołącza go do sceny; lista „dołącz z assets…” dołącza plik już wgrany. Dołączaj pliki, których scena nie wskazuje wprost – np. czcionkę dla znaczników tekstu albo grafiki, które operator wybiera w Trio. „brak!” = pliku nie ma w assets.
 - **⇧ Import** przyjmuje `.cgpack`: pliki trafiają do assets (ten sam plik o tej samej treści jest pomijany, inna treść pod tą samą nazwą → `nazwa_2.ext` i przepisane odnośniki), sceny są dodawane jako nowe (istniejące nie są nadpisywane), strony dostają swój numer albo nowy, gdy numer jest zajęty. Raport pokazuje, co się zmieniło. Paczka elementu BTB CG wczytana przez ⇧ Import trafia do importu BTB (§12).
-- Czcionki z paczki serwuje serwer (`/assets/<plik>`); wyjście `/output` ładuje je zawczasu (§4.7).
+- Czcionki z paczki serwuje serwer (`/assets/<plik>`); wyjście `/output` ładuje je zawczasu (§4.8).
 
 Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista scen i plików z sumą CRC-32), `scenes.json` (`{ scenes, pages }` jak w show), `assets/<nazwa>`. Odczyt sprawdza ścieżki, typy plików, sumy i limity (200 plików, 256 MB). To format VizRS – nie jest eksportem do BTB CG.
 
@@ -440,7 +443,7 @@ TAKE strony z warstwy, na której już coś jest, zastępuje poprzednią grafik�
 | Ctrl+Spacja (w polu) | Word Replace |
 | skrót strony | TAKE tej strony, a gdy jest na antenie – OUT |
 
-**Skrót strony:** kliknij pole „skrót” w nagłówku edytora i naciśnij kombinację (Ctrl/Alt/Shift + klawisz albo F7, F9–F12); Backspace usuwa skrót.
+**Skrót strony:** kliknij pole „skrót” w nagłówku edytora i naciśnij kombinację (Ctrl lub Alt + klawisz albo F7, F9–F12, także z Shift); Backspace lub Delete usuwa skrót.
 
 ### 9.5 Playlista, rundown, makra
 
@@ -448,13 +451,15 @@ TAKE strony z warstwy, na której już coś jest, zastępuje poprzednią grafik�
 - **Rundown:** kolejka stron programu. Przeciąganie zmienia kolejność, notatki przy pozycjach, stany: ● na antenie, ▶ następna, ✓ odegrana. **NEXT** (F8) bierze następną pozycję; ↺ zeruje stany; import/eksport CSV (`numer;notatka`). Bez automatu czasowego – zawsze ręczne NEXT.
 - **Makra:** jedna komenda w wierszu, opcjonalnie z opóźnieniem: `CLEAR`, `TAKE 1001`, `+2.5 TAKE 3001`, `+6 OUT main,back`. **⇥ z anteny** tworzy makro z bieżącego stanu anteny (preset segmentu). Nowe makro przerywa poprzednie.
 
-- **Show na audycję:** lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Import show zastępuje show aktywny – żeby wczytać plik jako osobną audycję, utwórz najpierw nowy show i dopiero potem importuj.
+### 9.6 Show na audycję
 
-### 9.6 ⚙ Stan systemu
+Lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Import show zastępuje show aktywny – żeby wczytać plik jako osobną audycję, utwórz najpierw nowy show i dopiero potem importuj.
+
+### 9.7 ⚙ Stan systemu
 
 Zdrowie serwera i wyjść, błędy scen (z przyciskiem Wyczyść), lista Word Replace, kopie zapasowe show (Przywróć), ostatnie komendy z logu audytowego.
 
-### 9.7 Wielu operatorów
+### 9.8 Wielu operatorów
 
 Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudzej strony wymaga potwierdzenia. Blokada wygasa po 45 s bez aktywności. Konflikt zapisu → wybór „nadpisz moją wersją / zachowaj zmiany”.
 
@@ -504,27 +509,28 @@ Wskazówki dla scen kanału wypalanego: ticker w trybie `roll` albo `wipe` koszt
 
 ## 11. Sterowanie zewnętrzne
 
-Pełna lista: [API.md](API.md). W skrócie:
+Pełna lista komend, adresów i zdarzeń: [API.md](API.md); przyciski Stream Deck: [COMPANION.md](COMPANION.md).
 
-- **HTTP** (także GET – Companion/Stream Deck): `/api/take/1001?name=Jan`, `/api/continue/main`, `/api/out/main`, `/api/update/5001?homeScore=3`, `/api/clear`, `/api/rundown/<id>/next`, `/api/macro/<nazwa>`, `/api/state`, `/api/variables`.
-- **TCP :6100** (linia = komenda): `TAKE 1001`, `TAKE 1001 name=Anna|title=Ekspertka`, `TAKE 1001,3001`, `CONTINUE main`, `OUT main`, `UPDATE 5001 homeScore=3`, `LIVE 5001 homeScore=4` (bez zapisu), `TICKER …`, `NEXT <rundown>`, `MACRO <nazwa>`, `CAROUSEL START <playlista>`, `CLEAR`, `STATE`, `PING`.
-- **OSC** (`--osc 8000`): `/vizrs/take 1001`, `/vizrs/out main`, `/vizrs/next <rundown>`… (przy tokenie `/vizrs/<token>/…`).
-- **Webhook** (`--webhook http://…`): `onAir`, `offAir`, `error`.
-- **SSE** `/events`: strumień zdarzeń (`snapshot`, `take`, `continue`, `out`, `update`, `rescene`, `dock`, `show`, `state`, `error`…).
-- Companion: [COMPANION.md](COMPANION.md).
+| Kanał | Do czego | Przykład |
+|---|---|---|
+| HTTP (także GET) | automatyzacja, Companion, Stream Deck | `/api/take/1001?name=Jan` |
+| TCP :6100 | komendy tekstowe, jedna w linii | `TAKE 1001 name=Anna\|title=Ekspertka` |
+| OSC (`--osc 8000`) | konsole i sterowniki | `/vizrs/take 1001` |
+| webhook (`--webhook http://…`) | powiadomienia na zewnątrz: `onAir`, `offAir`, `error` | |
+| SSE `/events` | strumień zdarzeń stanu anteny | |
 
 ## 12. Import z BTB CG
 
 VizRS **importuje** grafiki z BTB CG; eksportu w drugą stronę nie ma.
 
 - Artist → **⇧ Element**: element `.json` (eksport v3) albo `.cgpack` → scena + strona, z raportem konwersji (ostrzeżenia o tym, czego nie przeniesiono).
-- Przenoszone: układ, teksty z regułami, **ruch 1:1** (presety IN/OUT warstw i elementu z kierunkiem, czasem, opóźnieniem i krzywą, efekty tekstu, pętle uwagi, „po warstwie” przy wejściu → `node.motion`, §4.4a; stop point po wejściu, długość = stop + wyjście), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
+- Przenoszone: układ, teksty z regułami, **ruch 1:1** (presety IN/OUT warstw i elementu z kierunkiem, czasem, opóźnieniem i krzywą, efekty tekstu, pętle uwagi, „po warstwie” przy wejściu → `node.motion`, §4.5; stop point po wejściu, długość = stop + wyjście), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
 - Ściskanie: warstwa z `squash` → `textFit: squeeze` z granicą `minSquash` (0 i brak granicy → bez granicy, w VizRS 0,3 – jak migracja BTB `upgrade-minsquash`); BADGE (BTB ściska wg długości, min. 50%) → ściskanie do wnętrza tła z granicą 0,5; tekst z auto-szerokością (`autoW`) → `squeeze` w szerokości `maxW` z granicą 0,5.
 - Warstwy tekstu bez pola (w BTB edytowane w WYSIWYG) dostają pola `tekst1`, `tekst2`… (etykiety „Tekst 1”, „Tekst 2”), a przy wyrównaniu do lewej szerokość do krawędzi tła.
 - Ruch całego elementu jak w BTB: punkt odniesienia w lewym górnym rogu (`motion.origin`), a przy skali layoutu ≠ 1 ruch w wewnętrznej grupie „ruch elementu” (przesunięcia skalowane jak `.cg-scene` w BTB). Efekty tła kształtów (`shimmer`, `pulse`, `glow`, `scanline`) → `motion.bg`. Efekt tekstu bez czasu/opóźnienia dostaje domyślne BTB (IN 1 s po 0,2 s, OUT 0,5 s).
 - Nieprzenoszone (ostrzeżenia): maski warstw, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, „po warstwie” przy wyjściu (start równoczesny). Typ ruchu spoza listy → `fallback` z BTB albo przenikanie.
 - Zgodność sprawdza `tests/e2e/btb-visual.js` (stan po wejściu), z `--frames` także klatki 25/50/75% wejścia przy wspólnym zegarze obu stron.
-- Paczka wzorców: `examples/BTB.cgpack` ([opis](../examples/README.md)) – 31 scen, strony 8001–8506, warstwy `main`/`badge`/`ticker`/`clock`/`logo`.
+- Gotowe wzorce BTB: paczka `BTB.cgpack` ([opis](../examples/README.md)).
 
 ## 13. Uruchamianie, opcje, bezpieczeństwo
 
@@ -553,6 +559,7 @@ Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vi
 | `--idle-exit N` | | – | `serve`: zakończ po N s bez podłączonych okien i wyjść (serwer uruchamiany przez okno natywne) |
 | `--healthcheck` | | | sprawdź `/health` serwera pod `--bind`/`--port` (z `--token`) i zakończ |
 | `--version` | | | wersja i skrót commita |
+| `--help` | | | lista opcji |
 
 Flaga ma pierwszeństwo przed zmienną; pusta zmienna = nieustawiona. Opcje można też pisać jako `--port=8099`. Nieznana opcja albo zła wartość (np. port spoza 0–65535) kończy start z błędem (kod 2) – literówka nie przejdzie po cichu.
 
@@ -641,7 +648,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 |---|---|
 | `vizrs-data/show.json` | aktywny show (zapis przez plik tymczasowy + `fsync`) |
 | `vizrs-data/shows/` | biblioteka show: `<id>.json` na audycję (każdy zapis aktywnego show trafia też tutaj), `.active` = id aktywnego |
-| `vizrs-data/assets/` | obrazy, wideo, fonty (png jpg jpeg gif webp svg mp4 webm ttf otf woff woff2; łącznie do 2 GB) |
+| `vizrs-data/assets/` | obrazy, wideo, fonty (png jpg jpeg gif webp svg mp4 webm ttf otf woff woff2; plik do 64 MB, łącznie do 2 GB) |
 | `vizrs-data/backups/` | kopie: bieżące (20, nie częściej niż co 30 s), godzinowe (24), dzienne (14); czas warszawski (Europe/Warsaw); w godzinie cofnięcia zegara jesienią pliki z tej godziny nadpisują się |
 | `vizrs-data/log.jsonl` | log audytowy komend |
 
@@ -649,7 +656,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 - Przywrócenie: Trio → ⚙ Stan → Kopie zapasowe → Przywróć (stan sprzed przywrócenia trafia do najnowszej kopii) albo `POST /api/backups/restore/<nazwa>`.
 - Nieudany zapis: czerwony znacznik w Trio, API zwraca 500; antena działa dalej.
 
-Paczki przykładowe (`examples/`, opis w [examples/README.md](../examples/README.md)) – po jednym `.cgpack` na oprawę, ze wszystkimi scenami, stronami, grafikami i czcionkami: **INFO24.cgpack** (demo wbudowane, strony 1001–5001), **R7_NEWS.cgpack** (strony 7001–7505), **BTB.cgpack** (31 wzorców BTB CG i belka wielowierszowa, strony 8001–8506), **BTB_INFO24.cgpack** (INFO24 w stylistyce BTB, strony 9001–13001), **BTB_ALPHA.cgpack** (58 scen z gałęzi alpha BTB CG, strony 14001–14501), **BTB_TRIO.cgpack** (18 scen z gałęzi TRIO BTB CG z powiązaniami, strony 15001–15401); paczki BTB* zawierają font Bahnschrift – nie do dystrybucji. Wczytanie: Trio → nowy show (▾), potem Artist → ⇧ Import → plik `.cgpack` (§8.6). Paczka nie przenosi playlist. Dawne pliki `.show.json` i katalog `BTB_CG/` są w `examples/archiwum/` (źródło paczek i testów).
+Gotowe oprawy (`.cgpack`) i sposób ich wczytania: [examples/README.md](../examples/README.md).
 
 ## 15. Testy i narzędzia
 
@@ -689,10 +696,4 @@ CI: `.github/workflows/ci.yml` (Linux, macOS, Windows).
 
 ## 16. Znane ograniczenia
 
-Aktualna lista: [LUKI.md](LUKI.md). Najważniejsze:
-
-- OUT zdejmuje warstwę w serwerze od razu; animację wyjścia gra wyjście – TAKE w trakcie OUT może ją ściąć.
-- Dock tylko przesuwa (dx, dy), bez reguł względem rozmiaru celu.
-- Rundown bez automatu czasowego; brak źródła tickera z RSS/URL (tylko komendy `TICKER`).
-- Brak TLS; blokady edycji są miękkie.
-- Kształty wektorowe, tryby mieszania i ekspresje – poza zakresem.
+Aktualna lista, uszeregowana od niezawodności do funkcji: [LUKI.md](LUKI.md).

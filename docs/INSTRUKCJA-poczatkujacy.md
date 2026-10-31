@@ -17,14 +17,13 @@
 
 | System | Polecenie |
 |---|---|
-| Debian / Ubuntu | `sudo apt install ./vizrs_2.0.8_amd64.deb` (plik z wydania na GitHub), potem w menu aplikacji **VizRS Trio** / **VizRS Artist** / **VizRS Trio – serwer zdalny** |
+| Debian / Ubuntu | `sudo apt install ./vizrs_<wersja>_amd64.deb` (plik z wydania na GitHub), potem w menu aplikacji **VizRS Trio** / **VizRS Artist** / **VizRS Trio – serwer zdalny** |
 | inny Linux | `VizRS-Trio-…-x86_64.AppImage` / `VizRS-Artist-…AppImage` z wydania na GitHub – nadaj prawo uruchamiania i kliknij |
-| Linux | `./start-linux.sh trio` (okno Trio) albo `./start-linux.sh artist` (okno Artist); `./start-linux.sh` = sam serwer |
+| Linux, kopia repozytorium | `./start-linux.sh trio` (okno Trio) albo `./start-linux.sh artist` (okno Artist); `./start-linux.sh` = sam serwer |
 | Windows | raz `build-windows.bat` (wymaga Rust z https://rustup.rs), potem `start-windows.bat` (okno Trio) albo `start-windows.bat artist` |
 | macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data trio` |
 
 **Okna aplikacji:** Artist i Trio otwierają się we własnych oknach (Edge/Chrome/Chromium bez pasków przeglądarki). Drugie okno dołącza do już działającego serwera. Zamknięcie okna nie zdejmuje grafiki z anteny – serwer pracuje, dopóki OBS albo inne okno jest podłączone.
-Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze między nimi (dwuklik przywraca rozmiar); podpowiedzi skrótów dla panelu pod kursorem są w pasku stanu na dole okna.
 **Okno natywne (zalecane):** `vizrs-shell` – Artist w prawdziwym oknie systemowym z menu i oknem „Zapisz jako” (Linux: `bin/linux-x86_64/vizrs-shell`; `vizrs-shell trio` – Trio). Zamknięcie okna nie zdejmuje grafiki z anteny.
 Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli) – same wybiorą okno natywne, jeśli jest. Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
 
@@ -56,6 +55,8 @@ Za pierwszym razem startuje przykładowy zestaw **INFO24** (belki, ticker, zegar
 
 ## 4. Pierwsza belka w Artist (10 minut)
 
+Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze między nimi (dwuklik przywraca rozmiar); podpowiedzi skrótów dla panelu pod kursorem są w pasku stanu na dole okna.
+
 1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
 2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
 3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px).
@@ -84,8 +85,8 @@ Element przy prawej krawędzi ekranu ustaw z **punktem X = right** – będzie r
 
 Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości → Presety animacji → ＋ zapisz) i stosować na innych węzłach.
 
-### Szybciej: ruch bez kluczy (jak w BTB CG)
-1. Zaznacz węzeł i przewiń Właściwości do grupy **Ruch (jak w BTB CG)**.
+### Szybciej: ruch bez kluczy
+1. Zaznacz węzeł i przewiń Właściwości do grupy **Ruch – bez kluczy**.
 2. **wejście** – wybierz efekt (np. *przesłona pozioma*, *wjazd*, *wyskok*), kierunek, czas i opóźnienie. **wyjście** – tak samo.
 3. Przy tekście: **tekst IN** (np. *znaki: w górę*, *maszyna do pisania*, *licznik liczby*) i **tekst OUT**.
 4. **pętla** – np. *pulsowanie* plakietki „NA ŻYWO” albo *połysk* paska; gra, gdy grafika stoi na wizji.

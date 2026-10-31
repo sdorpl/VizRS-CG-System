@@ -11,7 +11,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 1. Przeczytaj [docs/STATUS.md](docs/STATUS.md) (bieżący etap, następne zadanie), `git log -5` i `git status`.
 2. Przeczytaj [docs/LUKI.md](docs/LUKI.md): znane braki, uszeregowane G1 (niezawodność) → G2 (wierność) → G3 (funkcje).
 3. Przy zmianie zachowania aplikacji przeczytaj właściwą sekcję [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) — w tym samym commicie ją zaktualizujesz.
-4. Plany i analizy są w [docs/plany/](docs/plany/README.md). Przy tickerach: [PLAN-ticker.md](docs/plany/PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](docs/plany/PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](docs/plany/PLAN-natywne-i-serwer.md); playout kanału (osobne repo VizRS Playout): [PLAN-kanal.md](docs/plany/PLAN-kanal.md).
+4. Plany i analizy są w [docs/plany/](docs/plany/README.md). Przy tickerach: [PLAN-ticker.md](docs/plany/PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](docs/plany/PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](docs/plany/PLAN-natywne-i-serwer.md); playout kanału (VirtRS CG Playout, osobne repo): [PLAN-kanal.md](docs/plany/PLAN-kanal.md), lekkie wyjście: [PLAN-lekkie-output.md](docs/plany/PLAN-lekkie-output.md).
 
 ## Niepodważalne zasady
 
@@ -53,7 +53,7 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test
 cargo build --release
-node tests/vectors/run.js && node tests/vectors/btb.js && node tests/motion.js
+node tests/vectors/run.js && node tests/vectors/btb.js
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
 node tests/e2e/artist.js target/release/vizrs     # Artist
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
@@ -90,16 +90,18 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/artist.html` | edytor scen |
 | `source/web/trio.html` | playout |
 | `source/web/output.html` | wyjście OBS (`?layers`, `?bus=preview`, `?mode=fill|key`, `?bg`, `?checker`) |
+| `source/web/index.html`, `ui.css` | strona startowa, wspólne style UI |
 | `source/web/text-model.js`, `richtext.js` | reguły pól, typografia PL, Word Replace; znaczniki `{b}{i}{u}{c=}{sz=}` i `[[ ]]` |
-| `source/web/ticker-model.js`, `ticker-items.js` | model wiadomości tickera; edytor listy wiadomości (Trio i Artist) |
+| `source/web/ticker-model.js`, `ticker-items.js`, `color-picker.js` | model wiadomości tickera; edytor listy wiadomości i wybór koloru (Trio i Artist) |
+| `source/web/qr.js` | generator kodów QR offline |
 | `source/web/btb-io.js` | import elementów BTB CG (`.json` v3, `.cgpack`) |
 | `source/web/motion.js` | ruch jak w BTB CG (`node.motion`): krzywe GSAP, presety IN/OUT, efekty tekstu, pętle uwagi, sekwencja `after` – czyste funkcje, rysuje `renderer.js` |
 | `source/web/cgpack.js` | paczka belek VizRS `.cgpack` (sceny + strony + grafiki + czcionki): zapis ZIP, odczyt, instalacja plików |
 | `source/web/demo_show.json` | show startowy (INFO24) |
-| `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
-| `source/tools/` | `sync-btb.sh`, `build-btb-pack.mjs`, `out_choreo.py`, `render_video.py`, `gallery.js` (galeria zrzutów stron) |
+| `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe), `fixtures/btb/` (elementy BTB do testów importu) |
+| `source/tools/` | narzędzia pakietów, galerii, filmów i zgodności (`sync-btb.sh`, `build-packs.mjs`, `gallery.js`, `engines.js`, `video.js`…); pełna lista: DOKUMENTACJA §15 |
 | `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json`, `BTB_CG/`, `BTB_ALPHA/`, `BTB_TRIO/`, `assets/` (używane przez testy) |
-| `deploy/` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
+| `deploy/`, `render.yaml` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
 | `docs/` | dokumentacja (spis: `docs/README.md`); `docs/plany/` – plany i raport (dokumenty projektowe, nie opis bieżącego działania) |
 | `Dockerfile` | obraz `scratch` ze statyczną binarką musl |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |
