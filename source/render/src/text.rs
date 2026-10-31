@@ -3,6 +3,7 @@
 //! i `fitLines` z `renderer.js` (te same progi, ta sama kolejność prób).
 
 use crate::font::FontDb;
+use crate::richtext;
 
 /// Styl tekstu węzła.
 #[derive(Clone, Debug, PartialEq)]
@@ -14,6 +15,15 @@ pub struct Style {
     pub spacing: f32,
     /// `font-variant-numeric: tabular-nums` (teksty i zegary).
     pub tnum: bool,
+    /// Tło i tekst `[[wyróżnienia]]` (`hlColor`, `hlText`).
+    pub hl: Option<(Color, Color)>,
+}
+
+pub type Color = [f32; 4];
+
+/// Kolor CSS jako RGBA 0–1.
+pub fn css_color(v: &str) -> Option<Color> {
+    crate::model::parse_color(v).map(|c| [(c[0] / 255.0) as f32, (c[1] / 255.0) as f32, (c[2] / 255.0) as f32, c[3] as f32])
 }
 
 /// Glif ułożony w wierszu.
@@ -24,14 +34,28 @@ pub struct Glyph {
     /// Położenie początku glifu (px od początku wiersza) i przesunięcie w pionie.
     pub x: f32,
     pub dy: f32,
+    /// Rozmiar fontu glifu (`{sz=}` zmienia go w przebiegu).
+    pub size: f32,
+    /// Kolor własny (`{c=}`, tekst wyróżnienia); brak = kolor tekstu.
+    pub color: Option<Color>,
     pub fake_bold: bool,
     pub fake_italic: bool,
+}
+
+/// Ozdoby wiersza: tło wyróżnienia (pod tekstem) i podkreślenie (`{u}`).
+#[derive(Clone, Debug)]
+pub enum Decor {
+    /// Prostokąt x0..x1 od `top` do `bottom` względem linii bazowej, zaokrąglenie, kolor.
+    Mark { x0: f32, x1: f32, top: f32, bottom: f32, radius: f32, color: Color },
+    /// Linia x0..x1 w `y` (względem linii bazowej) o grubości `th`; kolor brak = kolor tekstu.
+    Underline { x0: f32, x1: f32, y: f32, th: f32, color: Option<Color> },
 }
 
 /// Wiersz po kształtowaniu.
 #[derive(Clone, Debug, Default)]
 pub struct Run {
     pub glyphs: Vec<Glyph>,
+    pub decor: Vec<Decor>,
     /// Szerokość z odstępami liter (jak układ przeglądarki, przed zaokrągleniem).
     pub width: f32,
     pub size: f32,
@@ -47,17 +71,19 @@ impl Run {
     }
 }
 
-/// Kształtuje jeden wiersz (bez `\n`).
-pub fn shape(db: &FontDb, style: &Style, text: &str) -> Run {
-    let chain = db.chain(&style.font, style.weight, style.italic);
-    let mut run = Run { size: style.size, ..Run::default() };
-    let Some(&primary) = chain.first() else { return run };
-    let pf = db.face(primary);
-    run.ascent = (pf.ascent / pf.upem * style.size).round();
-    run.descent = (pf.descent / pf.upem * style.size).round();
-    if text.is_empty() {
-        return run;
+/// `font-weight: bolder` względem grubości rodzica.
+fn bolder(w: u16) -> u16 {
+    match w {
+        0..=349 => 400,
+        350..=549 => 700,
+        _ => 900,
     }
+}
+
+/// Kształtuje `text` stylem `style` od położenia `x` i dokłada glify do `run`; zwraca nowe `x`.
+fn shape_into(db: &FontDb, style: &Style, text: &str, mut x: f32, run: &mut Run, color: Option<Color>) -> f32 {
+    let chain = db.chain(&style.font, style.weight, style.italic);
+    let Some(&primary) = chain.first() else { return x };
     // przebiegi o tej samej czcionce (znak bez glifu w pierwszym foncie bierze następny w łańcuchu)
     let mut segs: Vec<(usize, usize, usize)> = Vec::new();
     for (i, c) in text.char_indices() {
@@ -68,7 +94,6 @@ pub fn shape(db: &FontDb, style: &Style, text: &str) -> Run {
             _ => segs.push((f, i, i + c.len_utf8())),
         }
     }
-    let mut x = 0.0f32;
     let features: Vec<rustybuzz::Feature> =
         if style.tnum { vec![rustybuzz::Feature::new(rustybuzz::ttf_parser::Tag::from_bytes(b"tnum"), 1, ..)] } else { Vec::new() };
     for (f, a, b) in segs {
@@ -88,6 +113,8 @@ pub fn shape(db: &FontDb, style: &Style, text: &str) -> Run {
                 id: info.glyph_id as u16,
                 x: x + p.x_offset as f32 * k,
                 dy: -(p.y_offset as f32) * k,
+                size: style.size,
+                color,
                 fake_bold,
                 fake_italic,
             });
@@ -98,6 +125,66 @@ pub fn shape(db: &FontDb, style: &Style, text: &str) -> Run {
                 x += style.spacing;
             }
         }
+    }
+    x
+}
+
+/// Wysokość nad i pod linią bazową (px, zaokrąglone jak w Blink) dla stylu.
+fn metrics<'a>(db: &'a FontDb, style: &Style) -> Option<(f32, f32, &'a crate::font::Face)> {
+    let chain = db.chain(&style.font, style.weight, style.italic);
+    let pf = db.face(*chain.first()?);
+    Some(((pf.ascent / pf.upem * style.size).round(), (pf.descent / pf.upem * style.size).round(), pf))
+}
+
+/// Kształtuje jeden wiersz (bez `\n`); znaczniki tekstu sformatowanego jak `setRich` w `renderer.js`.
+pub fn shape(db: &FontDb, style: &Style, text: &str) -> Run {
+    let mut run = Run { size: style.size, ..Run::default() };
+    let Some((ascent, descent, pf)) = metrics(db, style) else { return run };
+    run.ascent = ascent;
+    run.descent = descent;
+    if text.is_empty() {
+        return run;
+    }
+    if !crate::richtext::has_markup(text) {
+        run.width = shape_into(db, style, text, 0.0, &mut run, None).max(0.0);
+        return run;
+    }
+    let (spans, _) = crate::richtext::parse(text, None);
+    let em = style.size;
+    let (ul_th, ul_pos) = (pf.underline.0 / pf.upem, pf.underline.1 / pf.upem);
+    let (hl_bg, hl_fg) = style.hl.unwrap_or(([0.89, 0.02, 0.07, 1.0], [1.0; 4]));
+    let mut x = 0.0f32;
+    let mut mark_start: Option<f32> = None;
+    let close_mark = |run: &mut Run, start: f32, x: &mut f32| {
+        // <mark>: padding 0 .16em, margin 0 .04em, zaokrąglenie .06em; tło pod polem treści fontu
+        *x += 0.16 * em;
+        run.decor.push(Decor::Mark { x0: start + 0.04 * em, x1: *x, top: -ascent, bottom: descent, radius: 0.06 * em, color: hl_bg });
+        *x += 0.04 * em;
+    };
+    for sp in &spans {
+        if sp.hl && mark_start.is_none() {
+            mark_start = Some(x);
+            x += 0.2 * em;
+        } else if !sp.hl {
+            if let Some(start) = mark_start.take() {
+                close_mark(&mut run, start, &mut x);
+            }
+        }
+        let st = Style {
+            weight: if sp.b { bolder(style.weight) } else { style.weight },
+            italic: style.italic || sp.i,
+            size: if sp.sz > 0.0 { style.size * sp.sz / 100.0 } else { style.size },
+            ..style.clone()
+        };
+        let color = css_color(&sp.c).filter(|_| !sp.c.is_empty()).or(sp.hl.then_some(hl_fg));
+        let x0 = x;
+        x = shape_into(db, &st, &sp.t, x, &mut run, color);
+        if sp.u {
+            run.decor.push(Decor::Underline { x0, x1: x, y: -ul_pos * st.size, th: (ul_th * st.size).max(1.0), color });
+        }
+    }
+    if let Some(start) = mark_start.take() {
+        close_mark(&mut run, start, &mut x);
     }
     run.width = x.max(0.0);
     run
@@ -168,13 +255,35 @@ fn break_after(prev: char, next: Option<char>) -> bool {
 fn wrap(db: &FontDb, style: &Style, text: &str, width: f32) -> Vec<String> {
     let mut out = Vec::new();
     for para in text.split('\n') {
-        // kawałki między miejscami podziału
-        let chars: Vec<char> = para.chars().collect();
+        // kawałki między miejscami podziału; znaczniki to nie znaki, `[[wyróżnienie]]` się nie dzieli (`nowrap`)
+        let mut items: Vec<(String, bool)> = Vec::new(); // (tekst, znacznik)
+        let mut i = 0;
+        while i < para.len() {
+            if let Some(len) = richtext::token_len(&para[i..]) {
+                items.push((para[i..i + len].to_string(), true));
+                i += len;
+            } else {
+                let c = para[i..].chars().next().expect("in bounds");
+                items.push((c.to_string(), false));
+                i += c.len_utf8();
+            }
+        }
         let mut pieces: Vec<String> = Vec::new();
         let mut cur = String::new();
-        for (i, &c) in chars.iter().enumerate() {
-            cur.push(c);
-            if break_after(c, chars.get(i + 1).copied()) {
+        let mut hl = 0u32;
+        for (k, (t, tag)) in items.iter().enumerate() {
+            cur.push_str(t);
+            if *tag {
+                if t == "[[" {
+                    hl += 1;
+                } else if t == "]]" {
+                    hl = hl.saturating_sub(1);
+                }
+                continue;
+            }
+            let c = t.chars().next().expect("one char");
+            let next = items[k + 1..].iter().find(|(_, tag)| !tag).and_then(|(t, _)| t.chars().next());
+            if hl == 0 && break_after(c, next) {
                 pieces.push(std::mem::take(&mut cur));
             }
         }
@@ -198,10 +307,13 @@ fn wrap(db: &FontDb, style: &Style, text: &str, width: f32) -> Vec<String> {
 
 /// Wiersze `pre` albo `pre-wrap` (maxWidth = `width`), każdy już ukształtowany.
 fn block_lines(db: &FontDb, style: &Style, text: &str, width: Option<f32>) -> Vec<Run> {
-    let lines: Vec<String> = match width {
+    let mut lines: Vec<String> = match width {
         Some(w) => wrap(db, style, text, w),
         None => text.split('\n').map(str::to_string).collect(),
     };
+    if richtext::has_markup(text) {
+        lines = richtext::carry_lines(&lines);
+    }
     lines.iter().map(|l| shape(db, style, if width.is_some() { l.trim_end_matches(' ') } else { l })).collect()
 }
 
@@ -479,6 +591,8 @@ pub fn fit_lines(db: &FontDb, base: &Style, text: &str, o: &Fit) -> Layout {
             }
         }
     }
+    // każdy wiersz samodzielnie poprawny (znaczniki przeniesione przez podział)
+    let lines = richtext::carry_lines(&lines);
     let mut out = Layout::default();
     let mut max_w = 0.0f32;
     let mut top = 0.0f32;

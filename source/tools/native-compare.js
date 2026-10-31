@@ -25,6 +25,8 @@ const RENDER = path.resolve(opt('render', path.join(SRC, 'render/target/release/
 const OUT = opt('out', '');
 const LIMIT = +opt('limit', '0.02');
 const ONLY = opt('pages', '') ? opt('pages', '').split(',') : null;
+// --tickers: tickery widoczne (Chromium 2,6 s po TAKE, natywnie te same 2,6 s od TAKE w rytmie 25 kl./s)
+const TICKERS = args.includes('--tickers');
 const ASSETS = path.join(ROOT, 'examples/archiwum/assets');
 const FONTS = path.join(SRC, 'web/fonts');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -50,7 +52,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     for (let i = 0; i < 80; i++) { try { await fetch(B + '/api/state'); break; } catch (e) { await sleep(100); } }
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     await page.goto(B + '/output');
-    await page.addStyleTag({ content: '.vz-clock, .vz-ticker { visibility: hidden !important; }' });
+    await page.addStyleTag({ content: TICKERS ? '.vz-clock { visibility: hidden !important; }' : '.vz-clock, .vz-ticker { visibility: hidden !important; }' });
     await sleep(800);
     for (const p of pages) {
       await fetch(B + '/api/clear', { method: 'POST' });
@@ -59,7 +61,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       await sleep(2600);
       const chrome = await page.screenshot({ omitBackground: true });
       const file = path.join(data, `n${p.number}.png`);
-      const run = spawnSync(RENDER, ['frame', '--show', SHOW, '--page', String(p.number), '--stop', '0', '--hide', 'clock,ticker',
+      const run = spawnSync(RENDER, ['frame', '--show', SHOW, '--page', String(p.number), ...(TICKERS ? ['--time', '2.6', '--hide', 'clock'] : ['--stop', '0', '--hide', 'clock,ticker']),
         '--fonts', FONTS, '--assets', ASSETS, '-o', file], { encoding: 'utf8' });
       if (run.status !== 0) throw new Error(`vizrs-render frame ${p.number}: ${run.stderr}`);
       // braki zgłoszone dopiero przy danych strony (np. `[[wyróżnienie]]` w polu) – na antenie strona poszłaby do Chromium

@@ -78,6 +78,9 @@ struct NState {
     tk_items: Vec<Item>,
     tk_page: HashMap<String, String>,
     crawl: Option<Crawl>,
+    slots: Option<Slots>,
+    /// Kod QR: tekst i moduły (liczone przy zmianie tekstu).
+    qr: Option<(Arc<str>, Option<QrCells>)>,
     /// Treść węzła w tej klatce (budowana w przebiegu 1).
     content: Vec<Paint>,
     extra: Vec<DNode>,
@@ -145,29 +148,7 @@ pub fn cubic_bezier(x1: f64, y1: f64, x2: f64, y2: f64, u: f64) -> f64 {
 
 /// Ma znaczniki tekstu sformatowanego (`hasMarkup` z `richtext.js`).
 pub fn has_markup(t: &str) -> bool {
-    if t.contains("[[") {
-        return true;
-    }
-    let l = t.to_ascii_lowercase();
-    let b = l.as_bytes();
-    let mut i = 0;
-    while let Some(off) = l[i..].find('{') {
-        let s = i + off + 1;
-        let rest = &l[s..];
-        let rest = rest.strip_prefix('/').unwrap_or(rest);
-        for tag in ["sz", "b", "i", "u", "c"] {
-            if let Some(after) = rest.strip_prefix(tag) {
-                if after.starts_with('}') || after.starts_with('=') && after.contains('}') {
-                    return true;
-                }
-            }
-        }
-        i = s;
-        if i >= b.len() {
-            break;
-        }
-    }
-    false
+    crate::richtext::has_markup(t)
 }
 
 fn weight_of(v: &Value) -> u16 {
@@ -396,6 +377,7 @@ impl Player {
             size,
             spacing: self.num(i, "spacing"),
             tnum,
+            hl: None,
         }
     }
 
@@ -437,7 +419,7 @@ impl Player {
                 "image" => self.image_content(i),
                 "text" | "clock" => self.text_content(i, &node, clk, res, epoch),
                 "ticker" => self.ticker_content(i, clk, res, epoch, dt),
-                "qr" => self.issue(i, "kod QR"),
+                "qr" => self.qr_content(i),
                 "group" | "" => {}
                 other => {
                     let msg = format!("nieznany typ węzła {other}");
@@ -636,6 +618,28 @@ impl Player {
         self.states[i].content = paints;
     }
 
+    /// Kod QR (`qrSvg`): moduły z `qr.rs`, kolory `color` i `qrBg`, zaokrąglenie i cień pola.
+    fn qr_content(&mut self, i: usize) {
+        let text = self.txt(i, "text");
+        let (dark, light) = (color(&self.txt(i, "color")).unwrap_or([0.0, 0.0, 0.0, 1.0]), color(&self.txt(i, "qrBg")).unwrap_or([1.0; 4]));
+        let r = self.num(i, "radius").max(0.0);
+        let sh = self.num(i, "shadow");
+        if self.states[i].key != text || self.states[i].qr.is_none() {
+            self.states[i].key = text.clone();
+            self.states[i].qr = Some((Arc::from(text.as_str()), crate::qr::matrix(&text).map(Arc::new)));
+        }
+        let Some((t, cells)) = self.states[i].qr.clone() else { return };
+        if cells.is_none() {
+            self.issue(i, "kod QR: tekst za długi (Chromium pokazuje „za długi”)");
+        }
+        let mut paints = Vec::new();
+        if sh > 0.0 {
+            paints.push(Paint::BoxShadow { radius: Radius::Px(r), sigma: sh / 2.0, dy: sh / 3.0, color: [0.0, 0.0, 0.0, 0.5] });
+        }
+        paints.push(Paint::Qr { text: t, cells, dark, light });
+        self.states[i].content = paints;
+    }
+
     fn image_content(&mut self, i: usize) {
         let src = self.txt(i, "src");
         let r = self.num(i, "radius").max(0.0);
@@ -695,9 +699,6 @@ impl Player {
         if truthy(&self.prop(i, "upper")) {
             text = text.to_uppercase();
         }
-        if has_markup(&text) {
-            self.issue(i, "tekst sformatowany ([[ ]], {b} …)");
-        }
         let font = self.txt(i, "font");
         // font z assets jeszcze się wczytuje: tekstu nie ma (`font-display: block`); font spoza wbudowanych –
         // zastępczy z łańcucha (jak Chromium bez Google Fonts), zgłoszony w `issues`
@@ -716,7 +717,11 @@ impl Player {
         let sq_min = self.num(i, "squeezeMin");
         let line_break = self.txt(i, "lineBreak");
         let fill_sq = self.num(i, "fillSqueeze");
-        let style = self.style(i, size, true);
+        let mut style = self.style(i, size, true);
+        style.hl = Some((
+            crate::text::css_color(&self.txt(i, "hlColor")).unwrap_or([0.0; 4]),
+            crate::text::css_color(&self.txt(i, "hlText")).unwrap_or([1.0; 4]),
+        ));
         let key = format!("{text}|{style:?}|{fit_mode}|{max_lines}|{sq_min}|{line_break}|{fill_sq}|{w}|{pad_x}|{lh}|{align}|{epoch}");
         if self.states[i].key != key || self.states[i].layout.is_none() {
             let fo = Fit {
@@ -731,11 +736,10 @@ impl Player {
                 fill_squeeze: fill_sq,
             };
             let db = res.fonts.read().unwrap_or_else(|e| e.into_inner());
-            let plain = strip_markup(&text);
             let layout = if fit_mode == "squeeze-lines" || fit_mode == "squeeze-each" {
-                text::fit_lines(&db, &style, &plain, &fo)
+                text::fit_lines(&db, &style, &text, &fo)
             } else {
-                text::fit_text(&db, &style, &plain, &fo)
+                text::fit_text(&db, &style, &text, &fo)
             };
             drop(db);
             let st = &mut self.states[i];
@@ -776,7 +780,7 @@ impl Player {
             self.states[i].tk_raw = Some((raw, label.clone()));
         }
         let mode = self.txt(i, "tickerMode");
-        if mode != "crawl" {
+        if !matches!(mode.as_str(), "crawl" | "roll" | "wipe" | "whip") {
             let msg = format!("ticker w trybie {mode}");
             self.issue(i, &msg);
             return;
@@ -819,6 +823,38 @@ impl Player {
                 weight_of(&Value::from(lw))
             }
         };
+        if mode != "crawl" {
+            // roll, wipe, whip (`tickerSlots`): dwie przegródki (bieżąca i następna wiadomość) i wycieraczka
+            self.states[i].crawl = None;
+            let cat_w = if !label.is_empty() || items.iter().any(|x| !x.cat.is_empty()) { self.num(i, "catW").max(0.0) } else { 0.0 };
+            let o = SlotOpts {
+                res,
+                mode: &mode,
+                w,
+                h,
+                cat_w,
+                up,
+                label: &label,
+                colors: &colors,
+                cat_bg: &cat_bg,
+                cat_fg: color(&cat_fg).unwrap_or([1.0; 4]),
+                style: &style,
+                lab_style: Style { size: lab_size, weight: lab_weight, ..style.clone() },
+                fg,
+                shadow,
+                fit: self.txt(i, "textFit"),
+                min: text::squeeze_floor(self.num(i, "squeezeMin")),
+                hold: f64::from(self.num(i, "hold")).max(1.0),
+                gleam: self.num(i, "gleam"),
+                now: clk.now,
+            };
+            let slots = self.states[i].slots.take();
+            let (extra, slots) = ticker_slots(&o, &items, slots);
+            self.states[i].slots = slots;
+            self.states[i].extra = extra;
+            return;
+        }
+        self.states[i].slots = None;
         let style_key = format!(
             "{up}|{sep}|{sep_style}|{sep_color}|{cat_bg}|{cat_fg}|{:?}|{}|{style:?}|{fg:?}|{shadow:?}|{h}|{epoch}",
             self.txt(i, "catColors"),
@@ -942,6 +978,269 @@ impl Player {
         }
         self.states[i].extra = extra;
     }
+}
+
+/// Moduły kodu QR (true = ciemny).
+type QrCells = Arc<Vec<Vec<bool>>>;
+
+/// Stan rotacji wiadomości (`it.tk` w trybie `slots`).
+struct Slots {
+    items: Vec<Item>,
+    cur: Option<Item>,
+    cur_idx: Option<usize>,
+    prev: Option<Item>,
+    next_idx: usize,
+    t0: f64,
+}
+
+struct SlotOpts<'a> {
+    res: &'a Resources,
+    mode: &'a str,
+    w: f32,
+    h: f32,
+    cat_w: f32,
+    up: bool,
+    label: &'a str,
+    colors: &'a HashMap<String, String>,
+    cat_bg: &'a str,
+    cat_fg: Color,
+    style: &'a Style,
+    lab_style: Style,
+    fg: Color,
+    shadow: Option<(f32, f32, Color)>,
+    fit: String,
+    min: f32,
+    hold: f64,
+    gleam: f32,
+    now: f64,
+}
+
+fn ease_io(u: f64) -> f64 {
+    if u < 0.5 {
+        4.0 * u * u * u
+    } else {
+        1.0 - (-2.0 * u + 2.0).powi(3) / 2.0
+    }
+}
+
+/// Przegródka: pole tekstu (`box`) i etykieta (`cat`) dla wiadomości `x`.
+fn slot_nodes(o: &SlotOpts, x: &Item) -> (DNode, DNode) {
+    let (w, h, cat_w) = (o.w, o.h, o.cat_w);
+    // etykieta: kategoria albo etykieta domyślna, tło w kolorze kategorii
+    let lab = if x.cat.is_empty() { o.label.to_string() } else { x.cat.clone() };
+    let mut cat = DNode::new(Transform::identity(), cat_w, h);
+    cat.overflow = Some(0.0);
+    if !lab.is_empty() {
+        if let Some(c) = color(&ticker::cat_color_of(x, o.colors, o.cat_bg, o.label)) {
+            cat.paints.push(Paint::Box { radius: Radius::Px(0.0), fill: Fill::Solid(c) });
+        }
+        let shown = if o.up { lab.to_uppercase() } else { lab };
+        if let Some((p, _)) = label_text(o.res, &o.lab_style, &shown, cat_w, h, o.cat_fg) {
+            cat.paints.push(p);
+        }
+    }
+    // treść: od catW, margines 18 px, dopasowanie jak `fill` w `tickerSlots`
+    let bw = (w - cat_w).max(0.0);
+    let mut bx = DNode::new(Transform::from_translate(cat_w, 0.0), bw, h);
+    bx.overflow = Some(0.0);
+    let body = if o.up { x.text.to_uppercase() } else { x.text.clone() };
+    let avail = (w - cat_w - 36.0).max(1.0);
+    let (mut block, sw, _) = line_block(o.res, o.style, &body, h);
+    let mut sx = 1.0f32;
+    if sw > avail && o.fit != "none" {
+        let s = avail / sw;
+        if o.fit == "shrink" {
+            let st = Style { size: o.style.size * s, ..o.style.clone() };
+            let (b2, sw2, _) = line_block(o.res, &st, &body, h);
+            block = b2;
+            let s2 = (avail / sw2.max(1.0)).min(1.0);
+            if s2 < 0.999 {
+                sx = s2;
+            }
+        } else if s < o.min && o.fit == "squeeze-shrink" {
+            let st = Style { size: o.style.size * s / o.min, ..o.style.clone() };
+            let (b2, sw2, _) = line_block(o.res, &st, &body, h);
+            block = b2;
+            sx = o.min.max((avail / sw2.max(1.0)).min(1.0));
+        } else {
+            sx = o.min.max(s);
+        }
+    }
+    if sx < 0.999 {
+        let mut lines = block.lines.clone();
+        for l in &mut lines {
+            l.sx = sx;
+            l.ox = 0.0;
+        }
+        block = Arc::new(TextBlock { key: block.key ^ u64::from(sx.to_bits()).rotate_left(17), lines });
+    }
+    bx.paints.push(Paint::Text { block, color: o.fg, shadow: o.shadow, x: 18.0, y: 0.0 });
+    (bx, cat)
+}
+
+/// `tickerSlots`: tryby `roll` (góra–dół), `wipe` (wycieraczka) i `whip` (etykieta przejeżdża przez pasek).
+fn ticker_slots(o: &SlotOpts, items: &[Item], state: Option<Slots>) -> (Vec<DNode>, Option<Slots>) {
+    let n = items.len();
+    let now = o.now;
+    let mut tk = state.unwrap_or_else(|| Slots {
+        items: items.to_vec(),
+        cur: items.first().cloned(),
+        cur_idx: (n > 0).then_some(0),
+        prev: None,
+        next_idx: usize::from(n > 1),
+        t0: now,
+    });
+    if tk.items != items {
+        if tk.cur.is_none() && n > 0 {
+            tk.cur = Some(items[0].clone());
+            tk.cur_idx = Some(0);
+            tk.next_idx = usize::from(n > 1);
+            tk.t0 = now;
+        } else if let Some(ci) = tk.cur_idx {
+            let next = ticker::continuation(&tk.items, ci, items);
+            tk.cur_idx = tk.cur.as_ref().and_then(|c| items.iter().position(|x| x.text == c.text && x.cat == c.cat));
+            tk.next_idx = next;
+        } else {
+            let at = tk.items.get(tk.next_idx).and_then(|c| items.iter().position(|x| x.text == c.text && x.cat == c.cat));
+            tk.next_idx = at.unwrap_or_else(|| ticker::continuation(&tk.items, tk.next_idx, items));
+        }
+        tk.items = items.to_vec();
+    }
+    let mut out = Vec::new();
+    let gleam_on = |cat: &mut DNode| {
+        if let Some(g) = gleam(o.gleam, now, o.cat_w, o.h) {
+            cat.children.push(g);
+        }
+    };
+    let Some(cur0) = tk.cur.clone().filter(|_| n > 0) else { return (out, Some(tk)) };
+    let _ = cur0;
+    let single = n == 1 && tk.cur_idx == Some(0);
+    let hold = o.hold;
+    if single || now - tk.t0 > hold * 50000.0 {
+        tk.t0 = now;
+    }
+    while (now - tk.t0) / 1000.0 >= hold {
+        tk.prev = tk.cur.clone();
+        let ci = tk.next_idx % n;
+        tk.cur_idx = Some(ci);
+        tk.cur = Some(items[ci].clone());
+        tk.next_idx = (ci + 1) % n;
+        tk.t0 += hold * 1000.0;
+    }
+    let cur = tk.cur.clone().expect("set above");
+    let next = items[tk.next_idx % n].clone();
+    let ph = (now - tk.t0) / 1000.0;
+    let (h, w, cat_w) = (o.h, o.w, o.cat_w);
+    let lab_key = |x: &Item| {
+        let l = if x.cat.is_empty() { o.label } else { &x.cat };
+        format!("{l}#{}", ticker::cat_color_of(x, o.colors, o.cat_bg, o.label))
+    };
+    let (mut a_box, mut a_cat) = slot_nodes(o, &cur);
+    let mut b: Option<(DNode, DNode)> = None;
+    let mut a_cat_on = cat_w > 0.0;
+    let mut wiper: Option<(f32, String)> = None;
+    if !single {
+        match o.mode {
+            "roll" => {
+                let t = (0.55f64).min(hold * 0.3);
+                if ph > hold - t {
+                    let u = ease_io((ph - (hold - t)) / t) as f32;
+                    let (mut b_box, mut b_cat) = slot_nodes(o, &next);
+                    a_box.m = Transform::from_translate(cat_w, -u * h);
+                    b_box.m = Transform::from_translate(cat_w, (1.0 - u) * h);
+                    let mut b_cat_on = cat_w > 0.0;
+                    if lab_key(&cur) != lab_key(&next) {
+                        a_cat.m = Transform::from_translate(0.0, -u * h);
+                        b_cat.m = Transform::from_translate(0.0, (1.0 - u) * h);
+                    } else {
+                        b_cat_on = false;
+                    }
+                    if !b_cat_on {
+                        b_cat.opacity = 0.0;
+                    }
+                    b = Some((b_box, b_cat));
+                }
+            }
+            "whip" => {
+                let t_in = (0.25f64).min(hold * 0.1);
+                let t_out = (0.35f64).min(hold * 0.1);
+                let t_w = if cat_w > 0.0 { (1.5f64).min(hold * 0.35) } else { 0.0 };
+                let out_at = hold - t_w - t_out;
+                a_box.opacity = (if ph < t_in {
+                    ph / t_in
+                } else if ph < out_at {
+                    1.0
+                } else {
+                    (1.0 - (ph - out_at) / t_out).max(0.0)
+                }) as f32;
+                if t_w > 0.0 && ph >= hold - t_w {
+                    let u = (ph - (hold - t_w)) / t_w;
+                    let travel = f64::from((w - cat_w).max(0.0));
+                    let x = if u < 0.65 { ease_io(u / 0.65) * travel } else { (1.0 - ease_io((u - 0.65) / 0.35)) * travel };
+                    if u < 0.325 {
+                        a_cat.m = Transform::from_translate(x as f32, 0.0);
+                    } else {
+                        // etykieta następnej wiadomości (przegródka B bez treści)
+                        a_cat_on = false;
+                        let (mut b_box, mut b_cat) = slot_nodes(o, &next);
+                        b_box.opacity = 0.0;
+                        b_cat.m = Transform::from_translate(x as f32, 0.0);
+                        b = Some((b_box, b_cat));
+                    }
+                }
+            }
+            _ => {
+                // wipe: odsłonięcie od lewej, na końcu zmazanie; krawędź prowadzi wycieraczka w kolorze kategorii
+                let t = (0.45f64).min(hold * 0.25);
+                let bw = w - cat_w;
+                let wc = ticker::cat_color_of(&cur, o.colors, o.cat_bg, o.label);
+                if ph < t && tk.prev.is_some() {
+                    let u = ease_io(ph / t) as f32;
+                    a_box.clip = Some([0.0, (1.0 - u) * 100.0, 0.0, 0.0]);
+                    if tk.prev.as_ref().map(lab_key) != Some(lab_key(&cur)) {
+                        a_cat.clip = Some([(1.0 - u) * 100.0, 0.0, 0.0, 0.0]);
+                    }
+                    if u < 0.999 {
+                        wiper = Some((cat_w + u * bw - 3.0, wc));
+                    }
+                } else if ph > hold - t {
+                    let u = ease_io((ph - (hold - t)) / t) as f32;
+                    a_box.clip = Some([0.0, 0.0, 0.0, u * 100.0]);
+                    if lab_key(&cur) != lab_key(&next) {
+                        a_cat.clip = Some([0.0, 0.0, u * 100.0, 0.0]);
+                    }
+                    if u > 0.001 {
+                        wiper = Some((cat_w + u * bw - 3.0, wc));
+                    }
+                }
+            }
+        }
+    }
+    // kolejność jak w DOM: pola treści, potem etykiety (z-index 2), na wierzchu wycieraczka (z-index 3)
+    out.push(a_box);
+    let mut b_cat_node = None;
+    if let Some((b_box, b_cat)) = b {
+        out.push(b_box);
+        b_cat_node = Some(b_cat);
+    }
+    if a_cat_on {
+        gleam_on(&mut a_cat);
+        out.push(a_cat);
+    }
+    if let Some(mut c) = b_cat_node.filter(|_| cat_w > 0.0) {
+        if c.opacity > 0.0 {
+            gleam_on(&mut c);
+        }
+        out.push(c);
+    }
+    if let Some((left, c)) = wiper {
+        let mut wp = DNode::new(Transform::from_translate(left, 0.0), 6.0, h);
+        if let Some(col) = color(&c) {
+            wp.paints.push(Paint::Box { radius: Radius::Px(0.0), fill: Fill::Solid(col) });
+        }
+        out.push(wp);
+    }
+    (out, Some(tk))
 }
 
 /// Wspólne dane odcinków taśmy crawla.
@@ -1069,31 +1368,7 @@ fn segment(c: &SegCtx, x: &Item) -> (DNode, f64) {
 
 /// Tekst bez znaczników (`stripMarkup`).
 pub fn strip_markup(t: &str) -> String {
-    if !has_markup(t) {
-        return t.to_string();
-    }
-    let mut out = String::new();
-    let mut rest = t;
-    while !rest.is_empty() {
-        if let Some(r) = rest.strip_prefix("[[").or_else(|| rest.strip_prefix("]]")) {
-            rest = r;
-            continue;
-        }
-        if rest.starts_with('{') {
-            if let Some(end) = rest.find('}') {
-                let tag = rest[1..end].trim_start_matches('/').to_ascii_lowercase();
-                let name = tag.split('=').next().unwrap_or("");
-                if matches!(name, "b" | "i" | "u" | "c" | "sz") {
-                    rest = &rest[end + 1..];
-                    continue;
-                }
-            }
-        }
-        let c = rest.chars().next().expect("not empty");
-        out.push(c);
-        rest = &rest[c.len_utf8()..];
-    }
-    out
+    crate::richtext::strip(t)
 }
 
 /// Czy ruch na wzór BTB (`node.motion`) coś robi.
@@ -1128,7 +1403,6 @@ pub fn check_scene(scene: &Scene, fonts: &crate::font::FontDb) -> Vec<String> {
             }
             let p = |k: &str| n.prop_at(k, 0.0, &Map::new());
             match n.kind.as_str() {
-                "qr" => add("kod QR".into()),
                 "image" => {
                     let src = str_of(&p("src"));
                     if !src.is_empty() && !crate::image::supported_name(&src) {
@@ -1137,7 +1411,7 @@ pub fn check_scene(scene: &Scene, fonts: &crate::font::FontDb) -> Vec<String> {
                 }
                 "ticker" => {
                     let m = str_of(&p("tickerMode"));
-                    if m != "crawl" {
+                    if !matches!(m.as_str(), "crawl" | "roll" | "wipe" | "whip") {
                         add(format!("ticker w trybie {m}"));
                     }
                 }
@@ -1150,9 +1424,6 @@ pub fn check_scene(scene: &Scene, fonts: &crate::font::FontDb) -> Vec<String> {
                     || crate::font::SYSTEM_FAMILIES.iter().any(|f| f.eq_ignore_ascii_case(&font));
                 if !known {
                     add(format!("font „{font}” spoza wbudowanych (Chromium pobrałby go z Google Fonts)"));
-                }
-                if has_markup(&str_of(&p("text"))) {
-                    add("tekst sformatowany ([[ ]], {b} …)".into());
                 }
             }
             walk(&n.children, scene, fonts, out);

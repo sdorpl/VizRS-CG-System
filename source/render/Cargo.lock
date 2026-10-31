@@ -333,7 +333,7 @@ checksum = "383ad40bb927465ec0ce7720e033cb4ca06912855fc35db31b5755d0de75b1ee"
 
 [[package]]
 name = "vizrs-render"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "jpeg-decoder",
  "png",

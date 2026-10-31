@@ -362,6 +362,38 @@ impl Raster {
                     fill_path(dst, &path, shader, FillRule::Winding, m);
                 }
             }
+            Paint::Qr { cells, dark, light, .. } => {
+                let quiet = 2.0;
+                let n = cells.as_ref().map(|c| c.len()).unwrap_or(8) as f32;
+                let total = n + 2.0 * quiet;
+                let side = node.w.min(node.h);
+                let (ox, oy) = ((node.w - side) / 2.0, (node.h - side) / 2.0);
+                let unit = side / total;
+                // shape-rendering: crispEdges – bez wygładzania krawędzi modułów
+                let crisp =
+                    |shader: Shader<'static>, path: &Path| (SkPaint { shader, anti_alias: false, ..SkPaint::default() }, path.clone());
+                if let Some(bg) = Rect::from_xywh(ox, oy, side, side).map(PathBuilder::from_rect) {
+                    let (paint, path) = crisp(Shader::SolidColor(sk_color(*light, alpha)), &bg);
+                    dst.fill_path(&path, &paint, FillRule::Winding, m, mask);
+                }
+                if let Some(cells) = cells {
+                    let mut pb = PathBuilder::new();
+                    for (y, row) in cells.iter().enumerate() {
+                        for (x, &on) in row.iter().enumerate() {
+                            if on {
+                                if let Some(r) = Rect::from_xywh(ox + (x as f32 + quiet) * unit, oy + (y as f32 + quiet) * unit, unit, unit)
+                                {
+                                    pb.push_rect(r);
+                                }
+                            }
+                        }
+                    }
+                    if let Some(path) = pb.finish() {
+                        let (paint, path) = crisp(Shader::SolidColor(sk_color(*dark, alpha)), &path);
+                        dst.fill_path(&path, &paint, FillRule::Winding, m, mask);
+                    }
+                }
+            }
             Paint::BoxShadow { radius, sigma, dy, color } => {
                 let key = {
                     let mut h = DefaultHasher::new();
@@ -521,21 +553,34 @@ fn raster_text(
     let mut pix = Pixmap::new(pw, ph)?;
     let base = mul(Transform::from_translate(-ox, -oy), lin);
     let db = res.fonts.read().unwrap_or_else(|e| e.into_inner());
-    let draw = |pix: &mut Pixmap, tf0: Transform, col: Color| {
-        let paint = SkPaint { shader: Shader::SolidColor(sk_color(col, 1.0)), anti_alias: true, ..SkPaint::default() };
+    // `shadow`: cały tekst i podkreślenia kolorem cienia (bez tła wyróżnień, jak `text-shadow`)
+    let draw = |pix: &mut Pixmap, tf0: Transform, shadow: Option<Color>| {
+        let solid = |c: Color| SkPaint { shader: Shader::SolidColor(sk_color(c, 1.0)), anti_alias: true, ..SkPaint::default() };
         for line in &block.lines {
+            let lt = mul(tf0, Transform::from_row(line.sx, 0.0, 0.0, 1.0, line.ox - line.ox * line.sx, 0.0));
+            let lt = mul(lt, Transform::from_translate(line.x, line.baseline));
+            if shadow.is_none() {
+                for d in &line.run.decor {
+                    if let crate::text::Decor::Mark { x0, x1, top, bottom, radius, color } = d {
+                        if let Some(path) = shape(*x0, *top, x1 - x0, bottom - top, &Radius::Px(*radius)) {
+                            pix.fill_path(&path, &solid(*color), FillRule::Winding, lt, None);
+                        }
+                    }
+                }
+            }
             for g in &line.run.glyphs {
                 if g.face >= db.len() {
                     continue;
                 }
                 let face = db.face(g.face);
                 let Some(path) = face.glyph_path(g.id) else { continue };
-                let k = line.run.size / face.upem;
+                let k = g.size / face.upem;
                 let tf = mul(tf0, glyph_tf(line, g, k));
+                let paint = solid(shadow.or(g.color).unwrap_or(color));
                 pix.fill_path(&path, &paint, FillRule::Winding, tf, None);
                 if g.fake_bold {
                     // Skia: pogrubienie obrysem, grubość od 1/24 (9 px) do 1/32 (36 px) rozmiaru
-                    let s = line.run.size;
+                    let s = g.size;
                     let ratio = if s <= 9.0 {
                         1.0 / 24.0
                     } else if s >= 36.0 {
@@ -547,16 +592,23 @@ fn raster_text(
                     pix.stroke_path(&path, &paint, &stroke, tf, None);
                 }
             }
+            for d in &line.run.decor {
+                if let crate::text::Decor::Underline { x0, x1, y, th, color: c } = d {
+                    if let Some(r) = Rect::from_xywh(*x0, y - th / 2.0, x1 - x0, *th) {
+                        pix.fill_path(&PathBuilder::from_rect(r), &solid(shadow.or(*c).unwrap_or(color)), FillRule::Winding, lt, None);
+                    }
+                }
+            }
         }
     };
     if let Some((dy, s, c)) = shadow {
         let mut sp = Pixmap::new(pw, ph)?;
-        draw(&mut sp, mul(base, Transform::from_translate(0.0, dy)), c);
+        draw(&mut sp, mul(base, Transform::from_translate(0.0, dy)), Some(c));
         let (w, h) = (sp.width() as usize, sp.height() as usize);
         blur::gaussian(sp.data_mut(), w, h, 4, s * scale_of(&lin));
         pix.draw_pixmap(0, 0, sp.as_ref(), &PixmapPaint::default(), Transform::identity(), None);
     }
-    draw(&mut pix, base, color);
+    draw(&mut pix, base, None);
     Some(pix)
 }
 

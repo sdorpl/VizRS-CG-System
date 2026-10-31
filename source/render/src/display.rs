@@ -46,6 +46,8 @@ pub enum Paint {
     Border { radius: Radius, width: f32, color: Color },
     /// Obraz z assets dopasowany `object-fit`, przycięty do pola z zaokrągleniem.
     Image { src: String, fit: String, radius: f32 },
+    /// Kod QR (`qrSvg`): kwadrat wpisany w pole i wyśrodkowany, margines 2 moduły, krawędzie bez wygładzania.
+    Qr { text: Arc<str>, cells: Option<Arc<Vec<Vec<bool>>>>, dark: Color, light: Color },
     /// Tekst: blok, kolor, cień (dy, σ, kolor) i położenie elementu tekstu (`span`) w polu.
     Text { block: Arc<TextBlock>, color: Color, shadow: Option<(f32, f32, Color)>, x: f32, y: f32 },
 }
@@ -164,6 +166,12 @@ impl Paint {
                 src.hash(h);
                 fit.hash(h);
                 hash_f(&[*radius], h);
+            }
+            Paint::Qr { text, dark, light, .. } => {
+                7u8.hash(h);
+                text.hash(h);
+                hash_f(dark, h);
+                hash_f(light, h);
             }
             Paint::Text { block, color, shadow, x, y } => {
                 6u8.hash(h);
