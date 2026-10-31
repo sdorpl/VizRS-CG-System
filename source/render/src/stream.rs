@@ -2,13 +2,16 @@
 //! Sam łączy się z VizRS jak strona `/output` (zdarzenia, fonty, assets), a klatki rysuje na żądanie.
 //!
 //! Protokół (DOKUMENTACJA §10.1): na stdin wiersze tekstu, na stdout rekordy binarne.
-//! * `F <czas_ms> <ścienny_ms> [c]` – klatka w chwili `czas_ms` (zegar odtwarzania, monotoniczny) przy czasie
-//!   ściennym `ścienny_ms` (ms od epoki, do zegarów); `c` – rysuj tylko, gdy całą antenę da się narysować natywnie.
+//! * `F <czas_ms> <ścienny_ms> [cf]` – klatka w chwili `czas_ms` (zegar odtwarzania, monotoniczny) przy czasie
+//!   ściennym `ścienny_ms` (ms od epoki, do zegarów); `c` – rysuj tylko, gdy całą antenę da się narysować natywnie,
+//!   `f` – wyślij obraz także bez zmian (odbiorca wraca po przerwie).
 //! * `Q` – koniec.
 //!
 //! Rekord: 16 bajtów nagłówka `VZR1`, rodzaj (u8), flagi (u8), 2 bajty zera, szerokość i wysokość (u32 LE),
 //! potem przy rodzaju 1 piksele RGBA (bez przemnożenia alfy), wiersz po wierszu.
-//! Rodzaje: 0 – bez zmian, 1 – nowy obraz, 2 – pusto (przezroczyście), 3 – nie narysowano (`c`, antena niepełna).
+//! Rodzaje: 0 – bez zmian, 1 – nowy obraz, 2 – pusto (przezroczyście), 3 – nie narysowano (`c`, antena niepełna),
+//! 4 – nowy obraz, tylko prostokąt z grafiką: po nagłówku x, y, szerokość, wysokość (u32 LE), potem jego piksele
+//! (reszta obrazu przezroczysta). Renderer wysyła nowy obraz jako rodzaj 4; odbiorca czyta też rodzaj 1.
 //! Flagi: bit 0 – wszystko na antenie natywnie, bit 1 – połączenie z VizRS działa.
 //! Zmiana listy braków trafia na stderr (`vizrs-render: …`).
 
@@ -30,9 +33,11 @@ use crate::scene::{Clock, Output};
 
 pub const MAGIC: &[u8; 4] = b"VZR1";
 pub const UNCHANGED: u8 = 0;
+/// Cały obraz (odbiorca musi go czytać; renderer wysyła `REGION`).
 pub const IMAGE: u8 = 1;
 pub const EMPTY: u8 = 2;
 pub const SKIPPED: u8 = 3;
+pub const REGION: u8 = 4;
 pub const FLAG_COMPLETE: u8 = 1;
 pub const FLAG_CONNECTED: u8 = 2;
 
@@ -53,6 +58,36 @@ pub fn header(kind: u8, flags: u8, w: u32, h: u32) -> [u8; 16] {
     out[8..12].copy_from_slice(&w.to_le_bytes());
     out[12..16].copy_from_slice(&h.to_le_bytes());
     out
+}
+
+/// Obraz jako rekord `REGION`: tylko prostokąt z niezerową alfą (reszta przezroczysta); pusty obraz – `EMPTY`.
+pub fn region_record(pix: &Pixmap, flags: u8) -> Vec<u8> {
+    let (w, h) = (pix.width() as usize, pix.height() as usize);
+    let data = pix.data();
+    let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].chunks_exact(4).any(|p| p[3] != 0);
+    let Some(top) = (0..h).find(|&y| row_used(y)) else { return header(EMPTY, flags, w as u32, h as u32).to_vec() };
+    let bottom = (top..h).rev().find(|&y| row_used(y)).unwrap_or(top) + 1;
+    let (mut left, mut right) = (w, 0);
+    for y in top..bottom {
+        let row = &data[y * w * 4..(y + 1) * w * 4];
+        if let Some(l) = (0..left).find(|&x| row[x * 4 + 3] != 0) {
+            left = l;
+        }
+        if let Some(r) = (right..w).rev().find(|&x| row[x * 4 + 3] != 0) {
+            right = right.max(r + 1);
+        }
+    }
+    let rw = right.saturating_sub(left);
+    let mut rec = header(REGION, flags, w as u32, h as u32).to_vec();
+    for v in [left, top, rw, bottom - top] {
+        rec.extend_from_slice(&(v as u32).to_le_bytes());
+    }
+    let at = rec.len();
+    for y in top..bottom {
+        rec.extend_from_slice(&data[(y * w + left) * 4..(y * w + right) * 4]);
+    }
+    unpremultiply(&mut rec[at..]);
+    rec
 }
 
 /// Wbudowane fonty serwera (`/fonts/fonts.css`), wczytywane przy starcie.
@@ -154,7 +189,9 @@ pub fn run(opts: Options) -> Result<(), String> {
         }
         let now: f64 = parts.next().and_then(|v| v.parse().ok()).unwrap_or(0.0);
         let wall: f64 = parts.next().and_then(|v| v.parse().ok()).unwrap_or(now);
-        let only_complete = parts.next() == Some("c");
+        let want = parts.next().unwrap_or("");
+        let only_complete = want.contains('c');
+        let force = want.contains('f');
         let clk = Clock { now, wall };
         while let Ok(ev) = events.try_recv() {
             host.handle(&ev, clk);
@@ -181,17 +218,13 @@ pub fn run(opts: Options) -> Result<(), String> {
             header(SKIPPED, flags, aw, ah).to_vec()
         } else if !host.on_air() {
             // nic na antenie: pusty obraz raz, potem „bez zmian”
-            let kind = if was_empty { UNCHANGED } else { EMPTY };
+            let kind = if was_empty && !force { UNCHANGED } else { EMPTY };
             was_empty = true;
             header(kind, flags, aw, ah).to_vec()
-        } else if host.draw(&mut pix, opts.size, (ax, ay), &res) || was_empty {
+        } else if host.draw(&mut pix, opts.size, (ax, ay), &res) || was_empty || force {
             // po pustym obraz trzeba wysłać, nawet gdy lista się nie zmieniła (`pix` ma ostatni obraz)
             was_empty = false;
-            let mut rec = header(IMAGE, flags, aw, ah).to_vec();
-            let at = rec.len();
-            rec.extend_from_slice(pix.data());
-            unpremultiply(&mut rec[at..]);
-            rec
+            region_record(&pix, flags)
         } else {
             header(UNCHANGED, flags, aw, ah).to_vec()
         };
@@ -202,6 +235,22 @@ pub fn run(opts: Options) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn region_is_the_alpha_box() {
+        let mut pix = Pixmap::new(8, 6).unwrap();
+        let w = 8;
+        for (x, y) in [(2, 1), (5, 3)] {
+            pix.data_mut()[(y * w + x) * 4..(y * w + x) * 4 + 4].copy_from_slice(&[255, 0, 0, 255]);
+        }
+        let rec = region_record(&pix, 1);
+        assert_eq!(rec[4], REGION);
+        let v = |i: usize| u32::from_le_bytes(rec[16 + i * 4..20 + i * 4].try_into().unwrap());
+        assert_eq!((v(0), v(1), v(2), v(3)), (2, 1, 4, 3));
+        assert_eq!(rec.len(), 32 + 4 * 3 * 4);
+        assert_eq!(&rec[32..36], &[255, 0, 0, 255]);
+        assert_eq!(region_record(&Pixmap::new(4, 4).unwrap(), 0)[4], EMPTY);
+    }
 
     #[test]
     fn header_layout() {
