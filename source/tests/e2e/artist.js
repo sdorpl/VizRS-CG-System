@@ -161,6 +161,15 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     // ściskanie: wskaźnik pod „min. ściśnięcie” i ramka przepełnienia na kanwie (data-over)
     await pg.goto(B + '/artist?scene=at'); await sleep(1000);
     await pg.click('#tree .item[data-id="t1"]'); await sleep(200);
+    // własna czcionka: ⤒ przy polu font wgrywa plik i ustawia go w elemencie
+    const [fc] = await Promise.all([pg.waitForEvent('filechooser'), pg.click('[data-upload="font"]')]);
+    await fc.setFiles(path.join(__dirname, '../../../examples/archiwum/BTB_CG/assets/Bahnschrift.ttf')); await sleep(600);
+    ok(await pg.inputValue('input[data-p="font"]') === 'Bahnschrift.ttf', 'Font: wgrany plik ustawiony w elemencie');
+    ok(await pg.evaluate(() => [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Bahnschrift.ttf' && f.status === 'loaded')), 'Font: czcionka wczytana w podglądzie');
+    await pg.click('#tree .item[data-id=""]'); await sleep(300);
+    ok((await pg.textContent('#props')).includes('Bahnschrift.ttf'), 'Font: czcionka w zasobach paczki sceny');
+    await pg.click('#tree .item[data-id="t1"]'); await sleep(200);
+    await pg.fill('input[data-p="font"]', 'Inter'); await sleep(200);
     await pg.selectOption('[data-p="textFit"]', 'squeeze'); await sleep(200);
     await pg.locator('[data-p="text"]').fill('Tytuł nieco dłuższy niż ramka tekstu w tej scenie testowej'); await sleep(300);
     const sqA = await pg.locator('#sqInfo').innerText();

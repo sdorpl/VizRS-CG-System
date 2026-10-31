@@ -380,7 +380,7 @@ function inputFor(p, d) {
     case 'color': return `<div class="row"><input type="color" data-pc="${p}"><input data-p="${p}" class="grow mono" placeholder="#rrggbbaa"></div>`;
     case 'text': return `<textarea data-p="${p}" rows="2"></textarea>`;
     case 'string': return `<input data-p="${p}">`;
-    case 'font': return `<input data-p="${p}" list="fontlist">`;
+    case 'font': return `<div class="row"><input data-p="${p}" class="grow" list="fontlist"><button class="icon" data-upload="${p}" data-accept=".ttf,.otf,.woff,.woff2" title="Wgraj własną czcionkę (TTF/OTF/WOFF/WOFF2) i użyj jej w tym elemencie; trafi do paczki sceny">⤒</button></div>`;
     case 'node': return `<input data-p="${p}" list="nodelist" placeholder="nazwa węzła (kilka: a,b)">`;
     case 'select': return `<select data-p="${p}">${d.opts.map((o) => `<option>${o}</option>`).join('')}</select>`;
     case 'bool': return `<input type="checkbox" data-p="${p}">`;
@@ -998,7 +998,7 @@ $('#props').addEventListener('click', async (e) => {
     renderTree(); syncProps(); return;
   }
   const ub = e.target.closest('[data-upload]');
-  if (ub && n) { const a = await uploadAsset(); if (a) { checkpoint(); setProp(n, ub.dataset.upload, a.name); renderProps(); refresh(); } return; }
+  if (ub && n) { const a = await uploadAsset(ub.dataset.accept); if (a) { checkpoint(); setProp(n, ub.dataset.upload, a.name); renderProps(); refresh(); } return; }
   if (e.target.closest('[data-mofit]')) { fitMotionTiming(); return; }
   if (e.target.id === 'pkAdd') { const a = await uploadAsset(); if (a) { checkpoint(); scene.packAssets = [...new Set([...(scene.packAssets || []), a.name])]; renderProps(); refresh(); } return; }
   const pkr = e.target.closest('[data-pkrm]');
@@ -1051,10 +1051,10 @@ $('#props').addEventListener('mousedown', (e) => {
   addEventListener('mousemove', mv); addEventListener('mouseup', up);
 });
 
-function uploadAsset() {
+function uploadAsset(accept = 'image/*,video/mp4,video/webm,.ttf,.otf,.woff,.woff2') {
   return new Promise((res) => {
     const fi = $('#fileIn');
-    fi.accept = 'image/*,video/mp4,video/webm,.ttf,.otf,.woff,.woff2';
+    fi.accept = accept;
     fi.value = '';
     fi.onchange = async () => {
       const f = fi.files[0]; if (!f) return res(null);

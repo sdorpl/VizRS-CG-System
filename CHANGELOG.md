@@ -2,6 +2,7 @@
 
 ## Niewydane
 
+- **Artist, własna czcionka belki:** przycisk **⤒** przy polu **font** wgrywa plik TTF/OTF/WOFF/WOFF2 i od razu ustawia go w elemencie; czcionka jedzie z paczką sceny.
 - **Fonty wbudowane: Barlow, Bebas Neue, Roboto Mono** (OFL, @fontsource; 400–700, Bebas Neue 400). Szablony INFO24 (Podpis, Title, Scoreboard, BelkaProgram) nie pobierają już fontów z Google Fonts – działają bez internetu i w rendererze natywnym. Lista fontów offline w Artist bierze się z `OFFLINE_FONTS` renderera.
 
 - **Renderer natywny `vizrs-render` (0.1, gałąź `render-native`):** osobny program w `source/render/` rysuje antenę bez przeglądarki dla playoutu kanału (VizRS CG Playout): prymitywy, klucze i krzywe, tekst z dopasowaniem jak w `renderer.js`, zegary ze strefami, ticker `crawl`, warstwy, `dock`. Polecenia `stream` (klatki dla playoutu), `frame`, `check` (które sceny pójdą natywnie) i `bench`. Czego jeszcze nie umie, zgłasza – playout rysuje to Chromium. Zgodność z Chromium: `tools/native-compare.js` (INFO24 i R7 poniżej 1% różnych pikseli). DOKUMENTACJA §10.1, plan `docs/plany/PLAN-native.md`.

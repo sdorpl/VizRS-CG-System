@@ -65,8 +65,8 @@ Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
 
 ### Własna czcionka i grafiki – paczka belek
-1. W ustawieniach sceny (puste tło) w sekcji **Zasoby paczki** kliknij **＋ Wgraj i dołącz** i wybierz plik czcionki (`.ttf`, `.otf`, `.woff2`) albo grafikę.
-2. Czcionka pojawi się na liście fontów pod nazwą pliku (np. `MojFont.ttf`) – wybierz ją w polu **font** tekstu.
+1. Zaznacz tekst, kliknij **⤒** przy polu **font** i wybierz plik czcionki (`.ttf`, `.otf`, `.woff`, `.woff2`) – tekst od razu jej używa, a czcionka pojedzie z paczką belki.
+2. Grafikę albo czcionkę, której scena nie wskazuje wprost, dołącz w ustawieniach sceny (puste tło): **Zasoby paczki** → **＋ Wgraj i dołącz**. Wgrana czcionka jest na liście fontów pod nazwą pliku (np. `MojFont.ttf`).
 3. **⇩ Paczka** → zaznacz sceny → **Pobierz .cgpack**. Na innym stanowisku: **⇧ Import** i wskaż plik – sceny, strony, grafiki i czcionki wgrają się razem.
 4. Komputer z OBS nie musi mieć czcionki – wyjście pobiera ją z serwera VizRS.
 
