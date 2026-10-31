@@ -283,7 +283,8 @@ fn family_name(face: &ttf_parser::Face) -> Option<String> {
     let names = face.names();
     let get =
         |id: u16| names.into_iter().filter(|n| n.name_id == id && n.is_unicode()).find_map(|n| n.to_string()).filter(|s| !s.is_empty());
-    get(ttf_parser::name_id::TYPOGRAPHIC_FAMILY).or_else(|| get(ttf_parser::name_id::FAMILY).map(|f| strip_style_words(&f)))
+    // podzbiory @fontsource mają czasem odmianę w obu nazwach (np. „Montserrat Thin” dla grubości 600)
+    get(ttf_parser::name_id::TYPOGRAPHIC_FAMILY).or_else(|| get(ttf_parser::name_id::FAMILY)).map(|f| strip_style_words(&f))
 }
 
 /// Rodzina bez słów odmiany („Barlow Condensed SemiBold” → „Barlow Condensed”) – fonty bez nazwy typograficznej

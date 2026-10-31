@@ -537,7 +537,27 @@ vizrs-render stream --url 'http://vizrs:8088/output?token=…' --size 1920x1080 
 
 **Protokół `stream`** (proces podrzędny playoutu): na stdin wiersze `F <czas_ms> <ścienny_ms> [cf]` – klatka w chwili `czas_ms` (zegar odtwarzania, monotoniczny; animacje liczą się od niego, nie od zegara procesu) przy czasie ściennym `ścienny_ms` (zegary `time` i `target`); `c` = rysuj tylko, gdy całą antenę da się narysować natywnie, `f` = wyślij obraz (albo „pusto”) także bez zmian – odbiorca wraca po przerwie; `Q` kończy. Na stdout na każdą klatkę rekord: 16 bajtów nagłówka (`VZR1`, rodzaj u8, flagi u8, 2 bajty zera, szerokość i wysokość u32 LE), a przy rodzaju 1 piksele RGBA bez przemnożenia alfy, wiersz po wierszu, w rozmiarze `--area` (domyślnie całe `--size`). Rodzaje: 0 – bez zmian, 1 – nowy obraz (cały), 2 – pusto, 3 – nie narysowano (`c` przy niepełnej antenie), 4 – nowy obraz, ale tylko prostokąt z grafiką: po nagłówku jego x, y, szerokość i wysokość (u32 LE), potem jego piksele RGBA, reszta przezroczysta. Renderer wysyła nowe obrazy jako rodzaj 4 (pasek tickera to ułamek przesyłu całego obrazu); odbiorca czyta też rodzaj 1. Flagi: bit 0 – wszystko na antenie natywnie, bit 1 – połączenie z VizRS działa. Zmiana listy braków trafia na stderr. Adres `--url` to adres wyjścia (`/output`) – token, `layers`, `bus`, `w`, `h` i `fx=step` działają jak na stronie.
 
-**Wierność:** `node tools/native-compare.js [show.json] [--out katalog] [--tickers]` porównuje każdą obsługiwaną stronę z Chromium (TAKE, zakończone wejście, zegary ukryte; tickery ukryte, z `--tickers` widoczne – obie strony 2,6 s po TAKE): INFO24 (22 strony) i R7 (17) poniżej 1% pikseli różnych o więcej niż 24/255 – różnice to wygładzanie krawędzi. Moduły QR pilnuje test `render/tests/qr_vectors.rs` (wektory z `qr.js`). Zmiana w `renderer.js` (rysowanie, dopasowanie tekstu, krzywe) wymaga tej samej zmiany w `source/render/` i przebiegu `native-compare.js`. Ruch (wejścia, wyjścia, crawl, zegary) porównuje film `node tools/native-video.js` (§15): w INFO24 na antenie obraz jest ten sam, w animacjach renderer natywny bywa kilka milisekund za Chromium, bo Chromium w czasie wirtualnym rysuje w rytmie `requestAnimationFrame` (co ok. 16 ms), a natywny dokładnie w chwilach klatek kanału.
+**Wierność:** `node tools/native-compare.js [show.json] [--out katalog] [--tickers] [--assets katalog]` porównuje każdą obsługiwaną stronę z Chromium (TAKE, zakończone wejście, zegary ukryte; tickery ukryte, z `--tickers` widoczne – obie strony 2,6 s po TAKE) i podaje odsetek pikseli różnych o więcej niż 24/255 oraz średni błąd: INFO24 i R7 poniżej 1% pikseli i 0,6/255 średnio. Plansze testowe `node tools/native-cases.js <katalog>` (pola, gradienty, cienie, przekształcenia, maski, wszystkie tryby dopasowania, fonty, znaczniki, obrazy, QR, autofollow) – 11 z 12 poniżej 2% (ściśnięty tekst wielowierszowy 3%: tylko wygładzanie krawędzi, bez przesunięć). Szerokości tekstu sprawdza `node tools/native-widths.js` (średnio 0,05 px różnicy, najwięcej 0,04%), moduły QR – test `render/tests/qr_vectors.rs`. Ruch: film `node tools/native-video.js --stats plik.csv` (§15) – błąd każdej klatki; w nagraniu `requestAnimationFrame` strony biegnie raz na klatkę, jak `beginFrame` na kanale. INFO24: średni błąd klatek (MSE) każdej strony poniżej 5; krótkie piki do ok. 30 zostają w ruchu (przesuw `roll`, wejścia) – linia bazowa przesuwanego tekstu wypada czasem na sąsiedni piksel.
+
+Reguły Blink i Skia, które renderer natywny odtwarza (zmiana którejkolwiek po stronie przeglądarki = test planszami):
+
+| Reguła | Skutek, gdy jej brak |
+|---|---|
+| wysokość wiersza `line-height` × rozmiar w dół do 1/64 px; połowa interlinii nad wierszem w dół do piksela | tekst 0,5–1 px niżej, przy wielu wierszach rozjazd |
+| linia bazowa tekstu bez obrotu na pełnym pikselu (w pionie), w poziomie podpikselowo | tekst rozmyty w pionie |
+| wyśrodkowanie elementu tekstu wg dokładnej wysokości (nie `offsetHeight`) | wiersz co któryś o piksel niżej |
+| szerokość elementu wielowierszowego = min(tekst w jednym wierszu, `max-width`) w jednostkach 1/64 px | wyrównanie do środka i prawej przesunięte |
+| element z przekształceniem innym niż przesunięcie (`scaleX` ściśnięcia) – położenie do pełnego piksela | ściśnięty tekst do prawej/środka ±0,33 px |
+| fragment `{sz=}` podnosi wiersz (własna interlinia fragmentu) | zła wysokość i wyśrodkowanie |
+| przy łamaniu wiersz mierzony ze znacznikami otwartymi wcześniej (`{b}` z poprzedniego wiersza) | inne łamanie i ściśnięcie |
+| rozmiar fontu do FreeType w formacie 26.6 (w dół do 1/64 px) | tekst o ułamkowym rozmiarze (`shrink`) szerszy o 0,05% |
+| maska wygładzania glifów przez tablicę `SkMaskGamma` (gamma 1,2, kontrast 0,2, luminancja koloru w 3 bitach) | tekst cieńszy o 1–2,5% jasności |
+| gradient z alfą mieszany z przemnożeniem (przezroczysty biały nie rozjaśnia) | jaśniejsze przejścia do przezroczystości |
+| pierwsza klatka po TAKE (pętla uśpiona) ma dt = 0 | animacja wejścia o klatkę do przodu |
+| zdarzenie z `/events` obsłużone z czasem poprzedniej klatki (`performance.now()` przed następną) | zegar `up`/`down` o klatkę inny |
+| `margin-right: .5em` plakietki kategorii od jej własnego rozmiaru fontu | taśma crawla z kategoriami rozjeżdża się o ~4 px na odcinek |
+
+Zmiana w `renderer.js` (rysowanie, dopasowanie tekstu, krzywe, ticker) wymaga tej samej zmiany w `source/render/` i przebiegu narzędzi zgodności.
 
 ## 11. Sterowanie zewnętrzne
 
@@ -720,7 +740,9 @@ node tools/native-compare.js                         # zgodność renderera naty
 | `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
 | `tools/video.js [vizrs] [--only R7,BTB] [--fps 25]` | film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080), nagrywany klatka po klatce w czasie wirtualnym; wymaga ffmpeg. Lista paczek: `tools/sets.js` |
-| `tools/native-video.js [vizrs] [--only INFO24,R7] [--out plik.mp4]` | film porównawczy renderera natywnego (§10.1) z Chromium: każda strona TAKE → CONTINUE → OUT, oba renderery w tych samych chwilach (czas wirtualny), kadr 2×2 – Chromium, natywnie, różnica ×4, opis strony (czy cała natywnie, czas klatki); wymaga ffmpeg |
+| `tools/native-cases.js <katalog>` | plansze testowe renderera natywnego (12 stron wariantów: pola, gradienty, cienie, przekształcenia, maski, dopasowanie tekstu, fonty, znaczniki, obrazy, QR, autofollow) – do `native-compare.js <katalog>/show.json --assets <katalog>/assets` |
+| `tools/native-widths.js [vizrs]` | szerokości tekstu Chromium i renderera natywnego (`render/examples/measure`) dla fontów wbudowanych, grubości, rozmiarów ułamkowych, odstępów i kursywy |
+| `tools/native-video.js [vizrs] [--only INFO24,R7] [--out plik.mp4] [--stats plik.csv]` | film porównawczy renderera natywnego (§10.1) z Chromium: każda strona TAKE → CONTINUE → OUT, oba renderery w tych samych chwilach (czas wirtualny), kadr 2×2 – Chromium, natywnie, różnica ×4, opis strony (czy cała natywnie, czas klatki); `--stats`: błąd (MSE) każdej klatki do CSV i podsumowanie stron (zrzuty PNG); wymaga ffmpeg |
 | `tools/out_choreo.py plik.show.json` | wygenerowanie animacji OUT całego show |
 | `tools/render_video.py` + `steps_*.py` | filmy demonstracyjne (np. IN, potem OUT zwolnione 2,5×) |
 | `tools/gen_fonts.py` | wbudowane fonty (`fonts_data.rs`) |

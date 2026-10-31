@@ -175,6 +175,7 @@ pub fn run(opts: Options) -> Result<(), String> {
     let stdin = std::io::stdin();
     let mut issues: Vec<String> = Vec::new();
     let mut was_empty = false;
+    let mut last_clk: Option<Clock> = None;
     let mut line = String::new();
     loop {
         line.clear();
@@ -193,9 +194,13 @@ pub fn run(opts: Options) -> Result<(), String> {
         let only_complete = want.contains('c');
         let force = want.contains('f');
         let clk = Clock { now, wall };
+        // zdarzenie przyszło między klatkami: strona obsługuje je od razu, z czasem poprzedniej klatki
+        // (`performance.now()` przed następną) – stąd początek rotacji tickera i zegara `up`/`down`
+        let at = last_clk.unwrap_or(clk);
         while let Ok(ev) = events.try_recv() {
-            host.handle(&ev, clk);
+            host.handle(&ev, at);
         }
+        last_clk = Some(clk);
         host.tick(clk, &res);
         let now_issues = host.issues();
         if now_issues != issues {

@@ -62,6 +62,8 @@ pub struct Run {
     /// Wysokość nad i pod linią bazową (zaokrąglone jak w Blink), px.
     pub ascent: f32,
     pub descent: f32,
+    /// Fragmenty o innym rozmiarze (`{sz=}`): rozmiar, wysokość nad i pod linią bazową – podnoszą wiersz.
+    pub boxes: Vec<(f32, f32, f32)>,
 }
 
 impl Run {
@@ -96,9 +98,11 @@ fn shape_into(db: &FontDb, style: &Style, text: &str, mut x: f32, run: &mut Run,
     }
     let features: Vec<rustybuzz::Feature> =
         if style.tnum { vec![rustybuzz::Feature::new(rustybuzz::ttf_parser::Tag::from_bytes(b"tnum"), 1, ..)] } else { Vec::new() };
+    // Skia podaje FreeType rozmiar w formacie 26.6: ułamkowy rozmiar (z wyszukiwania `shrink`) w dół do 1/64 px
+    let size = (style.size * 64.0).floor() / 64.0;
     for (f, a, b) in segs {
         let face = db.face(f);
-        let k = style.size / face.upem;
+        let k = size / face.upem;
         let mut buf = rustybuzz::UnicodeBuffer::new();
         buf.push_str(&text[a..b]);
         buf.guess_segment_properties();
@@ -113,7 +117,7 @@ fn shape_into(db: &FontDb, style: &Style, text: &str, mut x: f32, run: &mut Run,
                 id: info.glyph_id as u16,
                 x: x + p.x_offset as f32 * k,
                 dy: -(p.y_offset as f32) * k,
-                size: style.size,
+                size,
                 color,
                 fake_bold,
                 fake_italic,
@@ -178,6 +182,11 @@ pub fn shape(db: &FontDb, style: &Style, text: &str) -> Run {
         };
         let color = css_color(&sp.c).filter(|_| !sp.c.is_empty()).or(sp.hl.then_some(hl_fg));
         let x0 = x;
+        if sp.sz > 0.0 {
+            if let Some((a, d, _)) = metrics(db, &st) {
+                run.boxes.push((st.size, a, d));
+            }
+        }
         x = shape_into(db, &st, &sp.t, x, &mut run, color);
         if sp.u {
             run.decor.push(Decor::Underline { x0, x1: x, y: -ul_pos * st.size, th: (ul_th * st.size).max(1.0), color });
@@ -219,6 +228,8 @@ pub struct Layout {
     pub h: f32,
     pub sq: Vec<f32>,
     pub over: bool,
+    /// Ściśnięcie całego elementu tekstu (`fitText` ze `scaleX`) albo osobnych wierszy (`fitLines`).
+    pub per_line: bool,
 }
 
 /// Parametry dopasowania (jak obiekt `fo` w rendererze).
@@ -248,6 +259,21 @@ fn break_after(prev: char, next: Option<char>) -> bool {
         '–' | '—' => next.is_some_and(|n| n != ' '),
         _ => false,
     }
+}
+
+/// Wysokość wiersza `line-height: <liczba>` jak w Blink: rozmiar × liczba w dół do 1/64 px.
+fn line_height(size: f32, lh: f32) -> f32 {
+    (size * lh * 64.0).floor() / 64.0
+}
+
+/// Wartość w jednostkach układu Blink (1/64 px).
+fn layout_unit(v: f32) -> f32 {
+    (v * 64.0).round() / 64.0
+}
+
+/// Szerokość jak w LayoutNG: jednostki 1/64 px, zaokrąglenie w górę (`LayoutUnit::FromFloatCeil`).
+fn layout_unit_ceil(w: f32) -> f32 {
+    (w * 64.0).ceil() / 64.0
 }
 
 /// `white-space: pre-wrap`: dzieli tekst na wiersze mieszczące się w `width` (słowo dłuższe wystaje).
@@ -291,9 +317,22 @@ fn wrap(db: &FontDb, style: &Style, text: &str, width: f32) -> Vec<String> {
             pieces.push(cur);
         }
         let mut line = String::new();
+        // znaczniki otwarte przed wierszem (np. `{b}` z poprzedniego) – wiersz mierzony tak, jak będzie narysowany
+        let mut before: String = out.concat();
+        let marked = richtext::has_markup(text);
+        let measure = |before: &str, cand: &str| {
+            let cand = cand.trim_end_matches(' ');
+            if marked {
+                let carried = richtext::carry_lines(&[before.to_string(), cand.to_string()]);
+                layout_unit_ceil(shape(db, style, &carried[1]).width)
+            } else {
+                layout_unit_ceil(shape(db, style, cand).width)
+            }
+        };
         for piece in pieces {
             let candidate = format!("{line}{piece}");
-            if !line.is_empty() && shape(db, style, candidate.trim_end_matches(' ')).width > width + 0.01 {
+            if !line.is_empty() && measure(&before, &candidate) > width {
+                before.push_str(&line);
                 out.push(std::mem::take(&mut line));
                 line = piece;
             } else {
@@ -334,8 +373,9 @@ pub fn fit_text(db: &FontDb, base: &Style, text: &str, o: &Fit) -> Layout {
     let fits = |fs: f32, width: f32| -> bool {
         let st = style_at(fs);
         if multi {
-            let n = block_lines(db, &st, text, Some(width)).len() as f32;
-            let height = (n * fs * lh).round();
+            let lh_px = line_height(fs, lh);
+            let height: f32 = block_lines(db, &st, text, Some(width)).iter().map(|r| line_box(r, lh_px, lh).1).sum();
+            let height = height.round();
             height / (fs * lh) <= l + 0.35
         } else {
             block_width(&block_lines(db, &st, text, None)).round() <= width + 0.5
@@ -401,14 +441,18 @@ pub fn fit_text(db: &FontDb, base: &Style, text: &str, o: &Fit) -> Layout {
     }
     let st = style_at(fs);
     let runs = block_lines(db, &st, text, wrap_w);
-    let line_h = fs * lh;
+    let line_h = line_height(fs, lh);
     let content_w = block_width(&runs);
     // szerokość elementu: treść, przy wielu wierszach najwyżej maxWidth
+    // element `display:block; flex:none` z `max-width`: szerokość = min(tekst w jednym wierszu, max-width)
+    // (jednostki układu: treść w górę do 1/64 px, max-width obcięte do 1/64 px)
     let span_w = match wrap_w {
-        Some(w) => content_w.min(w).round().max(if content_w > w { w.round() } else { 0.0 }),
-        None => content_w.round(),
+        Some(w) => layout_unit_ceil(block_width(&block_lines(db, &style_at(fs), text, None))).min((w * 64.0).trunc() / 64.0),
+        None => layout_unit_ceil(content_w),
     };
-    let span_h = (runs.len() as f32 * line_h).round();
+    // dokładna wysokość (LayoutUnit, 1/64 px) – do wyśrodkowania; zaokrąglona (`offsetHeight`) – do autofollow
+    let boxes: Vec<(f32, f32)> = runs.iter().map(|r| line_box(r, line_h, lh)).collect();
+    let span_h = layout_unit(boxes.iter().map(|b| b.1).sum());
     let ox = match o.align {
         "right" => span_w,
         "center" => span_w / 2.0,
@@ -423,18 +467,34 @@ pub fn fit_text(db: &FontDb, base: &Style, text: &str, o: &Fit) -> Layout {
                 "center" => (span_w - run.width) / 2.0,
                 _ => 0.0,
             };
-            let baseline = i as f32 * line_h + half_leading(line_h, &run) + run.ascent;
+            let top: f32 = boxes[..i].iter().map(|b| b.1).sum();
+            let baseline = top + boxes[i].0;
             Line { run, x, baseline, sx, ox }
         })
         .collect();
     let sq = if squeeze { vec![(sx * fs / o.size * 100.0).round() / 100.0] } else { Vec::new() };
     let w = (span_w * sx).min(if multi && !over { avail } else { f32::INFINITY });
-    Layout { lines, span_w, span_h, w, h: span_h, sq, over }
+    Layout { lines, span_w, span_h, w, h: span_h.round(), sq, over, per_line: false }
 }
 
 /// Połowa interlinii nad wierszem (jak LayoutNG: (wysokość linii − (A + D)) / 2).
-fn half_leading(line_h: f32, run: &Run) -> f32 {
-    (line_h - (run.ascent + run.descent)) / 2.0
+/// Blink (LayoutNG, `CalculateLeadingSpace`) zaokrągla połowę interlinii nad wierszem w dół do piksela.
+fn half_leading(line_h: f32, ascent: f32, descent: f32) -> f32 {
+    ((line_h - (ascent + descent)) / 2.0).floor()
+}
+
+/// Pudełko wiersza (LayoutNG): każdy fragment ma własną interlinię (`line-height` × jego rozmiar), wiersz obejmuje
+/// wszystkie. Zwraca (linia bazowa od góry wiersza, wysokość wiersza).
+fn line_box(run: &Run, line_h: f32, lh: f32) -> (f32, f32) {
+    let above0 = half_leading(line_h, run.ascent, run.descent) + run.ascent;
+    let (mut above, mut below) = (above0, line_h - above0);
+    for &(size, a, d) in &run.boxes {
+        let h = line_height(size, lh);
+        let up = half_leading(h, a, d) + a;
+        above = above.max(up);
+        below = below.max(h - up);
+    }
+    (above, above + below)
 }
 
 /// Słowa do łamania: `[[wyróżnienia]]` niepodzielne, twarda spacja nie dzieli (`breakTokens`).
@@ -614,13 +674,13 @@ pub fn fit_lines(db: &FontDb, base: &Style, text: &str, o: &Fit) -> Layout {
         let s = if s < 0.999 { s } else { 1.0 };
         out.sq.push((s * f * 100.0).round() / 100.0);
         max_w = max_w.max(width * s);
-        let line_h = o.size * f * lh;
-        placed.push((run, top, line_h, s));
+        let (above, line_h) = line_box(&run, line_height(o.size * f, lh), lh);
+        placed.push((run, top, above, s));
         top += line_h;
     }
     // element `sp` (flex, kolumna): szerokość = najszerszy wiersz przed ściśnięciem, wiersze wyrównane w nim
     let span_w = placed.iter().map(|(r, ..)| r.offset_width()).fold(0.0, f32::max);
-    for (run, top, line_h, sx) in placed {
+    for (run, top, above, sx) in placed {
         let rw = run.offset_width();
         let x = match o.align {
             "right" => span_w - rw,
@@ -632,19 +692,31 @@ pub fn fit_lines(db: &FontDb, base: &Style, text: &str, o: &Fit) -> Layout {
             "center" => rw / 2.0,
             _ => 0.0,
         };
-        let baseline = top + half_leading(line_h, &run) + run.ascent;
+        let baseline = top + above;
         out.lines.push(Line { run, x, baseline, sx, ox });
     }
     out.span_w = span_w;
-    out.span_h = top.round();
+    out.per_line = true;
+    out.span_h = layout_unit(top);
     out.w = max_w.min(avail);
-    out.h = out.span_h;
+    out.h = out.span_h.round();
     out
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn blink_line_metrics() {
+        // line-height 46 × 1,02 = 46,92 → 46,90625 (w dół do 1/64); połowa interlinii w dół do piksela
+        assert_eq!(line_height(46.0, 1.02), 46.90625);
+        assert_eq!(half_leading(46.90625, 44.0, 11.0), -5.0);
+        let run = Run { ascent: 44.0, descent: 11.0, boxes: vec![(53.2, 51.0, 13.0)], ..Run::default() };
+        let (above, h) = line_box(&run, line_height(38.0, 1.15), 1.15);
+        assert!(h > line_height(38.0, 1.15) && above >= 44.0, "{above} {h}");
+        assert_eq!(layout_unit_ceil(10.001), 10.015625);
+    }
 
     #[test]
     fn tokens_keep_highlights_whole() {

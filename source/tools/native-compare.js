@@ -27,7 +27,7 @@ const LIMIT = +opt('limit', '0.02');
 const ONLY = opt('pages', '') ? opt('pages', '').split(',') : null;
 // --tickers: tickery widoczne (Chromium 2,6 s po TAKE, natywnie te same 2,6 s od TAKE w rytmie 25 kl./s)
 const TICKERS = args.includes('--tickers');
-const ASSETS = path.join(ROOT, 'examples/archiwum/assets');
+const ASSETS = path.resolve(opt('assets', path.join(ROOT, 'examples/archiwum/assets')));
 const FONTS = path.join(SRC, 'web/fonts');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -52,7 +52,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     for (let i = 0; i < 80; i++) { try { await fetch(B + '/api/state'); break; } catch (e) { await sleep(100); } }
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     await page.goto(B + '/output');
-    await page.addStyleTag({ content: TICKERS ? '.vz-clock { visibility: hidden !important; }' : '.vz-clock, .vz-ticker { visibility: hidden !important; }' });
+    // ukrycie z potomkami: przegródki roll/wipe same ustawiają sobie visibility: visible
+    await page.addStyleTag({ content: TICKERS ? '.vz-clock, .vz-clock * { visibility: hidden !important; }' : '.vz-clock, .vz-clock *, .vz-ticker, .vz-ticker * { visibility: hidden !important; }' });
     await sleep(800);
     for (const p of pages) {
       await fetch(B + '/api/clear', { method: 'POST' });
@@ -75,14 +76,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         const k = document.createElement('canvas'); k.width = W * 3; k.height = H; const x = k.getContext('2d');
         x.putImageData(A, 0, 0); x.putImageData(Bm, W, 0);
         const D = x.createImageData(W, H);
-        let diff = 0;
+        let diff = 0, sum = 0;
         for (let i = 0; i < A.data.length; i += 4) {
           const d = Math.abs(A.data[i] - Bm.data[i]) + Math.abs(A.data[i + 1] - Bm.data[i + 1]) + Math.abs(A.data[i + 2] - Bm.data[i + 2]);
+          sum += d;
           if (d > 24) diff++;
           D.data[i] = Math.min(255, d * 2); D.data[i + 1] = d > 24 ? 40 : 0; D.data[i + 2] = 0; D.data[i + 3] = 255;
         }
         x.putImageData(D, W * 2, 0);
-        return { ratio: diff / (W * H), png: k.toDataURL('image/png').split(',')[1] };
+        return { ratio: diff / (W * H), mean: sum / (W * H * 3), png: k.toDataURL('image/png').split(',')[1] };
       }, [chrome.toString('base64'), fs.readFileSync(file).toString('base64')]);
       if (OUT) fs.writeFileSync(path.join(OUT, `${p.number}.png`), Buffer.from(res.png, 'base64'));
       if (gaps.length) {
@@ -92,7 +94,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       worst = Math.max(worst, res.ratio);
       const ok = res.ratio <= LIMIT;
       if (!ok) fails++;
-      console.log(`${ok ? 'ZGODNE  ' : 'RÓŻNE   '} ${p.number} ${sceneOf(p)?.name}: ${(res.ratio * 100).toFixed(2)}% pikseli`);
+      console.log(`${ok ? 'ZGODNE  ' : 'RÓŻNE   '} ${p.number} ${sceneOf(p)?.name}: ${(res.ratio * 100).toFixed(2)}% pikseli, średnio ${res.mean.toFixed(3)}/255`);
     }
   } finally {
     await browser.close();

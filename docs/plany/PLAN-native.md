@@ -27,6 +27,7 @@ z tym samym wyglądem i ruchem. OBS, Trio i Artist zostają przy `renderer.js`.
 | N0 | pomiar kosztu | x86 (kontener deweloperski): crawl 1080p25 3,8 ms/klatkę (ok. 9% rdzenia), sam pasek 1920×120 2,2 ms (ok. 5,5%) – `vizrs-render bench`; **pomiar na A1 do zrobienia** |
 | N1 | prymitywy, klucze, tekst bez znaczników, zegary, crawl, host warstw, `stream`, `check`, `frame`, `bench`; sidecar: `renderer: chromium\|native\|auto` | **zrobione (0.1)**: INFO24 i R7 – 13/13 stron poniżej 1% różnych pikseli wobec Chromium (poza stronami z `[[ ]]`) |
 | N2 | tekst sformatowany (`[[ ]]`, `{b}{i}{u}{c=}{sz=}`), ticker `roll`/`wipe`/`whip`, kod QR | **zrobione (0.2)**: INFO24 16/16 i R7 13/13 scen natywnie, 39 stron (także z tickerami) poniżej 1% różnych pikseli |
+| N2+ | wierność: plansze testowe, pomiar szerokości tekstu, błąd klatek ruchu; reguły Blink/Skia (DOKUMENTACJA §10.1) | **zrobione**: oprawy średnio poniżej 0,6/255, ruch – MSE klatek poniżej 5; zostaje wygładzanie krawędzi glifów (FreeType analitycznie, tiny-skia nadpróbkowaniem) |
 | N3 | ruch na wzór BTB (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) – port `motion.js` | czeka |
 | N4 | WebP, efekty specjalne (3D, RGB, glitch), szybsza ścieżka `yuva420p` i prostokąty zmian | czeka |
 | N5 | `renderer: auto` domyślnie w `docker-compose.ampere.yml` po tygodniu emisji testowej | czeka |

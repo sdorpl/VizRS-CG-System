@@ -334,6 +334,11 @@ impl Host {
 
     /// Krok animacji całej anteny (jak `loop` z `renderer.js`: dt najwyżej 0,1 s).
     pub fn tick(&mut self, clk: Clock, res: &Resources) {
+        // bez grafik pętla zasypia i zapomina czas (`last = 0`): pierwsza klatka po TAKE ma dt = 0
+        if self.layers.iter().all(|l| l.players.is_empty()) {
+            self.last_tick = None;
+            return;
+        }
         let dt = self.last_tick.map(|l| ((clk.now - l) / 1000.0).clamp(0.0, 0.1)).unwrap_or(0.0);
         self.last_tick = Some(clk.now);
         let out = self.output;
@@ -436,6 +441,20 @@ mod tests {
         assert!(h.current("front").is_some());
         h.handle(&json!({"t":"take","layer":"x","bus":"preview","scene":scene}), clk(30.0));
         assert!(h.layers.iter().all(|l| l.name != "x"));
+    }
+
+    #[test]
+    fn first_frame_after_idle_has_no_time_step() {
+        let res = Resources::new(crate::font::FontDb::new(), None, true);
+        let mut h = Host::new(None, "program");
+        h.tick(clk(0.0), &res);
+        h.tick(clk(40.0), &res);
+        let scene = json!({"duration":2,"stops":[1],"nodes":[]});
+        h.handle(&json!({"t":"take","layer":"main","scene":scene}), clk(80.0));
+        h.tick(clk(80.0), &res);
+        assert_eq!(h.current("main").map(|p| p.t), Some(0.0));
+        h.tick(clk(120.0), &res);
+        assert!((h.current("main").map(|p| p.t).unwrap() - 0.04).abs() < 1e-9);
     }
 
     #[test]

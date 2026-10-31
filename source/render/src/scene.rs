@@ -171,6 +171,17 @@ fn hash_str(parts: &[&str]) -> u64 {
     h.finish()
 }
 
+/// Lewa krawędź elementu tekstu w polu: flex z marginesem `padX`, wyrównanie wg `align`.
+fn span_x(layout: &Layout, pad_x: f32, w: f32, align: &str) -> f32 {
+    let cw = w - 2.0 * pad_x;
+    pad_x
+        + match align {
+            "center" => (cw - layout.span_w) / 2.0,
+            "right" => cw - layout.span_w,
+            _ => 0.0,
+        }
+}
+
 /// Jednostki `em` wysokości wiersza `normal` (A + D + odstęp) i linii bazowej względem środka pola.
 fn normal_metrics(res: &Resources, style: &Style) -> (f32, f32) {
     let db = res.fonts.read().unwrap_or_else(|e| e.into_inner());
@@ -179,8 +190,8 @@ fn normal_metrics(res: &Resources, style: &Style) -> (f32, f32) {
     let face = db.face(f);
     let k = style.size / face.upem;
     let (a, d, g) = ((face.ascent * k).round(), (face.descent * k).round(), (face.line_gap * k).round());
-    // wiersz `normal` wyśrodkowany w pionie: linia bazowa = środek + (A − D) / 2
-    (a + d + g, (a - d) / 2.0)
+    // wiersz `normal` (A + D + odstęp) wyśrodkowany w pionie; połowa odstępu nad wierszem w dół do piksela (Blink)
+    (a + d + g, -(a + d + g) / 2.0 + (g / 2.0).floor() + a)
 }
 
 impl Player {
@@ -742,28 +753,44 @@ impl Player {
                 text::fit_text(&db, &style, &text, &fo)
             };
             drop(db);
+            // Blink: element z przekształceniem innym niż przesunięcie (tu `scaleX`) ma położenie zaokrąglone do piksela –
+            // w `fitLines` każdy ściśnięty wiersz osobno (jego lewa krawędź w układzie pola)
+            let x0 = span_x(&layout, pad_x, w, &align);
+            let mut lines = layout.lines.clone();
+            if layout.per_line {
+                for l in lines.iter_mut().filter(|l| l.sx < 0.999) {
+                    let d = (x0 + l.x).round() - (x0 + l.x);
+                    l.x += d;
+                    l.ox += d;
+                }
+            }
             let st = &mut self.states[i];
             st.mw = Some(layout.w);
             st.mh = Some(layout.h);
-            st.block = Some(Arc::new(TextBlock { key: hash_str(&[&key]), lines: layout.lines.clone() }));
+            st.block = Some(Arc::new(TextBlock { key: hash_str(&[&key]), lines }));
+            if std::env::var_os("VIZRS_RENDER_LAYOUT").is_some() {
+                // diagnostyka zgodności z Chromium: rozmiar fontu, ściśnięcie i wymiary elementu tekstu
+                let lines: Vec<String> =
+                    layout.lines.iter().map(|l| format!("{:.4}px sx {:.6} w {:.0}", l.run.size, l.sx, l.run.offset_width())).collect();
+                eprintln!("layout {}: span {}x{} {:?}", self.nodes[i].label(), layout.span_w, layout.span_h, lines);
+            }
             st.layout = Some(Arc::new(layout));
             st.key = key;
         }
         let Some(layout) = self.states[i].layout.clone() else { return };
         let Some(block) = self.states[i].block.clone() else { return };
         // flex: wyrównanie elementu tekstu w polu (z marginesem X), w pionie wg `valign`
-        let cw = w - 2.0 * pad_x;
-        let x = pad_x
-            + match align.as_str() {
-                "center" => (cw - layout.span_w) / 2.0,
-                "right" => cw - layout.span_w,
-                _ => 0.0,
-            };
-        let y = match valign.as_str() {
+        let mut x = span_x(&layout, pad_x, w, &align);
+        let mut y = match valign.as_str() {
             "top" => 0.0,
             "bottom" => h - layout.span_h,
             _ => (h - layout.span_h) / 2.0,
         };
+        if !layout.per_line && layout.lines.first().is_some_and(|l| l.sx < 0.999) {
+            // ściśnięty element tekstu (`scaleX`): położenie do pełnego piksela, jak w Blink
+            x = x.round();
+            y = y.round();
+        }
         let Some(col) = color(&self.txt(i, "color")) else { return };
         let sh = self.num(i, "shadow");
         let shadow = (sh > 0.0).then(|| ((sh / 4.0).max(1.0), sh / 2.0, [0.0, 0.0, 0.0, 0.65]));
@@ -1331,7 +1358,7 @@ fn segment(c: &SegCtx, x: &Item) -> (DNode, f64) {
         if let Some(fg) = color(c.cat_fg) {
             node.paints.push(Paint::Text { block, color: fg, shadow: None, x: cx + px, y: 0.0 });
         }
-        cx += bw + size * 0.5;
+        cx += bw + bst.size * 0.5; // margin-right: .5em plakietki (jej własny rozmiar fontu)
     }
     let body = if c.up { x.text.to_uppercase() } else { x.text.clone() };
     let (block, tw, _) = line_block(c.res, c.style, &body, c.h);
@@ -1362,6 +1389,9 @@ fn segment(c: &SegCtx, x: &Item) -> (DNode, f64) {
     }
     // offsetWidth odcinka (całkowite px), najmniej 1
     let sw = f64::from(cx.round().max(1.0));
+    if std::env::var_os("VIZRS_RENDER_LAYOUT").is_some() {
+        eprintln!("odcinek „{}”: {cx:.3} → {sw}", x.text.chars().take(20).collect::<String>());
+    }
     node.w = sw as f32;
     (node, sw)
 }

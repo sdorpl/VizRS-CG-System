@@ -107,7 +107,24 @@ fn linear(angle: f32, stops: &[(f32, Color)], x: f32, y: f32, w: f32, h: f32, al
     let (cx, cy) = (x + w / 2.0, y + h / 2.0);
     let start = Point::from_xy(cx - dx * len / 2.0, cy - dy * len / 2.0);
     let end = Point::from_xy(cx + dx * len / 2.0, cy + dy * len / 2.0);
-    let stops = stops.iter().map(|(p, c)| GradientStop::new(*p, sk_color(*c, alpha))).collect();
+    // CSS miesza kolory z przemnożoną alfą (przezroczysty biały nie rozjaśnia); tiny-skia – bez przemnożenia.
+    // Przy różnej alfie punktów: gęstsze punkty liczone jak w CSS, między nimi różnica jest pomijalna.
+    let mut dense: Vec<(f32, Color)> = Vec::new();
+    for pair in stops.windows(2) {
+        let ((p0, c0), (p1, c1)) = (pair[0], pair[1]);
+        let steps = if (c0[3] - c1[3]).abs() > 0.001 { 16 } else { 1 };
+        for k in 0..steps {
+            let u = k as f32 / steps as f32;
+            let a = c0[3] + (c1[3] - c0[3]) * u;
+            let ch =
+                |i: usize| if a > 0.0 { (c0[i] * c0[3] + (c1[i] * c1[3] - c0[i] * c0[3]) * u) / a } else { c0[i] + (c1[i] - c0[i]) * u };
+            dense.push((p0 + (p1 - p0) * u, [ch(0), ch(1), ch(2), a]));
+        }
+    }
+    if let Some(last) = stops.last() {
+        dense.push(*last);
+    }
+    let stops = dense.iter().map(|(p, c)| GradientStop::new(*p, sk_color(*c, alpha))).collect();
     LinearGradient::new(start, end, stops, SpreadMode::Pad, Transform::identity())
 }
 
@@ -459,13 +476,15 @@ impl Raster {
     }
 
     /// Raster z pamięci podręcznej przeniesiony w położenie `m`. Klucz obejmuje część liniową `m`
-    /// i położenie z dokładnością do ćwiartki piksela (ruch płynny, bez rozmycia przez przenoszenie).
+    /// i położenie z dokładnością do ćwiartki piksela w poziomie i 1/64 w pionie (ruch płynny, bez rozmycia przez przenoszenie).
     fn blit<F>(&mut self, dst: &mut Pixmap, key: u64, m: Transform, mask: Option<&Mask>, alpha: f32, make: F)
     where
         F: FnOnce(Transform, &mut (i32, i32)) -> Option<Pixmap>,
     {
         let (ix, iy) = (m.tx.floor(), m.ty.floor());
-        let (fx, fy) = (((m.tx - ix) * 4.0).round() / 4.0, ((m.ty - iy) * 4.0).round() / 4.0);
+        // w poziomie ćwiartka piksela (przewijanie); w pionie 1/64 – linia bazowa tekstu jest potem zaokrąglana
+        // do piksela, więc kwantowanie do ćwiartki zmieniałoby wiersz (np. 0,406 → 0,5 → w dół o piksel)
+        let (fx, fy) = (((m.tx - ix) * 4.0).round() / 4.0, ((m.ty - iy) * 64.0).round() / 64.0);
         let lin = Transform::from_row(m.sx, m.ky, m.kx, m.sy, fx, fy);
         let full_key = {
             let mut h = DefaultHasher::new();
@@ -474,7 +493,7 @@ impl Raster {
                 ((v * 4096.0).round() as i64).hash(&mut h);
             }
             ((fx * 4.0) as i32).hash(&mut h);
-            ((fy * 4.0) as i32).hash(&mut h);
+            ((fy * 64.0) as i32).hash(&mut h);
             h.finish()
         };
         let frame = self.frame;
@@ -554,9 +573,22 @@ fn raster_text(
     let base = mul(Transform::from_translate(-ox, -oy), lin);
     let db = res.fonts.read().unwrap_or_else(|e| e.into_inner());
     // `shadow`: cały tekst i podkreślenia kolorem cienia (bez tła wyróżnień, jak `text-shadow`)
+    // glify do masek A8 (po jednej na kolor), potem tablica gamma Skia i kolor – jak tekst w Chromium
     let draw = |pix: &mut Pixmap, tf0: Transform, shadow: Option<Color>| {
+        let mut masks: Vec<([u32; 4], Color, Mask)> = Vec::new();
         let solid = |c: Color| SkPaint { shader: Shader::SolidColor(sk_color(c, 1.0)), anti_alias: true, ..SkPaint::default() };
         for line in &block.lines {
+            // Skia: tekst bez obrotu ma linię bazową na pełnym pikselu (w pionie), w poziomie położenie podpikselowe
+            let mut base = Point::from_xy(0.0, line.baseline);
+            let snap = if tf0.kx == 0.0 && tf0.ky == 0.0 {
+                let mut p = [base];
+                tf0.map_points(&mut p);
+                p[0].y.round() - p[0].y
+            } else {
+                0.0
+            };
+            base.y = snap;
+            let tf0 = mul(Transform::from_translate(0.0, base.y), tf0);
             let lt = mul(tf0, Transform::from_row(line.sx, 0.0, 0.0, 1.0, line.ox - line.ox * line.sx, 0.0));
             let lt = mul(lt, Transform::from_translate(line.x, line.baseline));
             if shadow.is_none() {
@@ -576,8 +608,18 @@ fn raster_text(
                 let Some(path) = face.glyph_path(g.id) else { continue };
                 let k = g.size / face.upem;
                 let tf = mul(tf0, glyph_tf(line, g, k));
-                let paint = solid(shadow.or(g.color).unwrap_or(color));
-                pix.fill_path(&path, &paint, FillRule::Winding, tf, None);
+                let c = shadow.or(g.color).unwrap_or(color);
+                let key = c.map(f32::to_bits);
+                let at = match masks.iter().position(|(k2, _, _)| *k2 == key) {
+                    Some(i) => i,
+                    None => {
+                        let Some(m) = Mask::new(pix.width(), pix.height()) else { continue };
+                        masks.push((key, c, m));
+                        masks.len() - 1
+                    }
+                };
+                let mask = &mut masks[at].2;
+                mask.fill_path(&path, FillRule::Winding, true, tf);
                 if g.fake_bold {
                     // Skia: pogrubienie obrysem, grubość od 1/24 (9 px) do 1/32 (36 px) rozmiaru
                     let s = g.size;
@@ -589,7 +631,9 @@ fn raster_text(
                         1.0 / 24.0 + (s - 9.0) / 27.0 * (1.0 / 32.0 - 1.0 / 24.0)
                     };
                     let stroke = Stroke { width: s * ratio / k, ..Stroke::default() };
-                    pix.stroke_path(&path, &paint, &stroke, tf, None);
+                    if let Some(outline) = path.stroke(&stroke, 1.0) {
+                        mask.fill_path(&outline, FillRule::Winding, true, tf);
+                    }
                 }
             }
             for d in &line.run.decor {
@@ -598,6 +642,16 @@ fn raster_text(
                         pix.fill_path(&PathBuilder::from_rect(r), &solid(shadow.or(*c).unwrap_or(color)), FillRule::Winding, lt, None);
                     }
                 }
+            }
+        }
+        let full = Rect::from_xywh(0.0, 0.0, pix.width() as f32, pix.height() as f32);
+        for (_, c, mut mask) in masks {
+            let lut = mask_gamma(c);
+            for v in mask.data_mut() {
+                *v = lut[usize::from(*v)];
+            }
+            if let Some(r) = full {
+                pix.fill_rect(r, &solid(c), Transform::identity(), Some(&mask));
             }
         }
     };
@@ -610,6 +664,47 @@ fn raster_text(
     }
     draw(&mut pix, base, None);
     Some(pix)
+}
+
+/// Korekcja maski wygładzania tekstu jak `SkMaskGamma` w Chromium na Linuksie (`SK_GAMMA_EXPONENT=1.2`,
+/// `SK_GAMMA_CONTRAST=0.2`): tablica dla luminancji koloru tekstu skwantowanej do 3 bitów (`SkTMaskGamma<3,3,3>`).
+pub fn mask_gamma(c: Color) -> &'static [u8; 256] {
+    static TABLES: std::sync::OnceLock<[[u8; 256]; 8]> = std::sync::OnceLock::new();
+    let tables = TABLES.get_or_init(|| {
+        let mut out = [[0u8; 256]; 8];
+        for (level, table) in out.iter_mut().enumerate() {
+            *table = gamma_table((level * 255 / 7) as f32 / 255.0, 0.2, 1.2);
+        }
+        out
+    });
+    // SkComputeLuminance (r·54 + g·183 + b·19) >> 8, potem 3 najwyższe bity
+    let ch = |v: f32| (v.clamp(0.0, 1.0) * 255.0).round() as u32;
+    let lum = (ch(c[0]) * 54 + ch(c[1]) * 183 + ch(c[2]) * 19) >> 8;
+    &tables[(lum >> 5) as usize]
+}
+
+/// `SkTMaskGamma_build_correcting_lut` dla jasności tekstu `src` (0–1).
+fn gamma_table(src: f32, contrast: f32, gamma: f32) -> [u8; 256] {
+    let luma = |v: f32| v.powf(gamma);
+    let from_luma = |v: f32| v.powf(1.0 / gamma);
+    let apply_contrast = |a: f32, c: f32| a + (1.0 - a) * c * a;
+    let lin_src = luma(src);
+    let dst = 1.0 - src;
+    let lin_dst = luma(dst);
+    let adjusted = contrast * lin_dst;
+    let mut t = [0u8; 256];
+    for (i, out) in t.iter_mut().enumerate() {
+        let raw = i as f32 / 255.0;
+        let a = apply_contrast(raw, adjusted);
+        let v = if (src - dst).abs() < 1.0 / 256.0 {
+            a
+        } else {
+            let lin_out = lin_src * a + (1.0 - a) * lin_dst;
+            (from_luma(lin_out) - dst) / (src - dst)
+        };
+        *out = (255.0 * v).round().clamp(0.0, 255.0) as u8;
+    }
+    t
 }
 
 /// Obraz z przemnożoną alfą → RGBA bez przemnożenia (jak PNG z Chromium).
@@ -634,6 +729,34 @@ mod tests {
         let b = p.bounds();
         assert!((b.width() - 10.0).abs() < 1e-3);
         assert!(shape(0.0, 0.0, 0.0, 10.0, &Radius::Px(0.0)).is_none() || shape(0.0, 0.0, 0.0, 10.0, &Radius::Px(0.0)).is_some());
+    }
+
+    #[test]
+    fn mask_gamma_like_skia() {
+        // biały tekst: pokrycie^(1/1,2), bez kontrastu; skrajne wartości bez zmian
+        let w = mask_gamma([1.0; 4]);
+        assert_eq!((w[0], w[255]), (0, 255));
+        assert_eq!(w[64], ((64.0f32 / 255.0).powf(1.0 / 1.2) * 255.0).round() as u8);
+        // czarny tekst: kontrast 0,2, potem gamma 1,2 (SkTMaskGamma_build_correcting_lut) – w połowie 124
+        let b = mask_gamma([0.0, 0.0, 0.0, 1.0]);
+        assert_eq!((b[128], b[255]), (124, 255));
+        assert!(b.windows(2).all(|p| p[0] <= p[1]) && w.windows(2).all(|p| p[0] <= p[1]));
+    }
+
+    #[test]
+    fn transparent_gradient_mixes_premultiplied() {
+        // przezroczysty biały → niebieski: w połowie tylko niebieski z połową alfy (bez rozjaśnienia)
+        let res = Resources::new(crate::font::FontDb::new(), None, true);
+        let mut pix = Pixmap::new(100, 1).unwrap();
+        let mut n = DNode::new(Transform::identity(), 100.0, 1.0);
+        n.paints.push(Paint::Box {
+            radius: Radius::Px(0.0),
+            fill: Fill::Linear { angle: 90.0, stops: vec![(0.0, [1.0, 1.0, 1.0, 0.0]), (1.0, [0.0, 0.0, 1.0, 1.0])] },
+        });
+        Raster::new().draw(&mut pix, &[(&n, Transform::identity())], &res);
+        let p = pix.pixel(50, 0).unwrap();
+        assert!(p.red() <= 2 && p.green() <= 2, "{p:?}");
+        assert!((i32::from(p.alpha()) - 128).abs() <= 4 && (i32::from(p.blue()) - i32::from(p.alpha())).abs() <= 2, "{p:?}");
     }
 
     #[test]

@@ -3,7 +3,8 @@
 //        [--only INFO24,R7] [--fps 25]
 // Jeden serwer VizRS na paczkę, te same komendy (TAKE → na antenie → CONTINUE → OUT) dla obu rendererów.
 // Chromium nagrywany w czasie wirtualnym (jak tools/video.js), renderer natywny dostaje te same czasy klatek
-// (`F <czas> <ścienny>`), więc animacje, tickery i zegary są w tych samych chwilach. Kadr 2×2: Chromium | natywnie
+// (`F <czas> <ścienny>`), więc animacje, tickery i zegary są w tych samych chwilach; requestAnimationFrame strony
+// biegnie raz na klatkę, jak `beginFrame` na kanale. Kadr 2×2: Chromium | natywnie
 // / różnica ×4 | opis strony (czy wszystko natywnie, czas klatki renderera natywnego). Wymaga ffmpeg.
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -16,8 +17,10 @@ const opt = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : nu
 const OUT = path.resolve(opt('--out') || path.join(os.tmpdir(), 'vizrs-chromium-vs-natywny.mp4'));
 const ONLY = (opt('--only') || 'INFO24').split(',');
 const FPS = Math.max(1, +opt('--fps') || 25);
+// --stats plik.csv: błąd każdej klatki (MSE Chromium–natywnie, filtr psnr ffmpeg) i podsumowanie stron
+const STATS = opt('--stats');
 const RENDER = path.resolve(opt('--render') || path.join(__dirname, '../render/target/release/vizrs-render'));
-const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && !['--out', '--only', '--fps', '--render'].includes(args[i - 1])) || path.join(__dirname, '../target/release/vizrs'));
+const BIN = path.resolve(args.find((a, i) => !a.startsWith('--') && !['--out', '--only', '--fps', '--render', '--stats'].includes(args[i - 1])) || path.join(__dirname, '../target/release/vizrs'));
 const ASSETS = path.join(ROOT, 'examples/archiwum/assets');
 const [W, H] = [1920, 1080];
 const BGC = [0x2b, 0x34, 0x42]; // jednolite tło obu stron (różnica nie zależy od tła)
@@ -83,7 +86,8 @@ const esc = (s) => String(s).replace(/\\/g, '\\\\\\\\').replace(/'/g, '\u2019').
 (async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vizrs-nvideo-'));
   const fileA = path.join(tmp, 'chromium.mkv'), fileB = path.join(tmp, 'natywny.mkv');
-  const encA = ffEncode(fileA, ['-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-']);
+  // przy --stats zrzuty PNG: bez artefaktów JPEG w błędzie klatek (wolniej)
+  const encA = ffEncode(fileA, ['-f', 'image2pipe', '-framerate', String(FPS), '-c:v', STATS ? 'png' : 'mjpeg', '-i', '-']);
   const encB = ffEncode(fileB, ['-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', `${W}x${H}`, '-framerate', String(FPS), '-i', '-']);
   const segments = []; // { from, to (s), lines: [..] } – opis w czwartej ćwiartce
   const { chromium } = loadPlaywright();
@@ -109,13 +113,21 @@ const esc = (s) => String(s).replace(/\\/g, '\\\\\\\\').replace(/'/g, '\u2019').
       try {
         await page.goto(B + '/output');
         await page.evaluate((bg) => { document.documentElement.style.background = document.body.style.background = bg; }, BGCSS);
+        // jedna klatka animacji na klatkę nagrania, w jej chwili – jak `beginFrame` na kanale (VizRS CG Playout);
+        // zegar wirtualny Playwright odpalałby requestAnimationFrame co 16 ms, niezależnie od klatek
+        await page.evaluate(() => {
+          const queue = [];
+          window.requestAnimationFrame = (cb) => queue.push(cb);
+          window.__vzFrame = () => { const t = performance.now(); for (const cb of queue.splice(0)) cb(t); };
+        });
         await sleep(1200); // SSE, fonty (czas rzeczywisty), renderer natywny wczytuje fonty serwera
         let stat = { ms: 0, n: 0, complete: true };
         const record = async (sec) => {
           for (let i = 0, n = Math.round(sec * FPS); i < n; i++) {
             vt += 1000 / FPS;
             await page.clock.runFor(1000 / FPS);
-            await encA.write(await page.screenshot({ type: 'jpeg', quality: 95 }));
+            await page.evaluate(() => window.__vzFrame());
+            await encA.write(await page.screenshot(STATS ? { type: 'png' } : { type: 'jpeg', quality: 95 }));
             const t0 = process.hrtime.bigint();
             const r = await nat.frame(1000 + vt, base + vt);
             stat.ms += Number(process.hrtime.bigint() - t0) / 1e6;
@@ -164,6 +176,27 @@ const esc = (s) => String(s).replace(/\\/g, '\\\\\\\\').replace(/'/g, '\u2019').
     await browser.close();
     await encA.end();
     await encB.end();
+  }
+  if (STATS) {
+    const log = path.join(tmp, 'psnr.log');
+    await new Promise((res, rej) => {
+      const f = spawn('ffmpeg', ['-v', 'error', '-i', fileA, '-i', fileB, '-lavfi', `[0:v][1:v]psnr=stats_file=${log}`, '-f', 'null', '-'], { stdio: 'inherit' });
+      f.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg psnr: kod ' + c))));
+    });
+    const mse = fs.readFileSync(log, 'utf8').trim().split('\n').map((l) => +(/mse_avg:([\d.]+)/.exec(l) || [0, 0])[1]);
+    const rows = ['klatka,czas_s,strona,mse'];
+    console.log('\nstrona                                  MSE: średnio  najwięcej (s od TAKE)');
+    for (const sg of segments) {
+      const a = Math.round(sg.from * FPS), b = Math.round(sg.to * FPS);
+      let max = 0, at = a, sum = 0;
+      for (let k = a; k < b && k < mse.length; k++) {
+        rows.push(`${k},${(k / FPS).toFixed(2)},${sg.lines[1].replace(/,/g, ' ')},${mse[k].toFixed(3)}`);
+        sum += mse[k];
+        if (mse[k] > max) { max = mse[k]; at = k; }
+      }
+      console.log(`${sg.lines[1].slice(0, 38).padEnd(40)} ${(sum / Math.max(1, b - a)).toFixed(2).padStart(8)} ${max.toFixed(2).padStart(9)} (${((at - a) / FPS).toFixed(2)})`);
+    }
+    fs.writeFileSync(path.resolve(STATS), rows.join('\n') + '\n');
   }
   // kadr 2×2: Chromium | natywnie / różnica ×4 | opis
   const font = ['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf'].find((f) => fs.existsSync(f));
