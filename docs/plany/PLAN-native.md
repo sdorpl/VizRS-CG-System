@@ -36,6 +36,7 @@ z tym samym wyglądem i ruchem. OBS, Trio i Artist zostają przy `renderer.js`.
 Szablony nie muszą się zmieniać – czego renderer nie umie, rysuje Chromium. Żeby kanał szedł natywnie, sceny kanału
 dostosowuje się stopniowo (raport: `vizrs-render check --show show.json`):
 
-- **fonty z Google Fonts** (np. Barlow, Bebas Neue, Roboto Mono w INFO24) – wgrać plik fontu do assets i wskazać go
-  w węźle albo przejść na font wbudowany (§4.8); na antenie i tak zalecane (praca bez internetu);
+- **fonty z Google Fonts** – Barlow, Bebas Neue i Roboto Mono (INFO24) są już wbudowane (2026-10-31), bez zmiany
+  wyglądu szablonów: INFO24 13/16 scen natywnie (było 9/16). Inny font z Google: wgrać plik do assets i wskazać go
+  w węźle albo przejść na font wbudowany (DOKUMENTACJA §4.8);
 - **tekst sformatowany, ticker `roll`/`wipe`/`whip`, QR, ruch BTB** – do czasu etapów N2–N3 te sceny idą przez Chromium.

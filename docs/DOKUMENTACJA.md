@@ -212,7 +212,7 @@ Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warst
 
 ### 4.8 Fonty
 
-- Wbudowane offline: **Oswald, Barlow Condensed, Inter, Roboto, Roboto Condensed, Montserrat** (`/fonts/fonts.css`).
+- Wbudowane offline: **Oswald, Barlow Condensed, Barlow, Bebas Neue, Inter, Roboto, Roboto Condensed, Roboto Mono, Montserrat** (`/fonts/fonts.css`). Barlow, Bebas Neue i Roboto Mono (używane w INFO24) doszły w gałęzi `render-native`: szablony z nimi nie potrzebują już internetu, a renderer natywny (§10.1) rysuje je sam.
 - Fonty systemowe (Arial, Verdana…) – bez ładowania.
 - Inne nazwy z Google Fonts ładują się z internetu (na antenie lepiej tego unikać).
 - Własny font: wgraj `.ttf/.otf/.woff/.woff2` do assets i wpisz w polu „font” nazwę pliku, np. `MojFont.ttf`. Font wgrany, gdy Trio lub wyjście są już otwarte, wczyta się sam w ciągu kilkunastu sekund (bez odświeżania strony).

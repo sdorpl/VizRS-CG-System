@@ -4,7 +4,8 @@ Pliki pochodzą z pakietu fontów BTB-CG (fonts/pack, @fontsource, OFL-1.1). Uru
     python3 tools/gen_fonts.py
 (Skrypt jednorazowo wygenerował też katalog web/fonts z pakietu BTB-CG; tu odtwarza tylko tabelę Rust.)"""
 import os, re
-FAMS = {'oswald': 'Oswald', 'barlow-condensed': 'Barlow Condensed', 'inter': 'Inter', 'roboto-condensed': 'Roboto Condensed', 'montserrat': 'Montserrat', 'roboto': 'Roboto'}
+FAMS = {'oswald': 'Oswald', 'barlow-condensed': 'Barlow Condensed', 'inter': 'Inter', 'roboto-condensed': 'Roboto Condensed', 'montserrat': 'Montserrat', 'roboto': 'Roboto',
+        'barlow': 'Barlow', 'bebas-neue': 'Bebas Neue', 'roboto-mono': 'Roboto Mono'}
 old = open('src/fonts_data.rs').read()
 ranges = re.findall(r'pub const RANGE_[A-Z_]+: &str = "[^"]*";', old)
 rows = []

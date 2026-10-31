@@ -231,7 +231,7 @@ export function showIfOk(node, scene, values) {
 // ------------------------------------------------------------------ fonty
 const loadedFonts = new Set();
 /** Rodziny dostępne offline (wbudowane w serwer: /fonts/fonts.css). Reszta idzie przez Google Fonts. */
-export const OFFLINE_FONTS = ['Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'];
+export const OFFLINE_FONTS = ['Oswald', 'Barlow Condensed', 'Barlow', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto', 'Bebas Neue', 'Roboto Mono'];
 if (typeof document !== 'undefined' && !document.querySelector('link[data-vz-fonts]')) {
   const l = document.createElement('link');
   l.rel = 'stylesheet'; l.href = '/fonts/fonts.css'; l.dataset.vzFonts = '1';

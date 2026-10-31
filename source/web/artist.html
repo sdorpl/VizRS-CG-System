@@ -226,7 +226,7 @@
 import * as BTB from '/btb-io.js';
 import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
-import { PROPS, TYPES, FONTS, EASES, ScenePlayer, propAt, trackValue, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
+import { PROPS, TYPES, FONTS, OFFLINE_FONTS, EASES, ScenePlayer, propAt, trackValue, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -1716,7 +1716,7 @@ async function importBtbFile(f) {
     for (const el of elements) {
       const used = new Set();
       const r = BTB.convertElement(el, {
-        knownFonts: [...FONTS, 'Oswald', 'Barlow Condensed', 'Inter', 'Roboto Condensed', 'Montserrat', 'Roboto'],
+        knownFonts: [...FONTS, ...OFFLINE_FONTS],
         assetName: (src) => { const k = Object.keys(files || {}).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
       });
       for (const k of used) {
