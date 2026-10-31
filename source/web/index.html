@@ -41,7 +41,6 @@
   <ol>
     <li>W OBS: <b>Źródła → + → Przeglądarka</b> (Browser).</li>
     <li>URL: <code id="outUrl">http://localhost:8088/output</code>, szerokość <code>1920</code>, wysokość <code>1080</code>.</li>
-    <li>Wyczyść pole „Własny CSS” (domyślny CSS OBS jest OK — tło i tak jest przezroczyste).</li>
     <li>Zaznacz <i>„Odśwież przeglądarkę, gdy scena staje się aktywna”</i> — VizRS odtworzy stan anteny po odświeżeniu.</li>
     <li>Sterowanie z <a href="/trio">Trio</a> w zwykłej przeglądarce (lub w OBS jako <i>Dock → Niestandardowe docki przeglądarki</i>).</li>
   </ol>
@@ -49,7 +48,7 @@
 
   <h2>Model pracy (jak w Vizrt)</h2>
   <ul>
-    <li><b>Scena</b> (Artist) = szablon. Kontenery: grupa, prostokąt, elipsa, tekst, obraz/wideo, zegar, ticker.</li>
+    <li><b>Scena</b> (Artist) = szablon. Kontenery: grupa, prostokąt, elipsa, tekst, kod QR, obraz/wideo, zegar, ticker.</li>
     <li><b>Pola kontrolne</b> (⛓, odpowiednik Control Object) — właściwości, które operator wypełnia w Trio.</li>
     <li><b>Strona</b> (Trio) = instancja szablonu z danymi i numerem (np. 1001).</li>
     <li><b>Stop pointy</b>: TAKE gra do 1. stopu, CONTINUE do kolejnego, OUT od ostatniego stopu do końca.</li>
@@ -64,12 +63,17 @@
     <tr><td>GET|POST /api/clear</td><td>zdejmij wszystko</td></tr>
     <tr><td>GET|POST /api/update/5001?homeScore=3</td><td>zmień pola strony; jeśli jest na antenie — podmiana na żywo bez animacji. <code>&amp;save=0</code> = bez zapisu</td></tr>
     <tr><td>GET|POST /api/carousel/start/pl1</td><td>start karuzeli playlisty (id lub nazwa); <code>/api/carousel/stop</code></td></tr>
+    <tr><td>GET|POST /api/rundown/{id}/next</td><td>NEXT w rundownie</td></tr>
+    <tr><td>GET|POST /api/macro/{nazwa}</td><td>uruchom makro</td></tr>
+    <tr><td>GET|POST /api/ticker/3001/add?item=SPORT|Gol</td><td>dodaj wiadomość do tickera</td></tr>
     <tr><td>GET /api/state</td><td>co jest na antenie</td></tr>
-    <tr><td>GET|PUT /api/show</td><td>cały show (sceny, strony, playlisty)</td></tr>
-    <tr><td>POST|PUT|DELETE /api/{scenes|pages|playlists}/{id}</td><td>CRUD</td></tr>
+    <tr><td>GET|PUT /api/show</td><td>cały show; <code>PUT</code> = import</td></tr>
+    <tr><td>POST /api/{rodzaj}</td><td>nowy obiekt; rodzaje: <code>scenes</code>, <code>pages</code>, <code>playlists</code>, <code>rundowns</code>, <code>macros</code></td></tr>
+    <tr><td>PUT|DELETE /api/{rodzaj}/{id}</td><td>zapis lub usunięcie obiektu</td></tr>
     <tr><td>POST /api/assets?name=logo.png</td><td>upload pliku (surowe body); pliki pod <code>/assets/…</code></td></tr>
     <tr><td>GET /events</td><td>strumień zdarzeń SSE</td></tr>
   </table>
+  <p class="dim">Pełna lista komend: <code>docs/API.md</code> w repozytorium.</p>
 
   <h2>Port komend TCP (domyślnie 6100)</h2>
 <pre>TAKE 1001
