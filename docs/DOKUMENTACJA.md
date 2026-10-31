@@ -499,7 +499,7 @@ OBS: Źródła → **+** → **Przeglądarka** → `http://localhost:8088/output
 
 Wygląd z `fx=step` różni się od OBS, dlatego to świadomy wybór kanału; podgląd: `/output?fx=step&checker=1`. Adres dla playoutu kanału 25 kl./s: `/output?fps=25&fx=step`. Bez stron na antenie pętla animacji zasypia (w każdym trybie).
 
-**Taśma crawla przesuwana przez playout (`window.vizrsTape`).** Przewijany crawl zmienia obraz w każdej klatce, choć taśma tylko się przesuwa. Playout kanału (VirtRS CG Playout, opcja `tape`) może ją przesuwać sam: wtedy Chromium rysuje taśmę tylko raz na jej okno („film”), a nie w każdej klatce. `/output` wystawia do tego interfejs dla DevTools (`Runtime.evaluate`); bez wywołań nic nie zmienia i nic nie kosztuje (OBS, Trio, Artist):
+**Taśma crawla przesuwana przez playout (`window.vizrsTape`).** Przewijany crawl zmienia obraz w każdej klatce, choć taśma tylko się przesuwa. Playout kanału (VizRS CG Playout, opcja `tape`) może ją przesuwać sam: wtedy Chromium rysuje taśmę tylko raz na jej okno („film”), a nie w każdej klatce. `/output` wystawia do tego interfejs dla DevTools (`Runtime.evaluate`); bez wywołań nic nie zmienia i nic nie kosztuje (OBS, Trio, Artist):
 
 | Wywołanie | Działanie |
 |---|---|
@@ -513,7 +513,7 @@ Wskazówki dla scen kanału wypalanego: ticker w trybie `roll` albo `wipe` koszt
 
 ### 10.1 Renderer natywny (`vizrs-render`)
 
-`vizrs-render` (katalog `source/render/`) rysuje antenę bez przeglądarki: czyta te same zdarzenia co `/output` (`/events`, fonty `/fonts`, pliki `/assets`), odtwarza sceny tą samą logiką co `renderer.js` (stop pointy, klucze i krzywe, pola strony, warianty, autofollow, `dock`, ticker `crawl`, zegary) i rastruje je na CPU (tiny-skia, tekst kształtowany jak w Chromium – rustybuzz). Służy playoutowi kanału (VirtRS CG Playout, opcja `renderer`) na maszynach bez GPU: przewijany crawl 1080p25 kosztuje kilka procent jednego rdzenia zamiast ok. 2 rdzeni bezgłowego Chromium. OBS, Trio i Artist dalej używają `renderer.js`; renderer natywny to drugi wykonawca tej samej semantyki, nie nowy format.
+`vizrs-render` (katalog `source/render/`) rysuje antenę bez przeglądarki: czyta te same zdarzenia co `/output` (`/events`, fonty `/fonts`, pliki `/assets`), odtwarza sceny tą samą logiką co `renderer.js` (stop pointy, klucze i krzywe, pola strony, warianty, autofollow, `dock`, ticker `crawl`, zegary) i rastruje je na CPU (tiny-skia, tekst kształtowany jak w Chromium – rustybuzz). Służy playoutowi kanału (VizRS CG Playout, opcja `renderer`) na maszynach bez GPU: przewijany crawl 1080p25 kosztuje kilka procent jednego rdzenia zamiast ok. 2 rdzeni bezgłowego Chromium. OBS, Trio i Artist dalej używają `renderer.js`; renderer natywny to drugi wykonawca tej samej semantyki, nie nowy format.
 
 Czego jeszcze nie rysuje, zgłasza jako brak: playout przechodzi wtedy na Chromium (`renderer: auto`), więc grafika nie znika i nie zmienia wyglądu. Stan (wersja 0.1):
 

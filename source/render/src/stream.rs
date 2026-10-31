@@ -1,4 +1,4 @@
-//! Tryb `stream`: renderer jako proces podrzędny sidecara (VirtRS CG Playout) – zamiast bezgłowego Chromium.
+//! Tryb `stream`: renderer jako proces podrzędny sidecara (VizRS CG Playout) – zamiast bezgłowego Chromium.
 //! Sam łączy się z VizRS jak strona `/output` (zdarzenia, fonty, assets), a klatki rysuje na żądanie.
 //!
 //! Protokół (DOKUMENTACJA §10.1): na stdin wiersze tekstu, na stdout rekordy binarne.

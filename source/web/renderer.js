@@ -651,7 +651,7 @@ export function setOutputMode({ fps = 0, step = false } = {}) {
 }
 
 // ------------------------------------------------------------------ taśma crawla rysowana poza stroną (sidecar)
-// Bezgłowy Chromium sidecara (VirtRS CG Playout) zamiast zrzucać ekran w każdej klatce przewijania prosi o „film”:
+// Bezgłowy Chromium sidecara (VizRS CG Playout) zamiast zrzucać ekran w każdej klatce przewijania prosi o „film”:
 // raz na kilka sekund jedno okno taśmy (sama taśma, reszta strony ukryta), a taśmę na antenie przesuwa sam nad
 // statycznym tłem. Strona ukrywa wtedy swoją taśmę, ale tylko gdy crawl stoi w miejscu: niezmienione położenie,
 // pełne krycie przodków, bez filtra, maski i przycięcia, nic nad nim. Inaczej rysuje ją sama, jak zawsze.

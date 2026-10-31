@@ -1,11 +1,11 @@
 # PLAN: renderer natywny VizRS (`vizrs-render`, bez Chromium)
 
 > Stan (2026-10-31): **etap N1 rozpoczęty** na gałęzi `render-native` (renderer 0.1). Uzasadnienie, odrzucone kierunki
-> i decyzje: plan wspólny z playoutem kanału – `VirtRS CG Playout`, `docs/plany/native.md`. Opis działania: [DOKUMENTACJA §10.1](../DOKUMENTACJA.md#101-renderer-natywny-vizrs-render).
+> i decyzje: plan wspólny z playoutem kanału – `VizRS CG Playout`, `docs/plany/native.md`. Opis działania: [DOKUMENTACJA §10.1](../DOKUMENTACJA.md#101-renderer-natywny-vizrs-render).
 
 ## Cel
 
-Kanał wypalany (VirtRS CG Playout na Oracle Ampere A1, bez GPU) rysuje grafikę za ułamek CPU bezgłowego Chromium,
+Kanał wypalany (VizRS CG Playout na Oracle Ampere A1, bez GPU) rysuje grafikę za ułamek CPU bezgłowego Chromium,
 z tym samym wyglądem i ruchem. OBS, Trio i Artist zostają przy `renderer.js`.
 
 ## Zasady (decyzje z planu wspólnego, §8)

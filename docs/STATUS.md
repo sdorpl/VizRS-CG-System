@@ -9,7 +9,7 @@
 
 **Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
-**Playout kanału** – [plany/PLAN-kanal.md](plany/PLAN-kanal.md): własny playout na bazie ffplayout („VizRS Playout”, repo `VizRS ffPlayout System`) **porzucony 2026-10-24** – repozytorium zostaje jako archiwum i wzorzec. Kanał z grafiką VizRS: **VirtRS CG Playout** (sidecar dla ErsatzTV, `../VirtRS CG Playout`) – komendy na start klipu, reklamy bez grafiki, wtapianie `/output` bezgłowym Chromium.
+**Playout kanału** – [plany/PLAN-kanal.md](plany/PLAN-kanal.md): własny playout na bazie ffplayout („VizRS Playout”, repo `VizRS ffPlayout System`) **porzucony 2026-10-24** – repozytorium zostaje jako archiwum i wzorzec. Kanał z grafiką VizRS: **VizRS CG Playout** (sidecar dla ErsatzTV, `../VizRS CG Playout`) – komendy na start klipu, reklamy bez grafiki, wtapianie `/output` bezgłowym Chromium.
 
 **Renderer natywny** – [plany/PLAN-native.md](plany/PLAN-native.md): `vizrs-render` (`source/render/`, gałąź `render-native`) rysuje antenę bez Chromium dla playoutu kanału; etap N1 (0.1) zrobiony, następne: tekst sformatowany, `roll`/`wipe`/`whip`, QR (N2), ruch BTB (N3), pomiar na Ampere A1.
 

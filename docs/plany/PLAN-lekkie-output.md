@@ -3,7 +3,7 @@
 Status: **L1–L4 wdrożone** (2026-10-24): `?fps=N`, `?fx=step` (efekty ruchowe wyłączone), uśpienie pętli bez stron,
 wskazówki w DOKUMENTACJA §10 i instrukcji; test klatek screencastu w `tests/e2e/motion.js`. L5 (wskaźnik w Artist) – później.
 Decyzje z §6: osobne parametry `fps` i `fx=step` (bez `lite=1`); w L2 efekty ruchowe wyłączone.
-Dotyczy wypalania `/output` w obraz kanału przez bezgłowy Chromium bez GPU: VirtRS CG Playout (ErsatzTV)
+Dotyczy wypalania `/output` w obraz kanału przez bezgłowy Chromium bez GPU: VizRS CG Playout (ErsatzTV)
 (wcześniej także VizRS ffPlayout System – od 2026-10-24 archiwum). Docelowo Oracle Cloud Free, Ampere A1 (arm64, do 4 OCPU), gdzie grafika ma się
 zmieścić w ok. 1,5 OCPU obok kodowania x264. OBS, vMix i okno `vizrs output` zostają bez zmian. Wszystko,
 co niżej, włącza się parametrem adresu.
@@ -42,7 +42,7 @@ jedna właściwość liczona z czasu, np. krycie `blink` z cosinusa, żeby każd
 
 Środowisko:
 - Xeon E3-1270 v3 (x86, 8 wątków), Google Chrome 156 headless, VizRS 2.0.1, `demo_show.json`;
-- przechwytywanie `Capture` z VirtRS CG Playout w 1920×1080;
+- przechwytywanie `Capture` z VizRS CG Playout w 1920×1080;
 - 6 s pomiaru, 2 s po TAKE.
 
 CPU to suma procesów Chromium oraz proces Node sidecara (dekodowanie PNG i wycinanie prostokątów).
@@ -67,7 +67,7 @@ Prototyp zmian z §4 (kopia `web/` poza repo, ten sam pomiar):
 | 1405 Kafel (`cycle`) | 47% / 15%, 6,3 kl./s | 31% / 9%, 6,0 kl./s | 32% / 9% |
 
 (Chromium / Node, klatki/s.) Chromium nadal potrzebuje ok. 4% CPU na każdą klatkę na sekundę.
-`chromium-headless-shell`, którego używa obraz VirtRS CG, zmniejsza to mniej więcej o połowę.
+`chromium-headless-shell`, którego używa obraz VizRS CG Playout, zmniejsza to mniej więcej o połowę.
 Arm64 jeszcze nie zmierzony (A1 to Neoverse N1, 1 OCPU = 1 rdzeń bez SMT); spodziewany koszt jest
 podobny albo wyższy.
 
@@ -138,12 +138,12 @@ Artist mógłby wskazywać sceny z animacją ciągłą w stanie ustalonym (`blin
 
 ## 5. Spójność z playoutami
 
-- VirtRS CG Playout: `output_url` / `VIZRS_OUTPUT_URL` dostaje `&fps=25` (i ewentualnie
+- VizRS CG Playout: `output_url` / `VIZRS_OUTPUT_URL` dostaje `&fps=25` (i ewentualnie
   `&fx=step`). Sidecar nie zmienia adresu sam, bo klatkaż kanału zna dopiero z danych ErsatzTV,
   a jedna strona przechwytywania obsługuje wszystkie kanały danego rozmiaru.
 - VizRS ffPlayout System: archiwum od 2026-10-24, bez zmian.
 - Po wdrożeniu parametry trafiają do `docs/API.md` (sekcja „Wyjście `/output`”) i do dokumentacji
-  VirtRS CG Playout.
+  VizRS CG Playout.
 
 ## 6. Decyzje do podjęcia
 
