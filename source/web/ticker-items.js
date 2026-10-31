@@ -20,6 +20,7 @@ const STYLE = `
 .tkx .tkx-dot { width: 18px; height: 18px; min-width: 0; padding: 0; border-radius: 4px; border: 1px solid rgba(255,255,255,.35); }
 .tkx .tkx-dot:not(:disabled) { cursor: pointer; } .tkx .tkx-dot:not(:disabled):hover { outline: 1px solid var(--acc, #f0a020); }
 .tkx .tkx-dot:disabled { opacity: .45; border-style: dashed; }
+.tkx .tkx-dot.bare { border-style: dashed; }
 .tkx .tkx-dot.mix { outline: 1px dashed var(--acc, #f0a020); outline-offset: 1px; }
 .tkx input, .tkx select { width: 100%; min-width: 0; }
 .tkx-txt { font-size: 15px; padding: 4px 6px; }
@@ -42,7 +43,7 @@ const VIEWS = { list: 'Lista', groups: 'Grupy', raw: 'Tekst' };
 
 /**
  * @param host element, w którym powstaje edytor
- * @param o { value, onChange(text), catColors, catBg, catFg, label, rules: {maxItems, maxChars, cats, upper, readonly}, onHover(i|null) }
+ * @param o { value, onChange(text), catColors, catBg, catFg, label (tekst albo funkcja), rules: {maxItems, maxChars, cats, upper, readonly}, onHover(i|null) }
  * @returns { setValue(text), setSqueeze(arr|null), setOptions(o), focus(), el }
  */
 export function mountTickerEditor(host, o = {}) {
@@ -72,14 +73,16 @@ export function mountTickerEditor(host, o = {}) {
     status();
   };
   const up = (s) => String(s ?? '').trim().toUpperCase();
-  const sceneColor = (cat) => catColorOf({ cat }, colors(), o.catBg || '#c8102e', o.label);
-  const dot = (x) => (x.cat || x.color || o.label ? catColorOf(x, { ...colors(), ...pageCatColors(items) }, o.catBg || '#c8102e', o.label) : 'transparent');
-  /** Pole koloru: kolor ma kategoria, więc wiadomość bez kategorii wyboru nie ma (chyba że niesie stary kolor do zdjęcia). */
+  const label = () => String((typeof o.label === 'function' ? o.label() : o.label) || '');
+  const sceneColor = (cat) => catColorOf({ cat }, colors(), o.catBg || '#c8102e', label());
+  const pageColors = () => pageCatColors(items, label());
+  const dot = (x) => (x.cat || x.color || label() ? catColorOf(x, { ...colors(), ...pageColors() }, o.catBg || '#c8102e', label()) : 'transparent');
+  /** Pole koloru. Bez kategorii i etykiety nie ma plakietki: kliknięcie prowadzi do wpisania kategorii. */
   const swatch = (x, attr) => {
-    const off = R().readonly || !(x.cat || x.color);
+    const off = R().readonly, bare = !(x.cat || x.color || label());
     const mix = x.mix ? ' mix' : '';
-    const tip = R().readonly ? 'Kolor kategorii' : off ? 'Wpisz kategorię, aby wybrać jej kolor' : x.mix ? 'Wiadomości tej kategorii mają różne kolory – wybór ujednolici je' : `Kolor kategorii ${x.cat || ''}`.trim();
-    return `<button type="button" class="tkx-dot${mix}" data-a="color" ${attr} style="background:${esc(dot(x))}" title="${esc(tip)}" ${off ? 'disabled' : ''}></button>`;
+    const tip = off ? 'Kolor kategorii' : bare ? 'Brak plakietki – wpisz najpierw kategorię' : x.mix ? 'Wiadomości tej kategorii mają różne kolory – wybór ujednolici je' : x.cat ? `Kolor kategorii ${x.cat}` : `Kolor etykiety ${label()}`.trim();
+    return `<button type="button" class="tkx-dot${mix}${bare ? ' bare' : ''}" data-a="color" ${attr} style="background:${esc(dot(x))}" title="${esc(tip)}" ${off ? 'disabled' : ''}></button>`;
   };
   const paintDots = () => root.querySelectorAll('.tkx-dot').forEach((d) => {
     const x = d.dataset.i != null ? items[+d.dataset.i] : groups().find((g) => g.cat === d.dataset.cat);
@@ -93,10 +96,15 @@ export function mountTickerEditor(host, o = {}) {
     paintDots(); emit();
   }
   function pickColor(btn, cat) {
-    const color = pageCatColors(items)[up(cat)] || items.find((x) => up(x.cat) === up(cat))?.color || '';
+    if (!cat && !label() && !items.some((x) => !x.cat && x.color)) {
+      const row = btn.closest('[data-row]'), card = btn.closest('.tkx-card');
+      (row?.querySelector('.tkx-cat') || card?.querySelector('.tkx-cname'))?.focus();
+      return;
+    }
+    const color = pageColors()[up(cat || label())] || items.find((x) => up(x.cat) === up(cat))?.color || '';
     openColorPicker(btn, {
-      value: color, base: sceneColor(cat), label: cat || o.label || 'kategoria', fg: o.catFg,
-      palette: [...new Set(Object.values({ ...colors(), ...pageCatColors(items) }))],
+      value: color, base: sceneColor(cat), label: cat || label() || 'kategoria', fg: o.catFg,
+      palette: [...new Set(Object.values({ ...colors(), ...pageColors() }))],
       onInput: (c) => { if (root.isConnected) setCatColor(cat, c); },
     });
   }

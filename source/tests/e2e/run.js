@@ -522,6 +522,10 @@ async function waitUp() {
     ok((await trio.locator('.cpk').count()) === 0, 'Trio: Esc zamyka okienko koloru');
     await trio.locator('.tkx-cat').nth(1).fill('');
     await trio.locator('.tkx-txt').nth(1).click(); await sleep(100);
+    // bez kategorii i etykiety nie ma plakietki: pole koloru prowadzi do wpisania kategorii, a nie jest martwe
+    await trio.locator('.tkx-dot').nth(2).click();
+    ok((await trio.locator('.cpk').count()) === 0 && await trio.evaluate(() => document.activeElement?.classList.contains('tkx-cat')), 'Trio: pole koloru bez plakietki przechodzi do kategorii');
+    await trio.locator('.tkx-txt').nth(1).click();
     // ciągłość crawla: zmiana wiadomości na antenie nie zaczyna przewijania od nowa
     await api('/api/clear'); await sleep(300);
     await api('/api/take/3001'); await sleep(2500);

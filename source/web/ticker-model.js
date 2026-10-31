@@ -62,11 +62,11 @@ export function formatCatColors(map) {
   return Object.entries(map || {}).map(([k, v]) => `${k}=${v}`).join('; ');
 }
 
-/** Kolory kategorii ustawione na liście: pierwszy kolor danej kategorii obowiązuje jej wiadomości bez koloru. */
-export function pageCatColors(list) {
+/** Kolory kategorii ustawione na liście: pierwszy kolor danej kategorii obowiązuje jej wiadomości bez koloru; wiadomość bez kategorii koloruje etykietę `label`. */
+export function pageCatColors(list, label) {
   const out = {};
   for (const it of list || []) {
-    const k = String(it?.cat ?? '').trim().toUpperCase();
+    const k = String(it?.cat || label || '').trim().toUpperCase();
     if (k && it.color && !out[k]) out[k] = it.color;
   }
   return out;

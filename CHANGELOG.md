@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Kolor etykiety tickera w Trio:** wiadomości bez kategorii ustawiają kolor etykiety (np. PILNE), także stałej etykiety crawla; bez kategorii i etykiety kwadrat koloru przenosi do pola kategorii zamiast być zablokowany.
+
 ## 2.0.8 (2026-10-30) – „Kolory”
 
 - **Trio, kolory kategorii tickera:** wybór koloru w okienku (pole barwy, odcień, `#hex`, próbki, podgląd plakietki z ostrzeżeniem o kontraście, powrót do koloru sceny) zamiast dopisywania `#kolor` do nazwy; także w edytorze wiadomości w Artist.

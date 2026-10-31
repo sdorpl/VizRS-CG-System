@@ -46,6 +46,7 @@ import(pathToFileURL(path.join(__dirname, '../../web/ticker-model.js')).href).th
   check('catColorOf: kolor wiadomości > mapa > domyślny', K.catColorOf({ cat: 'PILNE', color: '#123' }, map, '#fff') === '#123' && K.catColorOf({ cat: 'Pilne' }, map, '#fff') === '#e00000' && K.catColorOf({ cat: 'X' }, map, '#fff') === '#fff');
   check('catColorOf: wiadomość bez kategorii ma kolor etykiety', K.catColorOf({ cat: '' }, { INFO: '#00f' }, '#fff', 'INFO') === '#00f' && K.catColorOf({ cat: 'X' }, { INFO: '#00f' }, '#fff', 'INFO') === '#fff');
   const pc = K.pageCatColors(K.parseTickerItems('SPORT#111|a\nsport|b\nsport#222|c\n#333|d\nKRAJ|e'));
+  check('pageCatColors: wiadomość bez kategorii koloruje etykietę', eq(K.pageCatColors(K.parseTickerItems('#333|a\nb'), 'Pilne'), { PILNE: '#333' }) && K.catColorOf({ cat: '' }, { PILNE: '#333' }, '#fff', 'Pilne') === '#333');
   check('pageCatColors: pierwszy kolor kategorii, bez kategorii pustych', eq(pc, { SPORT: '#111' }), pc);
   check('kategoria dziedziczy kolor z listy, kolor wiadomości wygrywa', K.catColorOf({ cat: 'sport' }, { SPORT: '#e00', ...pc }, '#fff') === '#111' && K.catColorOf({ cat: 'SPORT', color: '#222' }, pc, '#fff') === '#222');
   const CP = await import(pathToFileURL(path.join(__dirname, '../../web/color-picker.js')).href);

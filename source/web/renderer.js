@@ -926,8 +926,8 @@ export class ScenePlayer {
 
   /** Wiadomości węzła (parsowane tylko po zmianie tekstu). */
   tickerItems(it, p) {
-    const raw = String(p('text') ?? '');
-    if (it.tkRaw !== raw) { it.tkRaw = raw; it.tkItems = parseTickerItems(stripMarkup(raw)); it.tkPage = pageCatColors(it.tkItems); it.tkColors = it.tkItems.map((x) => x.color).join(); }
+    const raw = String(p('text') ?? ''), label = String(p('label') || '');
+    if (it.tkRaw !== raw || it.tkLabel !== label) { it.tkRaw = raw; it.tkLabel = label; it.tkItems = parseTickerItems(stripMarkup(raw)); it.tkPage = pageCatColors(it.tkItems, label); it.tkColors = it.tkItems.map((x) => x.color).join(); }
     return it.tkItems;
   }
 
