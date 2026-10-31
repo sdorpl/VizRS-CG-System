@@ -1809,7 +1809,14 @@ if (document.documentElement.classList.contains('native')) {
 
 // ------------------------------------------------------------ połączenie z serwerem
 // tylko wskaźnik (edycja sceny nie jest nadpisywana zdarzeniami); okno aplikacji `vizrs artist` wie dzięki temu, że Artist jest otwarty
-connectEvents(() => {}, (ok) => {
+// warstwa zmieniona w Trio: bez tego otwarta scena przywróciłaby starą przy zapisie (`rev` – tylko gdy nikt nie zmienił nic więcej)
+function layerChanged(ev) {
+  const held = scenes.find((s) => s.id === ev.id);
+  for (const s of new Set([held, scene?.id === ev.id ? scene : null])) if (s && s.rev === ev.rev - 1) { s.layer = ev.layer; s.rev = ev.rev; }
+  renderSceneSel(); renderTree();
+  const inp = $('[data-sp="layer"]'); if (inp && scene?.id === ev.id) inp.value = scene.layer;
+}
+connectEvents((ev) => { if (ev.t === 'show' && ev.kind === 'scenes' && ev.layer) layerChanged(ev); }, (ok) => {
   $('#conn').textContent = ok ? 'połączono' : 'brak połączenia';
   $('#conn').className = 'pill ' + (ok ? 'ok' : 'on');
 });

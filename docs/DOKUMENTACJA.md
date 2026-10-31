@@ -403,7 +403,7 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 | Kolumna | Zawartość |
 |---|---|
 | Lewa | **Strony** (pole `nr` + Enter = wczytaj, szukaj, ⧉ Duplikuj, 🗑) i **Szablony** (＋ = nowa strona z wartościami domyślnymi) |
-| Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, warstwa, ● ON AIR, 🔒); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
+| Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, **wybór warstwy**, ● ON AIR, 🔒); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
 | Prawa | monitor **PGM** (rzeczywiste wyjście, wybór tła monitora), **Na antenie – warstwy** (⏭ continue, ⏏ out, ⇅ dock, Wdróż teraz), zakładki **Playlista / Rundown / Makra** |
 | Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇩ Eksport show, ⇧ Import show, ✖ CLEAR ALL |
 
@@ -417,6 +417,10 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 6. **ARM** (F6) wysyła stronę na wyjście Preview (`/output?bus=preview`), antena się nie zmienia.
 
 TAKE strony z warstwy, na której już coś jest, zastępuje poprzednią grafikę tej warstwy. Różne warstwy grają jednocześnie.
+
+**Zmiana warstwy** – lista **warstwa** w statusie strony (`/api/layer/<strona>`). Warstwa należy do szablonu, więc zmiana od razu obejmuje wszystkie jego strony i jest zapisywana. Lista jest ułożona jak stos na wyjściu (od dołu); `●` i numer oznaczają warstwę zajętą na antenie, a **＋ nowa warstwa…** pyta o nazwę. Grafika tego szablonu na antenie i na Preview przechodzi na nową warstwę bez ponownej animacji: ticker i zegar grają dalej, stop point i wyłączony dock zostają, a znacznik ⏳ się nie pojawia. Gdy warstwa docelowa jest zajęta na antenie, Trio pyta o potwierdzenie; po OK tamta grafika schodzi z anteny. Otwarta w Artist scena przejmuje nową warstwę. Odwołania do starej nazwy (reguły dock `layer:…`, `?layers=…` w OBS, makra) trzeba poprawić ręcznie.
+
+F2 i F3 działają na warstwie, na której strona faktycznie gra, także gdy szablon dostał w tym czasie inną warstwę w Artist.
 
 ### 9.3 Podgląd strony
 

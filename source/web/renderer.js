@@ -1695,6 +1695,24 @@ export class LayerHost {
       ScenePlayer.onError?.({ scene: scene?.name || '?', node: '(scena)', message: String(e?.message || e) });
     }
   }
+  /** Przeniesienie grafiki na inną warstwę bez ponownej animacji (ticker i zegar grają dalej). Grafika z warstwy docelowej schodzi. */
+  relayer(ev) {
+    const { layer: from, to } = ev, A = this.layers.get(from), live = A?.player && !A.player.dead;
+    if (this.dockOff.delete(from)) this.dockOff.add(to); else this.dockOff.delete(to);
+    if (!this.accepts(to)) { if (live) this.out(from); return; } // wyjście z ?layers: grafika opuszcza pokazywane warstwy
+    if (!live) { // wyjście z ?layers: grafika wchodzi na pokazywaną warstwę
+      this.take(to, ev.scene, ev.values, ev.since, ev.page);
+      if (ev.stop) this.layers.get(to)?.player?.seekStop(ev.stop);
+      return;
+    }
+    const B = this.layer(to);
+    if (B.player && !B.player.dead) B.player.out();
+    B.player = null;
+    // warstwy zamieniają się miejscami: kontener z grafiką dostaje nową pozycję, nic nie powstaje od nowa
+    this.layers.set(to, A); this.layers.set(from, B);
+    A.div.dataset.layer = to; A.div.style.zIndex = layerZ(to);
+    B.div.dataset.layer = from; B.div.style.zIndex = layerZ(from);
+  }
   cont(name) { this.layers.get(name)?.player?.cont(); }
   out(name) {
     const L = this.layers.get(name);
@@ -1748,6 +1766,7 @@ export class LayerHost {
       case 'take': this.take(ev.layer, ev.scene, ev.values, ev.since, ev.page); this.recomputeDock(); break;
       case 'dock': if (ev.off) this.dockOff.add(ev.layer); else this.dockOff.delete(ev.layer); this.recomputeDock(); break;
       case 'rescene': this.rescene(ev.layer, ev.scene, ev.stop); break;
+      case 'relayer': this.relayer(ev); this.recomputeDock(); break;
       case 'continue': this.cont(ev.layer); break;
       case 'out': this.out(ev.layer); this.recomputeDock(); break;
       case 'update': this.update(ev.layer, ev.values); break;

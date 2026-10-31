@@ -9,7 +9,7 @@
 | **Scena** (szablon) | wygląd i animacja grafiki, projektowana w **Artist** – np. „Belka” |
 | **Strona** | scena + konkretne dane + numer, np. *1001 Belka – budżet*; operator pracuje na stronach w **Trio** |
 | **Pole kontrolne** ⛓ | właściwość sceny, którą operator zmienia na stronie (tekst, kolor, obraz…) |
-| **Warstwa** | `back`, `main`, `front` lub własna; grafiki na tej samej warstwie się zastępują, na różnych grają razem |
+| **Warstwa** | `back`, `main`, `front` lub własna; grafiki na tej samej warstwie się zastępują, na różnych grają razem. Zmienisz ją w Trio na liście **warstwa** nad polami strony – także na antenie; zmiana obejmuje wszystkie strony szablonu |
 | **Stop point** | miejsce, w którym animacja się zatrzymuje: TAKE gra do 1. stopu, CONTINUE do kolejnego, OUT do końca |
 | **Wyjście** | strona `/output`, którą OBS pokazuje jako przezroczystą grafikę |
 

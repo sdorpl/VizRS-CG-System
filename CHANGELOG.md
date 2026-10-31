@@ -4,6 +4,8 @@
 
 - **Kolor etykiety tickera w Trio:** wiadomości bez kategorii ustawiają kolor etykiety (np. PILNE), także stałej etykiety crawla; bez kategorii i etykiety kwadrat koloru przenosi do pola kategorii zamiast być zablokowany.
 - **Dokumentacja uporządkowana i sprawdzona z kodem:** poprawione liczby presetów ruchu (21 IN/OUT, 30 + 26 efektów tekstu), nazwa grupy **Ruch – bez kluczy**, zasady skrótów stron, limit 64 MB na plik i kod 413; sekcje `4.4a` i `8.3a` w DOKUMENTACJA dostały zwykłe numery, a „Show na audycję” własną sekcję 9.6; powtórzenia usunięte z README i DOKUMENTACJA §11, §14, §16; `SZYBKI_START.txt` zaktualizowany (paczki `.cgpack`, okno natywne).
+- **Trio, zmiana warstwy:** lista **warstwa** w statusie strony zmienia warstwę szablonu (wszystkie jego strony) i od razu ją zapisuje; `●` pokazuje warstwy zajęte na antenie, a **＋ nowa warstwa…** dodaje własną nazwę. Grafika na antenie przechodzi na nową warstwę bez ponownej animacji, a zajęta warstwa wymaga potwierdzenia. Nowe API `POST /api/layer/<strona>`, zdarzenie `relayer`. Otwarta w Artist scena przejmuje zmianę.
+- **Trio, F2 i F3 po zmianie warstwy:** działają na warstwie, na której strona faktycznie gra, także po zmianie warstwy szablonu w Artist.
 - **Strona startowa:** skrót API obejmuje rundowny, makra i ticker oraz poprawne metody zapisu; dopisany kod QR, usunięty zbędny krok o „Własnym CSS” w OBS.
 
 ## 2.0.8 (2026-10-30) – „Kolory”

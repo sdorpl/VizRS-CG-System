@@ -169,6 +169,15 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     const sqB = await pg.locator('#sqInfo').innerText();
     ok(sqB.includes('nie mieści') && (await pg.locator('#stage [data-id="t1"][data-over]').count()) === 1, 'Artist: przepełnienie – ostrzeżenie w panelu i ramka na kanwie', sqB);
 
+    // warstwa zmieniona w Trio: otwarta scena ją przejmuje, a zapis w Artist jej nie cofa
+    const sid = await pg.locator('#sceneSel').inputValue();
+    const pl = await api('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scene: sid, name: 'warstwa' }) });
+    await api(`/api/layer/${pl.number}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ layer: 'z3_trio' }) });
+    await sleep(500);
+    ok((await pg.locator('#sceneSel option:checked').innerText()).includes('z3_trio'), 'Artist: warstwa zmieniona w Trio pojawia się w otwartej scenie');
+    await pg.click('#bSave'); await sleep(600);
+    ok((await api('/api/show')).scenes.find((s) => s.id === sid).layer === 'z3_trio', 'Artist: zapis nie przywraca starej warstwy');
+
     ok(errs.length === 0, 'brak błędów JS w Artist' + (errs.length ? ': ' + errs.join('; ') : ''));
   } catch (e) { console.error(e); failures++; } finally {
     if (browser) await browser.close();

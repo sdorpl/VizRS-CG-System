@@ -26,6 +26,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 | `GET\|POST /clear` | zdejmuje wszystko |
 | `GET\|POST\|PATCH /update/<strona>[?save=0]` | podmiana danych na antenie bez ponownej animacji |
 | `GET\|POST /deploy/<warstwa>` | wdraża nową wersję szablonu do warstwy na antenie (bez animacji) |
+| `POST /layer/<strona>[?force=1]` | zmienia warstwę szablonu strony (`{"layer":"front"}`), zapisuje ją i przenosi grafikę z anteny i Preview bez animacji; zajęta warstwa anteny → 409, `force=1` zastępuje tamtą grafikę |
 | `GET\|POST /dock/<warstwa>/off\|on` | wyłącza/włącza powiązanie (dock) sceny – nadpisanie operatora |
 | `GET\|POST /carousel/start/<playlista>`, `/carousel/stop[?out=0]` | karuzela playlisty |
 | `GET\|POST /rundown/<id>/next`, `/take/<pozycja>`, `/cursor/<pozycja>`, `/reset` | rundown: NEXT, wzięcie pozycji, ustawienie kursora, zerowanie |
@@ -63,7 +64,7 @@ Przy `--token` adres musi mieć postać `/vizrs/<token>/take …`.
 `POST` JSON: `{"event":"onAir","layer":"main","page":{"number":1001,"name":"…"},"ts":…}`, `{"event":"offAir","layer":"main"|"*"}`, `{"event":"error","layer":"<scena>","message":"…"}`. Tylko `http://` (bez TLS).
 
 ## Strumień zdarzeń (SSE) `GET /events`
-Zdarzenia: `snapshot` (stan startowy; osobny z `bus:"preview"`), `take`, `continue`, `out`, `clear`, `update`, `rescene`, `dock`, `show`, `state`, `error`, `wordreplace`.
+Zdarzenia: `snapshot` (stan startowy; osobny z `bus:"preview"`), `take`, `continue`, `out`, `clear`, `update`, `rescene`, `relayer`, `dock`, `show`, `state`, `error`, `wordreplace`.
 
 ## Wyjście `/output`
 `?layers=main,front` · `?bg=%2300ff00` · `?w=1280&h=720` · `?checker=1` · `?status=1` · `?bus=preview` · `?mode=fill` (kolor na czerni) · `?mode=key` (alfa jako luma). Fill + Key = dwa źródła przeglądarki dla ATEM/Tricastera.

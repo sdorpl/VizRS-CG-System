@@ -70,6 +70,8 @@
   .empty { padding: 18px; text-align: center; color: var(--dim); }
   .status { font-size: 12px; padding: 6px 12px; color: var(--dim); }
   .status b.on { color: #ff6a66; }
+  .elayer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #elayer { font-family: var(--mono); font-size: 11px; padding: 1px 2px; max-width: 240px; }
   .segm { display: flex; gap: 0; flex-wrap: wrap; }
   .segm label { padding: 6px 14px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); cursor: pointer; margin-right: -1px; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
   .segm label:first-child { border-radius: 4px 0 0 4px; } .segm label:last-child { border-radius: 0 4px 4px 0; }
@@ -150,7 +152,7 @@
         <input id="ename" placeholder="Nazwa strony">
         <div class="row"><input id="ehotkey" placeholder="skrót" readonly title="Kliknij i naciśnij skrót (Ctrl/Alt/Shift+klawisz lub F7, F9–F12). Backspace = usuń. Skrót wywołuje TAKE, a gdy strona jest na antenie – OUT."><button id="eSave" class="acc" title="Zapisz stronę (Ctrl+S)">Zapisz</button><button id="eRevert" title="Przywróć zapisane">↺</button></div>
       </div>
-      <div class="status" id="estatus"></div>
+      <div class="status elayer"><span id="estatus"></span><label id="elayerBox" hidden>warstwa <select id="elayer"></select></label></div>
       <div class="scroll" id="fields"></div>
       <div id="pvBox" class="checker"><span id="pvTag">PODGLĄD</span><div id="pvStage"></div><div class="pvhit" id="pvHit"></div></div>
       <div class="row" style="padding:6px;border-top:1px solid var(--line)">
@@ -247,7 +249,7 @@
 <input type="file" id="fileIn" hidden>
 
 <script type="module">
-import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor, DEFAULT_TZ } from '/renderer.js';
+import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, layerZ, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor, DEFAULT_TZ } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -283,7 +285,7 @@ async function loadShow() {
   if (selId && !pageById(selId)) { selId = null; draft = null; }
   if (!selId && show.pages.length) selectPage(sortedPages()[0].id, true);
   else if (selId && !dirtyPage) selectPage(selId, true);
-  renderPages(); renderTemplates(); renderPlaylist(); renderRundown(); renderMacros();
+  renderPages(); renderTemplates(); renderPlaylist(); renderRundown(); renderMacros(); renderStatus();
 }
 let stTimer;
 function loadState() {
@@ -575,11 +577,49 @@ $('#fields').addEventListener('focusin', (e) => { const f = e.target.closest('[d
 new ResizeObserver(() => { fitPv(); if (pvAuto) pvFrame(); }).observe($('#pvBox'));
 
 function renderStatus() {
+  renderLayerSel();
   if (!draft) { $('#estatus').innerHTML = ''; return; }
   const s = sceneOf(draft), L = onAirLayer(draft.id);
-  const st = s ? `szablon <b>${esc(s.name)}</b> · warstwa <b>${esc(s.layer || 'main')}</b> · stopów: ${(s.stops || []).length}` : '';
+  const st = s ? `szablon <b>${esc(s.name)}</b> · stopów: ${(s.stops || []).length}` : '';
   $('#estatus').innerHTML = (lockedBy ? `<b style="color:#ff9a3d">🔒 edytuje ${esc(lockedBy)}</b> · ` : '') + (L ? `<b class="on">● ON AIR</b> (stop ${L.stop + 1}/${Math.max(1, L.stops)}) · ` : '') + st;
 }
+
+// ---- warstwa szablonu strony: zmiana także na antenie, bez ponownej animacji
+const NEW_LAYER = '+nowa';
+function renderLayerSel() {
+  const s = sceneOf(draft), sel = $('#elayer');
+  $('#elayerBox').hidden = !s;
+  if (!s || document.activeElement === sel) return;
+  const cur = s.layer || 'main', names = new Set(['back', 'main', 'front', cur]);
+  for (const x of show.scenes) names.add(x.layer || 'main');
+  for (const l of state.layers) names.add(l.layer);
+  const air = (n) => state.layers.find((l) => l.layer === n);
+  const label = (n) => (air(n) ? `${n} ● ${air(n).page?.number ?? ''}` : n);
+  const pages = show.pages.filter((p) => p.scene === s.id).length;
+  const html = [...names].sort((a, b) => layerZ(a) - layerZ(b) || a.localeCompare(b)).map((n) => `<option value="${esc(n)}">${esc(label(n))}</option>`).join('') + `<option value="${NEW_LAYER}">＋ nowa warstwa…</option>`;
+  if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
+  sel.value = cur;
+  sel.title = `Warstwa należy do szablonu „${s.name}”: zmiana obejmie stron: ${pages}. ● = zajęta na antenie`;
+}
+async function setLayer(layer) {
+  const s = sceneOf(draft); if (!s) return;
+  const post = (force) => api('POST', `/api/layer/${draft.number}${force ? '?force=1' : ''}`, { layer });
+  try {
+    const r = await post().catch((e) => {
+      if (!/^konflikt/.test(e.message)) throw e;
+      return confirm(`${e.message.replace(/^konflikt: /, '')}.\n\nOK = zastąp ją (zejdzie z anteny), Anuluj = nie zmieniaj warstwy.`) ? post(true) : null;
+    });
+    if (r) toast(`Szablon „${s.name}”: warstwa ${r.layer} (stron: ${r.pages})`);
+  } catch (e) { toast(`Warstwa: ${e.message}`, true); }
+  loadState();
+}
+$('#elayer').onchange = (e) => {
+  const sel = e.target, s = sceneOf(draft), cur = s?.layer || 'main';
+  let layer = sel.value;
+  if (layer === NEW_LAYER) layer = prompt('Nazwa nowej warstwy (litery, cyfry, - i _). Numer z<N>_ ustala kolejność, np. z5_ticker', '')?.trim();
+  sel.blur(); // skróty klawiszowe znów działają od razu
+  if (layer && layer !== cur) setLayer(layer); else sel.value = cur;
+};
 
 // ---- reguły pól (F3.1): limity, wersaliki, typografia, formatowanie, Word Replace
 const fieldDef = (fid) => listFields(sceneOf(draft) || { nodes: [] }).find((x) => x.id === fid);
@@ -846,8 +886,10 @@ applyPgmBg();
 // ------------------------------------------------------------ playout
 async function act(fn, label) { try { await fn(); loadState(); } catch (e) { toast(`${label}: ${e.message}`, true); } }
 const take = () => draft && (applyFinalRules(), true) && act(() => api('POST', `/api/take/${draft.number}`, { values: draft.values }), 'TAKE');
-const cont = () => draft && act(() => api('POST', `/api/continue/${draft.number}`), 'CONTINUE');
-const out = () => draft && act(() => api('POST', `/api/out/${draft.number}`), 'OUT');
+// strona na antenie: jej rzeczywista warstwa (szablon mógł w tym czasie dostać inną w Artist)
+const airKey = () => encodeURIComponent(onAirLayer(draft.id)?.layer ?? draft.number);
+const cont = () => draft && act(() => api('POST', `/api/continue/${airKey()}`), 'CONTINUE');
+const out = () => draft && act(() => api('POST', `/api/out/${airKey()}`), 'OUT');
 const upd = () => draft && (applyFinalRules(), true) && act(async () => {
   const r = await api('POST', `/api/update/${draft.number}?save=0`, { values: draft.values });
   if (!r.onAir) toast('Strona nie jest na antenie – nic do aktualizacji');

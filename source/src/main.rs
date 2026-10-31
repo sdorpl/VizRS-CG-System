@@ -702,6 +702,8 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             res(engine.update(key, &vals, persist), |j| Response::json(&j))
         }
         ("POST" | "GET", ["deploy", key]) => res(engine.deploy(key), |j| Response::json(&j)),
+        // layer: zmienia warstwę szablonu strony; grafika na antenie przechodzi bez ponownej animacji
+        ("POST", ["layer", key]) => res(engine.set_layer(key, body.str("layer").unwrap_or(""), req.q("force") == Some("1")), |j| Response::json(&j)),
         // ticker: lista wiadomości strony (GET) i zmiany z automatycznym UPDATE, gdy strona jest na antenie
         ("GET", ["ticker", key]) => res(engine.ticker(key, ticker::Op::List), |j| Response::json(&j)),
         ("POST" | "GET", ["ticker", key, op @ ..]) => {

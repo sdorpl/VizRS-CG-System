@@ -822,6 +822,77 @@ impl Engine {
         Ok(Json::obj().with("ok", true).with("layer", layer))
     }
 
+    /// Zmienia warstwę szablonu strony. Warstwa należy do sceny, więc zmiana obejmuje wszystkie jej strony;
+    /// grafika na antenie i na Preview przechodzi na nową warstwę bez ponownej animacji. Zajętej warstwy
+    /// anteny nie zastępuje bez `force`.
+    pub fn set_layer(&self, key: &str, layer: &str, force: bool) -> Result<Json, String> {
+        if !validate::layer_name_ok(layer) {
+            return Err("warstwa: dozwolone litery, cyfry, - i _ (maks. 50)".into());
+        }
+        let mut inner = self.inner.lk();
+        let page = Self::find_page(&inner.show, key).ok_or(format!("brak strony '{key}'"))?;
+        let sid = page.str("scene").unwrap_or("").to_string();
+        let scene = Self::find_scene(&inner.show, &sid).ok_or("strona wskazuje nieistniejący szablon")?;
+        let from = scene.str("layer").unwrap_or("main").to_string();
+        let old_rev = scene.num("rev").unwrap_or(0.0);
+        let holds = |list: &[(String, LayerState)]| list.iter().find(|(n, l)| l.scene.str("id") == Some(&sid) && n != layer).map(|(n, _)| n.clone());
+        let air = holds(&inner.layers);
+        let prv = holds(&inner.preview);
+        if air.is_some() && !force {
+            if let Some((_, l)) = inner.layers.iter().find(|(n, _)| n == layer) {
+                return Err(format!("konflikt: na warstwie {layer} jest na antenie strona {} {}", l.page.num("number").unwrap_or(0.0), l.page.str("name").unwrap_or("")));
+            }
+        }
+        let new_rev = if from == layer { old_rev } else { old_rev + 1.0 };
+        if from != layer {
+            if let Some(Json::Arr(list)) = inner.show.get_mut("scenes") {
+                if let Some(s) = list.iter_mut().find(|s| s.str("id") == Some(&sid)) {
+                    s.set("layer", layer.into());
+                    s.set("rev", new_rev.into());
+                }
+            }
+            bump_rev(&mut inner.show);
+        }
+        let mut events = vec![];
+        for (old, bus) in [(air.as_deref(), None), (prv.as_deref(), Some("preview"))] {
+            let Some(old) = old else { continue };
+            let list = if bus.is_some() { &mut inner.preview } else { &mut inner.layers };
+            list.retain(|(n, _)| n != layer);
+            if let Some((n, l)) = list.iter_mut().find(|(n, _)| n == old) {
+                *n = layer.to_string();
+                events.push(Self::layer_event("relayer", old, l, bus).with("to", layer).with("stop", l.stop));
+            }
+        }
+        if let Some(old) = &air {
+            inner.dock_off.retain(|d| d != layer);
+            for d in inner.dock_off.iter_mut().filter(|d| *d == old) {
+                *d = layer.to_string();
+            }
+        }
+        // sama zmiana warstwy to nie nowa wersja szablonu: bez znacznika ⏳, chyba że już czekała inna zmiana
+        let st = &mut *inner;
+        for (_, l) in st.layers.iter_mut().chain(st.preview.iter_mut()).filter(|(_, l)| l.scene.str("id") == Some(&sid) && l.scene_rev == old_rev) {
+            l.scene.set("layer", layer.into());
+            l.scene_rev = new_rev;
+        }
+        let show = (from != layer).then(|| inner.show.clone());
+        let pages = inner.show.arr("pages").iter().filter(|p| p.str("scene") == Some(&sid)).count();
+        drop(inner);
+        if let Some(show) = &show {
+            self.save(show);
+            self.broadcast(&Json::obj().with("t", "show").with("kind", "scenes").with("id", sid.as_str()).with("layer", layer).with("rev", new_rev));
+        }
+        let moved = !events.is_empty();
+        for e in &events {
+            self.broadcast(e);
+        }
+        if moved {
+            self.broadcast(&Json::obj().with("t", "state"));
+        }
+        self.check_saved()?;
+        Ok(Json::obj().with("ok", true).with("layer", layer).with("from", from.as_str()).with("pages", pages).with("onAir", air.is_some()))
+    }
+
     // ---------------- blokady edycji (wielu operatorów) ----------------
 
     fn live_locks(&self) -> Vec<(String, Lock)> {
@@ -1164,7 +1235,7 @@ impl Engine {
     fn carousel_loop(self: Arc<Self>, gen: u64, playlist_id: String) {
         let alive = |e: &Engine| e.carousel_gen.load(Ordering::SeqCst) == gen;
         let mut idx = 0usize;
-        let mut prev_layer: Option<String> = None;
+        let mut prev_page: Option<String> = None;
         loop {
             if !alive(&self) {
                 return;
@@ -1189,9 +1260,10 @@ impl Engine {
                 inner.carousel = Some((playlist_id.clone(), idx));
             }
             let layer = self.page_layer(&page);
-            if let (Some(p), Some(l)) = (&prev_layer, &layer) {
-                if p != l {
-                    self.out(p).ok();
+            // warstwa poprzedniej strony liczona teraz: operator mógł ją zmienić w trakcie karuzeli
+            if let (Some(p), Some(l)) = (prev_page.as_deref().and_then(|p| self.page_layer(p)), &layer) {
+                if p != *l {
+                    self.out(&p).ok();
                 }
             }
             if self.take(&page, None).is_err() {
@@ -1200,7 +1272,7 @@ impl Engine {
                 continue;
             }
             self.broadcast(&Json::obj().with("t", "state"));
-            prev_layer = layer;
+            prev_page = Some(page);
             let end = now_ms() + (dur * 1000.0) as u64;
             while now_ms() < end {
                 if !alive(&self) {
@@ -1211,7 +1283,7 @@ impl Engine {
             idx += 1;
         }
         if alive(&self) {
-            if let Some(l) = prev_layer {
+            if let Some(l) = prev_page.and_then(|p| self.page_layer(&p)) {
                 self.out(&l).ok();
             }
             self.inner.lk().carousel = None;
@@ -1314,6 +1386,53 @@ mod tests {
             .iter()
             .map(|l| (l.str("layer").unwrap_or("").to_string(), l.num("stop").unwrap_or(-1.0)))
             .collect()
+    }
+
+    #[test]
+    fn set_layer_moves_on_air_without_new_version() {
+        let (e, d) = engine("setlayer");
+        e.take("1001", None).unwrap();
+        e.arm("1001", None).unwrap();
+        e.set_dock("main", true).unwrap();
+        let r = e.set_layer("1001", "z5_belka", false).unwrap();
+        assert_eq!((r.str("from"), r.get("onAir")), (Some("main"), Some(&Json::Bool(true))));
+        assert_eq!(on_air(&e), vec![("z5_belka".to_string(), 0.0)]);
+        let st = e.state();
+        let l = &st.arr("layers")[0];
+        assert_eq!(l.get("pending"), Some(&Json::Bool(false))); // zmiana warstwy to nie nowa wersja szablonu
+        assert_eq!(l.get("dockOff"), Some(&Json::Bool(true)));
+        assert_eq!(e.page_layer("1001").as_deref(), Some("z5_belka"));
+        assert_eq!(e.snapshot_preview().arr("layers")[0].str("layer"), Some("z5_belka"));
+        // OUT po numerze strony trafia w nową warstwę
+        e.out("1001").unwrap();
+        assert!(on_air(&e).is_empty());
+        // zmiana bez anteny i ponowne ustawienie tej samej warstwy
+        assert_eq!(e.set_layer("1001", "z5_belka", false).unwrap().get("onAir"), Some(&Json::Bool(false)));
+        assert!(e.set_layer("1001", "zła nazwa", false).is_err());
+        assert!(e.set_layer("9999", "main", false).is_err());
+        std::fs::remove_dir_all(&d).ok();
+    }
+
+    #[test]
+    fn set_layer_needs_force_to_replace_on_air() {
+        let (e, d) = engine("setlayerbusy");
+        let show = e.show();
+        let other = show.arr("scenes").iter().find(|s| s.str("layer") == Some("back")).unwrap().str("id").unwrap().to_string();
+        let page = show.arr("pages").iter().find(|p| p.str("scene") == Some(&other)).unwrap().num("number").unwrap() as i64;
+        e.take("1001", None).unwrap();
+        e.take(&page.to_string(), None).unwrap();
+        assert!(e.set_layer("1001", "back", false).unwrap_err().starts_with("konflikt"));
+        assert_eq!(e.page_layer("1001").as_deref(), Some("main")); // odmowa niczego nie zmienia
+        assert_eq!(on_air(&e).len(), 2);
+        e.set_layer("1001", "back", true).unwrap();
+        assert_eq!(on_air(&e), vec![("back".to_string(), 0.0)]);
+        assert_eq!(e.state().arr("layers")[0].get("page").unwrap().num("number"), Some(1001.0));
+        // gdy szablonu nie ma na antenie, zajęta warstwa nie przeszkadza
+        e.clear();
+        e.take(&page.to_string(), None).unwrap();
+        e.set_layer("1001", "main", false).unwrap();
+        assert!(e.set_layer("1001", "back", false).is_ok());
+        std::fs::remove_dir_all(&d).ok();
     }
 
     #[test]

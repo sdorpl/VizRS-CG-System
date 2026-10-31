@@ -611,6 +611,54 @@ async function waitUp() {
       await ctxF.close();
     }
 
+    // --- Trio: zmiana warstwy szablonu, także na antenie ---
+    {
+      await api('/api/clear');
+      // osobny kontekst: otwarte karty z SSE wyczerpały już limit 6 połączeń do hosta
+      const ctxL = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+      const ol = await ctxL.newPage(); await ol.goto(B + '/output?checker=1&token=' + TOKEN);
+      const tl = await ctxL.newPage(); tl.on('pageerror', (e) => errs.push('/trio: ' + e.message));
+      await tl.goto(B + '/trio');
+      await sleep(800);
+      await tl.fill('#cmd', '1001'); await tl.press('#cmd', 'Enter');
+      await sleep(300);
+      ok(await tl.evaluate(() => document.querySelector('#elayer').value === 'main'), 'warstwa: wybór w Trio pokazuje warstwę szablonu');
+      await api('/api/take/1001'); await sleep(1500);
+      const shown = () => ol.evaluate(() => [...document.querySelectorAll('.vz-layer')].filter((d) => d.querySelector('.vz-node')).map((d) => d.dataset.layer + ':' + d.style.zIndex).join());
+      await ol.evaluate(() => { const n = document.querySelector('.vz-layer[data-layer="main"] .vz-node'); if (n) n.dataset.same = '1'; });
+      await tl.selectOption('#elayer', 'front');
+      await sleep(700);
+      const st = await api('/api/state');
+      ok(st.layers.length === 1 && st.layers[0].layer === 'front' && !st.layers[0].pending, 'warstwa: grafika przechodzi na nową warstwę bez znacznika nowej wersji', st.layers);
+      ok((await shown()) === 'front:3000', 'warstwa: wyjście ma grafikę na nowej pozycji', await shown());
+      ok(await ol.evaluate(() => !!document.querySelector('.vz-layer[data-layer="front"] .vz-node[data-same="1"]')), 'warstwa: te same węzły – bez ponownego wejścia');
+      ok(await tl.evaluate(() => document.querySelector('#elayer').value === 'front'), 'warstwa: wybór w Trio po zmianie');
+      const pgs = (await api('/api/show')).pages;
+      const back = pgs.find((p) => p.number === 3001) || pgs.find((p) => p.number !== 1001);
+      const busyNum = back.number;
+      const busyLayer = (await api(`/api/take/${busyNum}`)).layer;
+      await sleep(500);
+      tl.once('dialog', (d) => d.dismiss());
+      await tl.selectOption('#elayer', busyLayer);
+      await sleep(500);
+      ok((await api('/api/state')).layers.length === 2, 'warstwa: Anuluj przy zajętej warstwie niczego nie zdejmuje');
+      ok(await tl.evaluate(() => document.querySelector('#elayer').value === 'front'), 'warstwa: po anulowaniu wybór wraca do bieżącej');
+      tl.once('dialog', (d) => d.accept());
+      await tl.selectOption('#elayer', busyLayer);
+      await sleep(500);
+      const st2 = await api('/api/state');
+      ok(st2.layers.length === 1 && st2.layers[0].page.number === 1001 && st2.layers[0].layer === busyLayer, 'warstwa: OK zastępuje grafikę na warstwie docelowej', st2.layers);
+      await tl.keyboard.press('F3'); await sleep(400);
+      ok((await api('/api/state')).layers.length === 0, 'warstwa: F3 zdejmuje stronę z nowej warstwy');
+      tl.once('dialog', (d) => d.accept('z7_nowa'));
+      await tl.selectOption('#elayer', '+nowa');
+      await sleep(500);
+      ok((await api('/api/show')).scenes.find((s) => s.id === (pgs.find((p) => p.number === 1001).scene)).layer === 'z7_nowa', 'warstwa: nowa nazwa z okienka trafia do szablonu');
+      await tl.selectOption('#elayer', 'main');
+      await sleep(400);
+      await ctxL.close();
+    }
+
     // --- Trio: okno Stan systemu ---
     await trio.click('#bSys');
     await sleep(600);
