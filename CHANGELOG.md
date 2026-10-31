@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Renderer natywny `vizrs-render` (0.1, gałąź `render-native`):** osobny program w `source/render/` rysuje antenę bez przeglądarki dla playoutu kanału (VirtRS CG Playout): prymitywy, klucze i krzywe, tekst z dopasowaniem jak w `renderer.js`, zegary ze strefami, ticker `crawl`, warstwy, `dock`. Polecenia `stream` (klatki dla playoutu), `frame`, `check` (które sceny pójdą natywnie) i `bench`. Czego jeszcze nie umie, zgłasza – playout rysuje to Chromium. Zgodność z Chromium: `tools/native-compare.js` (INFO24 i R7 poniżej 1% różnych pikseli). DOKUMENTACJA §10.1, plan `docs/plany/PLAN-native.md`.
+
 - **Kolor etykiety tickera w Trio:** wiadomości bez kategorii ustawiają kolor etykiety (np. PILNE), także stałej etykiety crawla; bez kategorii i etykiety kwadrat koloru przenosi do pola kategorii zamiast być zablokowany.
 - **Dokumentacja uporządkowana i sprawdzona z kodem:** poprawione liczby presetów ruchu (21 IN/OUT, 30 + 26 efektów tekstu), nazwa grupy **Ruch – bez kluczy**, zasady skrótów stron, limit 64 MB na plik i kod 413; sekcje `4.4a` i `8.3a` w DOKUMENTACJA dostały zwykłe numery, a „Show na audycję” własną sekcję 9.6; powtórzenia usunięte z README i DOKUMENTACJA §11, §14, §16; `SZYBKI_START.txt` zaktualizowany (paczki `.cgpack`, okno natywne).
 - **Trio, zmiana warstwy:** lista **warstwa** w statusie strony zmienia warstwę szablonu (wszystkie jego strony) i od razu ją zapisuje; `●` pokazuje warstwy zajęte na antenie, a **＋ nowa warstwa…** dodaje własną nazwę. Grafika na antenie przechodzi na nową warstwę bez ponownej animacji, a zajęta warstwa wymaga potwierdzenia. Nowe API `POST /api/layer/<strona>`, zdarzenie `relayer`. Otwarta w Artist scena przejmuje zmianę.

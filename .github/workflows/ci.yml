@@ -90,6 +90,33 @@ jobs:
           start=$(date +%s); docker stop vizrs-ci; t=$(( $(date +%s) - start )); echo "docker stop: $t s"; [ "$t" -lt 5 ]
           docker logs vizrs-ci | tail -20
 
+  # renderer natywny vizrs-render (osobny workspace z zależnościami): testy i zgodność z Chromium na INFO24 i R7
+  render:
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo build --release
+      - name: vizrs-render – formatowanie, clippy, testy, budowa
+        working-directory: source/render
+        run: cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - name: Zgodność z Chromium
+        run: PLAYWRIGHT_DIR=$PWD node tools/native-compare.js && PLAYWRIGHT_DIR=$PWD node tools/native-compare.js ../examples/archiwum/R7_NEWS.show.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vizrs-render-linux
+          path: source/render/target/release/vizrs-render
+
   # okno natywne vizrs-shell (osobny workspace z zależnościami; rdzeń vizrs bez zmian)
   shell:
     needs: test

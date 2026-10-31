@@ -23,6 +23,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
   - nowy plik w `web/` trzeba dopisać do `STATIC`;
   - `start-linux.sh` uruchamia `bin/linux-x86_64/vizrs` (plik w repo) — po zmianach UI skopiuj tam `source/target/release/vizrs`.
 - **Jeden renderer.** `web/renderer.js` (`ScenePlayer`) renderuje wyjście OBS, podgląd w Trio i kanwę Artist. Nie duplikuj logiki rysowania w Trio/Artist.
+- **Wyjątek: renderer natywny `source/render/`** (`vizrs-render`, gałąź `render-native`, plan [PLAN-native.md](docs/plany/PLAN-native.md)) — drugi wykonawca tej samej semantyki tylko dla playoutu kanału bez GPU; osobny workspace z własnym `Cargo.lock`, dozwolone crate'y z nagłówka `source/render/Cargo.toml` (tiny-skia, rustybuzz, wuff, serde_json, png, jpeg-decoder). Czego nie umie, zgłasza (`check`, flaga klatki) zamiast zgadywać. Zmiana w `renderer.js` (rysowanie, tekst, krzywe, ticker) → ta sama w `source/render/` + `node tools/native-compare.js`.
 - **Dane z zewnątrz są wrogie.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
 - **Nie wywalaj serwera:** błędy przez `Result`, blokady odporne na zatrucie (`lk()`), wolny klient SSE jest odłączany. Antena ma działać dalej, nawet gdy zapis na dysk się nie uda.
 - **Wspólny model tekstu z BTB:** `web/text-model.js` to kopia modułu BTB-CG; zgodność pilnują wektory `source/tests/vectors/*.json` i `source/tools/sync-btb.sh --check`. Nie zmieniaj go tylko po jednej stronie.
@@ -61,6 +62,8 @@ node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana prze
 (cd shell && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # okno natywne
 node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell     # okno natywne w działaniu (otwiera okna)
 node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell       # zgodność WebView z Chromium (otwiera okno)
+(cd render && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # renderer natywny
+node tools/native-compare.js                      # zgodność renderera natywnego z Chromium (każda obsługiwana strona < 2%)
 node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch jak w BTB
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
 ```
@@ -77,6 +80,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/app.rs` | okna aplikacji: wyszukiwanie Chromium/Edge, argumenty `--app`, profil, `--connect` |
 | `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
 | `source/src/bin/vizrs-app.rs` | uruchamianie okien bez konsoli (Windows) |
+| `source/render/` | `vizrs-render` – renderer natywny dla playoutu kanału (tiny-skia, rustybuzz): `stream` (klatki przez stdin/stdout), `frame`, `check`, `bench`; osobny workspace z zależnościami (DOKUMENTACJA §10.1) |
 | `source/shell/` | `vizrs-shell` – okno natywne Artist/Trio (tao + wry: WebKitGTK / WebView2 / WKWebView), menu, „Zapisz jako”, pisownia pl; osobny workspace z zależnościami |
 | `source/src/engine.rs` | show, warstwy on-air, TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, dock, karuzela, rundown, makra, blokady, SSE |
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |

@@ -511,6 +511,34 @@ Strona ukrywa taśmę tylko wtedy, gdy crawl stoi: okno w tym samym miejscu co w
 
 Wskazówki dla scen kanału wypalanego: ticker w trybie `roll` albo `wipe` kosztuje ok. 4 razy mniej niż `crawl` (między zmianami wiadomości obraz stoi); `blink`, pętle uwagi i efekty tła na grafikach wiszących godzinami (logo, „Na żywo”) to stały koszt pełnego klatkażu – lepiej z nich zrezygnować albo użyć `fx=step`; zegar `HH:mm` zmienia obraz raz na minutę, z sekundami raz na sekundę (oba tanie); rotacja `cycle` kosztuje głównie w czasie przejścia; wideo w grafice nie nadaje się na kanał wypalany.
 
+### 10.1 Renderer natywny (`vizrs-render`)
+
+`vizrs-render` (katalog `source/render/`) rysuje antenę bez przeglądarki: czyta te same zdarzenia co `/output` (`/events`, fonty `/fonts`, pliki `/assets`), odtwarza sceny tą samą logiką co `renderer.js` (stop pointy, klucze i krzywe, pola strony, warianty, autofollow, `dock`, ticker `crawl`, zegary) i rastruje je na CPU (tiny-skia, tekst kształtowany jak w Chromium – rustybuzz). Służy playoutowi kanału (VirtRS CG Playout, opcja `renderer`) na maszynach bez GPU: przewijany crawl 1080p25 kosztuje kilka procent jednego rdzenia zamiast ok. 2 rdzeni bezgłowego Chromium. OBS, Trio i Artist dalej używają `renderer.js`; renderer natywny to drugi wykonawca tej samej semantyki, nie nowy format.
+
+Czego jeszcze nie rysuje, zgłasza jako brak: playout przechodzi wtedy na Chromium (`renderer: auto`), więc grafika nie znika i nie zmienia wyglądu. Stan (wersja 0.1):
+
+| Obsługiwane | Jeszcze nie (scena idzie do Chromium) |
+|---|---|
+| `group`, `rect`, `ellipse` (kolor, gradient, zaokrąglenie, ramka, cień), `image` PNG/JPEG | `qr`, obraz WebP/GIF/SVG, wideo |
+| `text`, `clock`: `textFit` (wszystkie tryby), `lineBreak`, `maxLines`, `padX`, `upper`, `spacing`, `lineHeight`, cień, `cycle`; zegar `time`/`up`/`down`/`target`, strefy IANA | tekst sformatowany (`[[ ]]`, `{b}` …) |
+| `ticker` `crawl`: etykieta z `gleam`, plakietki kategorii i kolory, separatory (`text`, `dot`, `square`, `pipe`, `skew`), `crawlFrom`, ciągłość po UPDATE | ticker `roll`, `wipe`, `whip` |
+| klucze wszystkich animowanych właściwości, `opacity`, maski `clip*`, `blur`, `rotation`, `scale`, `skewX`, `blink` (też `fx=step`), `showIf`, `follow`, `dock`, warstwy i `?layers`/`?bus`/`?w`/`?h` | ruch na wzór BTB (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) |
+| fonty wbudowane (§4.8) i z assets (`.ttf`, `.otf`, `.woff`, `.woff2`) | fonty z Google Fonts (spoza wbudowanych) |
+
+```bash
+cd source/render && cargo build --release      # osobny workspace z zależnościami (rdzeń vizrs bez zmian)
+vizrs-render check --show show.json            # które sceny pójdą natywnie, a które do Chromium i dlaczego
+vizrs-render frame --show show.json --page 1001 --stop 0 -o 1001.png   # jedna klatka (--time S: S sekund od TAKE)
+vizrs-render bench --show show.json --page 3001 --seconds 10 [--area 0,960,1920,120]   # koszt klatki
+vizrs-render stream --url 'http://vizrs:8088/output?token=…' --size 1920x1080 [--area x,y,w,h]   # dla playoutu
+```
+
+`frame`, `check` i `bench` biorą fonty z `--fonts` (domyślnie `web/fonts` obok) i pliki z `--assets`; `stream` – z serwera.
+
+**Protokół `stream`** (proces podrzędny playoutu): na stdin wiersze `F <czas_ms> <ścienny_ms> [c]` – klatka w chwili `czas_ms` (zegar odtwarzania, monotoniczny; animacje liczą się od niego, nie od zegara procesu) przy czasie ściennym `ścienny_ms` (zegary `time` i `target`); `c` = rysuj tylko, gdy całą antenę da się narysować natywnie; `Q` kończy. Na stdout na każdą klatkę rekord: 16 bajtów nagłówka (`VZR1`, rodzaj u8, flagi u8, 2 bajty zera, szerokość i wysokość u32 LE), a przy rodzaju 1 piksele RGBA bez przemnożenia alfy, wiersz po wierszu, w rozmiarze `--area` (domyślnie całe `--size`). Rodzaje: 0 – bez zmian, 1 – nowy obraz, 2 – pusto, 3 – nie narysowano (`c` przy niepełnej antenie). Flagi: bit 0 – wszystko na antenie natywnie, bit 1 – połączenie z VizRS działa. Zmiana listy braków trafia na stderr. Adres `--url` to adres wyjścia (`/output`) – token, `layers`, `bus`, `w`, `h` i `fx=step` działają jak na stronie.
+
+**Wierność:** `node tools/native-compare.js [show.json] [--out katalog]` porównuje każdą obsługiwaną stronę z Chromium (TAKE, zakończone wejście, zegary i tickery ukryte): dla INFO24 12 z 13 stron poniżej 1% pikseli różnych o więcej niż 24/255 – różnice to wygładzanie krawędzi; strona z `[[wyróżnieniem]]` czeka na tekst sformatowany. Zmiana w `renderer.js` (rysowanie, dopasowanie tekstu, krzywe) wymaga tej samej zmiany w `source/render/` i przebiegu `native-compare.js`.
+
 ## 11. Sterowanie zewnętrzne
 
 Pełna lista komend, adresów i zdarzeń: [API.md](API.md); przyciski Stream Deck: [COMPANION.md](COMPANION.md).
@@ -679,6 +707,8 @@ node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porów
 node tests/e2e/app.js target/release/vizrs          # okna aplikacji (udawana przeglądarka)
 node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell   # okno natywne w działaniu
 node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell     # zgodność WebView okna z Chromium (0 różnic)
+(cd render && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # renderer natywny (§10.1)
+node tools/native-compare.js                         # zgodność renderera natywnego z Chromium (strony INFO24)
 ```
 
 | Narzędzie | Do czego |

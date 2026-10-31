@@ -1,0 +1,31 @@
+# vizrs-render – natywny renderer grafiki VizRS (bez przeglądarki), plan: docs/plany/PLAN-native.md.
+#
+# Osobny workspace z własnym Cargo.lock: rdzeń `vizrs` (../Cargo.toml) zostaje BEZ zależności,
+# a obraz Docker serwera nie widzi tego katalogu. Renderer nie wkompilowuje serwera – czyta show
+# i zdarzenia anteny tak jak strona /output (GET /events, /fonts, /assets) albo z pliku.
+#
+# Dozwolone zależności (wyjątek od zasady „zero zależności” tylko w tym katalogu):
+#   tiny-skia (rasteryzacja 2D na CPU, wygładzanie jak Skia), rustybuzz (kształtowanie tekstu, kerning;
+#   razem z nim ttf-parser – kontury glifów), wuff (WOFF i WOFF2 → TTF), serde_json (show i zdarzenia),
+#   png i jpeg-decoder (obrazy z assets).
+[package]
+name = "vizrs-render"
+version = "0.1.0"
+edition = "2021"
+description = "Natywny renderer grafiki VizRS (wyjście kanału bez Chromium)"
+
+[workspace]
+
+[dependencies]
+tiny-skia = { version = "0.12", default-features = false, features = ["std", "simd"] }
+rustybuzz = "0.20"
+wuff = "0.2"
+serde_json = "1"
+png = "0.18"
+jpeg-decoder = { version = "0.3", default-features = false }
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+codegen-units = 1

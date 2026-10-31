@@ -1,0 +1,214 @@
+//! Tryb `stream`: renderer jako proces podrzędny sidecara (VirtRS CG Playout) – zamiast bezgłowego Chromium.
+//! Sam łączy się z VizRS jak strona `/output` (zdarzenia, fonty, assets), a klatki rysuje na żądanie.
+//!
+//! Protokół (DOKUMENTACJA §10.1): na stdin wiersze tekstu, na stdout rekordy binarne.
+//! * `F <czas_ms> <ścienny_ms> [c]` – klatka w chwili `czas_ms` (zegar odtwarzania, monotoniczny) przy czasie
+//!   ściennym `ścienny_ms` (ms od epoki, do zegarów); `c` – rysuj tylko, gdy całą antenę da się narysować natywnie.
+//! * `Q` – koniec.
+//!
+//! Rekord: 16 bajtów nagłówka `VZR1`, rodzaj (u8), flagi (u8), 2 bajty zera, szerokość i wysokość (u32 LE),
+//! potem przy rodzaju 1 piksele RGBA (bez przemnożenia alfy), wiersz po wierszu.
+//! Rodzaje: 0 – bez zmian, 1 – nowy obraz, 2 – pusto (przezroczyście), 3 – nie narysowano (`c`, antena niepełna).
+//! Flagi: bit 0 – wszystko na antenie natywnie, bit 1 – połączenie z VizRS działa.
+//! Zmiana listy braków trafia na stderr (`vizrs-render: …`).
+
+use std::io::{BufRead, Write};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver};
+use std::sync::Arc;
+use std::time::Duration;
+
+use serde_json::Value;
+use tiny_skia::Pixmap;
+
+use crate::font::{parse_fonts_css, FontDb};
+use crate::host::Host;
+use crate::net::OutputUrl;
+use crate::raster::unpremultiply;
+use crate::res::Resources;
+use crate::scene::{Clock, Output};
+
+pub const MAGIC: &[u8; 4] = b"VZR1";
+pub const UNCHANGED: u8 = 0;
+pub const IMAGE: u8 = 1;
+pub const EMPTY: u8 = 2;
+pub const SKIPPED: u8 = 3;
+pub const FLAG_COMPLETE: u8 = 1;
+pub const FLAG_CONNECTED: u8 = 2;
+
+pub struct Options {
+    pub url: String,
+    /// Rozmiar kanału (płótno sceny w px).
+    pub size: (u32, u32),
+    /// Obszar grafiki w px kanału (x, y, w, h); brak = cały kanał.
+    pub area: Option<(i32, i32, u32, u32)>,
+    pub font_dirs: Vec<std::path::PathBuf>,
+}
+
+pub fn header(kind: u8, flags: u8, w: u32, h: u32) -> [u8; 16] {
+    let mut out = [0u8; 16];
+    out[..4].copy_from_slice(MAGIC);
+    out[4] = kind;
+    out[5] = flags;
+    out[8..12].copy_from_slice(&w.to_le_bytes());
+    out[12..16].copy_from_slice(&h.to_le_bytes());
+    out
+}
+
+/// Wbudowane fonty serwera (`/fonts/fonts.css`), wczytywane przy starcie.
+fn server_fonts(url: &OutputUrl, db: &mut FontDb) -> Result<usize, String> {
+    let css = url.get("/fonts/fonts.css")?;
+    let mut n = 0;
+    for f in parse_fonts_css(&String::from_utf8_lossy(&css)) {
+        let file = f.url.rsplit('/').next().unwrap_or(&f.url).to_string();
+        if db.has_file(&file) {
+            continue;
+        }
+        let bytes = url.get(&f.url)?;
+        db.add(&file, &bytes, Some(&f.family), Some(f.weight), Some(f.italic))?;
+        n += 1;
+    }
+    Ok(n)
+}
+
+/// Wątek zdarzeń: fonty serwera, potem `/events` z ponawianiem co sekundę (`retry: 1000`).
+fn events_thread(url: OutputUrl, res: Arc<Resources>, connected: Arc<AtomicBool>) -> Receiver<Value> {
+    let (tx, rx) = mpsc::channel();
+    let _ = std::thread::Builder::new().name("events".into()).spawn(move || {
+        let mut fonts_loaded = false;
+        let mut warned = false;
+        loop {
+            if !fonts_loaded {
+                let mut db = res.fonts.write().unwrap_or_else(|e| e.into_inner());
+                match server_fonts(&url, &mut db) {
+                    Ok(n) => {
+                        fonts_loaded = true;
+                        drop(db);
+                        eprintln!("vizrs-render: {n} fontów z serwera");
+                    }
+                    Err(e) => {
+                        drop(db);
+                        if !warned {
+                            eprintln!("vizrs-render: fonty serwera: {e}");
+                        }
+                    }
+                }
+            }
+            let r = url.events(
+                &mut || {
+                    connected.store(true, Ordering::Relaxed);
+                    eprintln!("vizrs-render: połączono z {}:{}", url.host, url.port);
+                },
+                &mut |data| {
+                    if let Ok(v) = serde_json::from_str::<Value>(data) {
+                        let _ = tx.send(v);
+                    }
+                },
+            );
+            connected.store(false, Ordering::Relaxed);
+            if let Err(e) = r {
+                if !warned {
+                    eprintln!("vizrs-render: zdarzenia: {e}");
+                    warned = true;
+                }
+            }
+            std::thread::sleep(Duration::from_secs(1));
+        }
+    });
+    rx
+}
+
+pub fn run(opts: Options) -> Result<(), String> {
+    let url = OutputUrl::parse(&opts.url)?;
+    let mut db = FontDb::new();
+    for d in &opts.font_dirs {
+        db.add_dir(d);
+    }
+    crate::add_system_fonts(&mut db);
+    let fetch_url = url.clone();
+    let res = Resources::new(db, Some(Arc::new(move |path: &str| fetch_url.get(path))), false);
+    let connected = Arc::new(AtomicBool::new(false));
+    let events = events_thread(url.clone(), Arc::clone(&res), Arc::clone(&connected));
+    let layers = url.param("layers").map(|l| l.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect());
+    let mut host = Host::new(layers, url.param("bus").unwrap_or("program"));
+    host.output = Output { step: url.param("fx") == Some("step") };
+    let dim = |k: &str, d: f64| url.param(k).and_then(|v| v.parse::<f64>().ok()).filter(|v| *v > 0.0).unwrap_or(d);
+    host.stage = (dim("w", 1920.0), dim("h", 1080.0));
+    let (ax, ay, aw, ah) = opts.area.unwrap_or((0, 0, opts.size.0, opts.size.1));
+    let mut pix = Pixmap::new(aw.max(1), ah.max(1)).ok_or("zły rozmiar")?;
+    let mut out = std::io::stdout().lock();
+    let stdin = std::io::stdin();
+    let mut issues: Vec<String> = Vec::new();
+    let mut was_empty = false;
+    let mut line = String::new();
+    loop {
+        line.clear();
+        if stdin.lock().read_line(&mut line).map_err(|e| e.to_string())? == 0 {
+            return Ok(());
+        }
+        let mut parts = line.split_whitespace();
+        match parts.next() {
+            Some("Q") => return Ok(()),
+            Some("F") => {}
+            _ => continue,
+        }
+        let now: f64 = parts.next().and_then(|v| v.parse().ok()).unwrap_or(0.0);
+        let wall: f64 = parts.next().and_then(|v| v.parse().ok()).unwrap_or(now);
+        let only_complete = parts.next() == Some("c");
+        let clk = Clock { now, wall };
+        while let Ok(ev) = events.try_recv() {
+            host.handle(&ev, clk);
+        }
+        host.tick(clk, &res);
+        let now_issues = host.issues();
+        if now_issues != issues {
+            if now_issues.is_empty() {
+                eprintln!("vizrs-render: cała antena natywnie");
+            } else {
+                eprintln!("vizrs-render: poza rendererem natywnym: {}", now_issues.join("; "));
+            }
+            issues = now_issues;
+        }
+        let mut flags = 0;
+        if issues.is_empty() {
+            flags |= FLAG_COMPLETE;
+        }
+        if connected.load(Ordering::Relaxed) {
+            flags |= FLAG_CONNECTED;
+        }
+        let rec = if only_complete && !issues.is_empty() {
+            was_empty = false;
+            header(SKIPPED, flags, aw, ah).to_vec()
+        } else if !host.on_air() {
+            // nic na antenie: pusty obraz raz, potem „bez zmian”
+            let kind = if was_empty { UNCHANGED } else { EMPTY };
+            was_empty = true;
+            header(kind, flags, aw, ah).to_vec()
+        } else if host.draw(&mut pix, opts.size, (ax, ay), &res) || was_empty {
+            // po pustym obraz trzeba wysłać, nawet gdy lista się nie zmieniła (`pix` ma ostatni obraz)
+            was_empty = false;
+            let mut rec = header(IMAGE, flags, aw, ah).to_vec();
+            let at = rec.len();
+            rec.extend_from_slice(pix.data());
+            unpremultiply(&mut rec[at..]);
+            rec
+        } else {
+            header(UNCHANGED, flags, aw, ah).to_vec()
+        };
+        out.write_all(&rec).and_then(|_| out.flush()).map_err(|e| e.to_string())?;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn header_layout() {
+        let h = header(IMAGE, FLAG_COMPLETE | FLAG_CONNECTED, 1920, 120);
+        assert_eq!(&h[..4], b"VZR1");
+        assert_eq!((h[4], h[5]), (1, 3));
+        assert_eq!(u32::from_le_bytes(h[8..12].try_into().unwrap()), 1920);
+        assert_eq!(u32::from_le_bytes(h[12..16].try_into().unwrap()), 120);
+    }
+}
