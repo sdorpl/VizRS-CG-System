@@ -87,6 +87,8 @@ struct Args {
     vizrs: Option<String>,
     local: bool,
     probe: Option<(PathBuf, PathBuf)>,
+    /// akceleracja GPU stron: tak, nie, None = domyślnie silnika
+    gpu: Option<bool>,
     /// plik do otwarcia (skojarzenie .cgpack, .vizrs.json)
     file: Option<PathBuf>,
 }
@@ -102,6 +104,7 @@ Użycie: vizrs-shell [artist|trio|output|connect] [opcje] [PLIK]   (domyślnie a
   --token T       token serwera (VIZRS_TOKEN)
   --connect URL   okno dla serwera zdalnego, np. https://cg.example.pl (VIZRS_CONNECT)
   --local         serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu
+  --gpu TRYB      akceleracja GPU stron: on, off, auto (VIZRS_GPU; Linux)
   --vizrs PLIK    plik vizrs do uruchomienia serwera (VIZRS_BIN; domyślnie obok vizrs-shell albo w PATH)
   --probe JS --probe-out JSON   narzędzie testowe: po wczytaniu strony wykonaj skrypt, zapisz wynik, zakończ
 
@@ -124,6 +127,11 @@ fn parse_args() -> Result<Args, String> {
         vizrs: env("VIZRS_BIN"),
         local: false,
         probe: None,
+        gpu: match env("VIZRS_GPU").as_deref() {
+            Some("on") => Some(true),
+            Some("off") => Some(false),
+            _ => None,
+        },
         file: None,
     };
     let mut probe_js = None;
@@ -150,6 +158,14 @@ fn parse_args() -> Result<Args, String> {
             "--connect" => a.connect = Some(val()?),
             "--vizrs" => a.vizrs = Some(val()?),
             "--local" => a.local = true,
+            "--gpu" => {
+                a.gpu = match val()?.as_str() {
+                    "on" => Some(true),
+                    "off" => Some(false),
+                    "auto" => None,
+                    _ => return Err("--gpu: podaj on, off albo auto".into()),
+                }
+            }
             "--probe" => probe_js = Some(PathBuf::from(val()?)),
             "--probe-out" => probe_out = Some(PathBuf::from(val()?)),
             "--help" | "-h" => {
@@ -391,6 +407,7 @@ struct App {
     data: PathBuf,
     /// Zakończ w toku: kolejne okna z pytaniem o zapis
     quitting: bool,
+    gpu: Option<bool>,
     monitors: Vec<MonitorHandle>,
 }
 
@@ -525,6 +542,10 @@ impl App {
             // pisownia polska w polach tekstowych (słownik hunspell pl_PL z systemu, przez enchant)
             use webkit2gtk::{WebContextExt, WebViewExt};
             use wry::WebViewExtUnix;
+            if let (Some(on), Some(st)) = (self.gpu, WebViewExt::settings(&wv.webview())) {
+                use webkit2gtk::{HardwareAccelerationPolicy, SettingsExt};
+                st.set_hardware_acceleration_policy(if on { HardwareAccelerationPolicy::Always } else { HardwareAccelerationPolicy::Never });
+            }
             if let Some(ctx) = wv.webview().context() {
                 ctx.set_spell_checking_enabled(true);
                 ctx.set_spell_checking_languages(&["pl_PL"]);
@@ -1010,7 +1031,7 @@ fn main() {
         });
     }
     let local_start = (args.data.clone(), port, args.vizrs.clone());
-    let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note, data: args.data.clone(), quitting: false, monitors };
+    let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note, data: args.data.clone(), quitting: false, gpu: args.gpu, monitors };
     let first = args.kind;
     let first_file = args.file.clone();
 

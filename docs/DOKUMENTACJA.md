@@ -680,6 +680,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 | `--token T` | `VIZRS_TOKEN` | token serwera |
 | `--connect URL` | `VIZRS_CONNECT` | tylko okno, serwer zdalny |
 | `--vizrs PLIK` | `VIZRS_BIN` | program `vizrs` (domyślnie obok `vizrs-shell` albo w `PATH`) |
+| `--gpu TRYB` | `VIZRS_GPU` | akceleracja GPU stron na Linuksie: `on`, `off`, `auto` (domyślnie: decyduje WebKitGTK); do diagnozy problemów ze sterownikiem |
 | `--local` | | serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu |
 | | `VIZRS_CONFIG` | katalog listy serwerów (domyślnie niżej) |
 
@@ -692,6 +693,7 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 - **Pamięć okna:** rozmiar, pozycja (tylko X11), maksymalizacja, powiększenie i ostatnia scena Artist (serwer lokalny) w `window.json` obok listy serwerów.
 - **Jedna instancja (Linux, macOS):** kolejne uruchomienie na tym samym katalogu danych przekazuje prośbę działającemu programowi: okno na wierzch, nowe okno albo import pliku. Nie dotyczy `--connect`.
 - **Otwieranie plików:** `vizrs-shell plik.cgpack`, dwuklik (skojarzenia `.cgpack` i `.vizrs.json` zakładają `.deb` i `install-desktop-linux.sh`; AppImage nie), Plik → Importuj albo przeciągnięcie na okno Artist. Paczka i scena – import; obraz i wideo – wgranie i nowy element; czcionka – wgranie do zasobów. Limit 512 MB. Przeciąganie działa też w przeglądarce.
+- **Skalowanie ułamkowe (Linux):** GTK3 zna tylko skale całkowite. Przy 125% strona rysuje się w skali 2, a kompozytor zmniejsza obraz, więc tekst jest ostry, ale nie co do piksela. Dokładne piksele przy skali ułamkowej daje okno Chromium (`vizrs artist`).
 - **Ikona na Waylandzie:** bez instalacji okno zakłada ukryty wpis `~/.local/share/applications/vizrs-shell.desktop` i ikonę; istniejącego wpisu nie zmienia.
 - **Pliki:** ⇩ Eksport i ⇩ Paczka otwierają systemowe okno „Zapisz jako”; ⇧ Import – systemowe okno wyboru pliku.
 - **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Artist / Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.

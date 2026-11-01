@@ -3,6 +3,7 @@
 ## Niewydane
 
 - **Okno natywne (Linux):** pytanie o zapis przy zamykaniu (Artist, Trio), tytuł ze sceną i znacznikiem zmian, pełne menu (Plik, Edycja, Widok, Scena, Wyjście, Pomoc), pamięć okna i ostatniej sceny, jedna instancja, kopia robocza po awarii, skojarzenia `.cgpack` i `.vizrs.json`, przeciąganie plików na Artist, wyjście i Fill + Key na wybranym monitorze, logi w `~/.local/state/vizrs`, domyślne dane w `~/.local/share/vizrs`.
+- **Okno natywne:** opcja `--gpu on|off|auto` (`VIZRS_GPU`).
 - **Artist:** ostrzeżenie przy zapisie sceny, która jest na antenie.
 - **Artist – zoom podglądu:** kółko wokół kursora, przesuwanie środkowym przyciskiem, przyciski −/＋/⤢/1:1/⌖ i skróty Shift+1/2/3. Edycja na kanwie działa w każdym powiększeniu.
 
