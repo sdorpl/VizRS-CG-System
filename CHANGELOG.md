@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 2.0.9 (2026-11-01) – „Czcionki”
+
 - **Artist, własna czcionka belki:** przycisk **⤒** przy polu **font** wgrywa plik TTF/OTF/WOFF/WOFF2 i od razu ustawia go w elemencie; czcionka jedzie z paczką sceny.
 - **Fonty wbudowane: Barlow, Bebas Neue, Roboto Mono** (OFL, @fontsource; 400–700, Bebas Neue 400). Szablony INFO24 (Podpis, Title, Scoreboard, BelkaProgram) nie pobierają już fontów z Google Fonts – działają bez internetu i w rendererze natywnym. Lista fontów offline w Artist bierze się z `OFFLINE_FONTS` renderera.
 
