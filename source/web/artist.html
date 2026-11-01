@@ -233,6 +233,7 @@ import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
 import { PROPS, TYPES, FONTS, OFFLINE_FONTS, EASES, ScenePlayer, propAt, trackValue, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
+import { nativeBridge } from '/native.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -259,7 +260,7 @@ const stage = $('#stage'), box = $('#box');
 $('#fontlist').innerHTML = FONTS.map((f) => `<option>${f}</option>`).join('');
 $('#addSel').innerHTML += Object.entries(TYPES).map(([k, v]) => `<option value="${k}">${v.icon} ${v.label}</option>`).join('');
 
-function setDirty(d) { dirty = d; $('#bSave').classList.toggle('dirty', d); }
+function setDirty(d) { dirty = d; $('#bSave').classList.toggle('dirty', d); native.sync(); }
 function checkpoint() {
   undo.push(JSON.stringify(scene)); if (undo.length > 150) undo.shift();
   redo = []; setDirty(true);
@@ -332,19 +333,29 @@ async function confirmLeave() {
   if (confirm('Scena ma niezapisane zmiany. Zapisać przed przejściem?')) { await save(); return true; }
   return confirm('Porzucić zmiany?');
 }
+// ostrzeżenie: zapis szablonu, który właśnie jest na antenie (brak odpowiedzi serwera nie blokuje zapisu)
+async function confirmOnAir() {
+  const st = await api('GET', '/api/state').catch(() => null);
+  const air = st?.layers?.filter((l) => l.page?.scene === scene.id).map((l) => l.layer) || [];
+  return !air.length || confirm(`Scena „${scene.name}” jest teraz na antenie (warstwa: ${air.join(', ')}).\n\nZapisać zmiany szablonu?`);
+}
 async function save(force) {
   try {
+    if (force !== true && !(await confirmOnAir())) return false;
     const body = force === true ? (({ rev, ...r }) => r)(scene) : scene; // bez rev = świadome nadpisanie
     const saved = await api('PUT', '/api/scenes/' + encodeURIComponent(scene.id), body);
     scene.rev = saved.rev;
     const i = scenes.findIndex((s) => s.id === saved.id);
     if (i >= 0) scenes[i] = saved; else scenes.push(saved);
     setDirty(false); renderSceneSel(); toast('Zapisano scenę „' + scene.name + '”');
+    native.clearDraft(); native.sync();
+    return true;
   } catch (e) {
     if (/^konflikt/.test(e.message)) {
       if (confirm('Ta scena została zmieniona przez kogoś innego (lub w innym oknie).\n\nOK = nadpisz moją wersją, Anuluj = nie zapisuj.')) return save(true);
       toast('Konflikt zapisu – scena nie zapisana', true);
     } else toast('Błąd zapisu: ' + e.message, true);
+    return false;
   }
 }
 async function newScene(name, base) {
@@ -1629,7 +1640,7 @@ $('#sceneSel').addEventListener('change', async (e) => {
   const s = scenes.find((s) => s.id === e.target.value);
   if (await confirmLeave()) openScene(s); else renderSceneSel();
 });
-$('#bSave').onclick = save;
+$('#bSave').onclick = () => save();
 $('#bUndo').onclick = doUndo;
 $('#bRedo').onclick = doRedo;
 $('#bNew').onclick = async () => {
@@ -1656,21 +1667,35 @@ $('#bExp').onclick = () => {
 };
 $('#bImp').onclick = () => {
   const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
-  fi.onchange = async () => {
-    const f = fi.files[0]; if (!f) return;
-    try {
-      if (/\.cgpack$/i.test(f.name)) {
-        const u8 = new Uint8Array(await f.arrayBuffer());
-        const kind = await PACK.packKind(u8);
-        if (kind === 'btb') return importBtbFile(f);
-        if (!kind) throw new Error('to nie jest paczka .cgpack');
-        return importPack(u8);
-      }
-      const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s);
-    } catch (e) { toast('Import: ' + e.message, true); }
-  };
+  fi.onchange = () => { if (fi.files[0]) importFile(fi.files[0]); };
   fi.click();
 };
+async function importFile(f) {
+  try {
+    if (/\.cgpack$/i.test(f.name)) {
+      const u8 = new Uint8Array(await f.arrayBuffer());
+      const kind = await PACK.packKind(u8);
+      if (kind === 'btb') return importBtbFile(f);
+      if (!kind) throw new Error('to nie jest paczka .cgpack');
+      return importPack(u8);
+    }
+    const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s);
+  } catch (e) { toast('Import: ' + e.message, true); }
+}
+// plik z menedżera plików albo ze skojarzenia: paczka i scena – import, obraz/wideo – nowy element, czcionka – do zasobów
+const IMG_RE = /\.(png|jpe?g|webp|gif|svg|mp4|webm)$/i, FONT_FILE_RE = /\.(ttf|otf|woff2?)$/i;
+async function openFile(f) {
+  if (/\.(cgpack|json)$/i.test(f.name)) return importFile(f);
+  if (!IMG_RE.test(f.name) && !FONT_FILE_RE.test(f.name)) return toast(`Nieobsługiwany plik: ${f.name}`, true);
+  try {
+    const r = await fetch('/api/assets?name=' + encodeURIComponent(f.name), { method: 'POST', body: f });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error);
+    await loadAssets(); toast('Wgrano ' + j.name);
+    if (IMG_RE.test(f.name)) { addNode('image'); selNode().props.src = j.name; refresh(); renderProps(); }
+  } catch (e) { toast('Upload: ' + e.message, true); }
+}
+addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); });
+addEventListener('drop', (e) => { const fs = [...(e.dataTransfer?.files || [])]; if (!fs.length) return; e.preventDefault(); (async () => { for (const f of fs) await openFile(f); })(); });
 
 // ------------------------------------------------------------ paczka belek (.cgpack)
 const fetchAssetBytes = async (name) => {
@@ -1848,7 +1873,7 @@ let lastSync = 0;
 })(0);
 
 new ResizeObserver(() => resize()).observe(box);
-load().catch((e) => toast('Błąd: ' + e.message, true));
+const loaded = load().catch((e) => toast('Błąd: ' + e.message, true));
 
 // ------------------------------------------------------------ pasek stanu: podpowiedź do panelu pod kursorem
 const HINT0 = 'Ctrl+S zapisz · Ctrl+Z / Ctrl+Y cofnij / ponów · najedź na panel, aby zobaczyć jego skróty';
@@ -1878,6 +1903,31 @@ for (const g of document.querySelectorAll('.gutter')) {
 if (document.documentElement.classList.contains('native')) {
   addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
 }
+
+// ------------------------------------------------------------ okno natywne: stan dla powłoki, komendy menu, kopia robocza
+const click = (id) => () => $(id).click();
+const native = nativeBridge({
+  state: () => scene && { title: `${dirty ? '● ' : ''}${scene.name} — VizRS Artist`, dirty, undo: undo.length > 0, redo: redo.length > 0, scene: scene.id },
+  save: () => save(),
+  whatChanged: () => `Scena „${scene.name}” ma niezapisane zmiany.`,
+  draft: () => (dirty && scene ? { id: scene.id, text: JSON.stringify(scene) } : null),
+  commands: {
+    new: click('#bNew'), save: () => save(), export: click('#bExp'), pack: click('#bPack'),
+    undo: doUndo, redo: doRedo, dup: () => treeOp('dup'), del: () => (lastArea === 'timeline' && selKey ? deleteSelKey() : treeOp('del')),
+    fit: resetView, z100: zoom100, zsel: zoomSel, marker: () => addMarker(t),
+    play: () => { if (player.playing) player.playing = false; else $('#pPlay').click(); },
+    file: async (f) => { await loaded; openFile(f); },
+    // kopia robocza po awarii: propozycja przy otwarciu sceny
+    draft: async (text) => {
+      await loaded;
+      let d; try { d = JSON.parse(text); } catch { return; }
+      if (d.id !== scene?.id || !Array.isArray(d.nodes) || text === JSON.stringify(scene)) return;
+      if (confirm(`Znaleziono niezapisaną kopię roboczą sceny „${d.name}” (np. po awarii).\n\nOK = przywróć, Anuluj = pomiń.`)) {
+        checkpoint(); scene = { ...d, rev: scene.rev }; player.setScene(scene); player.seek(t); renderAll();
+      }
+    },
+  },
+});
 
 // ------------------------------------------------------------ połączenie z serwerem
 // tylko wskaźnik (edycja sceny nie jest nadpisywana zdarzeniami); okno aplikacji `vizrs artist` wie dzięki temu, że Artist jest otwarty

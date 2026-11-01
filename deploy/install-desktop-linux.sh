@@ -5,7 +5,7 @@
 #
 # Użycie: deploy/install-desktop-linux.sh [--chromium] [ścieżka-do-vizrs] [katalog-danych]
 #   domyślnie: bin/linux-x86_64/vizrs i vizrs-data/ obok repozytorium; --chromium = bez okna natywnego
-# Usunięcie: rm ~/.local/share/applications/vizrs-*.desktop ~/.local/share/icons/hicolor/scalable/apps/vizrs.svg
+# Usunięcie: rm ~/.local/share/applications/vizrs-*.desktop ~/.local/share/icons/hicolor/scalable/apps/vizrs.svg ~/.local/share/mime/packages/vizrs.xml
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CHROMIUM=0
@@ -20,7 +20,9 @@ SHELLBIN="$(dirname "$BIN")/vizrs-shell"
 case "$BIN$DATA$SHELLBIN" in *'"'*|*'`'*|*'$'*|*'\'*|*%*) echo "Ścieżka zawiera znak niedozwolony w pliku .desktop (\" \` \$ \\ %)" >&2; exit 1 ;; esac
 
 SHARE="${XDG_DATA_HOME:-$HOME/.local/share}"
-mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps"
+mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps" "$SHARE/mime/packages"
+cp "$ROOT/deploy/vizrs-mime.xml" "$SHARE/mime/packages/vizrs.xml"
+command -v update-mime-database >/dev/null && update-mime-database "$SHARE/mime" 2>/dev/null || true
 cp "$ROOT/deploy/vizrs.svg" "$SHARE/icons/hicolor/scalable/apps/vizrs.svg"
 
 for w in Artist Trio; do
@@ -42,6 +44,11 @@ Terminal=false
 Categories=AudioVideo;Video;
 StartupWMClass=$wmclass
 EOF
+  # skojarzenie .cgpack i .vizrs.json: dwuklik importuje w Artist (tylko okno natywne)
+  if [ "$w" = Artist ] && [ -n "$SHELLBIN" ]; then
+    sed -i -e 's/^\(Exec=.*\)$/\1 %f/' "$SHARE/applications/vizrs-artist.desktop"
+    echo "MimeType=application/x-vizrs-cgpack;application/x-vizrs-scene;" >> "$SHARE/applications/vizrs-artist.desktop"
+  fi
   echo "Utworzono $SHARE/applications/vizrs-$lower.desktop"
 done
 if [ -n "$SHELLBIN" ]; then

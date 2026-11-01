@@ -20,7 +20,8 @@
 | N2 bezpieczeństwo sieciowe (token wyjścia, spowalnianie prób, limit na adres, termin nagłówków, `--trust-proxy`, `--log-stdout`, SIGTERM) | zrobione |
 | N3 okna aplikacji (`vizrs artist|trio|output`, `--connect`, `vizrs-app` bez konsoli, skróty Linux/Windows, wskaźnik połączenia w Artist, `tests/e2e/app.js`) | zrobione; Windows/macOS: sprawdzona kompilacja (clippy dla celów), uruchomienie okien – do sprawdzenia na tych systemach |
 | N4.1 okno natywne `vizrs-shell` (Artist/Trio/wyjście, menu, „Zapisz jako”, pisownia pl, dołączanie/uruchamianie serwera, skróty, CI, `tools/engines.js` 82/82 zgodnych z Chromium) | zrobione; Linux sprawdzony w działaniu, Windows – kompilacja (clippy), macOS – CI |
-| N4.2–N4.5 (zasobnik, skróty globalne, wybór monitora, instalatory), N5 relay i kanały | opcjonalne – czekają na decyzję |
+| Etap 1 natywnego Artist na Linuksie (most strona–okno, pytanie przy zamykaniu, menu, pamięć okna, jedna instancja, kopia robocza, skojarzenia, przeciąganie, wybór monitora) | zrobione; następny: etap 2 Windows |
+| N4.2, N4.3, instalatory Windows/macOS, N5 relay i kanały | opcjonalne – czekają na decyzję |
 
 ## Zrobione (wg planu)
 | Etap | Kroki | Gdzie |

@@ -13,8 +13,9 @@ ROOT="$OUT/vizrs_${VER}_amd64"
 rm -rf "$ROOT"
 mkdir -p "$ROOT/DEBIAN" "$ROOT/usr/bin" "$ROOT/usr/lib/vizrs" "$ROOT/usr/share/applications" \
   "$ROOT/usr/share/icons/hicolor/scalable/apps" "$ROOT/usr/share/icons/hicolor/256x256/apps" \
-  "$ROOT/lib/systemd/system" "$ROOT/usr/share/doc/vizrs"
+  "$ROOT/lib/systemd/system" "$ROOT/usr/share/doc/vizrs" "$ROOT/usr/share/mime/packages"
 install -m755 "$VIZRS" "$SHELLBIN" "$ROOT/usr/bin/"
+install -m644 "$HERE/../vizrs-mime.xml" "$ROOT/usr/share/mime/packages/vizrs.xml"
 install -m644 "$HERE/../vizrs.svg" "$ROOT/usr/share/icons/hicolor/scalable/apps/vizrs.svg"
 install -m644 "$HERE/../vizrs-256.png" "$ROOT/usr/share/icons/hicolor/256x256/apps/vizrs.png"
 
@@ -42,7 +43,8 @@ StartupWMClass=vizrs-shell
 D
   [ -z "$5" ] || echo "NoDisplay=true" >> "$ROOT/usr/share/applications/$1.desktop"
 }
-desktop vizrs-artist "VizRS Artist" "Projektowanie szablonów grafiki CG" artist
+desktop vizrs-artist "VizRS Artist" "Projektowanie szablonów grafiki CG" "artist %f"
+echo "MimeType=application/x-vizrs-cgpack;application/x-vizrs-scene;" >> "$ROOT/usr/share/applications/vizrs-artist.desktop"
 desktop vizrs-trio "VizRS Trio" "Playout grafiki CG na żywo" trio
 desktop vizrs-trio-zdalnie "VizRS Trio – serwer zdalny" "Trio sterujące serwerem VizRS na VPS (adres i token)" connect
 # Wayland rozpoznaje okno po identyfikatorze aplikacji (nazwa programu) – ten wpis daje oknom ikonę VizRS
@@ -85,6 +87,7 @@ cat > "$ROOT/DEBIAN/postinst" <<'P'
 set -e
 if [ "$1" = configure ]; then
   getent passwd vizrs >/dev/null || useradd --system --home-dir /var/lib/vizrs --create-home --shell /usr/sbin/nologin vizrs
+  command -v update-mime-database >/dev/null && update-mime-database /usr/share/mime || true
   command -v update-desktop-database >/dev/null && update-desktop-database -q /usr/share/applications || true
   command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q /usr/share/icons/hicolor || true
   command -v systemctl >/dev/null && systemctl daemon-reload >/dev/null 2>&1 || true
