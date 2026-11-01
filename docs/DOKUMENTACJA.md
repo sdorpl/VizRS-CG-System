@@ -474,6 +474,18 @@ Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudz
 
 Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w poziomie. Korzysta z tego samego API co Trio, więc telefon i stanowisko widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego. Adres z tokenem: `http://<adres-serwera>:8088/mobile?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §13); token wyjścia nie otwiera tej strony (403).
 
+**Instalacja na telefonie (PWA):** strona ma manifest, ikonę i service workera, więc uruchamia się z ikony we własnym oknie, bez paska przeglądarki.
+
+| Telefon | Jak zainstalować | Co działa |
+|---|---|---|
+| Android, HTTPS | Chrome → menu → **Zainstaluj aplikację** | własne okno, start bez sieci, niewygaszanie ekranu |
+| iPhone | Safari → **Udostępnij** → **Do ekranu początkowego** | własne okno; start bez sieci i niewygaszanie tylko przez HTTPS |
+| Android, zwykłe HTTP | tylko skrót na ekranie | Chrome nie instaluje aplikacji bez HTTPS, skrót otwiera kartę przeglądarki |
+
+HTTPS musi mieć certyfikat zaufany przez telefon; certyfikat samopodpisany z ostrzeżeniem nie wystarczy. VizRS sam nie obsługuje TLS, więc potrzebne jest reverse proxy (§13, [RUNBOOK](RUNBOOK.md#vps-i-docker)).
+
+Bez tokenu w adresie `/mobile` pokazuje ekran logowania; po podaniu tokenu ciasteczko ważne jest rok, a token znika z adresu. `/mobile.webmanifest` i ikony są dostępne bez tokenu, bo przeglądarka pobiera je bez ciasteczka. Service worker przechowuje wyłącznie pliki interfejsu i zawsze najpierw pyta serwer, więc po aktualizacji telefon dostaje nową wersję. Bez sieci aplikacja startuje i pokazuje „brak połączenia”.
+
 Na dole ekranu stale są wybrana strona oraz **TAKE**, **CONTINUE**, **OUT** i **UPDATE**. Działają jak w Trio (§9.2): TAKE i UPDATE wysyłają wartości z edycji, także niezapisane, a CONTINUE i OUT są aktywne, gdy strona gra na wybranej antenie.
 
 | Zakładka | Zawartość |

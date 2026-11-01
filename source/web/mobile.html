@@ -5,6 +5,11 @@
 <title>VizRS Trio mobilne</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#0b0c0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VizRS Trio">
+<link rel="manifest" href="/mobile.webmanifest">
+<link rel="apple-touch-icon" href="/mobile-icon.png">
 <link rel="stylesheet" href="/ui.css">
 <script src="/text-model.js"></script>
 <style>
@@ -140,6 +145,14 @@
 <script type="module">
 import { connectEvents, listFields } from '/renderer.js';
 import { visLen, limitText, polish } from '/field-rules.js';
+
+// token z adresu trafił już do ciasteczka: nie zostawiamy go w historii, skrótach ani na zrzutach ekranu
+if (new URLSearchParams(location.search).has('token')) {
+  const q = new URLSearchParams(location.search); q.delete('token');
+  history.replaceState(null, '', '/mobile' + (q.size ? '?' + q : ''));
+}
+// bez HTTPS przeglądarka nie udostępnia service workera; aplikacja działa wtedy tak samo, tylko nie startuje bez sieci
+navigator.serviceWorker?.register('/mobile-sw.js', { scope: '/mobile' }).catch(() => {});
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];

@@ -30,6 +30,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   try {
     await waitUp();
     ok((await fetch(B + '/mobile')).status === 401, '/mobile bez tokenu → 401');
+    ok((await (await fetch(B + '/mobile')).text()).includes('name="token"'), '/mobile bez tokenu pokazuje ekran logowania');
+    ok((await fetch(B + '/mobile.webmanifest')).status === 200 && (await fetch(B + '/mobile-icon.png')).headers.get('content-type') === 'image/png', 'manifest i ikona bez tokenu');
+    ok((await fetch(B + '/trio')).status === 401 && !(await (await fetch(B + '/trio')).text()).includes('name="token"'), 'Trio bez zmian: bez ekranu logowania');
     ok((await fetch(`${B}/mobile?token=${OUT_TOKEN}`)).status === 403, 'token wyjścia: /mobile → 403');
 
     browser = await chromium.launch();
@@ -41,8 +44,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const shot = async (n) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png') }); };
     const layers = async () => (await api('/api/state')).layers;
     const pages = () => p.locator('#pages .item');
-    await p.goto(`${B}/mobile?token=${TOKEN}`);
+    // ekran logowania: zły token, potem dobry; token nie zostaje w adresie
+    await p.goto(`${B}/mobile`);
+    await p.fill('input[name=token]', 'zly');
+    await p.tap('form button');
+    await p.waitForFunction(() => !document.querySelector('#bad').hidden);
+    ok(true, 'zły token: komunikat na ekranie logowania');
+    await p.fill('input[name=token]', TOKEN);
+    await p.tap('form button');
     await p.waitForSelector('#pages .item');
+    ok(new URL(p.url()).search === '', 'token nie zostaje w adresie', p.url());
+    await p.goto(`${B}/mobile`);
+    await p.waitForSelector('#pages .item');
+    ok(true, 'zalogowany telefon wchodzi bez ekranu logowania');
     await p.waitForFunction(() => document.querySelector('#conn').textContent === 'OK');
 
     const over = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -172,6 +186,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await waitUp();
     await p.waitForFunction(() => document.querySelector('#conn').textContent === 'OK', null, { timeout: 15000 });
     ok(true, 'po powrocie serwera strona łączy się sama');
+
+    // service worker: bez serwera aplikacja startuje i pokazuje brak połączenia zamiast błędu przeglądarki
+    await p.waitForFunction(() => navigator.serviceWorker.ready.then(() => !!navigator.serviceWorker.controller), null, { timeout: 8000 });
+    await p.reload();
+    await p.waitForSelector('#pages .item');
+    srv.kill('SIGTERM');
+    await sleep(500);
+    await p.reload();
+    await p.waitForFunction(() => document.querySelector('#conn')?.textContent === 'brak połączenia', null, { timeout: 12000 });
+    ok(true, 'bez serwera aplikacja startuje z pamięci telefonu');
+    srv = start();
+    await waitUp();
+    await p.waitForFunction(() => document.querySelector('#conn').textContent === 'OK', null, { timeout: 15000 });
+    await p.waitForSelector('#pages .item');
+    ok(true, 'po powrocie serwera wczytuje dane');
 
     ok(errs.length === 0, 'brak błędów JS', errs);
   } catch (e) {
