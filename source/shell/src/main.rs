@@ -407,6 +407,7 @@ struct App {
     data: PathBuf,
     /// Zakończ w toku: kolejne okna z pytaniem o zapis
     quitting: bool,
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     gpu: Option<bool>,
     monitors: Vec<MonitorHandle>,
 }

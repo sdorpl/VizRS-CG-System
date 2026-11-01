@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 2.0.15 (2026-11-01) – „Telefon”
+
 - **Trio na telefonie, wygląd i obsługa aplikacji:** pasek zakładek na dole, przesuwanie zakładek palcem, arkusze zamiast okienek przeglądarki, przycisk Wstecz, wibracje, czerwony nagłówek przy zajętej antenie. Nowe: podgląd strony, wiersze wiadomości tickera, pola koloru i obrazu (ze zdjęciem z telefonu), karuzela, ARM, wdrażanie szablonu.
 - **Trio na telefonie jako aplikacja (PWA):** manifest, ikona, start bez sieci przez service workera, ekran logowania tokenem; token znika z adresu po wejściu.
 - **Trio na telefonie (`/mobile`):** osobna strona na ekran dotykowy: lista stron, zmiana tekstu, TAKE / CONTINUE / OUT / UPDATE, warstwy na antenie z monitorem PGM, CLEAR ALL, rundown z NEXT, makra, wybór anteny. Dotknięcie strony tylko ją wybiera, a podwójne dotknięcie TAKE gra raz. Reguły pól są wspólne z Trio (`field-rules.js`).
@@ -9,6 +11,8 @@
 - **Okno natywne:** opcja `--gpu on|off|auto` (`VIZRS_GPU`).
 - **Artist:** ostrzeżenie przy zapisie sceny, która jest na antenie.
 - **Artist – zoom podglądu:** kółko wokół kursora, przesuwanie środkowym przyciskiem, przyciski −/＋/⤢/1:1/⌖ i skróty Shift+1/2/3. Edycja na kanwie działa w każdym powiększeniu.
+- **CI:** okno natywne kompiluje się bez ostrzeżeń na Windowsie i macOS (pole `gpu` używane tylko na Linuksie).
+
 ## 2.0.13 (2026-11-01) – „Nazwy kanałów”
 
 - **Nazwy kanałów:** `POST /channels/<kanał>` z `name`, nazwa na liście Antena i monitorze PGM w Trio.
