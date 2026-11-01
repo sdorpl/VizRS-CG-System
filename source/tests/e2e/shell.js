@@ -71,7 +71,10 @@ const probe = (kind) => {
     await sleep(3000);
     const second = spawnSync(SHELL, ['trio', '--data', data, '--port', String(PORT), '--vizrs', BIN], { env: siEnv, timeout: 5000 });
     ok(second.status === 0 && first.exitCode === null, 'drugie uruchomienie kończy się od razu, pierwsze działa', second.status);
-    first.kill(); await sleep(11500);
+    first.kill();
+    // serwer poprzedniego okna kończy się po --idle-exit; krok 1 dołączyłby do niego i stracił go przy starcie WebKitGTK
+    for (let i = 0; i < 60 && await health(); i++) await sleep(500);
+    ok(!(await health()), 'serwer po zamknięciu okna kończy pracę przed kolejnym krokiem');
 
     // 1. Artist: powłoka uruchamia serwer, okno łączy się z nim
     const a = probe('artist');
