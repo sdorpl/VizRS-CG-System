@@ -2,6 +2,10 @@
 
 ## Niewydane
 
+## 2.0.13 (2026-11-01) – „Nazwy kanałów”
+
+- **Nazwy kanałów:** `POST /channels/<kanał>` z `name`, nazwa na liście Antena i monitorze PGM w Trio.
+
 ## 2.0.12 (2026-11-01) – „Anteny kanałów”
 
 - **Anteny kanałów playoutu:** jeden serwer ma osobną antenę na kanał: TCP `@<kanał> <komenda>`, HTTP `?channel=<kanał>`, wyjście `/output?bus=ch-<kanał>` (także `vizrs-render`). Każda antena ma własną karuzelę, kursor rundownu, makro i dock; lista kanałów przeżywa restart.
