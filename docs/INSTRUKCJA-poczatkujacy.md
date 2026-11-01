@@ -59,7 +59,7 @@ Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze
 
 1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
 2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
-3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px).
+3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px; kółko myszy powiększa kanwę, środkowy przycisk przesuwa widok, Shift+1 dopasowuje całą scenę).
 4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze` (jak w BTB CG): długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej ustaw `maks. linii` = 2 i wybierz `squeeze-each` (operator łamie wiersze Enterem, każdy wiersz ściska się osobno, wysokość liter ta sama) albo `squeeze-lines` (wiersze dzielą się same; „łamanie wierszy” = `fill` wypełnia najpierw pierwszy wiersz, jak belki TVP), dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
 5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.

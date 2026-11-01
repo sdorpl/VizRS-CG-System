@@ -178,6 +178,39 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     const sqB = await pg.locator('#sqInfo').innerText();
     ok(sqB.includes('nie mieści') && (await pg.locator('#stage [data-id="t1"][data-over]').count()) === 1, 'Artist: przepełnienie – ostrzeżenie w panelu i ramka na kanwie', sqB);
 
+    // zoom podglądu: kółko wokół kursora, przeciąganie w skali, przesuwanie, dopasowanie
+    await pg.evaluate(() => document.activeElement?.blur());
+    const view = () => pg.evaluate(() => {
+      const r = document.querySelector('#stage').getBoundingClientRect(), n = document.querySelector('#stage [data-id="t1"]').getBoundingClientRect(), b = document.querySelector('#box').getBoundingClientRect();
+      const W = document.querySelector('#stage').offsetWidth, H = document.querySelector('#stage').offsetHeight;
+      return { l: r.left, t: r.top, s: r.width / W, k: (r.width / W) / Math.min(b.width / W, b.height / H), cx: n.left + n.width / 2, cy: n.top + n.height / 2 };
+    });
+    const v0 = await view();
+    await pg.mouse.move(v0.cx, v0.cy); await pg.mouse.wheel(0, -300); await sleep(150);
+    const v1 = await view();
+    ok(v1.s > v0.s * 1.3, 'Kółko powiększa podgląd', [v0.s, v1.s]);
+    ok(Math.abs((v0.cx - v0.l) / v0.s - (v0.cx - v1.l) / v1.s) < 1, 'Punkt pod kursorem zostaje na miejscu');
+    await pg.mouse.down(); await pg.mouse.move(v1.cx + 120, v1.cy, { steps: 4 }); await pg.mouse.up(); await sleep(150);
+    const xp = await pg.inputValue('[data-p="x"]');
+    await pg.mouse.move(v1.cx + 120, v1.cy); await pg.mouse.down(); await pg.mouse.move(v1.cx + 240, v1.cy, { steps: 4 }); await pg.mouse.up(); await sleep(150);
+    ok(Math.abs(+(await pg.inputValue('[data-p="x"]')) - +xp - 120 / v1.s) <= 1, 'Przeciąganie w powiększeniu zachowuje piksele sceny');
+    const selOk = await pg.evaluate(() => { const a = document.querySelector('#sel').getBoundingClientRect(), n = document.querySelector('#stage [data-id="t1"]').getBoundingClientRect(); return Math.abs(a.left - n.left) < 2 && Math.abs(a.width - n.width) < 2; });
+    ok(selOk, 'Ramka zaznaczenia trzyma się elementu w powiększeniu');
+    const xb = await pg.inputValue('[data-p="x"]'), v2 = await view();
+    await pg.mouse.move(v2.cx, v2.cy); await pg.mouse.down({ button: 'middle' }); await pg.mouse.move(v2.cx - 80, v2.cy - 40, { steps: 3 }); await pg.mouse.up({ button: 'middle' }); await sleep(150);
+    const v3 = await view();
+    ok(Math.abs(v3.l - v2.l + 80) < 1 && Math.abs(v3.t - v2.t + 40) < 1 && (await pg.inputValue('[data-p="x"]')) === xb, 'Środkowy przycisk przesuwa widok, nie element');
+    await pg.setViewportSize({ width: 1500, height: 900 }); await sleep(300);
+    ok(Math.abs((await view()).k - v3.k) < 0.01, 'Zmiana rozmiaru panelu zachowuje powiększenie');
+    await pg.setViewportSize({ width: 1700, height: 1000 }); await sleep(300);
+    await pg.keyboard.press('Shift+Digit2'); await sleep(150);
+    ok(Math.abs((await view()).s - 1) < 0.001 && (await pg.locator('#vZoom').innerText()) === '100%', 'Shift+2 ustawia skalę 100%');
+    await pg.click('#vSel'); await sleep(150);
+    ok((await view()).s > 0, 'Kadr na zaznaczony element działa');
+    await pg.click('#vFit'); await sleep(150);
+    const v4 = await view();
+    ok(Math.abs(v4.k - 1) < 0.001, '⤢ wraca do dopasowania', v4.k);
+
     // warstwa zmieniona w Trio: otwarta scena ją przejmuje, a zapis w Artist jej nie cofa
     const sid = await pg.locator('#sceneSel').inputValue();
     const pl = await api('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scene: sid, name: 'warstwa' }) });

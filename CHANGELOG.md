@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Artist – zoom podglądu:** kółko wokół kursora, przesuwanie środkowym przyciskiem, przyciski −/＋/⤢/1:1/⌖ i skróty Shift+1/2/3. Edycja na kanwie działa w każdym powiększeniu.
+
 ## 2.0.11 (2026-11-01) – „Porządkowe”
 
 - Wydanie techniczne razem z VizRS CG Playout 2.3.1. Bez zmian w działaniu aplikacji.
