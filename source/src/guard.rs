@@ -259,7 +259,7 @@ mod tests {
         rep.method = "POST".into();
         assert_eq!(code(check(&rep, &t)), 200);
         // sterowanie i edycja – nie
-        for p in ["/trio", "/artist", "/api/take/1001", "/api/clear", "/api/show", "/api/state", "/api/audit"] {
+        for p in ["/trio", "/mobile", "/artist", "/api/take/1001", "/api/clear", "/api/show", "/api/state", "/api/audit"] {
             assert_eq!(code(check(&req(p, &ck, &[]), &t)), 403, "{p}");
         }
         let mut put = req("/api/show", &[("x-token", "out-1")], &[]);

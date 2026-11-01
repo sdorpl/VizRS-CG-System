@@ -2,6 +2,7 @@
 
 ## Niewydane
 
+- **Trio na telefonie (`/mobile`):** osobna strona na ekran dotykowy: lista stron, zmiana tekstu, TAKE / CONTINUE / OUT / UPDATE, warstwy na antenie z monitorem PGM, CLEAR ALL, rundown z NEXT, makra, wybór anteny. Dotknięcie strony tylko ją wybiera, a podwójne dotknięcie TAKE gra raz. Reguły pól są wspólne z Trio (`field-rules.js`).
 - **Okno natywne (Linux):** pytanie o zapis przy zamykaniu (Artist, Trio), tytuł ze sceną i znacznikiem zmian, pełne menu (Plik, Edycja, Widok, Scena, Wyjście, Pomoc), pamięć okna i ostatniej sceny, jedna instancja, kopia robocza po awarii, skojarzenia `.cgpack` i `.vizrs.json`, przeciąganie plików na Artist, wyjście i Fill + Key na wybranym monitorze, logi w `~/.local/state/vizrs`, domyślne dane w `~/.local/share/vizrs`.
 - **Okno natywne:** opcja `--gpu on|off|auto` (`VIZRS_GPU`).
 - **Artist:** ostrzeżenie przy zapisie sceny, która jest na antenie.

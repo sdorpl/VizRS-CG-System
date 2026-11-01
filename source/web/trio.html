@@ -253,6 +253,7 @@
 import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, layerZ, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor, DEFAULT_TZ } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 import { nativeBridge } from '/native.js';
+import { visLen, limitText, polish } from '/field-rules.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -647,7 +648,6 @@ $('#elayer').onchange = (e) => {
 // ---- reguły pól (F3.1): limity, wersaliki, typografia, formatowanie, Word Replace
 const fieldDef = (fid) => listFields(sceneOf(draft) || { nodes: [] }).find((x) => x.id === fid);
 const rulesOf = (fid) => fieldDef(fid)?.rules || {};
-const visLen = (t) => Array.from(stripMarkup(t).replace(/\n/g, '')).length;
 const lastGood = new Map();
 function updateCounters() {
   for (const c of $$('[data-cnt]')) {
@@ -663,22 +663,12 @@ function enforceRules(el) {
   const fid = el.dataset.f, R = rulesOf(fid);
   if (R.readonly) return false;
   if (el.dataset.tk) return true; // ticker: reguły (limit wiadomości, znaków na wiadomość) pilnuje edytor listy
-  let v = el.value;
-  const caret = el.selectionStart, fromEnd = v.length - (caret ?? v.length);
-  if (R.upper) v = v.toUpperCase();
-  const ml = R.oneLine ? 1 : (R.maxLines || 0);
-  if (R.oneLine && /\n/.test(v)) v = v.replace(/\n+/g, ' ');
-  if (ml > 1 && v.split('\n').length > ml) { toast(`Maksymalnie ${ml} linie`, true); v = lastGood.get(fid) ?? v.split('\n').slice(0, ml).join('\n'); }
-  if (R.maxChars && visLen(v) > R.maxChars) { toast(`Limit ${R.maxChars} znaków`, true); v = lastGood.get(fid) ?? v; }
+  const caret = el.selectionStart, fromEnd = el.value.length - (caret ?? el.value.length);
+  const { v, err } = limitText(el.value, R, lastGood.get(fid));
+  if (err) toast(err, true);
   if (v !== el.value) { el.value = v; if (caret != null) el.setSelectionRange(Math.max(0, v.length - fromEnd), Math.max(0, v.length - fromEnd)); }
   lastGood.set(fid, v);
   return true;
-}
-const escHtml = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-/** Polska typografia (CGText.typo z BTB-CG): twarde spacje po spójnikach, cudzysłowy „”, wielokropek, półpauza. */
-function polish(text) {
-  if (!window.CGText) return text;
-  return text.split('\n').map((l) => (l ? CGText.plain(CGText.typo('<div>' + escHtml(l) + '</div>')) : l)).join('\n');
 }
 /** Reguły stosowane po zakończeniu wpisywania (typografia działa na całym tekście, więc nie w trakcie pisania). */
 function applyFinalRules() {

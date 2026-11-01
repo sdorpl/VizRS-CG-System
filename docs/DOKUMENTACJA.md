@@ -470,6 +470,28 @@ Zdrowie serwera i wyjść, błędy scen (z przyciskiem Wyczyść), lista Word Re
 
 Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudzej strony wymaga potwierdzenia. Blokada wygasa po 45 s bez aktywności. Konflikt zapisu → wybór „nadpisz moją wersją / zachowaj zmiany”.
 
+### 9.9 Trio na telefonie (`/mobile`)
+
+Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w poziomie. Korzysta z tego samego API co Trio, więc telefon i stanowisko widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego. Adres z tokenem: `http://<adres-serwera>:8088/mobile?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §13); token wyjścia nie otwiera tej strony (403).
+
+Na dole ekranu stale są wybrana strona oraz **TAKE**, **CONTINUE**, **OUT** i **UPDATE**. Działają jak w Trio (§9.2): TAKE i UPDATE wysyłają wartości z edycji, także niezapisane, a CONTINUE i OUT są aktywne, gdy strona gra na wybranej antenie.
+
+| Zakładka | Zawartość |
+|---|---|
+| **Strony** | lista z wyszukiwaniem po numerze i nazwie, ● = na antenie, 🔒 = edytuje ktoś inny |
+| **Edycja** | pola wybranej strony, **Zapisz**, **↺** (przywróć zapisane) |
+| **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tej zakładce), warstwy z ⏭ i ⏏, **CLEAR ALL** z potwierdzeniem |
+| **Kolejka** | rundown: dotknięcie pozycji ustawia kursor, **NEXT ▶** bierze ją na antenę; makra: ▶ uruchamia, **■ Przerwij makro** |
+
+- **Ochrona anteny:** dotknięcie strony lub pozycji rundownu niczego nie wysyła. Kolejna komenda czeka na odpowiedź serwera i krótką przerwę, więc podwójne dotknięcie TAKE nie gra grafiki dwa razy.
+- **Pola:** tekst, liczby, przełączniki, listy, warianty i wiadomości tickera (zapis `KAT|treść`, jedna w wierszu). Reguły pól działają jak w Trio. Kolor, czcionkę i obraz zmienia się w Trio; strona podaje, ile takich pól pominięto, a ich wartości zostają bez zmian.
+- **Blokada edycji** (§9.8) zakłada się przy pierwszej zmianie pola, nie przy wybraniu strony. Nazwa operatora to `vizrs.who`, domyślnie `Telefon NN`.
+- **Antena:** lista pojawia się, gdy są kanały playoutu; `?channel=<kanał>` i wybór są wspólne z Trio w tej samej przeglądarce. Po usunięciu wybranego kanału strona wraca na antenę główną i o tym informuje.
+- **Sieć:** komenda bez odpowiedzi przez 6 s zgłasza błąd i nie jest ponawiana. Po takim błędzie sprawdź antenę, bo komenda mogła dojść. Zanik połączenia widać na pasku; po powrocie sieci albo telefonu z uśpienia strona sama się łączy i odświeża dane.
+- **Wygaszanie ekranu:** strona prosi o niewygaszanie, ale przeglądarki pozwalają na to tylko przez HTTPS; po zwykłym HTTP wydłuż czas wygaszania w telefonie.
+
+Na telefonie nie ma tworzenia i usuwania stron, playlist, ARM, podglądu lokalnego, formatowania tekstu ani edycji rundownu i makr.
+
 ## 10. Wyjście dla OBS i mikserów
 
 OBS: Źródła → **+** → **Przeglądarka** → `http://localhost:8088/output`, 1920×1080, zaznacz „Odśwież przeglądarkę, gdy scena staje się aktywna”. Trio można dodać jako dock (*Docki → Niestandardowe docki przeglądarki*).
@@ -730,6 +752,7 @@ cargo clippy --all-targets -- -D warnings
 cargo test                                           # silnik, API, JSON, walidacja, kopie
 node tests/vectors/run.js && node tests/vectors/btb.js   # wspólne wektory z BTB, konwersja
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
+node tests/e2e/mobile.js target/release/vizrs [katalog]   # E2E Trio na telefonie (emulacja dotyku; katalog = zrzuty)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
 node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja

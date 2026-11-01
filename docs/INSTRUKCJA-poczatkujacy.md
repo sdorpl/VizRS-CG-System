@@ -131,6 +131,14 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
   **⇥ z anteny** zapisuje bieżący zestaw grafik jako makro (preset segmentu).
 - **Skrót strony**: kliknij pole „skrót” w nagłówku edytora i naciśnij np. Ctrl+1 – ten skrót robi TAKE strony, a gdy jest na antenie, OUT.
 
+### Sterowanie z telefonu
+
+1. Uruchom serwer w sieci: `vizrs --bind 0.0.0.0 --token <hasło>`.
+2. Na telefonie w tej samej sieci otwórz `http://<adres-komputera>:8088/mobile?token=<hasło>`.
+3. Dotknij stronę na liście, a potem **TAKE** na dole ekranu. Tekst zmienisz w zakładce **Edycja**.
+
+Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Opis: [DOKUMENTACJA §9.9](DOKUMENTACJA.md#99-trio-na-telefonie-mobile).
+
 ## 9. Ściąga skrótów
 
 **Trio**

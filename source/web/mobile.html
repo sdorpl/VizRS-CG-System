@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>VizRS Trio mobilne</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="stylesheet" href="/ui.css">
+<script src="/text-model.js"></script>
+<style>
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; font-size: 15px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  body { height: 100dvh; display: grid; grid-template: "top" auto "tabs" auto "views" minmax(0, 1fr) "bar" auto / minmax(0, 1fr); padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+  /* pole poniżej 16px powiększa stronę po dotknięciu na iOS */
+  input, select, textarea { font-size: 16px; padding: 9px 10px; border-radius: 6px; width: 100%; }
+  input[type=checkbox] { width: 28px; height: 28px; }
+  #top { grid-area: top; display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #0b0c0e; border-bottom: 1px solid var(--line); min-width: 0; }
+  #top .brand { flex: none; }
+  #antSel { flex: 1 1 0; min-width: 0; padding: 5px 8px; font-size: 14px; }
+  #showName { flex: 1 1 0; min-width: 0; color: var(--dim); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #top .pill { flex: none; font-size: 12px; padding: 2px 8px; }
+  #tabs { grid-area: tabs; display: grid; grid-template-columns: repeat(4, 1fr); background: #0b0c0e; border-bottom: 1px solid var(--line); }
+  #tabs button { border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: none; color: var(--dim); padding: 10px 2px 8px; font-size: 14px; font-weight: 600; }
+  #tabs button.on { color: var(--text); border-bottom-color: var(--acc); }
+  #tabs b { color: #ff6a66; }
+  .view { grid-area: views; display: none; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+  .view.on { display: flex; }
+  .scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .pad { padding: 8px 10px; }
+  .empty { padding: 26px 16px; text-align: center; color: var(--dim); }
+  .num { font-family: var(--mono); font-weight: 600; color: var(--acc); }
+  .sub { font-size: 12.5px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list .item { min-height: 56px; padding: 7px 10px; }
+  .list .item > .txt { flex: 1; min-width: 0; }
+  .dot { flex: none; width: 11px; height: 11px; border-radius: 50%; background: #333840; }
+  .dot.on { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .big { min-height: 48px; min-width: 56px; font-size: 14px; font-weight: 700; border-radius: 6px; }
+  #eHead { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  #eHead > .txt { flex: 1; min-width: 0; }
+  #eSave.dirty { background: var(--acc); border-color: var(--acc); color: #1a1100; }
+  .fl { padding: 7px 10px; }
+  .fl > label { display: block; margin-bottom: 4px; font-size: 13px; }
+  .fl.chk { display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
+  .fl.chk > label { margin: 0; }
+  .cnt { font: 12px var(--mono); color: var(--dim); text-align: right; margin-top: 2px; }
+  .cnt.warn { color: var(--acc); } .cnt.bad { color: #ff6a66; font-weight: 700; }
+  #pgmBox { position: relative; flex: none; aspect-ratio: 16 / 9; width: 100%; max-height: 42dvh; border-bottom: 1px solid var(--line); }
+  #pgmBox iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+  #pgmTag { position: absolute; left: 6px; top: 6px; z-index: 5; font-size: 12px; font-weight: 700; color: #fff; background: var(--red); padding: 1px 6px; border-radius: 3px; }
+  #bClear { background: #3a1716; border-color: var(--red); color: #ffb3b0; width: 100%; }
+  .lname { flex: none; width: 56px; font: 12px var(--mono); text-transform: uppercase; color: var(--dim); overflow: hidden; text-overflow: ellipsis; }
+  h3.sect { padding: 12px 10px 6px; }
+  #rd .item.next { background: #14301f; }
+  #rd .item.onair { background: #3a1716; }
+  #rd .item.done { opacity: .5; }
+  #rd .st { flex: none; width: 16px; text-align: center; color: var(--green); }
+  #rd .onair .st { color: var(--red); }
+  #rdSel { flex: 1; width: auto; }
+  #bNext { background: var(--acc); border-color: var(--acc); color: #1a1100; flex: none; padding: 0 16px; }
+  #bar { grid-area: bar; background: #0b0c0e; border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  #barPage { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 3px 8px; background: var(--panel); text-align: left; border-radius: 6px; }
+  #barPage .name { flex: 1; min-width: 0; }
+  #barSt { flex: none; font-size: 12.5px; color: var(--dim); }
+  #barSt.on { color: #ff6a66; font-weight: 700; }
+  #btns { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 6px; }
+  #btns button { min-height: 62px; padding: 0 2px; border-radius: 8px; font-weight: 800; font-size: clamp(10.5px, 3.3vw, 14px); }
+  #bTake { background: #b4211d; border-color: var(--red); color: #fff; font-size: 20px !important; letter-spacing: .06em; }
+  #bCont { background: #8a5a0c; border-color: var(--acc); color: #fff; }
+  #bUpd { background: #1d3d6e; border-color: var(--blue); }
+  #btns button:active:not(:disabled) { filter: brightness(1.35); }
+  .toast { top: calc(52px + env(safe-area-inset-top)); bottom: auto; width: max-content; max-width: 92vw; text-align: center; pointer-events: none; }
+  /* telefon poziomo: przyciski w prawej kolumnie */
+  @media (orientation: landscape) and (max-height: 560px) {
+    body { grid-template: "top bar" auto "tabs bar" auto "views bar" minmax(0, 1fr) / minmax(0, 1fr) 240px; }
+    #bar { border-top: 0; border-left: 1px solid var(--line); }
+    #btns { flex: 1; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 1fr; }
+    #bTake { grid-column: 1 / -1; }
+    #pgmBox { max-height: 60dvh; }
+  }
+</style>
+</head>
+<body>
+<div id="top">
+  <span class="brand">Viz<b>RS</b></span>
+  <span id="showName"></span>
+  <select id="antSel" hidden title="Antena, na którą działają przyciski"></select>
+  <span id="saveErr" class="pill on" hidden>⚠ zapis</span>
+  <span id="errPill" class="pill on" hidden></span>
+  <span id="conn" class="pill">łączenie…</span>
+</div>
+<nav id="tabs">
+  <button data-tab="pages" class="on">Strony</button>
+  <button data-tab="edit">Edycja</button>
+  <button data-tab="air">Antena <b id="airN"></b></button>
+  <button data-tab="queue">Kolejka</button>
+</nav>
+
+<section class="view on" data-view="pages">
+  <div class="pad"><input id="filter" type="search" placeholder="numer lub nazwa…" autocomplete="off" enterkeyhint="search"></div>
+  <div class="scroll list" id="pages"></div>
+</section>
+
+<section class="view" data-view="edit">
+  <div id="eHead">
+    <div class="txt"><div class="name" id="eName"></div><div class="sub" id="eSub"></div></div>
+    <button id="eRevert" class="big" title="Przywróć zapisane" disabled>↺</button>
+    <button id="eSave" class="big" disabled>Zapisz</button>
+  </div>
+  <div class="scroll" id="fields"></div>
+</section>
+
+<section class="view" data-view="air">
+  <div id="pgmBox" class="checker"><span id="pgmTag">PGM</span></div>
+  <div class="scroll list" id="layers"></div>
+  <div class="pad"><button id="bClear" class="big">✖ CLEAR ALL</button></div>
+</section>
+
+<section class="view" data-view="queue">
+  <div class="scroll">
+    <div class="pad row" id="rdBox">
+      <select id="rdSel"></select>
+      <button id="bNext" class="big">NEXT ▶</button>
+    </div>
+    <div class="list" id="rd"></div>
+    <h3 class="sect">Makra</h3>
+    <div class="list" id="mc"></div>
+  </div>
+</section>
+
+<div id="bar">
+  <button id="barPage" title="Edytuj pola strony"><span class="name" id="barName"></span><span id="barSt"></span></button>
+  <div id="btns">
+    <button id="bTake" disabled>TAKE</button>
+    <button id="bCont" disabled>CONTINUE</button>
+    <button id="bOut" disabled>OUT</button>
+    <button id="bUpd" disabled>UPDATE</button>
+  </div>
+</div>
+
+<script type="module">
+import { connectEvents, listFields } from '/renderer.js';
+import { visLen, limitText, polish } from '/field-rules.js';
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+// Odświeżenie stanu w chwili dotknięcia podmieniłoby element pod palcem i tap by przepadł, więc listy zmieniamy tylko przy zmianie treści.
+const shown = new WeakMap();
+function setHtml(el, html) { if (shown.get(el) !== html) { shown.set(el, html); el.innerHTML = html; } }
+
+let toastT;
+function toast(msg, err) {
+  let el = $('.toast'); if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.toggle('err', !!err); el.style.opacity = 1;
+  clearTimeout(toastT); toastT = setTimeout(() => (el.style.opacity = 0), 2800);
+}
+
+async function api(method, url, body) {
+  // Wi-Fi na hali potrafi zawiesić żądanie: operator musi szybko wiedzieć, że komenda nie doszła
+  const signal = AbortSignal.timeout(method === 'GET' ? 20000 : 6000);
+  let r;
+  try { r = await fetch(url, { method, signal, headers: body !== undefined ? { 'Content-Type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined }); }
+  catch (e) { throw new Error(e.name === 'TimeoutError' ? 'brak odpowiedzi serwera – sprawdź antenę' : 'brak połączenia'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+// ------------------------------------------------------------ antena: główna ('') albo kanał playoutu, ta sama pamięć co w Trio
+let ant = new URLSearchParams(location.search).get('channel');
+try { ant ??= localStorage.getItem('vizrs.ant') || ''; } catch { ant ??= ''; }
+const onAnt = (url) => ant ? `${url}${url.includes('?') ? '&' : '?'}channel=${encodeURIComponent(ant)}` : url;
+const antName = (n) => state.channelNames?.[n] ? `${n} ${state.channelNames[n]}` : 'Kanał ' + n;
+function setAnt(name) {
+  ant = name;
+  try { localStorage.setItem('vizrs.ant', ant); } catch { /* ignoruj */ }
+  renderMonitor(); loadState();
+}
+
+let show = { scenes: [], pages: [], rundowns: [], macros: [] }, state = { layers: [] };
+let selId = null, draft = null, dirty = false, tab = 'pages', busy = false, rdId = null;
+
+const sceneOf = (p) => show.scenes.find((s) => s.id === p?.scene);
+const pageById = (id) => show.pages.find((p) => p.id === id);
+const sortedPages = () => [...show.pages].sort((a, b) => a.number - b.number);
+const onAirLayer = (pid) => state.layers.find((l) => l.page?.id === pid);
+const otherLock = (id) => (state.locks || []).find((l) => l.kind === 'pages' && l.id === id && l.who !== who);
+
+async function loadShow() {
+  show = await api('GET', '/api/show');
+  show.rundowns ||= []; show.macros ||= [];
+  if (selId && !pageById(selId)) { selId = null; draft = null; setDirty(false); renderEdit(); }
+  else if (selId && !dirty) {
+    draft = structuredClone(pageById(selId)); draft.values ||= {};
+    if (!$('#fields').contains(document.activeElement)) renderEdit();
+  }
+  renderAll();
+}
+async function refreshState() {
+  try { state = await api('GET', onAnt('/api/state')); } catch { return; }
+  // TAKE na usuniętym kanale założyłby go od nowa i grafika poszłaby w próżnię
+  if (ant && !state.channels?.includes(ant)) { toast(`Kanał ${ant} nie istnieje – antena główna`, true); setAnt(''); return; }
+  renderAll();
+}
+let stTimer;
+function loadState() { clearTimeout(stTimer); stTimer = setTimeout(refreshState, 40); }
+
+function renderAll() { renderTop(); renderPages(); renderHead(); renderLayers(); renderQueue(); renderBar(); }
+
+function renderTop() {
+  $('#showName').textContent = show.name || '';
+  const names = state.channels || [];
+  const sel = $('#antSel');
+  sel.hidden = !names.length && !ant;
+  $('#showName').hidden = !sel.hidden;
+  setHtml(sel, `<option value="">Antena główna</option>${names.map((n) => `<option value="${esc(n)}">${esc(antName(n))}</option>`).join('')}`);
+  sel.value = ant;
+  $('#pgmTag').textContent = ant ? antName(ant).toUpperCase() : 'PGM';
+  $('#saveErr').hidden = !state.saveError; $('#saveErr').title = state.saveError || '';
+  $('#errPill').hidden = !state.errors; $('#errPill').textContent = `⚠ ${state.errors || 0}`; $('#errPill').title = `Błędy scen na wyjściu: ${state.errors || 0}`;
+  $('#airN').textContent = state.layers.length || '';
+}
+$('#antSel').onchange = (e) => setAnt(e.target.value);
+
+// ------------------------------------------------------------ zakładki
+function setTab(t) {
+  tab = t;
+  $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  $$('.view').forEach((v) => v.classList.toggle('on', v.dataset.view === t));
+  renderMonitor();
+}
+$('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); };
+
+/** Monitor PGM tylko na widocznej zakładce Antena: wyjście w telefonie kosztuje baterię i transfer. */
+function renderMonitor() {
+  const src = tab === 'air' && !document.hidden ? '/output?checker=1&fps=15' + (ant ? '&bus=ch-' + encodeURIComponent(ant) : '') : '';
+  const box = $('#pgmBox');
+  if (box.dataset.src === src) return;
+  box.dataset.src = src;
+  $('iframe', box)?.remove();
+  if (src) { const f = document.createElement('iframe'); f.src = src; f.title = 'Monitor PGM'; box.appendChild(f); }
+}
+
+// ------------------------------------------------------------ lista stron: dotknięcie tylko wybiera, antenę zmieniają przyciski na dole
+function renderPages() {
+  const f = $('#filter').value.trim().toLowerCase();
+  const list = sortedPages().filter((p) => !f || `${p.number} ${p.name} ${sceneOf(p)?.name}`.toLowerCase().includes(f));
+  setHtml($('#pages'), list.map((p) => {
+    const lock = otherLock(p.id);
+    return `<div class="item ${p.id === selId ? 'sel' : ''}" data-id="${esc(p.id)}"><span class="dot ${onAirLayer(p.id) ? 'on' : ''}"></span><span class="num">${p.number}</span>
+      <span class="txt"><div class="name">${esc(p.name)}</div><div class="sub">${lock ? `🔒 ${esc(lock.who)} · ` : ''}${esc(sceneOf(p)?.name || '⚠ brak szablonu')}</div></span></div>`;
+  }).join('') || `<div class="empty">${show.pages.length ? 'Nic nie pasuje.' : 'Brak stron – utwórz je w Trio.'}</div>`);
+}
+$('#filter').addEventListener('input', renderPages);
+$('#pages').onclick = (e) => { const it = e.target.closest('.item[data-id]'); if (it) select(it.dataset.id); };
+
+function select(id) {
+  if (id === selId) return;
+  if (dirty && !confirm('Strona ma niezapisane zmiany. Porzucić?')) return;
+  const p = pageById(id); if (!p) return;
+  setDirty(false);
+  selId = id; draft = structuredClone(p); draft.values ||= {};
+  renderEdit(); renderPages(); renderBar();
+}
+
+// ------------------------------------------------------------ edycja pól: tylko to, co da się wygodnie zmienić palcem
+function fieldInput(f, v) {
+  const id = `data-f="${esc(f.id)}"`, R = f.rules || {}, ro = R.readonly ? 'readonly' : '';
+  const kind = f.nodeType === 'variant' ? 'select' : f.type;
+  if (kind === 'num') return `<input type="number" inputmode="decimal" step="any" ${id} ${ro} value="${esc(v)}">`;
+  if (kind === 'bool') return `<input type="checkbox" ${id} ${ro ? 'disabled' : ''} ${v === true || v === 'true' ? 'checked' : ''}>`;
+  if (kind === 'select') return `<select ${id} ${ro ? 'disabled' : ''}>${f.opts.map((o) => `<option ${o == v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+  const spell = R.spell === false ? 'spellcheck="false"' : 'spellcheck="true" lang="pl"';
+  if (isTicker(f)) return `<textarea rows="6" data-tk="1" ${id} ${ro} spellcheck="true" lang="pl">${esc(v)}</textarea>`;
+  const maxLines = R.maxLines || f.lines || 1;
+  const multi = !R.oneLine && (maxLines > 1 || String(v ?? '').includes('\n'));
+  const ctl = multi ? `<textarea rows="${Math.max(2, maxLines)}" ${id} ${ro} ${spell}>${esc(v)}</textarea>` : `<input enterkeyhint="done" ${id} ${ro} ${spell} value="${esc(v)}">`;
+  return ctl + `<div class="cnt" data-cnt="${esc(f.id)}"></div>`;
+}
+const isTicker = (f) => f.nodeType === 'ticker' && f.prop === 'text';
+const NO_TOUCH = new Set(['color', 'font', 'image']);
+const pageFields = () => listFields(sceneOf(draft) || { nodes: [] });
+const rulesOf = (fid) => pageFields().find((f) => f.id === fid)?.rules || {};
+const lastGood = new Map();
+
+function renderEdit() {
+  lastGood.clear();
+  const s = sceneOf(draft);
+  if (!draft || !s) { $('#fields').innerHTML = `<div class="empty">${draft ? '⚠ Szablon tej strony nie istnieje.' : 'Wybierz stronę na liście.'}</div>`; renderHead(); return; }
+  // kolejność jak w Trio: pola z regułą `tab` rosnąco, reszta w kolejności sceny
+  const all = pageFields().map((f, i) => ({ f, i })).sort((a, b) => ((a.f.rules?.tab ?? 1e6) - (b.f.rules?.tab ?? 1e6)) || a.i - b.i).map((x) => x.f);
+  const fields = all.filter((f) => f.nodeType === 'variant' || !NO_TOUCH.has(f.type));
+  const rest = all.length - fields.length;
+  $('#fields').innerHTML = fields.map((f) => {
+    const hint = isTicker(f) ? ' · jedna wiadomość w wierszu, KAT|treść' : '';
+    return `<div class="fl ${f.type === 'bool' && f.nodeType !== 'variant' ? 'chk' : ''}"><label>${esc(f.label)}${hint}</label>${fieldInput(f, draft.values[f.id] ?? f.default)}</div>`;
+  }).join('') + (rest ? `<div class="empty">Pola niewidoczne na telefonie (kolor, czcionka, obraz): ${rest}. Zmienisz je w Trio.</div>` : fields.length ? '' : '<div class="empty">Ta strona nie ma pól.</div>');
+  updateCounters(); renderHead();
+}
+function renderHead() {
+  $('#eName').innerHTML = draft ? `<span class="num">${draft.number}</span> ${esc(draft.name)}` : '';
+  const lock = lockedBy || (draft && otherLock(draft.id)?.who);
+  $('#eSub').innerHTML = draft ? (lock ? `<b style="color:#ff9a3d">🔒 edytuje ${esc(lock)}</b> · ` : '') + esc(sceneOf(draft)?.name || '') : '';
+  $('#eSave').disabled = !dirty; $('#eRevert').disabled = !dirty;
+  $('#eSave').classList.toggle('dirty', dirty);
+}
+function updateCounters() {
+  for (const c of $$('[data-cnt]')) {
+    const R = rulesOf(c.dataset.cnt), el = $(`[data-f="${CSS.escape(c.dataset.cnt)}"]`);
+    if (!R.maxChars || !el) { c.textContent = ''; continue; }
+    const n = visLen(el.value), soft = R.softMax || Math.floor(R.maxChars * 0.85);
+    c.textContent = `${n} / ${R.maxChars}`;
+    c.className = 'cnt ' + (n >= R.maxChars ? 'bad' : n >= soft ? 'warn' : '');
+  }
+}
+function setDirty(d) {
+  dirty = d;
+  if (d) lock(); else unlock();
+  renderHead(); renderBar();
+}
+$('#fields').addEventListener('input', (e) => {
+  const el = e.target, fid = el.dataset.f; if (!fid) return;
+  if (/^(INPUT|TEXTAREA)$/.test(el.tagName) && el.type !== 'checkbox' && !el.dataset.tk) {
+    const caret = el.selectionStart, fromEnd = el.value.length - (caret ?? el.value.length);
+    const { v, err } = limitText(el.value, rulesOf(fid), lastGood.get(fid));
+    if (err) toast(err, true);
+    if (v !== el.value) { el.value = v; if (caret != null) el.setSelectionRange(Math.max(0, v.length - fromEnd), Math.max(0, v.length - fromEnd)); }
+    lastGood.set(fid, v);
+  }
+  draft.values[fid] = el.type === 'checkbox' ? el.checked : el.value;
+  updateCounters();
+  if (!dirty) setDirty(true);
+});
+/** Reguły stosowane po zakończeniu wpisywania (typografia działa na całym tekście, więc nie w trakcie pisania). */
+function applyFinalRules() {
+  if (!draft) return;
+  for (const el of $$('#fields [data-f]')) {
+    if (!rulesOf(el.dataset.f).typo || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) continue;
+    const nv = polish(el.value);
+    if (nv !== el.value) { el.value = nv; draft.values[el.dataset.f] = nv; if (!dirty) setDirty(true); }
+  }
+}
+$('#fields').addEventListener('change', applyFinalRules);
+
+// ------------------------------------------------------------ blokady edycji: telefon blokuje stronę dopiero przy pierwszej zmianie
+let who = '';
+try { who = localStorage.getItem('vizrs.who') || ''; } catch { /* brak localStorage */ }
+if (!who) { who = 'Telefon ' + Math.floor(10 + Math.random() * 90); try { localStorage.setItem('vizrs.who', who); } catch { /* ignoruj */ } }
+let lockedBy = null, lockedId = null;
+const lockUrl = (op, id) => `/api/${op}/pages/${encodeURIComponent(id)}?who=${encodeURIComponent(who)}`;
+async function lock() {
+  if (!draft || lockedId === draft.id) return;
+  lockedId = draft.id; lockedBy = null;
+  try { await api('POST', lockUrl('lock', lockedId)); }
+  catch (e) { if (/^konflikt/.test(e.message)) { lockedBy = e.message.replace(/^konflikt: edytuje /, '').replace(/ \(.*$/, ''); toast(`Stronę edytuje ${lockedBy}`, true); renderHead(); } }
+}
+function unlock() {
+  if (lockedId && !lockedBy) api('POST', lockUrl('unlock', lockedId)).catch(() => {});
+  lockedId = lockedBy = null;
+}
+setInterval(() => { if (lockedId && !lockedBy) api('POST', lockUrl('lock', lockedId)).catch(() => {}); }, 15000);
+addEventListener('pagehide', () => { if (lockedId && !lockedBy) navigator.sendBeacon(lockUrl('unlock', lockedId)); });
+
+async function savePage(force) {
+  if (!draft) return;
+  applyFinalRules();
+  if (lockedBy && !confirm(`Tę stronę edytuje ${lockedBy}. Zapisać mimo to?`)) return;
+  try {
+    const body = force === true ? (({ rev, ...r }) => r)(draft) : draft; // bez rev = świadome nadpisanie
+    const p = await api('PUT', '/api/pages/' + encodeURIComponent(draft.id), body);
+    show.pages[show.pages.findIndex((x) => x.id === p.id)] = p;
+    draft = structuredClone(p); setDirty(false); renderPages(); toast(`Zapisano stronę ${p.number}`);
+  } catch (e) {
+    if (!/^konflikt/.test(e.message)) return toast(e.message, true);
+    if (confirm('Ta strona została zmieniona przez kogoś innego.\n\nOK = nadpisz moją wersją, Anuluj = zachowaj moje zmiany bez zapisu.')) return savePage(true);
+    toast('Konflikt zapisu – zmiany nie zapisane', true);
+  }
+}
+$('#eSave').onclick = () => savePage();
+$('#eRevert').onclick = () => { draft = structuredClone(pageById(selId)); draft.values ||= {}; setDirty(false); renderEdit(); };
+
+// ------------------------------------------------------------ playout: te same komendy co w Trio
+/** Jedna komenda naraz i chwila przerwy po niej: podwójne dotknięcie nie może zagrać TAKE dwa razy. */
+async function act(fn, label) {
+  if (busy) return;
+  busy = true; renderBar();
+  try { await fn(); } catch (e) { toast(`${label}: ${e.message}`, true); }
+  await refreshState();
+  setTimeout(() => { busy = false; renderBar(); }, 350);
+}
+const airKey = () => encodeURIComponent(onAirLayer(draft.id)?.layer ?? draft.number);
+$('#bTake').onclick = () => { applyFinalRules(); act(() => api('POST', onAnt(`/api/take/${draft.number}`), { values: draft.values }), 'TAKE'); };
+$('#bCont').onclick = () => act(() => api('POST', onAnt(`/api/continue/${airKey()}`)), 'CONTINUE');
+$('#bOut').onclick = () => act(() => api('POST', onAnt(`/api/out/${airKey()}`)), 'OUT');
+$('#bUpd').onclick = () => {
+  applyFinalRules();
+  act(async () => {
+    const r = await api('POST', `/api/update/${draft.number}?save=0`, { values: draft.values });
+    if (!r.onAir) toast('Strona nie jest na antenie – nic do aktualizacji');
+  }, 'UPDATE');
+};
+$('#bClear').onclick = () => { if (confirm('Zdjąć wszystkie grafiki z anteny?')) act(() => api('POST', onAnt('/api/clear')), 'CLEAR'); };
+$('#barPage').onclick = () => setTab('edit');
+
+function renderBar() {
+  const L = draft && onAirLayer(draft.id);
+  $('#barName').innerHTML = draft ? `<span class="num">${draft.number}</span> ${esc(draft.name)}` : '<span class="dim">Wybierz stronę</span>';
+  $('#barSt').textContent = L ? `● ON AIR ${L.stop + 1}/${Math.max(1, L.stops)}` : dirty ? '✎ zmiany' : '';
+  $('#barSt').className = L ? 'on' : '';
+  $('#bTake').disabled = busy || !draft;
+  $('#bUpd').disabled = busy || !draft;
+  $('#bCont').disabled = $('#bOut').disabled = busy || !L;
+}
+
+function renderLayers() {
+  setHtml($('#layers'), state.layers.map((l) => `<div class="item"><span class="lname">${esc(l.layer)}</span>
+    <span class="txt"><div class="name"><span class="num">${l.page?.number ?? ''}</span> ${esc(l.page?.name || l.scene)}</div><div class="sub">stop ${l.stop + 1}/${Math.max(1, l.stops)}${l.pending ? ' · ⏳ nowa wersja szablonu' : ''}</div></span>
+    <button class="big" data-lcont="${esc(l.layer)}" title="Continue">⏭</button><button class="big" data-lout="${esc(l.layer)}" title="Out">⏏</button></div>`).join('')
+    || '<div class="empty">Antena czysta</div>');
+}
+$('#layers').onclick = (e) => {
+  const c = e.target.closest('[data-lcont]'), o = e.target.closest('[data-lout]');
+  if (c) act(() => api('POST', onAnt('/api/continue/' + encodeURIComponent(c.dataset.lcont))), 'CONTINUE');
+  if (o) act(() => api('POST', onAnt('/api/out/' + encodeURIComponent(o.dataset.lout))), 'OUT');
+};
+
+// ------------------------------------------------------------ kolejka: rundown (NEXT) i makra
+function renderQueue() {
+  if (!rdId || !show.rundowns.some((r) => r.id === rdId)) rdId = show.rundowns[0]?.id || null;
+  const rd = show.rundowns.find((r) => r.id === rdId), run = (state.rundowns || []).find((r) => r.id === rdId) || {};
+  $('#rdBox').hidden = !rd;
+  setHtml($('#rdSel'), show.rundowns.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join(''));
+  if (rd) $('#rdSel').value = rdId;
+  $('#bNext').disabled = !rd || !run.cursor;
+  const done = new Set(run.done || []);
+  setHtml($('#rd'), rd ? (rd.items || []).map((it) => {
+    const p = pageById(it.page), air = !!onAirLayer(it.page);
+    const cls = air ? 'onair' : it.id === run.cursor ? 'next' : done.has(it.id) ? 'done' : '';
+    return `<div class="item ${cls}" data-iid="${esc(it.id)}"><span class="st">${air ? '●' : it.id === run.cursor ? '▶' : done.has(it.id) ? '✓' : ''}</span><span class="num">${p?.number ?? '?'}</span>
+      <span class="txt"><div class="name">${esc(p?.name ?? '(usunięta)')}</div>${it.note ? `<div class="sub">${esc(it.note)}</div>` : ''}</span></div>`;
+  }).join('') || '<div class="empty">Rundown jest pusty.</div>' : '<div class="empty">Brak rundownów – utwórz je w Trio.</div>');
+  setHtml($('#mc'), show.macros.map((m) => `<div class="item"><span class="txt"><div class="name">${esc(m.name)}</div></span><button class="big" data-mrun="${esc(m.id)}">▶</button></div>`).join('')
+    + (show.macros.length ? '<div class="pad"><button class="big" id="mcStop" style="width:100%">■ Przerwij makro</button></div>' : '<div class="empty">Brak makr.</div>'));
+}
+$('#rdSel').onchange = (e) => { rdId = e.target.value; renderQueue(); };
+$('#bNext').onclick = () => act(() => api('POST', onAnt(`/api/rundown/${encodeURIComponent(rdId)}/next`)), 'NEXT');
+// dotknięcie pozycji ustawia tylko kursor, grafikę wysyła dopiero NEXT
+$('#rd').onclick = (e) => {
+  const it = e.target.closest('.item[data-iid]');
+  if (it) act(() => api('POST', onAnt(`/api/rundown/${encodeURIComponent(rdId)}/cursor/${encodeURIComponent(it.dataset.iid)}`)), 'Rundown');
+};
+$('#mc').onclick = (e) => {
+  const b = e.target.closest('[data-mrun]');
+  if (b) act(() => api('POST', onAnt('/api/macro/' + encodeURIComponent(b.dataset.mrun))), 'Makro');
+  if (e.target.id === 'mcStop') act(() => api('POST', onAnt('/api/macro/stop')), 'Makro');
+};
+
+// ------------------------------------------------------------ życie telefonu: wygaszony ekran, uśpiona karta, zaniki sieci
+let wakeLock = null;
+async function keepAwake() {
+  if (wakeLock || document.hidden) return;
+  try { wakeLock = await navigator.wakeLock?.request('screen'); wakeLock?.addEventListener('release', () => { wakeLock = null; }); } catch { /* tylko HTTPS */ }
+}
+let closeEvents = null, lost = false;
+function listen() {
+  closeEvents?.();
+  closeEvents = connectEvents((ev) => {
+    if (ev.t === 'show') { loadShow().catch(() => {}); return; }
+    loadState();
+  }, (ok) => {
+    $('#conn').textContent = ok ? 'OK' : 'brak połączenia';
+    $('#conn').className = 'pill ' + (ok ? 'ok' : 'on');
+    // przerwa w strumieniu = mogliśmy przegapić zmiany, także w show
+    if (ok && lost) loadShow().then(refreshState).catch(() => {});
+    lost = !ok;
+  });
+}
+document.addEventListener('visibilitychange', () => {
+  renderMonitor();
+  if (document.hidden) return;
+  // przeglądarka mobilna potrafi zamknąć strumień w tle bez zdarzenia błędu
+  lost = true; listen(); keepAwake();
+});
+addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+listen(); keepAwake();
+renderEdit();
+loadShow().then(refreshState).catch((e) => toast(e.message, true));
+</script>
+</body>
+</html>

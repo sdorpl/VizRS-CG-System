@@ -44,6 +44,7 @@ const STATIC: &[Static] = &[
     Static { path: "/", ctype: "text/html; charset=utf-8", body: include_str!("../web/index.html") },
     Static { path: "/artist", ctype: "text/html; charset=utf-8", body: include_str!("../web/artist.html") },
     Static { path: "/trio", ctype: "text/html; charset=utf-8", body: include_str!("../web/trio.html") },
+    Static { path: "/mobile", ctype: "text/html; charset=utf-8", body: include_str!("../web/mobile.html") },
     Static { path: "/output", ctype: "text/html; charset=utf-8", body: include_str!("../web/output.html") },
     Static { path: "/renderer.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/renderer.js") },
     Static { path: "/richtext.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/richtext.js") },
@@ -52,6 +53,7 @@ const STATIC: &[Static] = &[
     Static { path: "/motion.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/motion.js") },
     Static { path: "/text-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/text-model.js") },
     Static { path: "/qr.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/qr.js") },
+    Static { path: "/field-rules.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/field-rules.js") },
     Static { path: "/ticker-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-model.js") },
     Static { path: "/ticker-items.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-items.js") },
     Static { path: "/native.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/native.js") },
@@ -347,6 +349,7 @@ fn start(mut cfg: Config) -> Running {
     println!("│ VizRS {:<51}│", env!("CARGO_PKG_VERSION"));
     println!("│  Artist (projektowanie):  http://localhost:{:<14}│", format!("{}/artist", cfg.port));
     println!("│  Trio   (playout):        http://localhost:{:<14}│", format!("{}/trio", cfg.port));
+    println!("│  Trio na telefonie:       http://localhost:{:<14}│", format!("{}/mobile", cfg.port));
     println!("│  Wyjście OBS (1920x1080): http://localhost:{:<14}│", format!("{}/output", cfg.port));
     if cfg.osc_port != 0 {
         println!("│  OSC (UDP):               port {:<26}│", cfg.osc_port);

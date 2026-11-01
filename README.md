@@ -25,6 +25,7 @@ Paczki `.deb` i AppImage, binarki oraz obraz Docker są w [wydaniach na GitHub](
 | http://localhost:8088/ | strona startowa, podłączenie OBS, skrót API |
 | http://localhost:8088/artist | **Artist** – projektowanie scen |
 | http://localhost:8088/trio | **Trio** – playout |
+| http://localhost:8088/mobile | **Trio na telefonie** – sterowanie anteną z ekranu dotykowego |
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
 W OBS: Źródła → **+** → **Przeglądarka**, URL `http://localhost:8088/output`, 1920 × 1080.
