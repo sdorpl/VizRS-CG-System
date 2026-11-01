@@ -40,11 +40,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const errs = [];
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errs.push(e.message));
-    p.on('dialog', (d) => d.accept());
+    p.on('dialog', (d) => { errs.push('okienko przeglądarki: ' + d.message()); d.accept(); });
     const shot = async (n) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png') }); };
     const layers = async () => (await api('/api/state')).layers;
     const pages = () => p.locator('#pages .item');
     // ekran logowania: zły token, potem dobry; token nie zostaje w adresie
+    const await0 = await api('/api/show');
     await p.goto(`${B}/mobile`);
     await p.fill('input[name=token]', 'zly');
     await p.tap('form button');
@@ -83,11 +84,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
     // edycja pola: TAKE/UPDATE bez zapisu, potem zapis
     await p.tap('[data-tab="edit"]');
-    const field = p.locator('#fields input:not([type=checkbox]):not([type=number]), #fields textarea').first();
+    const field = p.locator('#fields textarea:not([hidden])').first();
     const fid = await field.getAttribute('data-f');
+    await p.waitForFunction(() => document.querySelector('#pvStage').childElementCount > 0);
+    ok(true, 'Edycja pokazuje podgląd strony');
     await field.fill('Z telefonu');
+    await sleep(100);
+    ok(/z telefonu/i.test(await p.textContent('#pvStage')), 'podgląd śledzi wpisywany tekst');
     await shot('3-edycja');
     await sleep(450);
+    // dotknięcie przy otwartej klawiaturze: przycisk nie może uciec spod palca, gdy wraca pasek zakładek
     await p.tap('#bUpd');
     await sleep(300);
     const updated = await p.evaluate(() => performance.getEntriesByType('resource').some((r) => r.name.includes('/api/update/') && r.responseStatus === 200));
@@ -107,10 +113,44 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const rules = await p.evaluate(async () => { const m = await import('/field-rules.js'); return [m.limitText('abc', { upper: true }).v, m.limitText('a\nb', { oneLine: true }).v, m.limitText('abcd', { maxChars: 3 }, 'abc').v, m.visLen('{b}ab{/b}\nc')]; });
     ok(JSON.stringify(rules) === JSON.stringify(['ABC', 'a b', 'abc', 3]), 'wspólne reguły pól', rules);
 
+    // przesunięcie palcem zmienia zakładkę; podgląd działa tylko na Edycji
+    await p.evaluate(() => { const v = document.querySelector('#views'); v.scrollLeft = 0; });
+    await p.waitForFunction(() => document.querySelector('#nav .on').dataset.tab === 'pages');
+    await sleep(250);
+    ok(await p.evaluate(() => document.querySelector('#pvStage').childElementCount === 0), 'poza Edycją podgląd jest wyłączony');
+    await p.tap('[data-tab="edit"]');
+    await p.waitForFunction(() => document.querySelector('#pvStage').childElementCount > 0);
+
+    // ticker: wiersze zamiast surowego tekstu, zapis w formacie KAT|treść; przytrzymanie strony otwiera menu
+    await p.tap('[data-tab="pages"]');
+    await sleep(350);
+    const tick = await0.pages.find((x) => { const sc = (await0.scenes || []).find((c) => c.id === x.scene); return sc && JSON.stringify(sc.nodes).includes('"ticker"'); });
+    const row = p.locator(`#pages .item[data-id="${tick.id}"]`);
+    await row.scrollIntoViewIfNeeded();
+    const box = await row.boundingBox();
+    await p.evaluate((id) => { const el = document.querySelector(`#pages .item[data-id="${id}"]`); el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); }, tick.id);
+    await p.waitForSelector('#sheetWrap.open');
+    ok(box.height > 40, 'przytrzymanie strony otwiera menu');
+    await shot('3b-menu');
+    await p.tap('#sheetList [data-i="0"]');
+    await p.waitForSelector('[data-tkadd]');
+    await sleep(900);
+    await shot('3c-ticker');
+    await p.tap('[data-tkadd]');
+    await p.locator('[data-tkc]').last().fill('SPORT');
+    await p.locator('[data-tkt]').last().fill('Gol');
+    ok((await p.inputValue('[data-tk]')).endsWith('SPORT|Gol'), 'nowa wiadomość tickera w formacie KAT|treść', await p.inputValue('[data-tk]'));
+    await p.tap('#eRevert');
+    await p.tap('[data-tab="pages"]');
+    await sleep(350);
+    await pages().first().tap();
+    await sleep(100);
+
     // Antena: monitor tylko na tej zakładce, CONTINUE/OUT warstwy, CLEAR
     ok(await p.locator('#pgmBox iframe').count() === 0, 'monitor PGM nie działa poza zakładką Antena');
     await p.tap('[data-tab="air"]');
     await p.waitForSelector('#layers .item');
+    await p.waitForSelector('#pgmBox iframe', { state: 'attached' });
     ok(await p.locator('#pgmBox iframe').count() === 1, 'zakładka Antena otwiera monitor PGM');
     await sleep(900);
     await shot('4-antena');
@@ -121,12 +161,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await p.waitForSelector('#layers [data-lout]');
     await sleep(450);
     await p.tap('#bClear');
+    await p.waitForSelector('#sheetWrap.open');
+    ok((await layers()).length > 0, 'CLEAR ALL czeka na potwierdzenie w arkuszu');
+    await shot('4b-arkusz');
+    await p.tap('#sheetList [data-i="0"]');
     await p.waitForFunction(() => document.querySelector('#layers').textContent.includes('Antena czysta'), null, { timeout: 8000 });
     ok((await layers()).length === 0, 'CLEAR ALL po potwierdzeniu');
 
     // Kolejka: dotknięcie ustawia kursor, NEXT bierze pozycję; makro
-    const show = await api('/api/show');
-    const pg = show.pages.slice(0, 2);
+    const pg = await0.pages.slice(0, 2);
     await api('/api/rundowns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Program', items: pg.map((x, i) => ({ id: 'i' + i, page: x.id, note: i ? 'po przerwie' : '' })) }) });
     await api('/api/macros', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Wejście', steps: [{ delay: 0, cmd: `TAKE ${pg[0].number}` }] }) });
     await p.tap('[data-tab="queue"]');
@@ -145,6 +188,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await p.tap('[data-mrun]');
     await sleep(500);
     ok((await layers()).some((l) => l.page?.number === pg[0].number), 'makro z telefonu');
+    await api('/api/clear', { method: 'POST' });
+
+    // karuzela
+    await api('/api/playlists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Pętla', loop: true, items: [{ page: pg[0].id, duration: 30 }] }) });
+    await p.waitForSelector('[data-plrun]');
+    await sleep(450);
+    await p.tap('[data-plrun]');
+    await p.waitForSelector('[data-plstop]');
+    ok((await api('/api/state')).carousel?.playlist, 'karuzela startuje z telefonu');
+    await sleep(450);
+    await p.tap('[data-plstop]');
+    await p.waitForSelector('[data-plrun]');
     await api('/api/clear', { method: 'POST' });
 
     // antena kanału; usunięty kanał wraca na główną zamiast cicho sterować nieistniejącą

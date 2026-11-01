@@ -137,7 +137,7 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
 2. Na telefonie w tej samej sieci otwórz `http://<adres-komputera>:8088/mobile?token=<hasło>`.
 3. Dotknij stronę na liście, a potem **TAKE** na dole ekranu. Tekst zmienisz w zakładce **Edycja**.
 
-Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Opis: [DOKUMENTACJA §9.9](DOKUMENTACJA.md#99-trio-na-telefonie-mobile).
+Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Przytrzymanie strony otwiera menu z ARM, a zakładki zmienisz także przesunięciem palcem. Żeby mieć ikonę na ekranie: na iPhonie Safari → **Udostępnij** → **Do ekranu początkowego**; na Androidzie **⋯** → **Zainstaluj aplikację** (wymaga HTTPS). Opis: [DOKUMENTACJA §9.9](DOKUMENTACJA.md#99-trio-na-telefonie-mobile).
 
 ## 9. Ściąga skrótów
 

@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<title>VizRS Trio mobilne</title>
+<title>VizRS Trio</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#0b0c0e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,22 +13,30 @@
 <link rel="stylesheet" href="/ui.css">
 <script src="/text-model.js"></script>
 <style>
-  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; font-size: 15px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-  body { height: 100dvh; display: grid; grid-template: "top" auto "tabs" auto "views" minmax(0, 1fr) "bar" auto / minmax(0, 1fr); padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; font-size: 15px; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; touch-action: manipulation; }
+  body { height: 100dvh; display: grid; grid-template: "top" auto "views" minmax(0, 1fr) "bar" auto "nav" auto / minmax(0, 1fr); padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); }
   /* pole poniżej 16px powiększa stronę po dotknięciu na iOS */
   input, select, textarea { font-size: 16px; padding: 9px 10px; border-radius: 6px; width: 100%; }
   input[type=checkbox] { width: 28px; height: 28px; }
-  #top { grid-area: top; display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #0b0c0e; border-bottom: 1px solid var(--line); min-width: 0; }
+  #top { grid-area: top; display: flex; align-items: center; gap: 8px; padding: calc(6px + env(safe-area-inset-top)) 10px 6px; background: #0b0c0e; border-bottom: 2px solid var(--line); min-width: 0; transition: background .2s, border-color .2s; }
+  #top.air { background: #2a0f0e; border-bottom-color: var(--red); }
   #top .brand { flex: none; }
+  #bMenu { flex: none; min-width: 40px; height: 34px; padding: 0; background: none; border: 0; font-size: 20px; line-height: 1; }
   #antSel { flex: 1 1 0; min-width: 0; padding: 5px 8px; font-size: 14px; }
   #showName { flex: 1 1 0; min-width: 0; color: var(--dim); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #top .pill { flex: none; font-size: 12px; padding: 2px 8px; }
-  #tabs { grid-area: tabs; display: grid; grid-template-columns: repeat(4, 1fr); background: #0b0c0e; border-bottom: 1px solid var(--line); }
-  #tabs button { border: 0; border-radius: 0; border-bottom: 3px solid transparent; background: none; color: var(--dim); padding: 10px 2px 8px; font-size: 14px; font-weight: 600; }
-  #tabs button.on { color: var(--text); border-bottom-color: var(--acc); }
-  #tabs b { color: #ff6a66; }
-  .view { grid-area: views; display: none; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
-  .view.on { display: flex; }
+  /* zakładki przesuwa palcem przeglądarka (scroll-snap), więc gest ma fizykę systemu */
+  #views { grid-area: views; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; min-width: 0; min-height: 0; overscroll-behavior-x: contain; }
+  #views::-webkit-scrollbar { display: none; }
+  .view { flex: 0 0 100%; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+  #nav { grid-area: nav; display: grid; grid-template-columns: repeat(4, 1fr); background: #0b0c0e; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  #nav button, #nav button:hover, #nav button:active { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; border: 0; border-radius: 0; background: none; color: var(--dim); padding: 6px 2px 5px; font-size: 11.5px; font-weight: 600; }
+  #nav button.on { color: var(--acc); }
+  #nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  #nav b { position: absolute; top: 2px; left: calc(50% + 7px); min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--red); color: #fff; font-size: 11px; line-height: 16px; }
+  #nav b:empty { display: none; }
+  body.kb #nav { display: none; }
   .scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .pad { padding: 8px 10px; }
   .empty { padding: 26px 16px; text-align: center; color: var(--dim); }
@@ -42,6 +50,9 @@
   .big { min-height: 48px; min-width: 56px; font-size: 14px; font-weight: 700; border-radius: 6px; }
   #eHead { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
   #eHead > .txt { flex: 1; min-width: 0; }
+  #pvBox { position: relative; flex: none; aspect-ratio: 16 / 9; width: 100%; max-height: 34dvh; overflow: hidden; border-bottom: 1px solid var(--line); }
+  #pvStage { position: absolute; left: 0; top: 0; }
+  @media (max-height: 520px) { #pvBox { display: none; } }
   #eSave.dirty { background: var(--acc); border-color: var(--acc); color: #1a1100; }
   .fl { padding: 7px 10px; }
   .fl > label { display: block; margin-bottom: 4px; font-size: 13px; }
@@ -49,6 +60,11 @@
   .fl.chk > label { margin: 0; }
   .cnt { font: 12px var(--mono); color: var(--dim); text-align: right; margin-top: 2px; }
   .cnt.warn { color: var(--acc); } .cnt.bad { color: #ff6a66; font-weight: 700; }
+  .row > input, .row > select { flex: 1; width: auto; }
+  input[type=color] { flex: none !important; width: 48px; height: 44px; }
+  .tk { display: grid; grid-template-columns: 76px minmax(0, 1fr) 44px; gap: 6px; margin-bottom: 6px; }
+  .tk button { padding: 0; font-size: 18px; }
+  .tkadd { width: 100%; }
   #pgmBox { position: relative; flex: none; aspect-ratio: 16 / 9; width: 100%; max-height: 42dvh; border-bottom: 1px solid var(--line); }
   #pgmBox iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
   #pgmTag { position: absolute; left: 6px; top: 6px; z-index: 5; font-size: 12px; font-weight: 700; color: #fff; background: var(--red); padding: 1px 6px; border-radius: 3px; }
@@ -61,8 +77,9 @@
   #rd .st { flex: none; width: 16px; text-align: center; color: var(--green); }
   #rd .onair .st { color: var(--red); }
   #rdSel { flex: 1; width: auto; }
+  .item.play { background: #14301f; }
   #bNext { background: var(--acc); border-color: var(--acc); color: #1a1100; flex: none; padding: 0 16px; }
-  #bar { grid-area: bar; background: #0b0c0e; border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  #bar { grid-area: bar; background: #0b0c0e; border-top: 1px solid var(--line); padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   #barPage { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 3px 8px; background: var(--panel); text-align: left; border-radius: 6px; }
   #barPage .name { flex: 1; min-width: 0; }
   #barSt { flex: none; font-size: 12.5px; color: var(--dim); }
@@ -72,14 +89,26 @@
   #bTake { background: #b4211d; border-color: var(--red); color: #fff; font-size: 20px !important; letter-spacing: .06em; }
   #bCont { background: #8a5a0c; border-color: var(--acc); color: #fff; }
   #bUpd { background: #1d3d6e; border-color: var(--blue); }
-  #btns button:active:not(:disabled) { filter: brightness(1.35); }
+  button { transition: transform .08s, filter .08s; }
+  button:active:not(:disabled) { transform: scale(.96); filter: brightness(1.3); }
+  /* arkusz akcji zamiast okienek przeglądarki */
+  #sheetWrap { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0); pointer-events: none; transition: background .2s; }
+  #sheetWrap.open { background: rgba(0,0,0,.55); pointer-events: auto; }
+  #sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 80dvh; overflow: auto; background: var(--panel); border-radius: 16px 16px 0 0; padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .22s cubic-bezier(.2, .8, .2, 1); }
+  #sheetWrap.open #sheet { transform: none; }
+  #sheet::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto 10px; border-radius: 2px; background: #4a505c; }
+  #sheetTitle { padding: 4px 6px 12px; color: var(--dim); text-align: center; white-space: pre-line; }
+  #sheet button { display: block; width: 100%; min-height: 52px; margin-bottom: 8px; border-radius: 10px; font-size: 16px; font-weight: 600; }
+  #sheet button.danger { background: #b4211d; border-color: var(--red); color: #fff; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   .toast { top: calc(52px + env(safe-area-inset-top)); bottom: auto; width: max-content; max-width: 92vw; text-align: center; pointer-events: none; }
   /* telefon poziomo: przyciski w prawej kolumnie */
   @media (orientation: landscape) and (max-height: 560px) {
-    body { grid-template: "top bar" auto "tabs bar" auto "views bar" minmax(0, 1fr) / minmax(0, 1fr) 240px; }
-    #bar { border-top: 0; border-left: 1px solid var(--line); }
+    body { grid-template: "top bar" auto "views bar" minmax(0, 1fr) "nav bar" auto / minmax(0, 1fr) 240px; }
+    #bar { border-top: 0; border-left: 1px solid var(--line); padding-bottom: calc(6px + env(safe-area-inset-bottom)); }
     #btns { flex: 1; grid-template-columns: 1fr 1fr 1fr; grid-auto-rows: 1fr; }
     #bTake { grid-column: 1 / -1; }
+    #nav button { flex-direction: row; justify-content: center; gap: 6px; padding: 3px 2px; }
     #pgmBox { max-height: 60dvh; }
   }
 </style>
@@ -92,15 +121,10 @@
   <span id="saveErr" class="pill on" hidden>⚠ zapis</span>
   <span id="errPill" class="pill on" hidden></span>
   <span id="conn" class="pill">łączenie…</span>
+  <button id="bMenu" title="Więcej">⋯</button>
 </div>
-<nav id="tabs">
-  <button data-tab="pages" class="on">Strony</button>
-  <button data-tab="edit">Edycja</button>
-  <button data-tab="air">Antena <b id="airN"></b></button>
-  <button data-tab="queue">Kolejka</button>
-</nav>
-
-<section class="view on" data-view="pages">
+<div id="views">
+<section class="view" data-view="pages">
   <div class="pad"><input id="filter" type="search" placeholder="numer lub nazwa…" autocomplete="off" enterkeyhint="search"></div>
   <div class="scroll list" id="pages"></div>
 </section>
@@ -108,9 +132,11 @@
 <section class="view" data-view="edit">
   <div id="eHead">
     <div class="txt"><div class="name" id="eName"></div><div class="sub" id="eSub"></div></div>
+    <button id="eMore" class="big" title="Więcej" disabled>⋯</button>
     <button id="eRevert" class="big" title="Przywróć zapisane" disabled>↺</button>
     <button id="eSave" class="big" disabled>Zapisz</button>
   </div>
+  <div id="pvBox" class="checker" hidden><div id="pvStage"></div></div>
   <div class="scroll" id="fields"></div>
 </section>
 
@@ -127,10 +153,13 @@
       <button id="bNext" class="big">NEXT ▶</button>
     </div>
     <div class="list" id="rd"></div>
+    <h3 class="sect">Karuzela</h3>
+    <div class="list" id="pl"></div>
     <h3 class="sect">Makra</h3>
     <div class="list" id="mc"></div>
   </div>
 </section>
+</div>
 
 <div id="bar">
   <button id="barPage" title="Edytuj pola strony"><span class="name" id="barName"></span><span id="barSt"></span></button>
@@ -141,9 +170,18 @@
     <button id="bUpd" disabled>UPDATE</button>
   </div>
 </div>
+<nav id="nav">
+  <button data-tab="pages" class="on"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>Strony</button>
+  <button data-tab="edit"><svg viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/></svg>Edycja</button>
+  <button data-tab="air"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.6 4.6a10.5 10.5 0 0 0 0 14.8M19.4 4.6a10.5 10.5 0 0 1 0 14.8"/></svg>Antena<b id="airN"></b></button>
+  <button data-tab="queue"><svg viewBox="0 0 24 24"><path d="M5 5v6l5-3zM14 8h6M5 16h15M5 20h15"/></svg>Kolejka</button>
+</nav>
+<div id="sheetWrap"><div id="sheet"><div id="sheetTitle"></div><div id="sheetList"></div></div></div>
+<input type="file" id="fileIn" accept="image/*,video/mp4,video/webm" hidden>
 
 <script type="module">
-import { connectEvents, listFields } from '/renderer.js';
+import { connectEvents, listFields, ScenePlayer, fitStage, parseColor } from '/renderer.js';
+import { parseTickerItems, serializeTickerItems, TICKER_LIMITS } from '/ticker-model.js';
 import { visLen, limitText, polish } from '/field-rules.js';
 
 // token z adresu trafił już do ciasteczka: nie zostawiamy go w historii, skrótach ani na zrzutach ekranu
@@ -169,6 +207,31 @@ function toast(msg, err) {
   clearTimeout(toastT); toastT = setTimeout(() => (el.style.opacity = 0), 2800);
 }
 
+const buzz = (p) => navigator.vibrate?.(p);
+
+// ------------------------------------------------------------ arkusz akcji; przycisk Wstecz w Androidzie zamyka go jak w aplikacji
+let sheetDone = null;
+function closeSheet(v, fromBack) {
+  if (!sheetDone) return;
+  const done = sheetDone; sheetDone = null;
+  $('#sheetWrap').classList.remove('open');
+  if (!fromBack) history.back();
+  done(v);
+}
+function sheet(title, items) {
+  return new Promise((res) => {
+    sheetDone = res;
+    $('#sheetTitle').textContent = title;
+    $('#sheetList').innerHTML = [...items, { label: 'Anuluj' }].map((it, i) => `<button class="${it.danger ? 'danger' : ''}" data-i="${i}">${esc(it.label)}</button>`).join('');
+    $('#sheetList').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) closeSheet(items[+b.dataset.i]?.v ?? null); };
+    history.pushState({ sheet: 1 }, '');
+    $('#sheetWrap').classList.add('open');
+  });
+}
+$('#sheetWrap').onclick = (e) => { if (e.target.id === 'sheetWrap') closeSheet(null); };
+addEventListener('popstate', () => closeSheet(null, true));
+const ask = async (title, label, danger) => (await sheet(title, [{ label, danger, v: true }])) === true;
+
 async function api(method, url, body) {
   // Wi-Fi na hali potrafi zawiesić żądanie: operator musi szybko wiedzieć, że komenda nie doszła
   const signal = AbortSignal.timeout(method === 'GET' ? 20000 : 6000);
@@ -191,7 +254,7 @@ function setAnt(name) {
   renderMonitor(); loadState();
 }
 
-let show = { scenes: [], pages: [], rundowns: [], macros: [] }, state = { layers: [] };
+let show = { scenes: [], pages: [], rundowns: [], macros: [], playlists: [] }, state = { layers: [] }, assets = [];
 let selId = null, draft = null, dirty = false, tab = 'pages', busy = false, rdId = null;
 
 const sceneOf = (p) => show.scenes.find((s) => s.id === p?.scene);
@@ -202,7 +265,8 @@ const otherLock = (id) => (state.locks || []).find((l) => l.kind === 'pages' && 
 
 async function loadShow() {
   show = await api('GET', '/api/show');
-  show.rundowns ||= []; show.macros ||= [];
+  show.rundowns ||= []; show.macros ||= []; show.playlists ||= [];
+  assets = await api('GET', '/api/assets').catch(() => assets);
   if (selId && !pageById(selId)) { selId = null; draft = null; setDirty(false); renderEdit(); }
   else if (selId && !dirty) {
     draft = structuredClone(pageById(selId)); draft.values ||= {};
@@ -233,17 +297,32 @@ function renderTop() {
   $('#saveErr').hidden = !state.saveError; $('#saveErr').title = state.saveError || '';
   $('#errPill').hidden = !state.errors; $('#errPill').textContent = `⚠ ${state.errors || 0}`; $('#errPill').title = `Błędy scen na wyjściu: ${state.errors || 0}`;
   $('#airN').textContent = state.layers.length || '';
+  // antena zajęta: nagłówek i pasek systemowy telefonu na czerwono, widać to kątem oka
+  $('#top').classList.toggle('air', state.layers.length > 0);
+  $('meta[name=theme-color]').content = state.layers.length ? '#2a0f0e' : '#0b0c0e';
 }
 $('#antSel').onchange = (e) => setAnt(e.target.value);
 
-// ------------------------------------------------------------ zakładki
+// ------------------------------------------------------------ zakładki: dotknięcie w pasku albo przesunięcie palcem
+const TABS = ['pages', 'edit', 'air', 'queue'];
+const pager = $('#views');
+let going = null, settleT;
+function markTab(t) { $$('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t)); }
+function activate(t) { tab = t; going = null; markTab(t); renderMonitor(); renderPreview(); }
 function setTab(t) {
-  tab = t;
-  $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
-  $$('.view').forEach((v) => v.classList.toggle('on', v.dataset.view === t));
-  renderMonitor();
+  const left = TABS.indexOf(t) * pager.clientWidth;
+  if (Math.abs(left - pager.scrollLeft) < 2) return activate(t);
+  going = t; markTab(t);
+  pager.scrollTo({ left, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
-$('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); };
+pager.addEventListener('scroll', () => {
+  const t = TABS[Math.round(pager.scrollLeft / pager.clientWidth)];
+  if (!going) markTab(t);
+  // monitor i podgląd startują dopiero, gdy zakładka się zatrzyma
+  clearTimeout(settleT); settleT = setTimeout(() => activate(t), 120);
+}, { passive: true });
+new ResizeObserver(() => { pager.scrollLeft = TABS.indexOf(tab) * pager.clientWidth; }).observe(pager);
+$('#nav').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); };
 
 /** Monitor PGM tylko na widocznej zakładce Antena: wyjście w telefonie kosztuje baterię i transfer. */
 function renderMonitor() {
@@ -266,51 +345,138 @@ function renderPages() {
   }).join('') || `<div class="empty">${show.pages.length ? 'Nic nie pasuje.' : 'Brak stron – utwórz je w Trio.'}</div>`);
 }
 $('#filter').addEventListener('input', renderPages);
-$('#pages').onclick = (e) => { const it = e.target.closest('.item[data-id]'); if (it) select(it.dataset.id); };
+// przytrzymanie = menu strony
+let pressT = 0, pressed = false;
+$('#pages').addEventListener('pointerdown', (e) => {
+  const it = e.target.closest('.item[data-id]'); pressed = false;
+  if (it) pressT = setTimeout(async () => { pressed = true; buzz(20); if (await select(it.dataset.id)) pageMenu(); }, 500);
+});
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('#pages').addEventListener(ev, () => clearTimeout(pressT));
+$('#pages').onclick = (e) => {
+  if (pressed) { pressed = false; return; }
+  const it = e.target.closest('.item[data-id]'); if (it) select(it.dataset.id);
+};
+addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea')) e.preventDefault(); });
 
-function select(id) {
-  if (id === selId) return;
-  if (dirty && !confirm('Strona ma niezapisane zmiany. Porzucić?')) return;
-  const p = pageById(id); if (!p) return;
+async function pageMenu() {
+  if (!draft) return;
+  const a = await sheet(`${draft.number} ${draft.name}`, [{ label: 'Edytuj pola', v: 'edit' }, { label: 'ARM – wyślij na Preview', v: 'arm' }, { label: 'Wyczyść Preview', v: 'clear' }]);
+  if (a === 'edit') setTab('edit');
+  if (a === 'arm') { applyFinalRules(); act(() => api('POST', `/api/arm/${draft.number}`, { values: draft.values }), 'ARM'); }
+  if (a === 'clear') act(() => api('POST', '/api/preview/clear'), 'Preview');
+}
+
+async function select(id) {
+  if (id === selId) return true;
+  if (dirty && !await ask('Strona ma niezapisane zmiany.', 'Porzuć zmiany', true)) return false;
+  const p = pageById(id); if (!p) return false;
   setDirty(false);
   selId = id; draft = structuredClone(p); draft.values ||= {};
   renderEdit(); renderPages(); renderBar();
+  return true;
 }
 
-// ------------------------------------------------------------ edycja pól: tylko to, co da się wygodnie zmienić palcem
+// ------------------------------------------------------------ edycja pól
 function fieldInput(f, v) {
   const id = `data-f="${esc(f.id)}"`, R = f.rules || {}, ro = R.readonly ? 'readonly' : '';
   const kind = f.nodeType === 'variant' ? 'select' : f.type;
+  if (kind === 'color') return `<div class="row"><input type="color" data-fc="${esc(f.id)}" ${ro ? 'disabled' : ''} value="${hex6(v)}"><input class="mono" autocapitalize="off" ${id} ${ro} value="${esc(v)}"></div>`;
+  if (kind === 'image') {
+    const imgs = assets.filter((a) => !/\.(ttf|otf|woff2?)$/i.test(a.name)).map((a) => a.name);
+    if (v && !imgs.includes(v)) imgs.unshift(v);
+    return `<div class="row"><select ${id} ${ro ? 'disabled' : ''}><option value="">— brak —</option>${imgs.map((n) => `<option ${n === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select><button class="big" data-up="${esc(f.id)}" title="Wgraj z telefonu" ${ro ? 'disabled' : ''}>⤒</button></div>`;
+  }
   if (kind === 'num') return `<input type="number" inputmode="decimal" step="any" ${id} ${ro} value="${esc(v)}">`;
   if (kind === 'bool') return `<input type="checkbox" ${id} ${ro ? 'disabled' : ''} ${v === true || v === 'true' ? 'checked' : ''}>`;
   if (kind === 'select') return `<select ${id} ${ro ? 'disabled' : ''}>${f.opts.map((o) => `<option ${o == v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
   const spell = R.spell === false ? 'spellcheck="false"' : 'spellcheck="true" lang="pl"';
-  if (isTicker(f)) return `<textarea rows="6" data-tk="1" ${id} ${ro} spellcheck="true" lang="pl">${esc(v)}</textarea>`;
+  if (isTicker(f)) return `<div data-tkhost="${esc(f.id)}"></div><textarea hidden data-tk="1" ${id}>${esc(v)}</textarea>`;
   const maxLines = R.maxLines || f.lines || 1;
   const multi = !R.oneLine && (maxLines > 1 || String(v ?? '').includes('\n'));
   const ctl = multi ? `<textarea rows="${Math.max(2, maxLines)}" ${id} ${ro} ${spell}>${esc(v)}</textarea>` : `<input enterkeyhint="done" ${id} ${ro} ${spell} value="${esc(v)}">`;
   return ctl + `<div class="cnt" data-cnt="${esc(f.id)}"></div>`;
 }
 const isTicker = (f) => f.nodeType === 'ticker' && f.prop === 'text';
-const NO_TOUCH = new Set(['color', 'font', 'image']);
+const hex6 = (c) => { const p = parseColor(c); return p ? '#' + p.slice(0, 3).map((x) => Math.round(x).toString(16).padStart(2, '0')).join('') : '#000000'; };
 const pageFields = () => listFields(sceneOf(draft) || { nodes: [] });
 const rulesOf = (fid) => pageFields().find((f) => f.id === fid)?.rules || {};
 const lastGood = new Map();
 
 function renderEdit() {
   lastGood.clear();
+  $('#eMore').disabled = !draft;
   const s = sceneOf(draft);
+  renderPreview();
   if (!draft || !s) { $('#fields').innerHTML = `<div class="empty">${draft ? '⚠ Szablon tej strony nie istnieje.' : 'Wybierz stronę na liście.'}</div>`; renderHead(); return; }
   // kolejność jak w Trio: pola z regułą `tab` rosnąco, reszta w kolejności sceny
   const all = pageFields().map((f, i) => ({ f, i })).sort((a, b) => ((a.f.rules?.tab ?? 1e6) - (b.f.rules?.tab ?? 1e6)) || a.i - b.i).map((x) => x.f);
-  const fields = all.filter((f) => f.nodeType === 'variant' || !NO_TOUCH.has(f.type));
+  const fields = all.filter((f) => f.nodeType === 'variant' || f.type !== 'font');
   const rest = all.length - fields.length;
   $('#fields').innerHTML = fields.map((f) => {
-    const hint = isTicker(f) ? ' · jedna wiadomość w wierszu, KAT|treść' : '';
-    return `<div class="fl ${f.type === 'bool' && f.nodeType !== 'variant' ? 'chk' : ''}"><label>${esc(f.label)}${hint}</label>${fieldInput(f, draft.values[f.id] ?? f.default)}</div>`;
-  }).join('') + (rest ? `<div class="empty">Pola niewidoczne na telefonie (kolor, czcionka, obraz): ${rest}. Zmienisz je w Trio.</div>` : fields.length ? '' : '<div class="empty">Ta strona nie ma pól.</div>');
+    return `<div class="fl ${f.type === 'bool' && f.nodeType !== 'variant' ? 'chk' : ''}"><label>${esc(f.label)}</label>${fieldInput(f, draft.values[f.id] ?? f.default)}</div>`;
+  }).join('') + (rest ? `<div class="empty">Pola czcionki zmienisz w Trio: ${rest}.</div>` : fields.length ? '' : '<div class="empty">Ta strona nie ma pól.</div>');
+  $$('[data-tkhost]').forEach((h) => renderTicker(h.dataset.tkhost));
   updateCounters(); renderHead();
 }
+
+// podgląd strony z tym samym rendererem co antena, zatrzymany w pierwszym stopie; działa tylko na widocznej zakładce
+let pv = null;
+function renderPreview() {
+  pv?.destroy(); pv = null;
+  const s = sceneOf(draft);
+  $('#pvBox').hidden = !s;
+  if (!s || tab !== 'edit' || document.hidden) return;
+  pv = new ScenePlayer($('#pvStage'), s, draft.values);
+  pv.seekStop(0);
+  fitPv();
+}
+function fitPv() { const s = sceneOf(draft); if (s && pv) fitStage($('#pvStage'), $('#pvBox'), s.width || 1920, s.height || 1080); }
+new ResizeObserver(fitPv).observe($('#pvBox'));
+
+// wiadomości tickera: wiersze do palca zamiast surowego `KAT|treść`, wynik idzie przez ukryte pole jak w Trio
+const tkItems = new Map();
+function renderTicker(fid) {
+  const R = rulesOf(fid), ta = $(`[data-f="${CSS.escape(fid)}"]`), host = $(`[data-tkhost="${CSS.escape(fid)}"]`);
+  const items = parseTickerItems(ta.value); if (!items.length) items.push({ cat: '', color: '', text: '' });
+  tkItems.set(fid, items);
+  const ro = R.readonly ? 'readonly' : '', max = R.maxItems || TICKER_LIMITS.items;
+  host.innerHTML = items.map((it, i) => `<div class="tk" data-i="${i}"><input data-tkc value="${esc(it.cat)}" placeholder="KAT" ${ro}><input data-tkt value="${esc(it.text)}" placeholder="treść" maxlength="${R.maxChars || TICKER_LIMITS.chars}" spellcheck="true" lang="pl" ${ro}><button data-tkdel title="Usuń" ${ro ? 'disabled' : ''}>×</button></div>`).join('')
+    + (ro || items.length >= max ? '' : '<button class="big tkadd" data-tkadd>＋ Wiadomość</button>');
+}
+function saveTicker(host) {
+  const ta = $(`[data-f="${CSS.escape(host.dataset.tkhost)}"]`);
+  ta.value = serializeTickerItems(tkItems.get(host.dataset.tkhost));
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+}
+$('#fields').addEventListener('input', (e) => {
+  const host = e.target.closest('[data-tkhost]'); if (!host) return;
+  const it = tkItems.get(host.dataset.tkhost)[+e.target.closest('.tk').dataset.i];
+  if ('tkc' in e.target.dataset) it.cat = e.target.value;
+  else { if (rulesOf(host.dataset.tkhost).upper) e.target.value = e.target.value.toUpperCase(); it.text = e.target.value; }
+  saveTicker(host);
+});
+$('#fields').addEventListener('click', (e) => {
+  const host = e.target.closest('[data-tkhost]');
+  if (host && e.target.closest('[data-tkadd], [data-tkdel]')) {
+    const fid = host.dataset.tkhost, items = tkItems.get(fid);
+    if ('tkadd' in e.target.dataset) items.push({ cat: '', color: '', text: '' }); else items.splice(+e.target.closest('.tk').dataset.i, 1);
+    saveTicker(host); renderTicker(fid); $$('[data-tkt]', host).at(-1)?.focus();
+  }
+  const up = e.target.closest('[data-up]'); if (!up) return;
+  const fi = $('#fileIn'); fi.value = '';
+  fi.onchange = async () => {
+    const f = fi.files[0]; if (!f) return;
+    toast('Wysyłanie…');
+    try {
+      const r = await fetch('/api/assets?name=' + encodeURIComponent(f.name), { method: 'POST', body: f });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || r.statusText);
+      assets = await api('GET', '/api/assets');
+      draft.values[up.dataset.up] = j.name; if (!dirty) setDirty(true); renderEdit(); toast('Wgrano ' + j.name);
+    } catch (err) { toast(`Wgrywanie: ${err.message}`, true); }
+  };
+  fi.click();
+});
 function renderHead() {
   $('#eName').innerHTML = draft ? `<span class="num">${draft.number}</span> ${esc(draft.name)}` : '';
   const lock = lockedBy || (draft && otherLock(draft.id)?.who);
@@ -333,7 +499,9 @@ function setDirty(d) {
   renderHead(); renderBar();
 }
 $('#fields').addEventListener('input', (e) => {
-  const el = e.target, fid = el.dataset.f; if (!fid) return;
+  const el = e.target;
+  if (el.dataset.fc) { const tx = $(`[data-f="${CSS.escape(el.dataset.fc)}"]`); tx.value = el.value; tx.dispatchEvent(new Event('input', { bubbles: true })); return; }
+  const fid = el.dataset.f; if (!fid) return;
   if (/^(INPUT|TEXTAREA)$/.test(el.tagName) && el.type !== 'checkbox' && !el.dataset.tk) {
     const caret = el.selectionStart, fromEnd = el.value.length - (caret ?? el.value.length);
     const { v, err } = limitText(el.value, rulesOf(fid), lastGood.get(fid));
@@ -343,6 +511,7 @@ $('#fields').addEventListener('input', (e) => {
   }
   draft.values[fid] = el.type === 'checkbox' ? el.checked : el.value;
   updateCounters();
+  pv?.update(draft.values);
   if (!dirty) setDirty(true);
 });
 /** Reguły stosowane po zakończeniu wpisywania (typografia działa na całym tekście, więc nie w trakcie pisania). */
@@ -351,8 +520,9 @@ function applyFinalRules() {
   for (const el of $$('#fields [data-f]')) {
     if (!rulesOf(el.dataset.f).typo || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) continue;
     const nv = polish(el.value);
-    if (nv !== el.value) { el.value = nv; draft.values[el.dataset.f] = nv; if (!dirty) setDirty(true); }
+    if (nv !== el.value) { el.value = nv; draft.values[el.dataset.f] = nv; if (!dirty) setDirty(true); if (el.dataset.tk) renderTicker(el.dataset.f); }
   }
+  pv?.update(draft.values);
 }
 $('#fields').addEventListener('change', applyFinalRules);
 
@@ -378,7 +548,7 @@ addEventListener('pagehide', () => { if (lockedId && !lockedBy) navigator.sendBe
 async function savePage(force) {
   if (!draft) return;
   applyFinalRules();
-  if (lockedBy && !confirm(`Tę stronę edytuje ${lockedBy}. Zapisać mimo to?`)) return;
+  if (lockedBy && !await ask(`Tę stronę edytuje ${lockedBy}.`, 'Zapisz mimo to', true)) return;
   try {
     const body = force === true ? (({ rev, ...r }) => r)(draft) : draft; // bez rev = świadome nadpisanie
     const p = await api('PUT', '/api/pages/' + encodeURIComponent(draft.id), body);
@@ -386,11 +556,12 @@ async function savePage(force) {
     draft = structuredClone(p); setDirty(false); renderPages(); toast(`Zapisano stronę ${p.number}`);
   } catch (e) {
     if (!/^konflikt/.test(e.message)) return toast(e.message, true);
-    if (confirm('Ta strona została zmieniona przez kogoś innego.\n\nOK = nadpisz moją wersją, Anuluj = zachowaj moje zmiany bez zapisu.')) return savePage(true);
+    if (await ask('Ta strona została zmieniona przez kogoś innego.', 'Nadpisz moją wersją', true)) return savePage(true);
     toast('Konflikt zapisu – zmiany nie zapisane', true);
   }
 }
 $('#eSave').onclick = () => savePage();
+$('#eMore').onclick = pageMenu;
 $('#eRevert').onclick = () => { draft = structuredClone(pageById(selId)); draft.values ||= {}; setDirty(false); renderEdit(); };
 
 // ------------------------------------------------------------ playout: te same komendy co w Trio
@@ -398,7 +569,7 @@ $('#eRevert').onclick = () => { draft = structuredClone(pageById(selId)); draft.
 async function act(fn, label) {
   if (busy) return;
   busy = true; renderBar();
-  try { await fn(); } catch (e) { toast(`${label}: ${e.message}`, true); }
+  try { await fn(); buzz(25); } catch (e) { buzz([60, 40, 60]); toast(`${label}: ${e.message}`, true); }
   await refreshState();
   setTimeout(() => { busy = false; renderBar(); }, 350);
 }
@@ -413,7 +584,7 @@ $('#bUpd').onclick = () => {
     if (!r.onAir) toast('Strona nie jest na antenie – nic do aktualizacji');
   }, 'UPDATE');
 };
-$('#bClear').onclick = () => { if (confirm('Zdjąć wszystkie grafiki z anteny?')) act(() => api('POST', onAnt('/api/clear')), 'CLEAR'); };
+$('#bClear').onclick = async () => { if (await ask('Zdjąć wszystkie grafiki z anteny?', 'CLEAR ALL', true)) act(() => api('POST', onAnt('/api/clear')), 'CLEAR'); };
 $('#barPage').onclick = () => setTab('edit');
 
 function renderBar() {
@@ -429,16 +600,17 @@ function renderBar() {
 function renderLayers() {
   setHtml($('#layers'), state.layers.map((l) => `<div class="item"><span class="lname">${esc(l.layer)}</span>
     <span class="txt"><div class="name"><span class="num">${l.page?.number ?? ''}</span> ${esc(l.page?.name || l.scene)}</div><div class="sub">stop ${l.stop + 1}/${Math.max(1, l.stops)}${l.pending ? ' · ⏳ nowa wersja szablonu' : ''}</div></span>
-    <button class="big" data-lcont="${esc(l.layer)}" title="Continue">⏭</button><button class="big" data-lout="${esc(l.layer)}" title="Out">⏏</button></div>`).join('')
+    ${l.pending ? `<button class="big" data-ldeploy="${esc(l.layer)}" title="Wdróż nową wersję szablonu bez animacji">Wdróż</button>` : ''}<button class="big" data-lcont="${esc(l.layer)}" title="Continue">⏭</button><button class="big" data-lout="${esc(l.layer)}" title="Out">⏏</button></div>`).join('')
     || '<div class="empty">Antena czysta</div>');
 }
 $('#layers').onclick = (e) => {
-  const c = e.target.closest('[data-lcont]'), o = e.target.closest('[data-lout]');
+  const c = e.target.closest('[data-lcont]'), o = e.target.closest('[data-lout]'), d = e.target.closest('[data-ldeploy]');
+  if (d) act(() => api('POST', onAnt('/api/deploy/' + encodeURIComponent(d.dataset.ldeploy))), 'Wdrożenie');
   if (c) act(() => api('POST', onAnt('/api/continue/' + encodeURIComponent(c.dataset.lcont))), 'CONTINUE');
   if (o) act(() => api('POST', onAnt('/api/out/' + encodeURIComponent(o.dataset.lout))), 'OUT');
 };
 
-// ------------------------------------------------------------ kolejka: rundown (NEXT) i makra
+// ------------------------------------------------------------ kolejka: rundown (NEXT), karuzela i makra
 function renderQueue() {
   if (!rdId || !show.rundowns.some((r) => r.id === rdId)) rdId = show.rundowns[0]?.id || null;
   const rd = show.rundowns.find((r) => r.id === rdId), run = (state.rundowns || []).find((r) => r.id === rdId) || {};
@@ -453,6 +625,8 @@ function renderQueue() {
     return `<div class="item ${cls}" data-iid="${esc(it.id)}"><span class="st">${air ? '●' : it.id === run.cursor ? '▶' : done.has(it.id) ? '✓' : ''}</span><span class="num">${p?.number ?? '?'}</span>
       <span class="txt"><div class="name">${esc(p?.name ?? '(usunięta)')}</div>${it.note ? `<div class="sub">${esc(it.note)}</div>` : ''}</span></div>`;
   }).join('') || '<div class="empty">Rundown jest pusty.</div>' : '<div class="empty">Brak rundownów – utwórz je w Trio.</div>');
+  const running = state.carousel?.playlist;
+  setHtml($('#pl'), show.playlists.map((p) => `<div class="item ${p.id === running ? 'play' : ''}"><span class="txt"><div class="name">${esc(p.name)}</div><div class="sub">${(p.items || []).length} stron${p.loop ? ' · pętla' : ''}</div></span><button class="big" ${p.id === running ? 'data-plstop' : `data-plrun="${esc(p.id)}"`}>${p.id === running ? '■' : '▶'}</button></div>`).join('') || '<div class="empty">Brak playlist.</div>');
   setHtml($('#mc'), show.macros.map((m) => `<div class="item"><span class="txt"><div class="name">${esc(m.name)}</div></span><button class="big" data-mrun="${esc(m.id)}">▶</button></div>`).join('')
     + (show.macros.length ? '<div class="pad"><button class="big" id="mcStop" style="width:100%">■ Przerwij makro</button></div>' : '<div class="empty">Brak makr.</div>'));
 }
@@ -462,6 +636,11 @@ $('#bNext').onclick = () => act(() => api('POST', onAnt(`/api/rundown/${encodeUR
 $('#rd').onclick = (e) => {
   const it = e.target.closest('.item[data-iid]');
   if (it) act(() => api('POST', onAnt(`/api/rundown/${encodeURIComponent(rdId)}/cursor/${encodeURIComponent(it.dataset.iid)}`)), 'Rundown');
+};
+$('#pl').onclick = (e) => {
+  const b = e.target.closest('[data-plrun]');
+  if (b) act(() => api('POST', onAnt('/api/carousel/start/' + encodeURIComponent(b.dataset.plrun))), 'Karuzela');
+  if (e.target.closest('[data-plstop]')) act(() => api('POST', onAnt('/api/carousel/stop')), 'Karuzela');
 };
 $('#mc').onclick = (e) => {
   const b = e.target.closest('[data-mrun]');
@@ -475,6 +654,34 @@ async function keepAwake() {
   if (wakeLock || document.hidden) return;
   try { wakeLock = await navigator.wakeLock?.request('screen'); wakeLock?.addEventListener('release', () => { wakeLock = null; }); } catch { /* tylko HTTPS */ }
 }
+// ------------------------------------------------------------ menu aplikacji i instalacja
+let installEv = null;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEv = e; });
+addEventListener('appinstalled', () => { installEv = null; toast('Zainstalowano'); });
+const installed = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function installHint() {
+  if (/iPhone|iPad/.test(navigator.userAgent)) return 'Safari → Udostępnij → Do ekranu początkowego';
+  return isSecureContext ? 'Menu przeglądarki → Zainstaluj aplikację' : 'Instalacja wymaga HTTPS, teraz możesz dodać tylko skrót na ekranie';
+}
+$('#bMenu').onclick = async () => {
+  const a = await sheet(`${show.name || 'VizRS'}\n${who}`, [
+    { label: 'Odśwież dane', v: 'reload' },
+    ...(installed() ? [] : [{ label: 'Zainstaluj aplikację', v: 'install' }]),
+    { label: 'Otwórz pełne Trio', v: 'trio' },
+  ]);
+  if (a === 'reload') loadShow().then(refreshState).then(() => toast('Dane odświeżone')).catch((e) => toast(e.message, true));
+  if (a === 'trio') location.href = '/trio';
+  if (a === 'install') { if (installEv) { installEv.prompt(); installEv = null; } else toast(installHint()); }
+};
+// klawiatura ekranowa: pasek zakładek ustępuje miejsca polu
+let kbT = 0;
+addEventListener('focusin', (e) => {
+  if (!/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || /^(checkbox|color|file)$/.test(e.target.type)) return;
+  clearTimeout(kbT); document.body.classList.add('kb');
+});
+// z opóźnieniem: pasek wracający od razu przesunąłby TAKE spod palca między wciśnięciem a puszczeniem i dotknięcie by przepadło
+addEventListener('focusout', () => { kbT = setTimeout(() => document.body.classList.remove('kb'), 300); });
+
 let closeEvents = null, lost = false;
 function listen() {
   closeEvents?.();
@@ -490,7 +697,7 @@ function listen() {
   });
 }
 document.addEventListener('visibilitychange', () => {
-  renderMonitor();
+  renderMonitor(); renderPreview();
   if (document.hidden) return;
   // przeglądarka mobilna potrafi zamknąć strumień w tle bez zdarzenia błędu
   lost = true; listen(); keepAwake();

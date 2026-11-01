@@ -490,19 +490,21 @@ Na dole ekranu stale są wybrana strona oraz **TAKE**, **CONTINUE**, **OUT** i *
 
 | Zakładka | Zawartość |
 |---|---|
-| **Strony** | lista z wyszukiwaniem po numerze i nazwie, ● = na antenie, 🔒 = edytuje ktoś inny |
-| **Edycja** | pola wybranej strony, **Zapisz**, **↺** (przywróć zapisane) |
-| **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tej zakładce), warstwy z ⏭ i ⏏, **CLEAR ALL** z potwierdzeniem |
-| **Kolejka** | rundown: dotknięcie pozycji ustawia kursor, **NEXT ▶** bierze ją na antenę; makra: ▶ uruchamia, **■ Przerwij makro** |
+| **Strony** | lista z wyszukiwaniem po numerze i nazwie, ● = na antenie, 🔒 = edytuje ktoś inny; przytrzymanie otwiera menu strony (Edytuj pola, ARM, Wyczyść Preview) |
+| **Edycja** | podgląd strony w pierwszym stopie, pola, **⋯** (menu strony), **↺** (przywróć zapisane), **Zapisz** |
+| **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tej zakładce), warstwy z ⏭, ⏏ i **Wdróż**, gdy czeka nowa wersja szablonu, **CLEAR ALL** z potwierdzeniem |
+| **Kolejka** | rundown: dotknięcie pozycji ustawia kursor, **NEXT ▶** bierze ją na antenę; karuzela: ▶ / ■; makra: ▶ uruchamia, **■ Przerwij makro** |
+
+Zakładki zmienia pasek na dole albo przesunięcie palcem w bok. Pytania i menu to arkusze wysuwane od dołu; zamyka je **Anuluj**, dotknięcie tła albo przycisk Wstecz w Androidzie. Gdy coś jest na antenie, nagłówek i pasek systemowy telefonu są czerwone, a przy zakładce Antena widać liczbę warstw. Komendy potwierdza krótka wibracja, a błąd podwójna (tylko Android, iPhone nie udostępnia wibracji stronom). **⋯** w nagłówku: odświeżenie danych, instalacja, pełne Trio.
 
 - **Ochrona anteny:** dotknięcie strony lub pozycji rundownu niczego nie wysyła. Kolejna komenda czeka na odpowiedź serwera i krótką przerwę, więc podwójne dotknięcie TAKE nie gra grafiki dwa razy.
-- **Pola:** tekst, liczby, przełączniki, listy, warianty i wiadomości tickera (zapis `KAT|treść`, jedna w wierszu). Reguły pól działają jak w Trio. Kolor, czcionkę i obraz zmienia się w Trio; strona podaje, ile takich pól pominięto, a ich wartości zostają bez zmian.
+- **Pola:** tekst, liczby, przełączniki, listy, warianty, kolor, obraz (lista grafik, **⤒** wgrywa zdjęcie z telefonu) i wiadomości tickera (wiersz: kategoria i treść, **＋ Wiadomość**, kolor wiadomości zostaje). Reguły pól działają jak w Trio. Czcionkę zmienia się w Trio; strona podaje, ile takich pól pominięto, a ich wartości zostają bez zmian.
 - **Blokada edycji** (§9.8) zakłada się przy pierwszej zmianie pola, nie przy wybraniu strony. Nazwa operatora to `vizrs.who`, domyślnie `Telefon NN`.
 - **Antena:** lista pojawia się, gdy są kanały playoutu; `?channel=<kanał>` i wybór są wspólne z Trio w tej samej przeglądarce. Po usunięciu wybranego kanału strona wraca na antenę główną i o tym informuje.
 - **Sieć:** komenda bez odpowiedzi przez 6 s zgłasza błąd i nie jest ponawiana. Po takim błędzie sprawdź antenę, bo komenda mogła dojść. Zanik połączenia widać na pasku; po powrocie sieci albo telefonu z uśpienia strona sama się łączy i odświeża dane.
 - **Wygaszanie ekranu:** strona prosi o niewygaszanie, ale przeglądarki pozwalają na to tylko przez HTTPS; po zwykłym HTTP wydłuż czas wygaszania w telefonie.
 
-Na telefonie nie ma tworzenia i usuwania stron, playlist, ARM, podglądu lokalnego, formatowania tekstu ani edycji rundownu i makr.
+Na telefonie nie ma tworzenia i usuwania stron, przełączania show, formatowania tekstu, grania animacji w podglądzie ani edycji playlist, rundownu i makr.
 
 ## 10. Wyjście dla OBS i mikserów
 

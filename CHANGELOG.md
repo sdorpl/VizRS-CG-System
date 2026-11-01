@@ -2,6 +2,7 @@
 
 ## Niewydane
 
+- **Trio na telefonie, wygląd i obsługa aplikacji:** pasek zakładek na dole, przesuwanie zakładek palcem, arkusze zamiast okienek przeglądarki, przycisk Wstecz, wibracje, czerwony nagłówek przy zajętej antenie. Nowe: podgląd strony, wiersze wiadomości tickera, pola koloru i obrazu (ze zdjęciem z telefonu), karuzela, ARM, wdrażanie szablonu.
 - **Trio na telefonie jako aplikacja (PWA):** manifest, ikona, start bez sieci przez service workera, ekran logowania tokenem; token znika z adresu po wejściu.
 - **Trio na telefonie (`/mobile`):** osobna strona na ekran dotykowy: lista stron, zmiana tekstu, TAKE / CONTINUE / OUT / UPDATE, warstwy na antenie z monitorem PGM, CLEAR ALL, rundown z NEXT, makra, wybór anteny. Dotknięcie strony tylko ją wybiera, a podwójne dotknięcie TAKE gra raz. Reguły pól są wspólne z Trio (`field-rules.js`).
 - **Okno natywne (Linux):** pytanie o zapis przy zamykaniu (Artist, Trio), tytuł ze sceną i znacznikiem zmian, pełne menu (Plik, Edycja, Widok, Scena, Wyjście, Pomoc), pamięć okna i ostatniej sceny, jedna instancja, kopia robocza po awarii, skojarzenia `.cgpack` i `.vizrs.json`, przeciąganie plików na Artist, wyjście i Fill + Key na wybranym monitorze, logi w `~/.local/state/vizrs`, domyślne dane w `~/.local/share/vizrs`.
