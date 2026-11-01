@@ -34,7 +34,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 | `GET /ticker/<strona[:pole]>` | wiadomości tickera strony: `{"field":"items","items":[{"cat","color","text"}]}` |
 | `GET\|POST /ticker/<strona>/add?item=KAT\|treść`, `/set/<n>?item=…`, `/del/<n>`, `/clear` | zmiana listy (n od 1; `item` także w treści `{"item":"…"}`); zapisuje stronę i – gdy jest na antenie – aktualizuje bez restartu przewijania; odpowiedź jak UPDATE + `items` |
 
-`take`, `continue`, `out`, `clear`, `state`, `deploy`, `dock`, `rundown`, `macro`, `carousel` z `?channel=<kanał>` działają na antenie kanału (jak TCP `@<kanał>`); `state` podaje listę anten w `channels`. `POST /channels/<kanał>` dodaje kanał, `DELETE /channels/<kanał>` zdejmuje jego grafikę i usuwa go.
+`take`, `continue`, `out`, `clear`, `state`, `deploy`, `dock`, `rundown`, `macro`, `carousel` z `?channel=<kanał>` działają na antenie kanału (jak TCP `@<kanał>`); `state` podaje listę anten w `channels`. `POST /channels/<kanał>` dodaje kanał (`{"name":"…"}` nadaje mu nazwę dla operatora, `state.channelNames`), `DELETE /channels/<kanał>` zdejmuje jego grafikę i usuwa go.
 
 ## Zasoby i narzędzia
 | Ścieżka | Opis |

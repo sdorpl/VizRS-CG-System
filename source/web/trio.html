@@ -262,12 +262,13 @@ try { ant ??= localStorage.getItem('vizrs.ant') || ''; } catch { ant ??= ''; }
 /** Adres komendy na wybranej antenie. */
 const onAnt = (url) => ant ? `${url}${url.includes('?') ? '&' : '?'}channel=${encodeURIComponent(ant)}` : url;
 const antQuery = () => ant ? '&bus=ch-' + encodeURIComponent(ant) : '';
+const antName = (n) => state.channelNames?.[n] ? `${n} ${state.channelNames[n]}` : 'Kanał ' + n;
 function renderAnt() {
   const names = state.channels || [];
-  const opts = `<option value="">Antena główna</option>${names.map((n) => `<option value="${esc(n)}">Kanał ${esc(n)}</option>`).join('')}<option value="+">+ nowy kanał…</option>${ant ? `<option value="-">− usuń kanał ${esc(ant)}</option>` : ''}`;
+  const opts = `<option value="">Antena główna</option>${names.map((n) => `<option value="${esc(n)}">${esc(antName(n))}</option>`).join('')}<option value="+">+ nowy kanał…</option>${ant ? `<option value="-">− usuń kanał ${esc(ant)}</option>` : ''}`;
   if ($('#antSel').dataset.opts !== opts) { $('#antSel').innerHTML = opts; $('#antSel').dataset.opts = opts; }
   $('#antSel').value = ant;
-  $('#pgmTag').textContent = ant ? 'KANAŁ ' + ant : 'PGM';
+  $('#pgmTag').textContent = ant ? antName(ant).toUpperCase() : 'PGM';
 }
 function setAnt(name) {
   ant = name;

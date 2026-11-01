@@ -798,7 +798,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
         ("GET", ["audit"]) => Response::json(&Json::Arr(engine.audit.tail(req.q("n").and_then(|n| n.parse().ok()).unwrap_or(100).min(1000)).into_iter().map(Json::from).collect())),
 
         // ---------- biblioteka show (paczka grafiki na audycję) ----------
-        ("POST", ["channels", ch]) => res(engine.channel_add(ch), |j| Response::json(&j)),
+        ("POST", ["channels", ch]) => res(engine.channel_add(ch, body.str("name")), |j| Response::json(&j)),
         ("DELETE", ["channels", ch]) => res(engine.channel_delete(ch), |j| Response::json(&j)),
         ("GET", ["shows"]) => Response::json(&engine.shows()),
         ("POST", ["shows", "switch", id]) => res(engine.switch_show(id), |_| Response::json(&engine.shows())),
