@@ -84,7 +84,7 @@ const probe = (kind) => {
   }
   // strona serwera nie może przełączyć okien na inny adres
   window.ipc.postMessage(JSON.stringify({ action: 'connect', url: 'http://127.0.0.1:1' }));
-  for (let i = 0; i < 50 && document.querySelector('#conn')?.textContent !== 'połączono'; i++) await sleep(100);
+  for (let i = 0; i < 100 && (document.querySelector('#conn')?.textContent !== 'połączono' || !document.querySelector('#pages .item')); i++) await sleep(100);
   window.ipc.postMessage('probe:' + JSON.stringify({ href: location.href, title: document.title, conn: document.querySelector('#conn')?.textContent, pages: document.querySelectorAll('#pages .item').length }));
 })();`);
       const out = path.join(tmp, 'connect.json');
