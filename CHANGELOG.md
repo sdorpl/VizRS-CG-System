@@ -2,6 +2,11 @@
 
 ## Niewydane
 
+## 2.0.10 (2026-11-01) – „Poprawki”
+
+- **Renderer natywny 0.3:** `vizrs-render stream` przyjmuje kilka `--area` i w jednym procesie rysuje każdy obszar osobno (rekord rodzaju 5), zamiast ich obwiedni.
+- **CI:** renderer natywny zgodny z clippy nowszego Rusta (`as_chunks`); test okna natywnego czeka na listę stron po połączeniu z serwerem. Bez zmian w działaniu aplikacji.
+
 ## 2.0.9 (2026-11-01) – „Czcionki”
 
 - **Artist, własna czcionka belki:** przycisk **⤒** przy polu **font** wgrywa plik TTF/OTF/WOFF/WOFF2 i od razu ustawia go w elemencie; czcionka jedzie z paczką sceny.

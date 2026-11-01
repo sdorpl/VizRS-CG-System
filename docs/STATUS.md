@@ -5,7 +5,7 @@
 > **Ostatnia aktualizacja:** 2026-11-01
 
 ## Bieżący etap
-**Wydanie 2.0.9 „Czcionki”** (2026-11-01). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
+**Wydanie 2.0.10 „Poprawki”** (2026-11-01). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
 **Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
