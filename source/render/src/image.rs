@@ -20,7 +20,7 @@ pub fn supported_name(src: &str) -> bool {
 }
 
 fn premultiplied(mut rgba: Vec<u8>, w: u32, h: u32) -> Result<Pixmap, String> {
-    for p in rgba.chunks_exact_mut(4) {
+    for p in rgba.as_chunks_mut::<4>().0 {
         let a = u16::from(p[3]);
         if a < 255 {
             for c in &mut p[..3] {
@@ -45,8 +45,8 @@ fn decode_png(data: &[u8]) -> Result<Pixmap, String> {
     let (w, h) = (info.width, info.height);
     let rgba = match info.color_type {
         png::ColorType::Rgba => buf,
-        png::ColorType::Rgb => buf.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
-        png::ColorType::GrayscaleAlpha => buf.chunks_exact(2).flat_map(|p| [p[0], p[0], p[0], p[1]]).collect(),
+        png::ColorType::Rgb => buf.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
+        png::ColorType::GrayscaleAlpha => buf.as_chunks::<2>().0.iter().flat_map(|p| [p[0], p[0], p[0], p[1]]).collect(),
         png::ColorType::Grayscale => buf.iter().flat_map(|&g| [g, g, g, 255]).collect(),
         png::ColorType::Indexed => return Err("PNG: paleta bez rozwinięcia".into()),
     };
@@ -59,11 +59,13 @@ fn decode_jpeg(data: &[u8]) -> Result<Pixmap, String> {
     let info = dec.info().ok_or("JPEG: brak nagłówka")?;
     let (w, h) = (u32::from(info.width), u32::from(info.height));
     let rgba: Vec<u8> = match info.pixel_format {
-        jpeg_decoder::PixelFormat::RGB24 => px.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
+        jpeg_decoder::PixelFormat::RGB24 => px.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
         jpeg_decoder::PixelFormat::L8 => px.iter().flat_map(|&g| [g, g, g, 255]).collect(),
-        jpeg_decoder::PixelFormat::L16 => px.chunks_exact(2).flat_map(|p| [p[0], p[0], p[0], 255]).collect(),
+        jpeg_decoder::PixelFormat::L16 => px.as_chunks::<2>().0.iter().flat_map(|p| [p[0], p[0], p[0], 255]).collect(),
         jpeg_decoder::PixelFormat::CMYK32 => px
-            .chunks_exact(4)
+            .as_chunks::<4>()
+            .0
+            .iter()
             .flat_map(|p| {
                 let k = 255 - u16::from(p[3]);
                 let ch = |c: u8| ((255 - u16::from(c)) * k / 255) as u8;

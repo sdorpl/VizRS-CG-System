@@ -67,7 +67,7 @@ pub fn header(kind: u8, flags: u8, w: u32, h: u32) -> [u8; 16] {
 fn alpha_box(pix: &Pixmap) -> Option<(usize, usize, usize, usize)> {
     let (w, h) = (pix.width() as usize, pix.height() as usize);
     let data = pix.data();
-    let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].chunks_exact(4).any(|p| p[3] != 0);
+    let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].as_chunks::<4>().0.iter().any(|p| p[3] != 0);
     let top = (0..h).find(|&y| row_used(y))?;
     let bottom = (top..h).rev().find(|&y| row_used(y)).unwrap_or(top) + 1;
     let (mut left, mut right) = (w, 0);

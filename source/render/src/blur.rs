@@ -80,7 +80,7 @@ pub fn gaussian(data: &mut [u8], w: usize, h: usize, ch: usize, sigma: f32) {
     }
     if ch == 4 {
         // po zaokrągleniach kolor nie może przekroczyć alfy (przemnożenie)
-        for p in data.chunks_exact_mut(4) {
+        for p in data.as_chunks_mut::<4>().0 {
             for k in 0..3 {
                 p[k] = p[k].min(p[3]);
             }

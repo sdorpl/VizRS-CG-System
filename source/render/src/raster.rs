@@ -709,7 +709,7 @@ fn gamma_table(src: f32, contrast: f32, gamma: f32) -> [u8; 256] {
 
 /// Obraz z przemnożoną alfą → RGBA bez przemnożenia (jak PNG z Chromium).
 pub fn unpremultiply(data: &mut [u8]) {
-    for p in data.chunks_exact_mut(4) {
+    for p in data.as_chunks_mut::<4>().0 {
         let a = u32::from(p[3]);
         if a > 0 && a < 255 {
             for c in &mut p[..3] {
