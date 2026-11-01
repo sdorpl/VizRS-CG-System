@@ -1,6 +1,6 @@
 # VizRS – dokumentacja aplikacji
 
-> Wersja 2.0.11 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
+> Wersja 2.0.15 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
 > Instrukcja krok po kroku dla nowych osób: [INSTRUKCJA-poczatkujacy.md](INSTRUKCJA-poczatkujacy.md).
 > API: [API.md](API.md) · Companion: [COMPANION.md](COMPANION.md) · awarie: [RUNBOOK.md](RUNBOOK.md) · braki: [LUKI.md](LUKI.md).
 
@@ -328,7 +328,7 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 |---|---|
 | Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.7), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ Element (import elementu BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W oknie natywnym (`vizrs-shell`) bez logo i zakładek Artist / Trio / Wyjście – są w menu okna |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, kosz; przeciąganie zmienia rodzica z zachowaniem położenia |
-| Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny |
+| Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny. **Zoom podglądu** (10–800%): kółko wokół kursora, −/＋, ⤢ dopasuj (Shift+1), 1:1 (Shift+2), ⌖ kadr na zaznaczony element (Shift+3); środkowy przycisk przesuwa widok. Zmiana rozmiaru panelu zachowuje zoom, zmiana sceny lub jej rozdzielczości wraca do dopasowania |
 | Właściwości (prawo) | grupy: Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker; „widoczny gdy”; presety animacji |
 | Oś czasu (dół) | pasek: czas, ⏮, ▶ Take, ⏭ Continue, ⏏ Out, ▶/⏸, ＋ Stop, Dł. (długość sceny), ≣ Sekwencja, ▾ marker (M), ⧉ / ⎘ kopiuj / wklej klucze, suwak powiększenia, ↔ dopasuj. Pod nim stały **pasek klucza** (czas, wartość, krzywa i usunięcie zaznaczonego klucza), a w trybie sekwencji w tym miejscu **pasek sekwencji** (§8.4) – oś czasu nie przeskakuje |
 | Pasek stanu (dół okna) | podpowiedź ze skrótami panelu pod kursorem; wskaźnik **połączono / brak połączenia** z serwerem |
@@ -469,6 +469,42 @@ Zdrowie serwera i wyjść, błędy scen (z przyciskiem Wyczyść), lista Word Re
 ### 9.8 Wielu operatorów
 
 Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudzej strony wymaga potwierdzenia. Blokada wygasa po 45 s bez aktywności. Konflikt zapisu → wybór „nadpisz moją wersją / zachowaj zmiany”.
+
+### 9.9 Trio na telefonie (`/mobile`)
+
+Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w poziomie. Korzysta z tego samego API co Trio, więc telefon i stanowisko widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego. Adres z tokenem: `http://<adres-serwera>:8088/mobile?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §13); token wyjścia nie otwiera tej strony (403).
+
+**Instalacja na telefonie (PWA):** strona ma manifest, ikonę i service workera, więc uruchamia się z ikony we własnym oknie, bez paska przeglądarki.
+
+| Telefon | Jak zainstalować | Co działa |
+|---|---|---|
+| Android, HTTPS | Chrome → menu → **Zainstaluj aplikację** | własne okno, start bez sieci, niewygaszanie ekranu |
+| iPhone | Safari → **Udostępnij** → **Do ekranu początkowego** | własne okno; start bez sieci i niewygaszanie tylko przez HTTPS |
+| Android, zwykłe HTTP | tylko skrót na ekranie | Chrome nie instaluje aplikacji bez HTTPS, skrót otwiera kartę przeglądarki |
+
+HTTPS musi mieć certyfikat zaufany przez telefon; certyfikat samopodpisany z ostrzeżeniem nie wystarczy. VizRS sam nie obsługuje TLS, więc potrzebne jest reverse proxy (§13, [RUNBOOK](RUNBOOK.md#vps-i-docker)).
+
+Bez tokenu w adresie `/mobile` pokazuje ekran logowania; po podaniu tokenu ciasteczko ważne jest rok, a token znika z adresu. `/mobile.webmanifest` i ikony są dostępne bez tokenu, bo przeglądarka pobiera je bez ciasteczka. Service worker przechowuje wyłącznie pliki interfejsu i zawsze najpierw pyta serwer, więc po aktualizacji telefon dostaje nową wersję. Bez sieci aplikacja startuje i pokazuje „brak połączenia”.
+
+Na dole ekranu stale są wybrana strona oraz **TAKE**, **CONTINUE**, **OUT** i **UPDATE**. Działają jak w Trio (§9.2): TAKE i UPDATE wysyłają wartości z edycji, także niezapisane, a CONTINUE i OUT są aktywne, gdy strona gra na wybranej antenie.
+
+| Zakładka | Zawartość |
+|---|---|
+| **Strony** | lista z wyszukiwaniem po numerze i nazwie, ● = na antenie, 🔒 = edytuje ktoś inny; przytrzymanie otwiera menu strony (Edytuj pola, ARM, Wyczyść Preview) |
+| **Edycja** | podgląd strony w pierwszym stopie, pola, **⋯** (menu strony), **↺** (przywróć zapisane), **Zapisz** |
+| **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tej zakładce), warstwy z ⏭, ⏏ i **Wdróż**, gdy czeka nowa wersja szablonu, **CLEAR ALL** z potwierdzeniem |
+| **Kolejka** | rundown: dotknięcie pozycji ustawia kursor, **NEXT ▶** bierze ją na antenę; karuzela: ▶ / ■; makra: ▶ uruchamia, **■ Przerwij makro** |
+
+Zakładki zmienia pasek na dole albo przesunięcie palcem w bok. Pytania i menu to arkusze wysuwane od dołu; zamyka je **Anuluj**, dotknięcie tła albo przycisk Wstecz w Androidzie. Gdy coś jest na antenie, nagłówek i pasek systemowy telefonu są czerwone, a przy zakładce Antena widać liczbę warstw. Komendy potwierdza krótka wibracja, a błąd podwójna (tylko Android, iPhone nie udostępnia wibracji stronom). **⋯** w nagłówku: odświeżenie danych, instalacja, pełne Trio.
+
+- **Ochrona anteny:** dotknięcie strony lub pozycji rundownu niczego nie wysyła. Kolejna komenda czeka na odpowiedź serwera i krótką przerwę, więc podwójne dotknięcie TAKE nie gra grafiki dwa razy.
+- **Pola:** tekst, liczby, przełączniki, listy, warianty, kolor, obraz (lista grafik, **⤒** wgrywa zdjęcie z telefonu) i wiadomości tickera (wiersz: kategoria i treść, **＋ Wiadomość**, kolor wiadomości zostaje). Reguły pól działają jak w Trio. Czcionkę zmienia się w Trio; strona podaje, ile takich pól pominięto, a ich wartości zostają bez zmian.
+- **Blokada edycji** (§9.8) zakłada się przy pierwszej zmianie pola, nie przy wybraniu strony. Nazwa operatora to `vizrs.who`, domyślnie `Telefon NN`.
+- **Antena:** lista pojawia się, gdy są kanały playoutu; `?channel=<kanał>` i wybór są wspólne z Trio w tej samej przeglądarce. Po usunięciu wybranego kanału strona wraca na antenę główną i o tym informuje.
+- **Sieć:** komenda bez odpowiedzi przez 6 s zgłasza błąd i nie jest ponawiana. Po takim błędzie sprawdź antenę, bo komenda mogła dojść. Zanik połączenia widać na pasku; po powrocie sieci albo telefonu z uśpienia strona sama się łączy i odświeża dane.
+- **Wygaszanie ekranu:** strona prosi o niewygaszanie, ale przeglądarki pozwalają na to tylko przez HTTPS; po zwykłym HTTP wydłuż czas wygaszania w telefonie.
+
+Na telefonie nie ma tworzenia i usuwania stron, przełączania show, formatowania tekstu, grania animacji w podglądzie ani edycji playlist, rundownu i makr.
 
 ## 10. Wyjście dla OBS i mikserów
 
@@ -677,25 +713,34 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 
 | Opcja | Zmienna | Opis |
 |---|---|---|
-| `--data KAT` | `VIZRS_DATA` | katalog danych (domyślnie `vizrs-data`) |
+| `--data KAT` | `VIZRS_DATA` | katalog danych (domyślnie `./vizrs-data`, jeśli zawiera `show.json`; inaczej Linux `~/.local/share/vizrs`, Windows `%LOCALAPPDATA%\VizRS`) |
 | `--port N` | `VIZRS_PORT` | port serwera uruchamianego przez okno (domyślnie 8088; gdy zajęty, np. przez serwer na innym katalogu danych – następny wolny, adres w Pomoc → O programie; port podany jawnie bez zmian) |
 | `--token T` | `VIZRS_TOKEN` | token serwera |
 | `--connect URL` | `VIZRS_CONNECT` | tylko okno, serwer zdalny |
 | `--vizrs PLIK` | `VIZRS_BIN` | program `vizrs` (domyślnie obok `vizrs-shell` albo w `PATH`) |
+| `--gpu TRYB` | `VIZRS_GPU` | akceleracja GPU stron na Linuksie: `on`, `off`, `auto` (domyślnie: decyduje WebKitGTK); do diagnozy problemów ze sterownikiem |
 | `--local` | | serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu |
 | | `VIZRS_CONFIG` | katalog listy serwerów (domyślnie niżej) |
 
-- **Serwer:** jeśli na danym katalogu danych działa już serwer VizRS, okno dołącza do niego. Jeśli nie, powłoka uruchamia `vizrs serve --idle-exit 10` jako **osobny proces**. Awaria okna nie zdejmuje anteny, a serwer kończy pracę sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS). Komunikaty serwera trafiają do pliku `vizrs-shell-serwer-<pid>.log` w katalogu tymczasowym (ścieżka w Pomoc → O programie). Błąd startu (np. zajęty port) okno pokazuje w okienku systemowym.
+- **Serwer:** jeśli na danym katalogu danych działa już serwer VizRS, okno dołącza do niego. Jeśli nie, powłoka uruchamia `vizrs serve --idle-exit 10` jako **osobny proces**. Awaria okna nie zdejmuje anteny, a serwer kończy pracę sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS). Komunikaty serwera trafiają do `~/.local/state/vizrs/serwer.log` (poprzedni przebieg: `serwer.log.1`; Pomoc → Pokaż logi). Błąd startu (np. zajęty port) okno pokazuje w okienku systemowym.
 - **Połącz z serwerem** (Plik → Połącz z serwerem…, Ctrl+Shift+K): okno z adresem serwera (`https://cg.example.pl`, sam host = `https://`) i tokenem operatora. Dla serwera `http://` okno najpierw sprawdza token (`/api/state`: zły token, token wyjścia OBS i brak serwera – komunikat w oknie); `https://` sprawdza wskaźnik połączenia w Trio/Artist (powłoka nie ma TLS). Po połączeniu **wszystkie okna** przechodzą na ten serwer (tytuł z nazwą hosta), a gdy żadne nie było otwarte – otwiera się Trio. Lista zapisanych serwerów (klik – wypełnij, dwuklik – połącz, × – usuń) leży w `connections.json`: Linux `~/.config/vizrs/`, Windows `%APPDATA%\VizRS\`, macOS `~/Library/Application Support/VizRS/` (plik z prawami tylko dla właściciela); token zapisuje się tylko przy „zapamiętaj token” – puste pole tokenu = token zapamiętany. „Łącz z tym serwerem przy uruchomieniu” – kolejne starty okna idą od razu do tego serwera, bez serwera lokalnego (`--local` – mimo to lokalny). **Serwer lokalny** wraca do serwera na katalogu danych (w razie potrzeby uruchamia go). Przełączenie serwera nie zmienia niczego na antenie żadnego z serwerów.
-- **Menu:** Plik – Połącz z serwerem… (Ctrl+Shift+K), nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Widok – Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Pomoc – strona startowa i API, O programie.
+- **Menu:** Plik – Nowa scena, Zapisz, Importuj…, Eksportuj scenę…, Paczka .cgpack…, Połącz z serwerem… (Ctrl+Shift+K), nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Edycja – Cofnij, Ponów, Duplikuj, Usuń; Widok – kanwa (dopasuj, 100%, do zaznaczenia), Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Scena – Odtwórz / zatrzymaj, Dodaj marker; Wyjście – pełny ekran na monitorze, Fill + Key na monitorach 1 i 2 (przy dwóch ekranach); Pomoc – strona startowa i API, Pokaż logi, Otwórz katalog danych, Sprawdź aktualizacje (strona wydań w przeglądarce), O programie. Pozycje Artist są wyszarzone w innych oknach, Cofnij i Ponów – gdy nie ma czego cofać. Skróty edycji obsługuje strona (w polach tekstowych działają jak w polu), dlatego w menu są tylko podpisem. Lista monitorów powstaje przy starcie programu. Pełnoekranowe wyjście nie ma paska menu: zamknięcie Ctrl+W.
+- **Zamykanie:** okno ze zmianami pyta „Zapisz / Nie zapisuj / Anuluj” (zamknięcie okna, Ctrl+W, Zakończ; Artist i Trio). Gdy strona nie odpowiada, ponowne zamknięcie po 5 s zamyka okno bez pytania.
+- **Tytuł okna:** nazwa sceny i `●` przy niezapisanych zmianach.
+- **Kopia robocza:** Artist co 5 s zapisuje zmienioną scenę w `~/.local/state/vizrs/drafts/`; po awarii proponuje przywrócenie przy otwarciu sceny. Zapis i „Nie zapisuj” kasują kopię.
+- **Pamięć okna:** rozmiar, pozycja (tylko X11), maksymalizacja, powiększenie i ostatnia scena Artist (serwer lokalny) w `window.json` obok listy serwerów.
+- **Jedna instancja (Linux, macOS):** kolejne uruchomienie na tym samym katalogu danych przekazuje prośbę działającemu programowi: okno na wierzch, nowe okno albo import pliku. Nie dotyczy `--connect`.
+- **Otwieranie plików:** `vizrs-shell plik.cgpack`, dwuklik (skojarzenia `.cgpack` i `.vizrs.json` zakładają `.deb` i `install-desktop-linux.sh`; AppImage nie), Plik → Importuj albo przeciągnięcie na okno Artist. Paczka i scena – import; obraz i wideo – wgranie i nowy element; czcionka – wgranie do zasobów. Limit 512 MB. Przeciąganie działa też w przeglądarce.
+- **Skalowanie ułamkowe (Linux):** GTK3 zna tylko skale całkowite. Przy 125% strona rysuje się w skali 2, a kompozytor zmniejsza obraz, więc tekst jest ostry, ale nie co do piksela. Dokładne piksele przy skali ułamkowej daje okno Chromium (`vizrs artist`).
+- **Ikona na Waylandzie:** bez instalacji okno zakłada ukryty wpis `~/.local/share/applications/vizrs-shell.desktop` i ikonę; istniejącego wpisu nie zmienia.
 - **Pliki:** ⇩ Eksport i ⇩ Paczka otwierają systemowe okno „Zapisz jako”; ⇧ Import – systemowe okno wyboru pliku.
 - **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Artist / Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.
-- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi tylko wynik skryptu testowego `--probe`, a wybór serwera wyłącznie z wbudowanego okna połączenia (strony serwera nie mogą przełączyć okien).
+- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi wynik skryptu testowego `--probe`, wybór serwera wyłącznie z wbudowanego okna połączenia (strony serwera nie mogą przełączyć okien), a ze stron Artist/Trio serwera biała lista komunikatów (`shell/src/bridge.rs`: stan okna, decyzja o zamknięciu, kopia robocza pod nazwą ze skrótu).
 - **Pisownia:** na Linuksie polska (słownik hunspell `pl_PL` z systemu, pakiet `hunspell-pl`); na Windows i macOS według ustawień systemu.
 - **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24, R7 i BTB_PILNE – 82/82 pól tekstowych z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.
 - **Wymagania:** Linux – biblioteki `libwebkit2gtk-4.1` i GTK 3 (są w typowym pulpicie; do budowy pakiety `-dev`); Windows – WebView2 Runtime (w Windows 10/11); macOS 10.15+.
 - **Budowa:** `cd source/shell && cargo build --release` (osobny workspace z zależnościami – rdzeń `vizrs` dalej ich nie ma). Linux: `bin/linux-x86_64/vizrs-shell`; Windows: `build-windows.bat` buduje też `vizrs-shell.exe`.
-- **Skróty:** `deploy/install-desktop-linux.sh` i `deploy\install-windows-shortcuts.ps1` używają okna natywnego, gdy `vizrs-shell` leży obok `vizrs` (wymuszenie okna Chromium: `--chromium` / `-Chromium`). Na Waylandzie ikonę okna daje wpis `vizrs-shell.desktop` zakładany przez skrypt.
+- **Skróty:** `deploy/install-desktop-linux.sh` i `deploy\install-windows-shortcuts.ps1` używają okna natywnego, gdy `vizrs-shell` leży obok `vizrs` (wymuszenie okna Chromium: `--chromium` / `-Chromium`). Skrypt zakłada też typy MIME i skojarzenia plików.
 
 ## 14. Dane na dysku i kopie zapasowe
 
@@ -721,6 +766,7 @@ cargo clippy --all-targets -- -D warnings
 cargo test                                           # silnik, API, JSON, walidacja, kopie
 node tests/vectors/run.js && node tests/vectors/btb.js   # wspólne wektory z BTB, konwersja
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
+node tests/e2e/mobile.js target/release/vizrs [katalog]   # E2E Trio na telefonie (emulacja dotyku; katalog = zrzuty)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
 node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja

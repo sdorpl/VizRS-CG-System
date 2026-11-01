@@ -57,6 +57,11 @@ pub fn find_vizrs(over: Option<&str>) -> Option<PathBuf> {
     std::env::split_paths(&path).map(|d| d.join(name)).find(|p| p.is_file())
 }
 
+/// Plik komunikatów serwera uruchomionego przez okno.
+pub fn log_path() -> PathBuf {
+    crate::paths::state_dir().join("serwer.log")
+}
+
 /// Serwer uruchomiony przez powłokę.
 pub struct Spawned {
     pub addr: String,
@@ -78,7 +83,12 @@ pub fn free_port(from: u16) -> u16 {
 pub fn spawn(vizrs: &Path, data: &Path, port: u16, token: Option<&str>) -> Result<Spawned, String> {
     // komunikaty serwera do pliku, nie do potoku: serwer żyje dłużej niż okno, a pisanie do
     // zamkniętego potoku kończyłoby się błędem w serwerze
-    let log = std::env::temp_dir().join(format!("vizrs-shell-serwer-{}.log", std::process::id()));
+    let log = log_path();
+    if let Some(d) = log.parent() {
+        std::fs::create_dir_all(d).map_err(|e| format!("{}: {e}", d.display()))?;
+    }
+    // poprzedni przebieg zostaje jako .1 – to on bywa potrzebny po awarii
+    std::fs::rename(&log, log.with_extension("log.1")).ok();
     let log_file = std::fs::File::create(&log).map_err(|e| format!("{}: {e}", log.display()))?;
     let mut cmd = Command::new(vizrs);
     cmd.arg("serve")

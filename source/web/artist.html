@@ -33,6 +33,8 @@
   #sel .lbl { position: absolute; left: -1px; top: -18px; font-size: 10px; background: var(--acc); color: #000; padding: 1px 4px; white-space: nowrap; }
   #safe { position: absolute; pointer-events: none; display: none; z-index: 4; }
   #safe div { position: absolute; border: 1px dashed rgba(255,255,255,.3); }
+  #vTools { position: absolute; right: 8px; top: 6px; z-index: 7; display: flex; align-items: center; gap: 3px; }
+  #vZoom { font: 11px ui-monospace, monospace; color: var(--dim); min-width: 44px; text-align: center; }
   #info { position: absolute; left: 8px; bottom: 6px; font-size: 11px; color: var(--dim); z-index: 6; pointer-events: none; }
   #tree .item { padding-top: 4px; padding-bottom: 4px; }
   #tree .ic { width: 16px; text-align: center; color: var(--acc); }
@@ -167,12 +169,15 @@
   </section>
   <div class="gutter" id="gL" data-k="l" title="Przeciągnij, aby zmienić szerokość (dwuklik = domyślna)"></div>
 
-  <section class="panel" id="canvasP" data-hint="Kanwa: przeciągnij element · róg = rozmiar · strzałki = 1 px (Shift = 10 px) · klik w puste miejsce = ustawienia sceny">
+  <section class="panel" id="canvasP" data-hint="Kanwa: przeciągnij element · róg = rozmiar · strzałki = 1 px (Shift = 10 px) · klik w puste miejsce = ustawienia sceny · kółko = zoom · środkowy przycisk = przesuwanie widoku · Shift+1 / 2 / 3 = dopasuj / 100% / zaznaczony">
     <div id="box" class="checker">
       <div id="stage"></div>
       <div id="safe"><div style="inset:5%"></div><div style="inset:10%"></div></div>
       <div id="sel"><span class="lbl"></span><div class="h"></div></div>
       <div id="info"></div>
+      <div id="vTools"><span id="vZoom" title="Powiększenie podglądu">100%</span>
+        <button id="vOut" class="icon" title="Pomniejsz podgląd">−</button><button id="vIn" class="icon" title="Powiększ podgląd">＋</button>
+        <button id="vFit" class="icon" title="Dopasuj całą scenę (Shift+1)">⤢</button><button id="v100" class="icon" title="Skala 100% (Shift+2)">1:1</button><button id="vSel" class="icon" title="Kadr na zaznaczony element (Shift+3)">⌖</button></div>
     </div>
   </section>
 
@@ -228,6 +233,7 @@ import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
 import { PROPS, TYPES, FONTS, OFFLINE_FONTS, EASES, ScenePlayer, propAt, trackValue, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
+import { nativeBridge } from '/native.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -254,7 +260,7 @@ const stage = $('#stage'), box = $('#box');
 $('#fontlist').innerHTML = FONTS.map((f) => `<option>${f}</option>`).join('');
 $('#addSel').innerHTML += Object.entries(TYPES).map(([k, v]) => `<option value="${k}">${v.icon} ${v.label}</option>`).join('');
 
-function setDirty(d) { dirty = d; $('#bSave').classList.toggle('dirty', d); }
+function setDirty(d) { dirty = d; $('#bSave').classList.toggle('dirty', d); native.sync(); }
 function checkpoint() {
   undo.push(JSON.stringify(scene)); if (undo.length > 150) undo.shift();
   redo = []; setDirty(true);
@@ -318,7 +324,7 @@ function openScene(s) {
   player?.destroy();
   player = new ScenePlayer(stage, scene, {}, { editor: true });
   history.replaceState(null, '', '?scene=' + encodeURIComponent(s.id));
-  resize(); renderAll();
+  resetView(); renderAll();
   // jak w Viz: edycja zaczyna się w pierwszym stop poincie (grafika widoczna)
   setTime([...scene.stops].sort((a, b) => a - b)[0] ?? 0);
 }
@@ -327,19 +333,29 @@ async function confirmLeave() {
   if (confirm('Scena ma niezapisane zmiany. Zapisać przed przejściem?')) { await save(); return true; }
   return confirm('Porzucić zmiany?');
 }
+// ostrzeżenie: zapis szablonu, który właśnie jest na antenie (brak odpowiedzi serwera nie blokuje zapisu)
+async function confirmOnAir() {
+  const st = await api('GET', '/api/state').catch(() => null);
+  const air = st?.layers?.filter((l) => l.page?.scene === scene.id).map((l) => l.layer) || [];
+  return !air.length || confirm(`Scena „${scene.name}” jest teraz na antenie (warstwa: ${air.join(', ')}).\n\nZapisać zmiany szablonu?`);
+}
 async function save(force) {
   try {
+    if (force !== true && !(await confirmOnAir())) return false;
     const body = force === true ? (({ rev, ...r }) => r)(scene) : scene; // bez rev = świadome nadpisanie
     const saved = await api('PUT', '/api/scenes/' + encodeURIComponent(scene.id), body);
     scene.rev = saved.rev;
     const i = scenes.findIndex((s) => s.id === saved.id);
     if (i >= 0) scenes[i] = saved; else scenes.push(saved);
     setDirty(false); renderSceneSel(); toast('Zapisano scenę „' + scene.name + '”');
+    native.clearDraft(); native.sync();
+    return true;
   } catch (e) {
     if (/^konflikt/.test(e.message)) {
       if (confirm('Ta scena została zmieniona przez kogoś innego (lub w innym oknie).\n\nOK = nadpisz moją wersją, Anuluj = nie zapisuj.')) return save(true);
       toast('Konflikt zapisu – scena nie zapisana', true);
     } else toast('Błąd zapisu: ' + e.message, true);
+    return false;
   }
 }
 async function newScene(name, base) {
@@ -929,7 +945,7 @@ function onPropInput(e) {
     let v = num ? parseFloat(inp.value) : inp.value;
     if (num && !(v > 0)) return;
     scene[k] = v;
-    if (k === 'width' || k === 'height') { player.setScene(scene); resize(); }
+    if (k === 'width' || k === 'height') { player.setScene(scene); resetView(); }
     if (k === 'duration') { if (t > v) setTime(v); renderTimeline(); }
     if (k === 'name' || k === 'layer') { renderTree(); }
     return;
@@ -1183,7 +1199,62 @@ $('#tDupN').onclick = () => treeOp('dup');
 $('#tDel').onclick = () => treeOp('del');
 
 // ------------------------------------------------------------ podgląd / płótno
-function resize() { if (!scene) return; scale = fitStage(stage, box, scene.width, scene.height); placeSafe(); }
+// zoom podglądu (jak w Trio): k – krotność względem dopasowania, x/y – przesunięcie w px pudełka
+let view = { k: 1, x: 0, y: 0 }, fit = { base: 1, ox: 0, oy: 0 };
+function applyView() {
+  const b = box.getBoundingClientRect(), w = scene.width * scale, h = scene.height * scale, M = 40;
+  // scena nie może całkiem uciec z pola widzenia
+  view.x = Math.min(b.width - M - fit.ox, Math.max(M - w - fit.ox, view.x));
+  view.y = Math.min(b.height - M - fit.oy, Math.max(M - h - fit.oy, view.y));
+  stage.style.transform = `translate(${fit.ox + view.x}px, ${fit.oy + view.y}px) scale(${scale})`;
+  $('#vZoom').textContent = Math.round(scale * 100) + '%';
+  $('#info').textContent = $('#info').textContent.replace(/\d+%$/, Math.round(scale * 100) + '%');
+  placeSafe(); updateSel();
+}
+function resize() {
+  if (!scene) return;
+  const b = box.getBoundingClientRect(), old = fit.base, base = fitStage(stage, box, scene.width, scene.height);
+  // zmiana panelu: ten sam punkt sceny zostaje na środku
+  if (old > 0 && base > 0) { view.x *= base / old; view.y *= base / old; }
+  fit = { base, ox: (b.width - scene.width * base) / 2, oy: (b.height - scene.height * base) / 2 };
+  scale = base * view.k;
+  applyView();
+}
+function resetView() { view = { k: 1, x: 0, y: 0 }; resize(); }
+/** Zoom do skali s (rzeczywistej), z punktem (px, py) pudełka nieruchomym. */
+function zoomAt(s, px, py) {
+  s = Math.min(8, Math.max(Math.min(0.1, fit.base), s));
+  const f = s / scale;
+  view = { k: s / fit.base, x: px - fit.ox - (px - fit.ox - view.x) * f, y: py - fit.oy - (py - fit.oy - view.y) * f };
+  scale = s; applyView();
+}
+/** Punkt (cx, cy) w px sceny na środku pudełka, w skali s. */
+function zoomOn(cx, cy, s) {
+  s = Math.min(8, Math.max(Math.min(0.1, fit.base), s));
+  const b = box.getBoundingClientRect();
+  view = { k: s / fit.base, x: b.width / 2 - fit.ox - cx * s, y: b.height / 2 - fit.oy - cy * s };
+  scale = s; applyView();
+}
+const boxMid = () => { const b = box.getBoundingClientRect(); return [b.width / 2, b.height / 2]; };
+const zoom100 = () => zoomOn(scene.width / 2, scene.height / 2, 1);
+function zoomSel() {
+  const el = selId && stage.querySelector(`[data-id="${CSS.escape(selId)}"]`);
+  const r = el && el.style.display !== 'none' ? el.getBoundingClientRect() : null;
+  if (!r || !r.width || !r.height) { toast('Zaznacz widoczny element', true); return; }
+  const b = box.getBoundingClientRect(), s0 = stage.getBoundingClientRect();
+  zoomOn((r.left + r.width / 2 - s0.left) / scale, (r.top + r.height / 2 - s0.top) / scale, scale * Math.min(0.7 * b.width / r.width, 0.7 * b.height / r.height));
+}
+$('#vTools').addEventListener('mousedown', (e) => e.stopPropagation());
+$('#vIn').onclick = () => zoomAt(scale * 1.5, ...boxMid());
+$('#vOut').onclick = () => zoomAt(scale / 1.5, ...boxMid());
+$('#vFit').onclick = resetView;
+$('#v100').onclick = zoom100;
+$('#vSel').onclick = zoomSel;
+box.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const b = box.getBoundingClientRect();
+  zoomAt(scale * Math.exp(-e.deltaY * 0.0015), e.clientX - b.left, e.clientY - b.top);
+}, { passive: false });
 addEventListener('resize', () => { resize(); renderTimeline(); });
 function placeSafe() {
   const b = box.getBoundingClientRect(), r = stage.getBoundingClientRect(), s = $('#safe');
@@ -1203,6 +1274,15 @@ function updateSel() {
 
 box.addEventListener('mousedown', (e) => {
   lastArea = 'canvas';
+  if (e.button === 1) {
+    e.preventDefault();
+    const sx = e.clientX, sy = e.clientY, x0 = view.x, y0 = view.y;
+    const mv = (ev) => { view.x = x0 + ev.clientX - sx; view.y = y0 + ev.clientY - sy; applyView(); };
+    const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+    return;
+  }
+  if (e.button !== 0) return;
   const handle = e.target.closest('#sel .h');
   const nodeEl = !handle && e.target.closest('.vz-node');
   if (!handle && !nodeEl) { if (selId) select(null); return; }
@@ -1560,7 +1640,7 @@ $('#sceneSel').addEventListener('change', async (e) => {
   const s = scenes.find((s) => s.id === e.target.value);
   if (await confirmLeave()) openScene(s); else renderSceneSel();
 });
-$('#bSave').onclick = save;
+$('#bSave').onclick = () => save();
 $('#bUndo').onclick = doUndo;
 $('#bRedo').onclick = doRedo;
 $('#bNew').onclick = async () => {
@@ -1587,21 +1667,35 @@ $('#bExp').onclick = () => {
 };
 $('#bImp').onclick = () => {
   const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
-  fi.onchange = async () => {
-    const f = fi.files[0]; if (!f) return;
-    try {
-      if (/\.cgpack$/i.test(f.name)) {
-        const u8 = new Uint8Array(await f.arrayBuffer());
-        const kind = await PACK.packKind(u8);
-        if (kind === 'btb') return importBtbFile(f);
-        if (!kind) throw new Error('to nie jest paczka .cgpack');
-        return importPack(u8);
-      }
-      const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s);
-    } catch (e) { toast('Import: ' + e.message, true); }
-  };
+  fi.onchange = () => { if (fi.files[0]) importFile(fi.files[0]); };
   fi.click();
 };
+async function importFile(f) {
+  try {
+    if (/\.cgpack$/i.test(f.name)) {
+      const u8 = new Uint8Array(await f.arrayBuffer());
+      const kind = await PACK.packKind(u8);
+      if (kind === 'btb') return importBtbFile(f);
+      if (!kind) throw new Error('to nie jest paczka .cgpack');
+      return importPack(u8);
+    }
+    const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s);
+  } catch (e) { toast('Import: ' + e.message, true); }
+}
+// plik z menedżera plików albo ze skojarzenia: paczka i scena – import, obraz/wideo – nowy element, czcionka – do zasobów
+const IMG_RE = /\.(png|jpe?g|webp|gif|svg|mp4|webm)$/i, FONT_FILE_RE = /\.(ttf|otf|woff2?)$/i;
+async function openFile(f) {
+  if (/\.(cgpack|json)$/i.test(f.name)) return importFile(f);
+  if (!IMG_RE.test(f.name) && !FONT_FILE_RE.test(f.name)) return toast(`Nieobsługiwany plik: ${f.name}`, true);
+  try {
+    const r = await fetch('/api/assets?name=' + encodeURIComponent(f.name), { method: 'POST', body: f });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error);
+    await loadAssets(); toast('Wgrano ' + j.name);
+    if (IMG_RE.test(f.name)) { addNode('image'); selNode().props.src = j.name; refresh(); renderProps(); }
+  } catch (e) { toast('Upload: ' + e.message, true); }
+}
+addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files')) e.preventDefault(); });
+addEventListener('drop', (e) => { const fs = [...(e.dataTransfer?.files || [])]; if (!fs.length) return; e.preventDefault(); (async () => { for (const f of fs) await openFile(f); })(); });
 
 // ------------------------------------------------------------ paczka belek (.cgpack)
 const fetchAssetBytes = async (name) => {
@@ -1749,6 +1843,9 @@ addEventListener('keydown', (e) => {
   if (mod && e.key.toLowerCase() === 'c' && lastArea === 'timeline') { e.preventDefault(); copyKeys(); return; }
   if (mod && e.key.toLowerCase() === 'v' && lastArea === 'timeline') { e.preventDefault(); pasteKeys(); return; }
   if (e.key.toLowerCase() === 'm' && !mod) { e.preventDefault(); addMarker(t); return; }
+  if (e.shiftKey && !mod && e.code === 'Digit1') { e.preventDefault(); resetView(); return; }
+  if (e.shiftKey && !mod && e.code === 'Digit2') { e.preventDefault(); zoom100(); return; }
+  if (e.shiftKey && !mod && e.code === 'Digit3') { e.preventDefault(); zoomSel(); return; }
   if (e.key === 'Home') { setTime(0); return; }
   if (e.key === 'End') { setTime(scene.duration); return; }
   const n = selNode();
@@ -1776,7 +1873,7 @@ let lastSync = 0;
 })(0);
 
 new ResizeObserver(() => resize()).observe(box);
-load().catch((e) => toast('Błąd: ' + e.message, true));
+const loaded = load().catch((e) => toast('Błąd: ' + e.message, true));
 
 // ------------------------------------------------------------ pasek stanu: podpowiedź do panelu pod kursorem
 const HINT0 = 'Ctrl+S zapisz · Ctrl+Z / Ctrl+Y cofnij / ponów · najedź na panel, aby zobaczyć jego skróty';
@@ -1806,6 +1903,31 @@ for (const g of document.querySelectorAll('.gutter')) {
 if (document.documentElement.classList.contains('native')) {
   addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
 }
+
+// ------------------------------------------------------------ okno natywne: stan dla powłoki, komendy menu, kopia robocza
+const click = (id) => () => $(id).click();
+const native = nativeBridge({
+  state: () => scene && { title: `${dirty ? '● ' : ''}${scene.name} — VizRS Artist`, dirty, undo: undo.length > 0, redo: redo.length > 0, scene: scene.id },
+  save: () => save(),
+  whatChanged: () => `Scena „${scene.name}” ma niezapisane zmiany.`,
+  draft: () => (dirty && scene ? { id: scene.id, text: JSON.stringify(scene) } : null),
+  commands: {
+    new: click('#bNew'), save: () => save(), export: click('#bExp'), pack: click('#bPack'),
+    undo: doUndo, redo: doRedo, dup: () => treeOp('dup'), del: () => (lastArea === 'timeline' && selKey ? deleteSelKey() : treeOp('del')),
+    fit: resetView, z100: zoom100, zsel: zoomSel, marker: () => addMarker(t),
+    play: () => { if (player.playing) player.playing = false; else $('#pPlay').click(); },
+    file: async (f) => { await loaded; openFile(f); },
+    // kopia robocza po awarii: propozycja przy otwarciu sceny
+    draft: async (text) => {
+      await loaded;
+      let d; try { d = JSON.parse(text); } catch { return; }
+      if (d.id !== scene?.id || !Array.isArray(d.nodes) || text === JSON.stringify(scene)) return;
+      if (confirm(`Znaleziono niezapisaną kopię roboczą sceny „${d.name}” (np. po awarii).\n\nOK = przywróć, Anuluj = pomiń.`)) {
+        checkpoint(); scene = { ...d, rev: scene.rev }; player.setScene(scene); player.seek(t); renderAll();
+      }
+    },
+  },
+});
 
 // ------------------------------------------------------------ połączenie z serwerem
 // tylko wskaźnik (edycja sceny nie jest nadpisywana zdarzeniami); okno aplikacji `vizrs artist` wie dzięki temu, że Artist jest otwarty

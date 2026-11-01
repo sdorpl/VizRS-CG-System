@@ -24,7 +24,7 @@
 | macOS | `./build-macos-linux.sh`, potem `./bin/native/vizrs --data ./vizrs-data trio` |
 
 **Okna aplikacji:** Artist i Trio otwierają się we własnych oknach (Edge/Chrome/Chromium bez pasków przeglądarki). Drugie okno dołącza do już działającego serwera. Zamknięcie okna nie zdejmuje grafiki z anteny – serwer pracuje, dopóki OBS albo inne okno jest podłączone.
-**Okno natywne (zalecane):** `vizrs-shell` – Artist w prawdziwym oknie systemowym z menu i oknem „Zapisz jako” (Linux: `bin/linux-x86_64/vizrs-shell`; `vizrs-shell trio` – Trio). Zamknięcie okna nie zdejmuje grafiki z anteny.
+**Okno natywne (zalecane):** `vizrs-shell` – Artist w prawdziwym oknie systemowym z menu i oknem „Zapisz jako” (Linux: `bin/linux-x86_64/vizrs-shell`; `vizrs-shell trio` – Trio). Zamknięcie okna nie zdejmuje grafiki z anteny. Przy niezapisanych zmianach okno zapyta o zapis, a po awarii zaproponuje przywrócenie kopii roboczej. Pliki `.cgpack`, sceny, obrazy i czcionki możesz przeciągnąć na okno Artist. Wyjście na wybrany monitor: menu **Wyjście**.
 Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli) – same wybiorą okno natywne, jeśli jest. Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
 
 Sterowanie serwerem na VPS z własnego komputera: w oknie natywnym **Plik → Połącz z serwerem…** (Ctrl+Shift+K) – wpisz adres serwera i token, kliknij **Połącz** (zaznacz „zapamiętaj token”, by następnym razem wybrać serwer z listy; **Serwer lokalny** wraca do pracy na swoim komputerze). Z wiersza poleceń: `vizrs trio --connect https://twoj-serwer.pl --token TOKEN`.
@@ -59,7 +59,7 @@ Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze
 
 1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
 2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
-3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px).
+3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw `x`, `y`, `w`, `h` i kolor tła belki (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px; kółko myszy powiększa kanwę, środkowy przycisk przesuwa widok, Shift+1 dopasowuje całą scenę).
 4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze` (jak w BTB CG): długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej ustaw `maks. linii` = 2 i wybierz `squeeze-each` (operator łamie wiersze Enterem, każdy wiersz ściska się osobno, wysokość liter ta sama) albo `squeeze-lines` (wiersze dzielą się same; „łamanie wierszy” = `fill` wypełnia najpierw pierwszy wiersz, jak belki TVP), dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
 5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
@@ -130,6 +130,14 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
   ```
   **⇥ z anteny** zapisuje bieżący zestaw grafik jako makro (preset segmentu).
 - **Skrót strony**: kliknij pole „skrót” w nagłówku edytora i naciśnij np. Ctrl+1 – ten skrót robi TAKE strony, a gdy jest na antenie, OUT.
+
+### Sterowanie z telefonu
+
+1. Uruchom serwer w sieci: `vizrs --bind 0.0.0.0 --token <hasło>`.
+2. Na telefonie w tej samej sieci otwórz `http://<adres-komputera>:8088/mobile?token=<hasło>`.
+3. Dotknij stronę na liście, a potem **TAKE** na dole ekranu. Tekst zmienisz w zakładce **Edycja**.
+
+Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Przytrzymanie strony otwiera menu z ARM, a zakładki zmienisz także przesunięciem palcem. Żeby mieć ikonę na ekranie: na iPhonie Safari → **Udostępnij** → **Do ekranu początkowego**; na Androidzie **⋯** → **Zainstaluj aplikację** (wymaga HTTPS). Opis: [DOKUMENTACJA §9.9](DOKUMENTACJA.md#99-trio-na-telefonie-mobile).
 
 ## 9. Ściąga skrótów
 

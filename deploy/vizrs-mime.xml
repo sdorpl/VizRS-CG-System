@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-vizrs-cgpack">
+    <comment>Paczka belek VizRS</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.cgpack" weight="60"/>
+  </mime-type>
+  <mime-type type="application/x-vizrs-scene">
+    <comment>Scena VizRS</comment>
+    <sub-class-of type="application/json"/>
+    <glob pattern="*.vizrs.json" weight="60"/>
+  </mime-type>
+</mime-info>

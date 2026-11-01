@@ -39,6 +39,43 @@ const probe = (kind) => {
 (async () => {
   let obs;
   try {
+    // 0. most okna: stan w tytule, pytanie przy zamykaniu, plik od powłoki, ostrzeżenie o antenie
+    const P2 = path.join(tmp, 'native.js');
+    fs.writeFileSync(P2, `(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      for (let i = 0; i < 50 && !document.querySelector('#sceneSel option'); i++) await sleep(100);
+      await sleep(400);
+      const r = { cmd: typeof window.__vizrsCmd };
+      document.querySelector('#bNew'); window.__vizrsCmd('fit');
+      window.__vizrsCmd('close'); await sleep(50);
+      r.modal = !!document.querySelector('#nativeClose');
+      document.querySelector('[data-nc="stay"]')?.click();
+      const before = (await (await fetch('/api/assets')).json()).length;
+      window.__vizrsFile.begin('kropka.png');
+      window.__vizrsFile.chunk(btoa('nie-obraz-ale-plik'));
+      window.__vizrsFile.end();
+      await sleep(800);
+      r.uploaded = (await (await fetch('/api/assets')).json()).length - before;
+      r.dirty = document.querySelector('#bSave').classList.contains('dirty');
+      window.ipc.postMessage('probe:' + JSON.stringify(r));
+    })();`);
+    const natOut = path.join(tmp, 'native.json');
+    spawnSync(SHELL, ['artist', '--data', data, '--port', String(PORT), '--vizrs', BIN, '--probe', P2, '--probe-out', natOut], { encoding: 'utf8', timeout: 60000 });
+    const nat = fs.existsSync(natOut) ? JSON.parse(fs.readFileSync(natOut, 'utf8')) : {};
+    ok(nat.cmd === 'function' && nat.modal, 'pytanie o niezapisane zmiany przy zamykaniu', nat);
+    ok(nat.uploaded === 1 && nat.dirty, 'plik z powłoki trafia do zasobów i dodaje element', nat);
+
+    // 0b. pojedyncza instancja: drugie uruchomienie przekazuje prośbę i kończy pracę
+    const siEnv = { ...process.env, XDG_RUNTIME_DIR: tmp };
+    const first = spawn(SHELL, ['artist', '--data', data, '--port', String(PORT), '--vizrs', BIN], { env: siEnv, stdio: 'ignore' });
+    await sleep(3000);
+    const second = spawnSync(SHELL, ['trio', '--data', data, '--port', String(PORT), '--vizrs', BIN], { env: siEnv, timeout: 5000 });
+    ok(second.status === 0 && first.exitCode === null, 'drugie uruchomienie kończy się od razu, pierwsze działa', second.status);
+    first.kill();
+    // serwer poprzedniego okna kończy się po --idle-exit; krok 1 dołączyłby do niego i stracił go przy starcie WebKitGTK
+    for (let i = 0; i < 60 && await health(); i++) await sleep(500);
+    ok(!(await health()), 'serwer po zamknięciu okna kończy pracę przed kolejnym krokiem');
+
     // 1. Artist: powłoka uruchamia serwer, okno łączy się z nim
     const a = probe('artist');
     ok(a.title === 'VizRS Artist' && a.conn === 'połączono' && a.scenes > 0, 'Artist w oknie natywnym: strona, połączenie, sceny', a);

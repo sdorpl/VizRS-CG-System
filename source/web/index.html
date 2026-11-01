@@ -11,7 +11,7 @@
   h1 { font-size: 34px; margin: 0 0 4px; letter-spacing: .02em; }
   h1 b { color: var(--acc); }
   h2 { font-size: 16px; margin: 34px 0 10px; color: var(--acc); }
-  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 22px; }
   .card { display: block; text-decoration: none; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; transition: border-color .15s; }
   .card:hover { border-color: var(--acc); }
   .card h3 { font-size: 18px; color: var(--text); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
@@ -23,6 +23,7 @@
   table { border-collapse: collapse; width: 100%; }
   td { border-bottom: 1px solid var(--line); padding: 6px 8px; vertical-align: top; }
   td:first-child { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: #c9d3e6; }
+  @media (max-width: 900px) { .cards { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 720px) { .cards { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -34,6 +35,7 @@
   <div class="cards">
     <a class="card" href="/artist"><h3>🎨 Artist</h3><p>Projektuj sceny: drzewo kontenerów, keyframe'y, stop pointy, pola kontrolne.</p></a>
     <a class="card" href="/trio"><h3>🎛 Trio</h3><p>Strony z szablonów, edycja danych, TAKE / CONTINUE / OUT, karuzela.</p></a>
+    <a class="card" href="/mobile"><h3>📱 Trio na telefonie</h3><p>TAKE / CONTINUE / OUT, zmiana tekstu, rundown i makra z telefonu.</p></a>
     <a class="card" href="/output?checker=1&status=1" target="_blank"><h3>📺 Wyjście</h3><p>Przezroczysta strona 1920×1080 dla Browser Source w OBS.</p></a>
   </div>
 

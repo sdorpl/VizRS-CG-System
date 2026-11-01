@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>VizRS Trio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="manifest" href="/mobile.webmanifest">
+<style>
+  html, body { margin: 0; height: 100%; background: #121316; color: #d9dde4; font: 16px/1.4 system-ui, sans-serif; color-scheme: dark; }
+  body { display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; }
+  form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; visibility: hidden; }
+  img { width: 72px; height: 72px; border-radius: 16px; align-self: center; }
+  h1 { font-size: 20px; margin: 0; text-align: center; }
+  input, button { font: inherit; padding: 13px; border-radius: 8px; border: 1px solid #2e323a; box-sizing: border-box; width: 100%; }
+  input { background: #0e0f12; color: inherit; }
+  button { background: #f0a020; border-color: #f0a020; color: #1a1100; font-weight: 700; }
+  #bad { color: #ff8a86; text-align: center; }
+</style>
+</head>
+<body>
+<form action="/mobile" method="get">
+  <img src="/mobile-icon.svg" alt="">
+  <h1>VizRS Trio</h1>
+  <div id="bad" hidden>Zły token.</div>
+  <input name="token" type="password" placeholder="token serwera" autocomplete="current-password" required autofocus>
+  <button>Połącz</button>
+</form>
+<script>
+// Ciasteczko SameSite=Strict nie jedzie z pierwszym wejściem z ikony; żądanie z tej strony już je ma, więc zalogowany telefon przechodzi od razu.
+const params = new URLSearchParams(location.search);
+document.getElementById('bad').hidden = !params.has('token');
+fetch('/api/state').then((r) => { if (r.ok && !params.has('token')) location.replace('/mobile' + location.search); else document.querySelector('form').style.visibility = 'visible'; })
+  .catch(() => { document.querySelector('form').style.visibility = 'visible'; });
+</script>
+</body>
+</html>
