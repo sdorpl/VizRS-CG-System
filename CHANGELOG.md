@@ -6,6 +6,10 @@
 - **Okno natywne:** opcja `--gpu on|off|auto` (`VIZRS_GPU`).
 - **Artist:** ostrzeżenie przy zapisie sceny, która jest na antenie.
 - **Artist – zoom podglądu:** kółko wokół kursora, przesuwanie środkowym przyciskiem, przyciski −/＋/⤢/1:1/⌖ i skróty Shift+1/2/3. Edycja na kanwie działa w każdym powiększeniu.
+## 2.0.12 (2026-11-01) – „Anteny kanałów”
+
+- **Anteny kanałów playoutu:** jeden serwer ma osobną antenę na kanał: TCP `@<kanał> <komenda>`, HTTP `?channel=<kanał>`, wyjście `/output?bus=ch-<kanał>` (także `vizrs-render`). Każda antena ma własną karuzelę, kursor rundownu, makro i dock; lista kanałów przeżywa restart.
+- **Trio:** lista Antena przełącza sterowanie i monitor PGM między anteną główną a kanałami.
 
 ## 2.0.11 (2026-11-01) – „Porządkowe”
 

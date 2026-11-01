@@ -408,6 +408,8 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 | Prawa | monitor **PGM** (rzeczywiste wyjście, wybór tła monitora), **Na antenie – warstwy** (⏭ continue, ⏏ out, ⇅ dock, Wdróż teraz), zakładki **Playlista / Rundown / Makra** |
 | Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇩ Eksport show, ⇧ Import show, ✖ CLEAR ALL |
 
+Lista **Antena** na górnym pasku wybiera antenę główną albo kanał playoutu (`+ nowy kanał…` dopisuje numer z ErsatzTV; adres `/trio?channel=2` otwiera go od razu). Na wybranej antenie działają TAKE, CONTINUE, OUT, CLEAR, lista „Na antenie”, monitor PGM, karuzela, rundown (każda antena ma własny kursor), makra i dock. Dane stron są wspólne, więc UPDATE dociera na każdą antenę z tą stroną, a Preview (ARM) jest jeden. Lista kanałów przeżywa restart; `− usuń kanał` zdejmuje jego grafikę.
+
 ### 9.2 Praca ze stroną
 
 1. Wczytaj stronę: klik na liście, numer + Enter albo ↑ ↓.
