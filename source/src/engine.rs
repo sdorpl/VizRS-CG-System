@@ -82,6 +82,8 @@ struct Inner {
     rundowns: std::collections::HashMap<String, RdRun>,
     /// Karuzele anten, klucz: kanał ("" = główna); (playlist id, indeks elementu).
     carousel: std::collections::HashMap<String, (String, usize)>,
+    /// Nazwy kanałów do pokazania operatorowi: (kanał, nazwa).
+    channel_labels: Vec<(String, String)>,
     /// Wyłączone powiązania (dock) kanałów: (kanał, warstwa).
     channel_dock: Vec<(String, String)>,
 }
@@ -145,7 +147,7 @@ impl Engine {
             })
             .unwrap_or_else(|| Json::parse(demo).expect("demo_show.json"));
         let e = Arc::new(Engine {
-            inner: Mutex::new(Inner { show: normalize_show(show), layers: vec![], preview: vec![], channels: load_channels(&data_dir), dock_off: vec![], rundowns: Default::default(), carousel: Default::default(), channel_dock: vec![] }),
+            inner: Mutex::new(Inner { show: normalize_show(show), layers: vec![], preview: vec![], channels: load_channels(&data_dir), dock_off: vec![], rundowns: Default::default(), carousel: Default::default(), channel_labels: load_labels(&data_dir), channel_dock: vec![] }),
             subs: Mutex::new(vec![]),
             save_err: Mutex::new(None),
             last_recent: AtomicU64::new(0),
@@ -463,6 +465,10 @@ impl Engine {
             })
             .collect();
         let channels = Json::Arr(inner.channels.iter().map(|(c, _)| Json::from(c.as_str())).collect());
+        let mut channel_names = Json::obj();
+        for (c, name) in &inner.channel_labels {
+            channel_names.set(c, name.as_str().into());
+        }
         let carousel = match inner.carousel.get(ch) {
             Some((id, i)) => Json::obj().with("playlist", id.as_str()).with("index", *i),
             None => Json::Null,
@@ -472,6 +478,7 @@ impl Engine {
             .with("layers", Json::Arr(layers))
             .with("carousel", carousel)
             .with("channels", channels)
+            .with("channelNames", channel_names)
             .with("outputs", self.clients())
             .with("rev", rev)
             .with("preview", Json::Arr(preview))
@@ -740,8 +747,17 @@ impl Engine {
     }
 
     /// Zakłada antenę kanału (zostaje na liście po restarcie).
-    pub fn channel_add(&self, ch: &str) -> Result<Json, String> {
-        Self::channel_mut(&mut self.inner.lk(), ch, true, &self.data_dir)?;
+    pub fn channel_add(&self, ch: &str, name: Option<&str>) -> Result<Json, String> {
+        let mut inner = self.inner.lk();
+        Self::channel_mut(&mut inner, ch, true, &self.data_dir)?;
+        if let Some(name) = name.map(|n| n.chars().filter(|c| !c.is_control()).take(100).collect::<String>()) {
+            inner.channel_labels.retain(|(c, _)| c != ch);
+            if !name.trim().is_empty() {
+                inner.channel_labels.push((ch.to_string(), name.trim().to_string()));
+            }
+            save_labels(&self.data_dir, &inner.channel_labels);
+        }
+        drop(inner);
         self.broadcast(&Json::obj().with("t", "state"));
         Ok(Json::obj().with("ok", true).with("bus", channel_bus(ch)))
     }
@@ -754,6 +770,8 @@ impl Engine {
         let mut inner = self.inner.lk();
         inner.channels.retain(|(c, _)| c != ch);
         inner.channel_dock.retain(|(c, _)| c != ch);
+        inner.channel_labels.retain(|(c, _)| c != ch);
+        save_labels(&self.data_dir, &inner.channel_labels);
         let prefix = format!("{ch}\0");
         inner.rundowns.retain(|k, _| !k.starts_with(&prefix));
         save_channels(&self.data_dir, &inner.channels);
@@ -1594,6 +1612,24 @@ fn save_channels(data_dir: &Path, channels: &[(String, Vec<(String, LayerState)>
     }
 }
 
+fn load_labels(data_dir: &Path) -> Vec<(String, String)> {
+    let text = std::fs::read_to_string(data_dir.join("channel-names.json")).unwrap_or_default();
+    match Json::parse(&text) {
+        Ok(Json::Obj(items)) => items.into_iter().filter_map(|(c, n)| if let (true, Json::Str(n)) = (valid_channel(&c), n) { Some((c, n.chars().take(100).collect())) } else { None }).take(MAX_CHANNELS).collect(),
+        _ => vec![],
+    }
+}
+
+fn save_labels(data_dir: &Path, labels: &[(String, String)]) {
+    let mut list = Json::obj();
+    for (c, name) in labels {
+        list.set(c, name.as_str().into());
+    }
+    if let Err(e) = std::fs::write(data_dir.join("channel-names.json"), list.dump()) {
+        eprintln!("[vizrs] zapis nazw kanałów: {e}");
+    }
+}
+
 fn valid_channel(ch: &str) -> bool {
     !ch.is_empty() && ch.len() <= 32 && ch.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_'))
 }
@@ -2155,6 +2191,9 @@ mod tests {
         e.set_dock_on("2", "main", true).unwrap();
         assert_eq!(e.state_on("2").unwrap().arr("layers")[0].get("dockOff"), Some(&Json::Bool(true)));
         assert_eq!(load_channels(&d).iter().filter(|(c, _)| c == "2" || c == "3").count(), 2);
+        e.channel_add("2", Some("BTB\n Info")).unwrap();
+        assert_eq!(e.state().get("channelNames").unwrap().str("2"), Some("BTB Info"));
+        assert_eq!(load_labels(&d), [("2".to_string(), "BTB Info".to_string())]);
         e.channel_delete("3").unwrap();
         assert!(!e.channel_names().contains(&"3".to_string()));
         assert!(e.channel_take("zła nazwa", "1001", None).is_err());
