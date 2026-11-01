@@ -2,6 +2,10 @@
 
 ## Niewydane
 
+## 2.0.11 (2026-11-01) – „Porządkowe”
+
+- Wydanie techniczne razem z VizRS CG Playout 2.3.1. Bez zmian w działaniu aplikacji.
+
 ## 2.0.10 (2026-11-01) – „Poprawki”
 
 - **Renderer natywny 0.3:** `vizrs-render stream` przyjmuje kilka `--area` i w jednym procesie rysuje każdy obszar osobno (rekord rodzaju 5), zamiast ich obwiedni.
