@@ -12,6 +12,8 @@
 //! Rodzaje: 0 – bez zmian, 1 – nowy obraz, 2 – pusto (przezroczyście), 3 – nie narysowano (`c`, antena niepełna),
 //! 4 – nowy obraz, tylko prostokąt z grafiką: po nagłówku x, y, szerokość, wysokość (u32 LE), potem jego piksele
 //! (reszta obrazu przezroczysta). Renderer wysyła nowy obraz jako rodzaj 4; odbiorca czyta też rodzaj 1.
+//! 5 – nowy obraz przy kilku `--area`: po nagłówku liczba prostokątów (u32 LE), potem każdy jak w rodzaju 4,
+//! w px kanału; szerokość i wysokość nagłówka to rozmiar kanału.
 //! Flagi: bit 0 – wszystko na antenie natywnie, bit 1 – połączenie z VizRS działa.
 //! Zmiana listy braków trafia na stderr (`vizrs-render: …`).
 
@@ -38,6 +40,7 @@ pub const IMAGE: u8 = 1;
 pub const EMPTY: u8 = 2;
 pub const SKIPPED: u8 = 3;
 pub const REGION: u8 = 4;
+pub const REGIONS: u8 = 5;
 pub const FLAG_COMPLETE: u8 = 1;
 pub const FLAG_CONNECTED: u8 = 2;
 
@@ -45,8 +48,8 @@ pub struct Options {
     pub url: String,
     /// Rozmiar kanału (płótno sceny w px).
     pub size: (u32, u32),
-    /// Obszar grafiki w px kanału (x, y, w, h); brak = cały kanał.
-    pub area: Option<(i32, i32, u32, u32)>,
+    /// Obszary grafiki w px kanału (x, y, w, h); pusto = cały kanał.
+    pub areas: Vec<(i32, i32, u32, u32)>,
     pub font_dirs: Vec<std::path::PathBuf>,
 }
 
@@ -60,12 +63,12 @@ pub fn header(kind: u8, flags: u8, w: u32, h: u32) -> [u8; 16] {
     out
 }
 
-/// Obraz jako rekord `REGION`: tylko prostokąt z niezerową alfą (reszta przezroczysta); pusty obraz – `EMPTY`.
-pub fn region_record(pix: &Pixmap, flags: u8) -> Vec<u8> {
+/// Prostokąt z niezerową alfą (x, y, w, h); pusty obraz – `None`.
+fn alpha_box(pix: &Pixmap) -> Option<(usize, usize, usize, usize)> {
     let (w, h) = (pix.width() as usize, pix.height() as usize);
     let data = pix.data();
     let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].chunks_exact(4).any(|p| p[3] != 0);
-    let Some(top) = (0..h).find(|&y| row_used(y)) else { return header(EMPTY, flags, w as u32, h as u32).to_vec() };
+    let top = (0..h).find(|&y| row_used(y))?;
     let bottom = (top..h).rev().find(|&y| row_used(y)).unwrap_or(top) + 1;
     let (mut left, mut right) = (w, 0);
     for y in top..bottom {
@@ -77,16 +80,42 @@ pub fn region_record(pix: &Pixmap, flags: u8) -> Vec<u8> {
             right = right.max(r + 1);
         }
     }
-    let rw = right.saturating_sub(left);
-    let mut rec = header(REGION, flags, w as u32, h as u32).to_vec();
-    for v in [left, top, rw, bottom - top] {
-        rec.extend_from_slice(&(v as u32).to_le_bytes());
+    Some((left, top, right.saturating_sub(left), bottom - top))
+}
+
+/// Dopisuje prostokąt: x, y, w, h (przesunięte o `origin`) i jego piksele bez przemnożenia alfy.
+fn push_box(rec: &mut Vec<u8>, pix: &Pixmap, (x, y, w, h): (usize, usize, usize, usize), origin: (i32, i32)) {
+    for v in [(x as i64 + origin.0 as i64) as u32, (y as i64 + origin.1 as i64) as u32, w as u32, h as u32] {
+        rec.extend_from_slice(&v.to_le_bytes());
     }
+    let stride = pix.width() as usize;
     let at = rec.len();
-    for y in top..bottom {
-        rec.extend_from_slice(&data[(y * w + left) * 4..(y * w + right) * 4]);
+    for row in y..y + h {
+        rec.extend_from_slice(&pix.data()[(row * stride + x) * 4..(row * stride + x + w) * 4]);
     }
     unpremultiply(&mut rec[at..]);
+}
+
+/// Obraz jako rekord `REGION`: tylko prostokąt z niezerową alfą (reszta przezroczysta); pusty obraz – `EMPTY`.
+pub fn region_record(pix: &Pixmap, flags: u8) -> Vec<u8> {
+    let (w, h) = (pix.width(), pix.height());
+    let Some(found) = alpha_box(pix) else { return header(EMPTY, flags, w, h).to_vec() };
+    let mut rec = header(REGION, flags, w, h).to_vec();
+    push_box(&mut rec, pix, found, (0, 0));
+    rec
+}
+
+/// Kilka obszarów jako rekord `REGIONS` (px kanału `size`); wszystkie puste – `EMPTY`.
+pub fn regions_record(areas: &[(Pixmap, (i32, i32))], flags: u8, size: (u32, u32)) -> Vec<u8> {
+    let found: Vec<_> = areas.iter().filter_map(|(pix, at)| alpha_box(pix).map(|b| (pix, *at, b))).collect();
+    if found.is_empty() {
+        return header(EMPTY, flags, size.0, size.1).to_vec();
+    }
+    let mut rec = header(REGIONS, flags, size.0, size.1).to_vec();
+    rec.extend_from_slice(&(found.len() as u32).to_le_bytes());
+    for (pix, at, b) in found {
+        push_box(&mut rec, pix, b, at);
+    }
     rec
 }
 
@@ -169,8 +198,14 @@ pub fn run(opts: Options) -> Result<(), String> {
     host.output = Output { step: url.param("fx") == Some("step") };
     let dim = |k: &str, d: f64| url.param(k).and_then(|v| v.parse::<f64>().ok()).filter(|v| *v > 0.0).unwrap_or(d);
     host.stage = (dim("w", 1920.0), dim("h", 1080.0));
-    let (ax, ay, aw, ah) = opts.area.unwrap_or((0, 0, opts.size.0, opts.size.1));
-    let mut pix = Pixmap::new(aw.max(1), ah.max(1)).ok_or("zły rozmiar")?;
+    let whole = [(0, 0, opts.size.0, opts.size.1)];
+    let list: &[(i32, i32, u32, u32)] = if opts.areas.is_empty() { &whole } else { &opts.areas };
+    let mut pixes = Vec::with_capacity(list.len());
+    for (x, y, w, h) in list {
+        pixes.push((Pixmap::new((*w).max(1), (*h).max(1)).ok_or("zły rozmiar")?, (*x, *y)));
+    }
+    // przy kilku obszarach rekordy mówią w px kanału, przy jednym – w px obszaru, jak dotąd
+    let (aw, ah) = if list.len() == 1 { (list[0].2, list[0].3) } else { opts.size };
     let mut out = std::io::stdout().lock();
     let stdin = std::io::stdin();
     let mut issues: Vec<String> = Vec::new();
@@ -226,10 +261,15 @@ pub fn run(opts: Options) -> Result<(), String> {
             let kind = if was_empty && !force { UNCHANGED } else { EMPTY };
             was_empty = true;
             header(kind, flags, aw, ah).to_vec()
-        } else if host.draw(&mut pix, opts.size, (ax, ay), &res) || was_empty || force {
-            // po pustym obraz trzeba wysłać, nawet gdy lista się nie zmieniła (`pix` ma ostatni obraz)
+        } else if host.draw_areas(&mut pixes.iter_mut().map(|(p, at)| (p, *at)).collect::<Vec<_>>(), opts.size, &res) || was_empty || force
+        {
+            // po pustym obraz trzeba wysłać, nawet gdy lista się nie zmieniła (`pixes` mają ostatni obraz)
             was_empty = false;
-            region_record(&pix, flags)
+            if pixes.len() == 1 {
+                region_record(&pixes[0].0, flags)
+            } else {
+                regions_record(&pixes, flags, opts.size)
+            }
         } else {
             header(UNCHANGED, flags, aw, ah).to_vec()
         };
@@ -255,6 +295,19 @@ mod tests {
         assert_eq!(rec.len(), 32 + 4 * 3 * 4);
         assert_eq!(&rec[32..36], &[255, 0, 0, 255]);
         assert_eq!(region_record(&Pixmap::new(4, 4).unwrap(), 0)[4], EMPTY);
+    }
+
+    #[test]
+    fn regions_are_in_channel_pixels() {
+        let mut a = Pixmap::new(4, 2).unwrap();
+        a.data_mut()[(4 + 1) * 4..(4 + 1) * 4 + 4].copy_from_slice(&[0, 255, 0, 255]);
+        let empty = Pixmap::new(2, 2).unwrap();
+        let rec = regions_record(&[(a, (10, 20)), (empty.clone(), (0, 0))], 1, (100, 50));
+        assert_eq!(rec[4], REGIONS);
+        let v = |i: usize| u32::from_le_bytes(rec[16 + i * 4..20 + i * 4].try_into().unwrap());
+        assert_eq!((v(0), v(1), v(2), v(3), v(4)), (1, 11, 21, 1, 1));
+        assert_eq!(rec.len(), 16 + 4 + 16 + 4);
+        assert_eq!(regions_record(&[(empty, (0, 0))], 0, (100, 50))[4], EMPTY);
     }
 
     #[test]

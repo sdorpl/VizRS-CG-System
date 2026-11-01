@@ -390,31 +390,37 @@ impl Host {
 
     /// Rysuje klatkę na `pix`. Zwraca false, gdy obraz nie zmienił się od poprzedniego (nic nie narysowano).
     pub fn draw(&mut self, pix: &mut Pixmap, size: (u32, u32), area: (i32, i32), res: &Resources) -> bool {
-        let stage = self.stage_transform(size, area);
+        self.draw_areas(&mut [(pix, area)], size, res)
+    }
+
+    /// Ta sama antena na kilku płótnach (obszary kanału): stan sceny jeden, rysowanie osobno na każdym.
+    pub fn draw_areas(&mut self, areas: &mut [(&mut Pixmap, (i32, i32))], size: (u32, u32), res: &Resources) -> bool {
         let mut order: Vec<(f64, u64, usize)> = self.layers.iter().enumerate().map(|(i, l)| (layer_z(&l.name), l.order, i)).collect();
         order.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
         let mut h = DefaultHasher::new();
         h.write_u64(res.epoch());
-        for v in [stage.sx, stage.sy, stage.tx, stage.ty] {
-            h.write_u32(v.to_bits());
-        }
-        h.write_u32(pix.width());
-        h.write_u32(pix.height());
-        let mut scenes = Vec::new();
-        for (_, _, i) in &order {
-            for p in &self.layers[*i].players {
-                if let Some(t) = &p.tree {
-                    t.fingerprint(&mut h);
-                    scenes.push((t, stage));
-                }
+        for (pix, area) in areas.iter() {
+            let stage = self.stage_transform(size, *area);
+            for v in [stage.sx, stage.sy, stage.tx, stage.ty] {
+                h.write_u32(v.to_bits());
             }
+            h.write_u32(pix.width());
+            h.write_u32(pix.height());
+        }
+        let trees: Vec<_> = order.iter().flat_map(|o| &self.layers[o.2].players).filter_map(|p| p.tree.as_ref()).collect();
+        for t in &trees {
+            t.fingerprint(&mut h);
         }
         let print = h.finish();
         if self.last_print == Some(print) {
             return false;
         }
+        for (pix, area) in areas.iter_mut() {
+            let stage = self.stage_transform(size, *area);
+            let scenes: Vec<_> = trees.iter().map(|t| (*t, stage)).collect();
+            self.raster.draw(pix, &scenes, res);
+        }
         self.last_print = Some(print);
-        self.raster.draw(pix, &scenes, res);
         true
     }
 }

@@ -1,6 +1,6 @@
 //! vizrs-render – natywny renderer grafiki VizRS.
 //!
-//!   vizrs-render stream --url <adres /output> --size 1920x1080 [--area x,y,w,h] [--fonts katalog]
+//!   vizrs-render stream --url <adres /output> --size 1920x1080 [--area x,y,w,h]… [--fonts katalog]
 //!   vizrs-render frame  --show show.json (--scene NAZWA | --page N) [--values JSON] [--stop I | --time S]
 //!                       [--size WxH] [--fonts katalog] [--assets katalog] [--wall-ms N] -o klatka.png
 //!   vizrs-render check  --show show.json [--fonts katalog] [--assets katalog]
@@ -328,13 +328,13 @@ fn main() {
         "stream" => (|| {
             let url = args.get("url").ok_or("brak --url")?.to_string();
             let size = size_of(args.get("size").unwrap_or("1920x1080"))?;
-            let area = args.get("area").map(area_of).transpose()?;
+            let areas = args.all("area").iter().map(|a| area_of(a)).collect::<Result<_, _>>()?;
             // fonty z serwera (`/fonts/fonts.css`) – katalogi tylko jawnie (`--fonts`, VIZRS_FONTS)
             let mut dirs: Vec<PathBuf> = args.all("fonts").into_iter().map(PathBuf::from).collect();
             if let Ok(v) = std::env::var("VIZRS_FONTS") {
                 dirs.extend(v.split(':').filter(|s| !s.is_empty()).map(PathBuf::from));
             }
-            stream::run(stream::Options { url, size, area, font_dirs: dirs })
+            stream::run(stream::Options { url, size, areas, font_dirs: dirs })
         })(),
         "frame" => frame(&args),
         "bench" => bench(&args),
