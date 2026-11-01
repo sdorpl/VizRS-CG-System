@@ -2,7 +2,7 @@
 //! logika TAKE / CONTINUE / OUT, karuzela playlist i rozgłaszanie zdarzeń
 //! do wyjść (OBS) przez Server-Sent Events.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{sync_channel, Receiver, SyncSender, TrySendError};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -75,10 +75,15 @@ struct Inner {
     layers: Vec<(String, LayerState)>,
     /// Bus Preview (uzbrojone strony; osobne wyjście `?bus=preview`).
     preview: Vec<(String, LayerState)>,
+    /// Anteny kanałów playoutu (`@N` w TCP, wyjście `?bus=ch-N`); niezależne od głównej.
+    channels: Vec<(String, Vec<(String, LayerState)>)>,
     /// Warstwy z wyłączonym przez operatora powiązaniem (dock) – nadpisanie jak w Viz.
     dock_off: Vec<String>,
     rundowns: std::collections::HashMap<String, RdRun>,
-    carousel: Option<(String, usize)>, // (playlist id, indeks elementu)
+    /// Karuzele anten, klucz: kanał ("" = główna); (playlist id, indeks elementu).
+    carousel: std::collections::HashMap<String, (String, usize)>,
+    /// Wyłączone powiązania (dock) kanałów: (kanał, warstwa).
+    channel_dock: Vec<(String, String)>,
 }
 
 pub struct Engine {
@@ -92,8 +97,9 @@ pub struct Engine {
     errors: Mutex<Vec<SceneErr>>,
     locks: Mutex<std::collections::HashMap<String, Lock>>,
     pub audit: Audit,
-    carousel_gen: AtomicU64,
-    pub macro_gen: AtomicU64,
+    /// Pokolenia karuzel i makr anten: nowe przerywa poprzednie tej samej anteny.
+    carousel_gens: Mutex<std::collections::HashMap<String, u64>>,
+    macro_gens: Mutex<std::collections::HashMap<String, u64>>,
     id_ctr: AtomicU64,
     /// Identyfikator aktywnego show w bibliotece `shows/` (plik `shows/<id>.json`).
     active: Mutex<String>,
@@ -139,7 +145,7 @@ impl Engine {
             })
             .unwrap_or_else(|| Json::parse(demo).expect("demo_show.json"));
         let e = Arc::new(Engine {
-            inner: Mutex::new(Inner { show: normalize_show(show), layers: vec![], preview: vec![], dock_off: vec![], rundowns: Default::default(), carousel: None }),
+            inner: Mutex::new(Inner { show: normalize_show(show), layers: vec![], preview: vec![], channels: load_channels(&data_dir), dock_off: vec![], rundowns: Default::default(), carousel: Default::default(), channel_dock: vec![] }),
             subs: Mutex::new(vec![]),
             save_err: Mutex::new(None),
             last_recent: AtomicU64::new(0),
@@ -149,8 +155,8 @@ impl Engine {
             locks: Mutex::new(Default::default()),
             audit: Audit::new(&data_dir),
             data_dir,
-            carousel_gen: AtomicU64::new(0),
-            macro_gen: AtomicU64::new(0),
+            carousel_gens: Mutex::new(Default::default()),
+            macro_gens: Mutex::new(Default::default()),
             id_ctr: AtomicU64::new(1),
             active: Mutex::new(String::new()),
         });
@@ -283,12 +289,17 @@ impl Engine {
         let text = std::fs::read_to_string(self.data_dir.join("shows").join(format!("{id}.json"))).map_err(|_| format!("brak show „{id}”"))?;
         let show = Json::parse(&text).map_err(|e| format!("show „{id}” uszkodzony: {e}"))?;
         validate::show(&show)?;
-        self.carousel_stop(false);
-        self.macro_gen.fetch_add(1, Ordering::SeqCst);
+        for ch in self.channel_names().into_iter().chain([String::new()]) {
+            self.carousel_stop_on(&ch, false);
+            self.macro_stop(&ch);
+        }
         {
             let mut inner = self.inner.lk();
             inner.preview.clear();
             inner.rundowns.clear();
+        }
+        for ch in self.inner.lk().channels.iter().map(|(c, _)| c.clone()).collect::<Vec<_>>() {
+            self.channel_clear(&ch).ok();
         }
         self.clear();
         self.set_active(id);
@@ -330,6 +341,9 @@ impl Engine {
         let (tx, rx) = sync_channel(SUB_QUEUE);
         tx.try_send(self.snapshot().dump()).ok();
         tx.try_send(self.snapshot_preview().dump()).ok();
+        for snapshot in self.snapshot_channels() {
+            tx.try_send(snapshot.dump()).ok();
+        }
         self.subs.lk().push(tx);
         rx
     }
@@ -385,10 +399,27 @@ impl Engine {
         Json::obj().with("t", "snapshot").with("bus", "preview").with("layers", Json::Arr(layers))
     }
 
+    fn snapshot_channels(&self) -> Vec<Json> {
+        let inner = self.inner.lk();
+        let layer = |(name, l): &(String, LayerState)| {
+            Json::obj().with("layer", name.as_str()).with("scene", l.scene.clone()).with("values", l.values.clone()).with("page", l.page.clone()).with("stop", l.stop).with("since", l.since as f64)
+        };
+        inner.channels.iter().map(|(ch, layers)| Json::obj().with("t", "snapshot").with("bus", channel_bus(ch)).with("layers", Json::Arr(layers.iter().map(layer).collect())).with("dockOff", Json::Arr(inner.channel_dock.iter().filter(|(c, _)| c == ch).map(|(_, d)| Json::from(d.as_str())).collect()))).collect()
+    }
+
     /// Stan dla interfejsu Trio (bez pełnych scen).
     pub fn state(&self) -> Json {
+        self.state_on("").expect("antena główna")
+    }
+
+    /// Stan z punktu widzenia anteny `ch` ("" = główna): warstwy, karuzela i rundowny tej anteny.
+    pub fn state_on(&self, ch: &str) -> Result<Json, String> {
+        if !ch.is_empty() && !valid_channel(ch) {
+            return Err("kanał: dozwolone litery, cyfry, . - _ (maks. 32)".into());
+        }
         let inner = self.inner.lk();
-        let mut layers: Vec<&(String, LayerState)> = inner.layers.iter().collect();
+        let air = if ch.is_empty() { &inner.layers } else { inner.channels.iter().find(|(c, _)| c == ch).map_or(&EMPTY_AIR, |(_, l)| l) };
+        let mut layers: Vec<&(String, LayerState)> = air.iter().collect();
         layers.sort_by_key(|(n, _)| layer_z(n));
         let layers: Vec<Json> = layers
             .iter()
@@ -406,7 +437,7 @@ impl Engine {
                     .with("since", l.since as f64)
                     .with("pending", pending)
                     .with("hasDock", !l.scene.arr("dock").is_empty())
-                    .with("dockOff", inner.dock_off.iter().any(|d| d == name))
+                    .with("dockOff", if ch.is_empty() { inner.dock_off.iter().any(|d| d == name) } else { inner.channel_dock.iter().any(|(c, d)| c == ch && d == name) })
             })
             .collect();
         let rev = inner.show.num("rev").unwrap_or(0.0);
@@ -421,7 +452,7 @@ impl Engine {
             .iter()
             .map(|r| {
                 let id = r.str("id").unwrap_or("");
-                let run = inner.rundowns.get(id).cloned().unwrap_or_default();
+                let run = inner.rundowns.get(&rd_key(ch, id)).cloned().unwrap_or_default();
                 let items = r.arr("items");
                 let cursor = Self::rd_next_item(items, &run);
                 Json::obj()
@@ -431,21 +462,23 @@ impl Engine {
                     .with("done", Json::Arr(run.done.iter().map(|d| Json::from(d.as_str())).collect()))
             })
             .collect();
-        let carousel = match &inner.carousel {
+        let channels = Json::Arr(inner.channels.iter().map(|(c, _)| Json::from(c.as_str())).collect());
+        let carousel = match inner.carousel.get(ch) {
             Some((id, i)) => Json::obj().with("playlist", id.as_str()).with("index", *i),
             None => Json::Null,
         };
         drop(inner);
-        Json::obj()
+        Ok(Json::obj()
             .with("layers", Json::Arr(layers))
             .with("carousel", carousel)
+            .with("channels", channels)
             .with("outputs", self.clients())
             .with("rev", rev)
             .with("preview", Json::Arr(preview))
             .with("locks", self.locks_json())
             .with("rundowns", Json::Arr(rundowns))
             .with("errors", self.errors.lk().len())
-            .with("saveError", self.save_error().map(Json::from).unwrap_or(Json::Null))
+            .with("saveError", self.save_error().map(Json::from).unwrap_or(Json::Null)))
     }
 
     // ---------------- show / CRUD ----------------
@@ -681,6 +714,205 @@ impl Engine {
         Ok(Json::obj().with("ok", true).with("layer", layer))
     }
 
+    // ---------------- anteny kanałów ----------------
+
+    /// Antena kanału; nową zakłada tylko `create` (limit [`MAX_CHANNELS`]).
+    fn channel_mut<'a>(inner: &'a mut Inner, ch: &str, create: bool, data_dir: &Path) -> Result<Option<&'a mut Vec<(String, LayerState)>>, String> {
+        if !valid_channel(ch) {
+            return Err("kanał: dozwolone litery, cyfry, . - _ (maks. 32)".into());
+        }
+        if let Some(i) = inner.channels.iter().position(|(c, _)| c == ch) {
+            return Ok(Some(&mut inner.channels[i].1));
+        }
+        if !create {
+            return Ok(None);
+        }
+        if inner.channels.len() >= MAX_CHANNELS {
+            return Err(format!("za dużo kanałów (maks. {MAX_CHANNELS})"));
+        }
+        inner.channels.push((ch.to_string(), vec![]));
+        save_channels(data_dir, &inner.channels);
+        Ok(inner.channels.last_mut().map(|c| &mut c.1))
+    }
+
+    pub fn channel_names(&self) -> Vec<String> {
+        self.inner.lk().channels.iter().map(|(c, _)| c.clone()).collect()
+    }
+
+    /// Zakłada antenę kanału (zostaje na liście po restarcie).
+    pub fn channel_add(&self, ch: &str) -> Result<Json, String> {
+        Self::channel_mut(&mut self.inner.lk(), ch, true, &self.data_dir)?;
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true).with("bus", channel_bus(ch)))
+    }
+
+    /// Zdejmuje grafikę kanału i usuwa jego antenę.
+    pub fn channel_delete(&self, ch: &str) -> Result<Json, String> {
+        self.carousel_stop_on(ch, false);
+        self.macro_stop(ch);
+        self.channel_clear(ch)?;
+        let mut inner = self.inner.lk();
+        inner.channels.retain(|(c, _)| c != ch);
+        inner.channel_dock.retain(|(c, _)| c != ch);
+        let prefix = format!("{ch}\0");
+        inner.rundowns.retain(|k, _| !k.starts_with(&prefix));
+        save_channels(&self.data_dir, &inner.channels);
+        drop(inner);
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true))
+    }
+
+    pub fn take_on(&self, ch: &str, key: &str, ov: Option<&Json>) -> Result<Json, String> {
+        if ch.is_empty() { self.take(key, ov) } else { self.channel_take(ch, key, ov) }
+    }
+
+    pub fn cont_on(&self, ch: &str, key: &str) -> Result<Json, String> {
+        if ch.is_empty() { self.cont(key) } else { self.channel_cont(ch, key) }
+    }
+
+    pub fn out_on(&self, ch: &str, key: &str) -> Result<Json, String> {
+        if ch.is_empty() { self.out(key) } else { self.channel_out(ch, key) }
+    }
+
+    pub fn clear_on(&self, ch: &str) -> Result<Json, String> {
+        if ch.is_empty() {
+            self.clear();
+            Ok(Json::obj().with("ok", true))
+        } else {
+            self.channel_clear(ch)
+        }
+    }
+
+    pub fn deploy_on(&self, ch: &str, key: &str) -> Result<Json, String> {
+        if ch.is_empty() {
+            return self.deploy(key);
+        }
+        let layer = self.channel_layer(ch, key)?;
+        let mut inner = self.inner.lk();
+        let show = inner.show.clone();
+        let list = Self::channel_mut(&mut inner, ch, false, &self.data_dir)?.ok_or(format!("warstwa '{layer}' jest pusta"))?;
+        let (_, l) = list.iter_mut().find(|(n, _)| *n == layer).ok_or(format!("warstwa '{layer}' jest pusta"))?;
+        let scene = Self::find_scene(&show, l.scene.str("id").unwrap_or("")).ok_or("szablon został usunięty")?;
+        l.scene = scene.clone();
+        l.scene_rev = scene.num("rev").unwrap_or(0.0);
+        l.stop = l.stop.min(scene.arr("stops").len().saturating_sub(1));
+        let stop = l.stop;
+        drop(inner);
+        self.broadcast(&Json::obj().with("t", "rescene").with("bus", channel_bus(ch)).with("layer", layer.as_str()).with("scene", scene).with("stop", stop));
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true).with("layer", layer))
+    }
+
+    pub fn set_dock_on(&self, ch: &str, layer: &str, off: bool) -> Result<Json, String> {
+        if ch.is_empty() {
+            return self.set_dock(layer, off);
+        }
+        if !validate::layer_name_ok(layer) || !valid_channel(ch) {
+            return Err("zła nazwa warstwy".into());
+        }
+        {
+            let mut inner = self.inner.lk();
+            inner.channel_dock.retain(|(c, l)| c != ch || l != layer);
+            if off {
+                inner.channel_dock.push((ch.to_string(), layer.to_string()));
+            }
+        }
+        self.broadcast(&Json::obj().with("t", "dock").with("bus", channel_bus(ch)).with("layer", layer).with("off", off));
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true).with("layer", layer).with("off", off))
+    }
+
+    fn bump(gens: &Mutex<std::collections::HashMap<String, u64>>, ch: &str) -> u64 {
+        let mut gens = gens.lk();
+        let gen = gens.entry(ch.to_string()).or_insert(0);
+        *gen += 1;
+        *gen
+    }
+
+    /// Nowe pokolenie makra anteny: przerywa makro, które na niej działa.
+    pub fn macro_stop(&self, ch: &str) -> u64 {
+        Self::bump(&self.macro_gens, ch)
+    }
+
+    pub fn macro_gen(&self, ch: &str) -> u64 {
+        self.macro_gens.lk().get(ch).copied().unwrap_or(0)
+    }
+
+    pub fn channel_take(&self, ch: &str, key: &str, override_values: Option<&Json>) -> Result<Json, String> {
+        let mut inner = self.inner.lk();
+        let (layer, st, _) = Self::make_layer(&inner.show, key, override_values)?;
+        let bus = channel_bus(ch);
+        let ev = Self::layer_event("take", &layer, &st, Some(&bus));
+        let list = Self::channel_mut(&mut inner, ch, true, &self.data_dir)?.ok_or("brak kanału")?;
+        match list.iter_mut().find(|(n, _)| *n == layer) {
+            Some(slot) => slot.1 = st,
+            None => list.push((layer.clone(), st)),
+        }
+        drop(inner);
+        self.broadcast(&ev);
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true).with("layer", layer).with("bus", bus))
+    }
+
+    /// Warstwa kanału z argumentu (nazwa warstwy albo strona).
+    fn channel_layer(&self, ch: &str, key: &str) -> Result<String, String> {
+        let k = key.trim();
+        let mut inner = self.inner.lk();
+        let held = Self::channel_mut(&mut inner, ch, false, &self.data_dir)?.is_some_and(|list| list.iter().any(|(n, _)| n == k));
+        drop(inner);
+        Ok(if held { k.to_string() } else { self.page_layer(k).unwrap_or_else(|| k.to_string()) })
+    }
+
+    pub fn channel_cont(&self, ch: &str, key: &str) -> Result<Json, String> {
+        let layer = self.channel_layer(ch, key)?;
+        let mut inner = self.inner.lk();
+        let list = Self::channel_mut(&mut inner, ch, false, &self.data_dir)?.ok_or(format!("warstwa '{layer}' jest pusta"))?;
+        let (_, l) = list.iter_mut().find(|(n, _)| *n == layer).ok_or(format!("warstwa '{layer}' jest pusta"))?;
+        if l.stop + 1 < l.scene.arr("stops").len() {
+            l.stop += 1;
+        }
+        let stop = l.stop;
+        drop(inner);
+        self.broadcast(&Json::obj().with("t", "continue").with("bus", channel_bus(ch)).with("layer", layer.as_str()).with("stop", stop));
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true).with("layer", layer).with("stop", stop))
+    }
+
+    pub fn channel_out(&self, ch: &str, key: &str) -> Result<Json, String> {
+        let layer = self.channel_layer(ch, key)?;
+        let mut inner = self.inner.lk();
+        let changed = Self::channel_mut(&mut inner, ch, false, &self.data_dir)?.is_some_and(|list| {
+            let before = list.len();
+            list.retain(|(n, _)| *n != layer);
+            before != list.len()
+        });
+        drop(inner);
+        if changed {
+            self.broadcast(&Json::obj().with("t", "out").with("bus", channel_bus(ch)).with("layer", layer.as_str()));
+            self.broadcast(&Json::obj().with("t", "state"));
+        }
+        Ok(Json::obj().with("ok", true).with("layer", layer))
+    }
+
+    pub fn channel_clear(&self, ch: &str) -> Result<Json, String> {
+        let mut inner = self.inner.lk();
+        if let Some(list) = Self::channel_mut(&mut inner, ch, false, &self.data_dir)? {
+            list.clear();
+        }
+        drop(inner);
+        self.broadcast(&Json::obj().with("t", "clear").with("bus", channel_bus(ch)));
+        self.broadcast(&Json::obj().with("t", "state"));
+        Ok(Json::obj().with("ok", true))
+    }
+
+    /// Stan anteny kanału, w układzie [`Engine::state`].
+    pub fn channel_state(&self, ch: &str) -> Result<Json, String> {
+        if !valid_channel(ch) {
+            return Err("kanał: dozwolone litery, cyfry, . - _ (maks. 32)".into());
+        }
+        Ok(self.state_on(ch)?.with("bus", channel_bus(ch)))
+    }
+
     /// Uzbraja stronę na busie Preview (`output?bus=preview`) – bez wejścia na antenę.
     pub fn arm(&self, key: &str, override_values: Option<&Json>) -> Result<Json, String> {
         let mut inner = self.inner.lk();
@@ -760,6 +992,12 @@ impl Engine {
             if l.page.str("id") == Some(&pid) {
                 merge(&mut l.values, values);
                 events.push(Json::obj().with("t", "update").with("layer", name.as_str()).with("values", l.values.clone()));
+            }
+        }
+        for (ch, list) in inner.channels.iter_mut() {
+            for (name, l) in list.iter_mut().filter(|(_, l)| l.page.str("id") == Some(&pid)) {
+                merge(&mut l.values, values);
+                events.push(Json::obj().with("t", "update").with("bus", channel_bus(ch)).with("layer", name.as_str()).with("values", l.values.clone()));
             }
         }
         drop(inner);
@@ -843,6 +1081,13 @@ impl Engine {
                 return Err(format!("konflikt: na warstwie {layer} jest na antenie strona {} {}", l.page.num("number").unwrap_or(0.0), l.page.str("name").unwrap_or("")));
             }
         }
+        for (ch, list) in &inner.channels {
+            if holds(list).is_some() && !force {
+                if let Some((_, l)) = list.iter().find(|(n, _)| n == layer) {
+                    return Err(format!("konflikt: na warstwie {layer} kanału {ch} jest strona {} {}", l.page.num("number").unwrap_or(0.0), l.page.str("name").unwrap_or("")));
+                }
+            }
+        }
         let new_rev = if from == layer { old_rev } else { old_rev + 1.0 };
         if from != layer {
             if let Some(Json::Arr(list)) = inner.show.get_mut("scenes") {
@@ -863,6 +1108,14 @@ impl Engine {
                 events.push(Self::layer_event("relayer", old, l, bus).with("to", layer).with("stop", l.stop));
             }
         }
+        for (ch, list) in inner.channels.iter_mut() {
+            let Some(old) = list.iter().find(|(n, l)| l.scene.str("id") == Some(&sid) && n != layer).map(|(n, _)| n.clone()) else { continue };
+            list.retain(|(n, _)| n != layer);
+            if let Some((n, l)) = list.iter_mut().find(|(n, _)| *n == old) {
+                *n = layer.to_string();
+                events.push(Self::layer_event("relayer", &old, l, Some(&channel_bus(ch))).with("to", layer).with("stop", l.stop));
+            }
+        }
         if let Some(old) = &air {
             inner.dock_off.retain(|d| d != layer);
             for d in inner.dock_off.iter_mut().filter(|d| *d == old) {
@@ -871,7 +1124,7 @@ impl Engine {
         }
         // sama zmiana warstwy to nie nowa wersja szablonu: bez znacznika ⏳, chyba że już czekała inna zmiana
         let st = &mut *inner;
-        for (_, l) in st.layers.iter_mut().chain(st.preview.iter_mut()).filter(|(_, l)| l.scene.str("id") == Some(&sid) && l.scene_rev == old_rev) {
+        for (_, l) in st.layers.iter_mut().chain(st.preview.iter_mut()).chain(st.channels.iter_mut().flat_map(|(_, list)| list.iter_mut())).filter(|(_, l)| l.scene.str("id") == Some(&sid) && l.scene_rev == old_rev) {
             l.scene.set("layer", layer.into());
             l.scene_rev = new_rev;
         }
@@ -1024,20 +1277,26 @@ impl Engine {
 
     /// Bierze pozycję `item_id` (albo następną) na antenę i przesuwa kursor.
     pub fn rundown_take(&self, rid: &str, item_id: Option<&str>) -> Result<Json, String> {
+        self.rundown_take_on("", rid, item_id)
+    }
+
+    /// Rundown na antenie `ch`: każda antena ma własny kursor.
+    pub fn rundown_take_on(&self, ch: &str, rid: &str, item_id: Option<&str>) -> Result<Json, String> {
         let rd = self.rd_find(rid)?;
         let rid = rd.str("id").unwrap_or("").to_string();
         let items = rd.arr("items");
-        let run = self.inner.lk().rundowns.get(&rid).cloned().unwrap_or_default();
+        let key = rd_key(ch, &rid);
+        let run = self.inner.lk().rundowns.get(&key).cloned().unwrap_or_default();
         let target = match item_id {
             Some(id) => items.iter().find(|i| i.str("id") == Some(id)).map(|_| id.to_string()).ok_or("brak takiej pozycji")?,
             None => Self::rd_next_item(items, &run).ok_or("koniec rundownu – brak kolejnych pozycji")?,
         };
         let item = items.iter().find(|i| i.str("id") == Some(target.as_str())).ok_or("brak pozycji")?;
         let page = item.str("page").unwrap_or("").to_string();
-        let r = self.take(&page, None)?;
+        let r = self.take_on(ch, &page, None)?;
         {
             let mut inner = self.inner.lk();
-            let st = inner.rundowns.entry(rid.clone()).or_default();
+            let st = inner.rundowns.entry(key).or_default();
             if let Some(prev) = st.last.take() {
                 if prev != target && !st.done.contains(&prev) {
                     st.done.push(prev);
@@ -1053,19 +1312,27 @@ impl Engine {
     }
 
     pub fn rundown_cursor(&self, rid: &str, item_id: &str) -> Result<(), String> {
+        self.rundown_cursor_on("", rid, item_id)
+    }
+
+    pub fn rundown_cursor_on(&self, ch: &str, rid: &str, item_id: &str) -> Result<(), String> {
         let rd = self.rd_find(rid)?;
         if !rd.arr("items").iter().any(|i| i.str("id") == Some(item_id)) {
             return Err("brak takiej pozycji".into());
         }
         let rid = rd.str("id").unwrap_or("").to_string();
-        self.inner.lk().rundowns.entry(rid).or_default().cursor = Some(item_id.to_string());
+        self.inner.lk().rundowns.entry(rd_key(ch, &rid)).or_default().cursor = Some(item_id.to_string());
         self.broadcast(&Json::obj().with("t", "state"));
         Ok(())
     }
 
     pub fn rundown_reset(&self, rid: &str) -> Result<(), String> {
+        self.rundown_reset_on("", rid)
+    }
+
+    pub fn rundown_reset_on(&self, ch: &str, rid: &str) -> Result<(), String> {
         let rd = self.rd_find(rid)?;
-        self.inner.lk().rundowns.remove(rd.str("id").unwrap_or(""));
+        self.inner.lk().rundowns.remove(&rd_key(ch, rd.str("id").unwrap_or("")));
         self.broadcast(&Json::obj().with("t", "state"));
         Ok(())
     }
@@ -1193,6 +1460,11 @@ impl Engine {
     // ---------------- karuzela ----------------
 
     pub fn carousel_start(self: &Arc<Self>, playlist_id: &str) -> Result<(), String> {
+        self.carousel_start_on("", playlist_id)
+    }
+
+    /// Karuzela anteny `ch`; każda antena ma własną.
+    pub fn carousel_start_on(self: &Arc<Self>, ch: &str, playlist_id: &str) -> Result<(), String> {
         let pl = {
             let inner = self.inner.lk();
             inner
@@ -1206,17 +1478,22 @@ impl Engine {
         if pl.arr("items").is_empty() {
             return Err("playlista jest pusta".into());
         }
-        let gen = self.carousel_gen.fetch_add(1, Ordering::SeqCst) + 1;
+        let gen = Self::bump(&self.carousel_gens, ch);
         let me = Arc::clone(self);
         let pid = pl.str("id").unwrap_or("").to_string();
-        std::thread::spawn(move || me.carousel_loop(gen, pid));
+        let ch = ch.to_string();
+        std::thread::spawn(move || me.carousel_loop(ch, gen, pid));
         Ok(())
     }
 
     pub fn carousel_stop(&self, take_out: bool) {
-        self.carousel_gen.fetch_add(1, Ordering::SeqCst);
+        self.carousel_stop_on("", take_out)
+    }
+
+    pub fn carousel_stop_on(&self, ch: &str, take_out: bool) {
+        Self::bump(&self.carousel_gens, ch);
         let mut inner = self.inner.lk();
-        let was = inner.carousel.take();
+        let was = inner.carousel.remove(ch);
         drop(inner);
         if take_out && was.is_some() {
             // zdejmij warstwy używane przez playlistę
@@ -1225,15 +1502,15 @@ impl Engine {
                 let mut layers: Vec<String> = pl.arr("items").iter().filter_map(|it| self.page_layer(it.str("page")?)).collect();
                 layers.dedup();
                 for l in layers {
-                    self.out(&l).ok();
+                    self.out_on(ch, &l).ok();
                 }
             }
         }
         self.broadcast(&Json::obj().with("t", "state"));
     }
 
-    fn carousel_loop(self: Arc<Self>, gen: u64, playlist_id: String) {
-        let alive = |e: &Engine| e.carousel_gen.load(Ordering::SeqCst) == gen;
+    fn carousel_loop(self: Arc<Self>, ch: String, gen: u64, playlist_id: String) {
+        let alive = |e: &Engine| e.carousel_gens.lk().get(&ch).copied() == Some(gen);
         let mut idx = 0usize;
         let mut prev_page: Option<String> = None;
         loop {
@@ -1257,16 +1534,16 @@ impl Engine {
             let dur = it.num("duration").unwrap_or(5.0).max(0.5);
             {
                 let mut inner = self.inner.lk();
-                inner.carousel = Some((playlist_id.clone(), idx));
+                inner.carousel.insert(ch.clone(), (playlist_id.clone(), idx));
             }
             let layer = self.page_layer(&page);
             // warstwa poprzedniej strony liczona teraz: operator mógł ją zmienić w trakcie karuzeli
             if let (Some(p), Some(l)) = (prev_page.as_deref().and_then(|p| self.page_layer(p)), &layer) {
                 if p != *l {
-                    self.out(&p).ok();
+                    self.out_on(&ch, &p).ok();
                 }
             }
-            if self.take(&page, None).is_err() {
+            if self.take_on(&ch, &page, None).is_err() {
                 idx += 1;
                 std::thread::sleep(Duration::from_millis(200));
                 continue;
@@ -1284,12 +1561,46 @@ impl Engine {
         }
         if alive(&self) {
             if let Some(l) = prev_page.and_then(|p| self.page_layer(&p)) {
-                self.out(&l).ok();
+                self.out_on(&ch, &l).ok();
             }
-            self.inner.lk().carousel = None;
+            self.inner.lk().carousel.remove(&ch);
             self.broadcast(&Json::obj().with("t", "state"));
         }
     }
+}
+
+/// Najwięcej anten kanałów: nazwy przychodzą z sieci.
+const MAX_CHANNELS: usize = 64;
+
+static EMPTY_AIR: Vec<(String, LayerState)> = Vec::new();
+
+/// Klucz stanu rundownu: każda antena ma własny kursor.
+fn rd_key(ch: &str, rid: &str) -> String {
+    if ch.is_empty() { rid.to_string() } else { format!("{ch}\0{rid}") }
+}
+
+/// Lista kanałów przeżywa restart; ich grafika, jak na antenie głównej, nie.
+fn load_channels(data_dir: &Path) -> Vec<(String, Vec<(String, LayerState)>)> {
+    let text = std::fs::read_to_string(data_dir.join("channels.json")).unwrap_or_default();
+    let list = Json::parse(&text).unwrap_or(Json::Arr(vec![]));
+    let Json::Arr(items) = list else { return vec![] };
+    items.iter().filter_map(|c| if let Json::Str(s) = c { Some(s.clone()) } else { None }).filter(|c| valid_channel(c)).take(MAX_CHANNELS).map(|c| (c, vec![])).collect()
+}
+
+fn save_channels(data_dir: &Path, channels: &[(String, Vec<(String, LayerState)>)]) {
+    let list = Json::Arr(channels.iter().map(|(c, _)| Json::from(c.as_str())).collect());
+    if let Err(e) = std::fs::write(data_dir.join("channels.json"), list.dump()) {
+        eprintln!("[vizrs] zapis listy kanałów: {e}");
+    }
+}
+
+fn valid_channel(ch: &str) -> bool {
+    !ch.is_empty() && ch.len() <= 32 && ch.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_'))
+}
+
+/// Szyna zdarzeń i wyjścia kanału (`/output?bus=ch-N`).
+fn channel_bus(ch: &str) -> String {
+    format!("ch-{ch}")
 }
 
 fn bump_rev(show: &mut Json) {
@@ -1808,6 +2119,49 @@ mod tests {
         assert_eq!(v.num("layers_on_air"), Some(1.0));
         assert_eq!(v.str("layer_main"), Some("1001"));
         assert!(v.str("layer_main_name").unwrap().contains("Belka"));
+        std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn channels_have_their_own_air() {
+        let (e, d) = engine("channels");
+        let rx = e.subscribe();
+        while rx.try_recv().is_ok() {}
+        e.channel_take("2", "1001", None).unwrap();
+        let ev = Json::parse(&rx.try_recv().unwrap()).unwrap();
+        assert_eq!((ev.str("t"), ev.str("bus")), (Some("take"), Some("ch-2")));
+        // główna antena i inne kanały tego nie widzą
+        assert!(e.state().arr("layers").is_empty());
+        assert!(e.channel_state("3").unwrap().arr("layers").is_empty());
+        assert_eq!(e.channel_state("2").unwrap().arr("layers").len(), 1);
+        // CLEAR głównej anteny nie dotyka kanału, a nowy klient dostaje jego stan
+        e.clear();
+        let fresh = e.subscribe();
+        let snapshots: Vec<Json> = fresh.try_iter().map(|m| Json::parse(&m).unwrap()).collect();
+        assert_eq!(snapshots.iter().find(|s| s.str("bus") == Some("ch-2")).unwrap().arr("layers").len(), 1);
+
+        let update = e.update("1001", &Json::obj().with("x", "y"), false).unwrap();
+        assert_eq!(update.get("onAir"), Some(&Json::Bool(true)));
+        e.channel_out("2", "1001").unwrap();
+        assert!(e.channel_state("2").unwrap().arr("layers").is_empty());
+        // rundown: własny kursor anteny
+        let rd = e.upsert("rundowns", Json::parse(r#"{"name":"R","items":[{"id":"a","page":"1001"},{"id":"b","page":"1002"}]}"#).unwrap()).unwrap();
+        let rid = rd.str("id").unwrap();
+        e.rundown_take_on("2", rid, None).unwrap();
+        assert_eq!(e.rundown_take_on("3", rid, None).unwrap().str("item"), Some("a"));
+        assert!(e.state().arr("layers").is_empty());
+        assert_eq!(e.state_on("2").unwrap().arr("rundowns")[0].str("cursor"), Some("b"));
+        // dock i lista kanałów po restarcie
+        e.set_dock_on("2", "main", true).unwrap();
+        assert_eq!(e.state_on("2").unwrap().arr("layers")[0].get("dockOff"), Some(&Json::Bool(true)));
+        assert_eq!(load_channels(&d).iter().filter(|(c, _)| c == "2" || c == "3").count(), 2);
+        e.channel_delete("3").unwrap();
+        assert!(!e.channel_names().contains(&"3".to_string()));
+        assert!(e.channel_take("zła nazwa", "1001", None).is_err());
+        for i in 0..MAX_CHANNELS {
+            e.channel_take(&format!("n{i}"), "1001", None).ok();
+        }
+        assert!(e.channel_take("nadmiar", "1001", None).is_err());
         std::fs::remove_dir_all(d).ok();
     }
 

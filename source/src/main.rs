@@ -527,27 +527,30 @@ fn each(keys: &str, f: impl Fn(&str) -> Result<Json, String>) -> Result<Json, St
 }
 
 /// Uruchamia makro w osobnym wątku; nowe makro (lub `macro/stop`) przerywa poprzednie.
-fn start_macro(engine: &Arc<Engine>, key: &str) -> Result<(), String> {
+fn start_macro(engine: &Arc<Engine>, ch: &str, key: &str) -> Result<(), String> {
     let m = engine.find_macro(key).ok_or(format!("brak makra '{key}'"))?;
     let steps: Vec<(String, f64)> = m.arr("steps").iter().map(|s| (s.str("cmd").unwrap_or("").to_string(), s.num("delay").unwrap_or(0.0))).collect();
     if steps.is_empty() {
         return Err("makro nie ma kroków".into());
     }
-    let gen = engine.macro_gen.fetch_add(1, Ordering::SeqCst) + 1;
+    let gen = engine.macro_stop(ch);
     let e = Arc::clone(engine);
+    let ch = ch.to_string();
     std::thread::spawn(move || {
         for (cmd, delay) in steps {
             let until = std::time::Instant::now() + Duration::from_secs_f64(delay.clamp(0.0, 3600.0));
             while std::time::Instant::now() < until {
-                if e.macro_gen.load(Ordering::SeqCst) != gen {
+                if e.macro_gen(&ch) != gen {
                     return;
                 }
                 std::thread::sleep(Duration::from_millis(20));
             }
-            if e.macro_gen.load(Ordering::SeqCst) != gen {
+            if e.macro_gen(&ch) != gen {
                 return;
             }
-            let out = exec_command(&e, &cmd);
+            // krok makra działa na antenie, na której makro uruchomiono
+            let line = if ch.is_empty() || cmd.trim_start().starts_with('@') { cmd.clone() } else { format!("@{ch} {cmd}") };
+            let out = exec_command(&e, &line);
             if out.starts_with("ERR") {
                 eprintln!("[vizrs] makro: {cmd} → {out}");
             }
@@ -577,6 +580,8 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
     }
     let segs = req.segs();
     let s: Vec<&str> = segs.to_vec();
+    // antena komendy: kanał albo "" (główna)
+    let ant = req.q("channel").unwrap_or("");
 
     // ---------- pliki statyczne ----------
     if m == "GET" {
@@ -644,7 +649,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             let force = req.q("force") == Some("1");
             res(engine.put_show(body, force), |_| Response::ok())
         }
-        ("GET", ["state"]) => Response::json(&engine.state()),
+        ("GET", ["state"]) => res(engine.state_on(ant), |j| Response::json(&j)),
 
         ("POST" | "PUT", [kind]) if engine::KINDS.contains(kind) => {
             res(engine.upsert(kind, body), |it| Response::json(&it))
@@ -664,28 +669,36 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
                 ov = body.get("values").cloned().unwrap();
             }
             let ov = if matches!(&ov, Json::Obj(v) if v.is_empty()) { None } else { Some(ov) };
-            res(each(key, |k| if arm { engine.arm(k, ov.as_ref()) } else { engine.take(k, ov.as_ref()) }), |j| Response::json(&j))
+            res(
+                each(key, |k| match (arm, req.q("channel")) {
+                    (true, _) => engine.arm(k, ov.as_ref()),
+                    (false, Some(ch)) => engine.channel_take(ch, k, ov.as_ref()),
+                    (false, None) => engine.take(k, ov.as_ref()),
+                }),
+                |j| Response::json(&j),
+            )
         }
         ("POST" | "GET", ["preview", "clear"]) => {
             engine.preview_clear();
             Response::ok()
         }
-        ("POST" | "GET", ["continue", key]) => res(each(key, |k| engine.cont(k)), |j| Response::json(&j)),
-        ("POST" | "GET", ["out", key]) => res(each(key, |k| engine.out(k)), |j| Response::json(&j)),
+        ("POST" | "GET", ["continue", key]) => res(each(key, |k| req.q("channel").map_or_else(|| engine.cont(k), |ch| engine.channel_cont(ch, k))), |j| Response::json(&j)),
+        ("POST" | "GET", ["out", key]) => res(each(key, |k| req.q("channel").map_or_else(|| engine.out(k), |ch| engine.channel_out(ch, k))), |j| Response::json(&j)),
 
         // ---------- rundown ----------
-        ("POST" | "GET", ["rundown", id, "next"]) => res(engine.rundown_take(id, None), |j| Response::json(&j)),
-        ("POST" | "GET", ["rundown", id, "take", item]) => res(engine.rundown_take(id, Some(item)), |j| Response::json(&j)),
-        ("POST" | "GET", ["rundown", id, "cursor", item]) => res(engine.rundown_cursor(id, item), |_| Response::ok()),
-        ("POST" | "GET", ["rundown", id, "reset"]) => res(engine.rundown_reset(id), |_| Response::ok()),
+        ("POST" | "GET", ["rundown", id, "next"]) => res(engine.rundown_take_on(ant, id, None), |j| Response::json(&j)),
+        ("POST" | "GET", ["rundown", id, "take", item]) => res(engine.rundown_take_on(ant, id, Some(item)), |j| Response::json(&j)),
+        ("POST" | "GET", ["rundown", id, "cursor", item]) => res(engine.rundown_cursor_on(ant, id, item), |_| Response::ok()),
+        ("POST" | "GET", ["rundown", id, "reset"]) => res(engine.rundown_reset_on(ant, id), |_| Response::ok()),
 
         // ---------- makra ----------
         ("POST" | "GET", ["macro", "stop"]) => {
-            engine.macro_gen.fetch_add(1, Ordering::SeqCst);
+            engine.macro_stop(ant);
             Response::ok()
         }
-        ("POST" | "GET", ["macro", key]) => res(start_macro(engine, key), |_| Response::ok()),
+        ("POST" | "GET", ["macro", key]) => res(start_macro(engine, ant, key), |_| Response::ok()),
         ("GET", ["variables"]) => Response::json(&engine.variables()),
+        ("POST" | "GET", ["clear"]) if req.q("channel").is_some() => res(engine.channel_clear(req.q("channel").unwrap_or("")), |j| Response::json(&j)),
         ("POST" | "GET", ["clear"]) => {
             engine.clear();
             Response::ok()
@@ -701,7 +714,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             let persist = req.q("save") != Some("0");
             res(engine.update(key, &vals, persist), |j| Response::json(&j))
         }
-        ("POST" | "GET", ["deploy", key]) => res(engine.deploy(key), |j| Response::json(&j)),
+        ("POST" | "GET", ["deploy", key]) => res(engine.deploy_on(ant, key), |j| Response::json(&j)),
         // layer: zmienia warstwę szablonu strony; grafika na antenie przechodzi bez ponownej animacji
         ("POST", ["layer", key]) => res(engine.set_layer(key, body.str("layer").unwrap_or(""), req.q("force") == Some("1")), |j| Response::json(&j)),
         // ticker: lista wiadomości strony (GET) i zmiany z automatycznym UPDATE, gdy strona jest na antenie
@@ -717,9 +730,9 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             };
             res(ticker::parse_op(&line).and_then(|o| engine.ticker(key, o)), |j| Response::json(&j))
         }
-        ("POST" | "GET", ["carousel", "start", id]) => res(engine.carousel_start(id), |_| Response::ok()),
+        ("POST" | "GET", ["carousel", "start", id]) => res(engine.carousel_start_on(ant, id), |_| Response::ok()),
         ("POST" | "GET", ["carousel", "stop"]) => {
-            engine.carousel_stop(req.q("out") != Some("0"));
+            engine.carousel_stop_on(ant, req.q("out") != Some("0"));
             Response::ok()
         }
 
@@ -778,13 +791,15 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
         ("DELETE" | "POST", ["unlock", kind, id]) => Response::json(&engine.unlock(kind, id, req.q("who").unwrap_or(""), req.q("force") == Some("1"))),
         ("GET", ["animpresets"]) => Response::json(&engine.anim_presets()),
         ("PUT", ["animpresets"]) => res(engine.put_anim_presets(body), |j| Response::json(&j)),
-        ("POST" | "GET", ["dock", layer, mode]) if *mode == "off" || *mode == "on" => res(engine.set_dock(layer, *mode == "off"), |j| Response::json(&j)),
+        ("POST" | "GET", ["dock", layer, mode]) if *mode == "off" || *mode == "on" => res(engine.set_dock_on(ant, layer, *mode == "off"), |j| Response::json(&j)),
         ("GET", ["wordreplace"]) => Response::json(&engine.word_replace()),
         ("PUT", ["wordreplace"]) => res(engine.put_word_replace(body), |j| Response::json(&j)),
         ("GET", ["fonts"]) => Response::json(&Json::Arr(fonts::families().into_iter().map(Json::from).collect())),
         ("GET", ["audit"]) => Response::json(&Json::Arr(engine.audit.tail(req.q("n").and_then(|n| n.parse().ok()).unwrap_or(100).min(1000)).into_iter().map(Json::from).collect())),
 
         // ---------- biblioteka show (paczka grafiki na audycję) ----------
+        ("POST", ["channels", ch]) => res(engine.channel_add(ch), |j| Response::json(&j)),
+        ("DELETE", ["channels", ch]) => res(engine.channel_delete(ch), |j| Response::json(&j)),
         ("GET", ["shows"]) => Response::json(&engine.shows()),
         ("POST", ["shows", "switch", id]) => res(engine.switch_show(id), |_| Response::json(&engine.shows())),
         ("POST", ["shows"]) => res(engine.new_show(body.str("name").unwrap_or(""), matches!(body.get("copy"), Some(Json::Bool(true)))), |j| Response::json(&j)),
@@ -859,8 +874,71 @@ fn parse_kv(s: &str) -> Json {
     v
 }
 
+/// `@<kanał> <komenda>`: komenda na antenie kanału zamiast głównej.
+fn exec_channel(engine: &Arc<Engine>, line: &str) -> Result<Json, String> {
+    let (ch, rest) = line.split_once(char::is_whitespace).unwrap_or((line, ""));
+    let (cmd, rest) = rest.trim().split_once(char::is_whitespace).unwrap_or((rest.trim(), ""));
+    let rest = rest.trim();
+    if ch.is_empty() {
+        return Err("brak numeru kanału".into());
+    }
+    let (arg, tail) = rest.split_once(char::is_whitespace).unwrap_or((rest, ""));
+    match cmd.to_ascii_uppercase().as_str() {
+        "TAKE" => {
+            let ov = parse_kv(tail);
+            let ov = if matches!(&ov, Json::Obj(v) if v.is_empty()) { None } else { Some(ov) };
+            each(arg, |k| engine.channel_take(ch, k, ov.as_ref()))
+        }
+        "CONTINUE" | "CONT" => each(if arg.is_empty() { "main" } else { arg }, |k| engine.channel_cont(ch, k)),
+        "OUT" => each(if arg.is_empty() { "main" } else { arg }, |k| engine.channel_out(ch, k)),
+        "CLEAR" => engine.channel_clear(ch),
+        "ARM" => {
+            let ov = parse_kv(tail);
+            let ov = if matches!(&ov, Json::Obj(v) if v.is_empty()) { None } else { Some(ov) };
+            each(arg, |k| engine.arm(k, ov.as_ref()))
+        }
+        "NEXT" => engine.rundown_take_on(ch, arg, None),
+        "RUNDOWN" => match arg.to_ascii_uppercase().as_str() {
+            "TAKE" => {
+                let (rid, item) = tail.trim().split_once(char::is_whitespace).unwrap_or((tail.trim(), ""));
+                engine.rundown_take_on(ch, rid, Some(item.trim()).filter(|i| !i.is_empty()))
+            }
+            "RESET" => engine.rundown_reset_on(ch, tail.trim()).map(|_| Json::obj()),
+            _ => Err("RUNDOWN TAKE <rundown> [pozycja] | RUNDOWN RESET <rundown>".into()),
+        },
+        "MACRO" => {
+            if tail.trim().is_empty() && arg.eq_ignore_ascii_case("STOP") {
+                engine.macro_stop(ch);
+                Ok(Json::obj())
+            } else {
+                start_macro(engine, ch, rest).map(|_| Json::obj())
+            }
+        }
+        "CAROUSEL" => match arg.to_ascii_uppercase().as_str() {
+            "START" => engine.carousel_start_on(ch, tail.trim()).map(|_| Json::obj()),
+            "STOP" => {
+                engine.carousel_stop_on(ch, true);
+                Ok(Json::obj())
+            }
+            _ => Err("CAROUSEL START <playlista> | CAROUSEL STOP".into()),
+        },
+        "STATE" => engine.channel_state(ch),
+        // dane strony są wspólne: UPDATE i LIVE sięgają też anten kanałów bez przedrostka
+        "UPDATE" => engine.update(arg, &parse_kv(tail), true),
+        "LIVE" => engine.update(arg, &parse_kv(tail), false),
+        "TICKER" => ticker::parse_op(tail).and_then(|op| engine.ticker(arg, op)),
+        other => Err(format!("komenda {other} nie działa na kanale")),
+    }
+}
+
 pub fn exec_command(engine: &Arc<Engine>, line: &str) -> String {
     let line = line.trim();
+    if let Some(rest) = line.strip_prefix('@') {
+        return match exec_channel(engine, rest) {
+            Ok(j) => format!("OK {}", j.dump()),
+            Err(e) => format!("ERR {e}"),
+        };
+    }
     let (cmd, rest) = line.split_once(char::is_whitespace).unwrap_or((line, ""));
     let rest = rest.trim();
     let (arg, tail) = rest.split_once(char::is_whitespace).unwrap_or((rest, ""));
@@ -884,10 +962,10 @@ pub fn exec_command(engine: &Arc<Engine>, line: &str) -> String {
         },
         "MACRO" => {
             if tail.trim().is_empty() && arg.eq_ignore_ascii_case("STOP") {
-                engine.macro_gen.fetch_add(1, Ordering::SeqCst);
+                engine.macro_stop("");
                 Ok(Json::obj())
             } else {
-                start_macro(engine, rest).map(|_| Json::obj())
+                start_macro(engine, "", rest).map(|_| Json::obj())
             }
         }
         "CLEAR" => {

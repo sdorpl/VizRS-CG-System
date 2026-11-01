@@ -47,7 +47,7 @@ impl Host {
             layers: Vec::new(),
             next_order: 0,
             filter,
-            bus: if bus == "preview" { "preview".into() } else { "program".into() },
+            bus: if bus == "preview" || bus.starts_with("ch-") { bus.into() } else { "program".into() },
             dock_off: Vec::new(),
             output: Output::default(),
             stage: (1920.0, 1080.0),
