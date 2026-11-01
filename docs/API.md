@@ -34,6 +34,8 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 | `GET /ticker/<strona[:pole]>` | wiadomości tickera strony: `{"field":"items","items":[{"cat","color","text"}]}` |
 | `GET\|POST /ticker/<strona>/add?item=KAT\|treść`, `/set/<n>?item=…`, `/del/<n>`, `/clear` | zmiana listy (n od 1; `item` także w treści `{"item":"…"}`); zapisuje stronę i – gdy jest na antenie – aktualizuje bez restartu przewijania; odpowiedź jak UPDATE + `items` |
 
+`take`, `continue`, `out`, `clear`, `state`, `deploy`, `dock`, `rundown`, `macro`, `carousel` z `?channel=<kanał>` działają na antenie kanału (jak TCP `@<kanał>`); `state` podaje listę anten w `channels`. `POST /channels/<kanał>` dodaje kanał, `DELETE /channels/<kanał>` zdejmuje jego grafikę i usuwa go.
+
 ## Zasoby i narzędzia
 | Ścieżka | Opis |
 |---|---|
@@ -55,6 +57,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 · `TICKER <strona[:pole]> LIST|ADD <KAT|treść>|SET <n> <KAT|treść>|DEL <n>|CLEAR`
 · `NEXT <rundown>` · `RUNDOWN TAKE <rundown> [pozycja]` · `RUNDOWN RESET <rundown>` · `MACRO <nazwa>` · `MACRO STOP` · `CAROUSEL START <playlista>` · `CAROUSEL STOP` · `STATE` · `PING`.
 Odpowiedź: `OK {json}` albo `ERR komunikat`.
+Kanały playoutu: `@<kanał> <komenda>` (`@2 TAKE 4001 a=b`) działa na osobnej antenie kanału, widocznej na `/output?bus=ch-<kanał>`; główna antena i komendy bez `@` zostają bez zmian. Na kanale działają też `ARM` (Preview jest wspólny), `CONTINUE`, `OUT`, `CLEAR`, `STATE`, `NEXT`, `RUNDOWN`, `MACRO`, `CAROUSEL` oraz wspólne dla stron `UPDATE`, `LIVE`, `TICKER`. Każda antena ma własny kursor rundownu, karuzelę, makro i powiązania (dock). Antena powstaje przy pierwszym `TAKE` albo `POST /channels/<kanał>` (do 64, nazwa: litery, cyfry, `.`, `-`, `_`, do 32 znaków); lista kanałów przeżywa restart (`channels.json`), ich grafika nie, a przełączenie show ją czyści.
 
 ## OSC (UDP; `--osc 8000`)
 `/vizrs/take 1001` · `/vizrs/arm 1001` · `/vizrs/out main` · `/vizrs/continue main` · `/vizrs/clear` · `/vizrs/next <rundown>` · `/vizrs/macro <nazwa>` · `/vizrs/update 1001 pole wartość [pole wartość…]` · `/vizrs/ticker 3001 ADD SPORT|Gol` (argumenty jak w TCP `TICKER`).
@@ -67,6 +70,6 @@ Przy `--token` adres musi mieć postać `/vizrs/<token>/take …`.
 Zdarzenia: `snapshot` (stan startowy; osobny z `bus:"preview"`), `take`, `continue`, `out`, `clear`, `update`, `rescene`, `relayer`, `dock`, `show`, `state`, `error`, `wordreplace`.
 
 ## Wyjście `/output`
-`?layers=main,front` · `?bg=%2300ff00` · `?w=1280&h=720` · `?checker=1` · `?status=1` · `?bus=preview` · `?mode=fill` (kolor na czerni) · `?mode=key` (alfa jako luma). Fill + Key = dwa źródła przeglądarki dla ATEM/Tricastera.
+`?layers=main,front` · `?bg=%2300ff00` · `?w=1280&h=720` · `?checker=1` · `?status=1` · `?bus=preview` · `?bus=ch-2` (antena kanału, TCP `@2`) · `?mode=fill` (kolor na czerni) · `?mode=key` (alfa jako luma). Fill + Key = dwa źródła przeglądarki dla ATEM/Tricastera.
 Lekkie wyjście dla bezgłowego Chromium (playout kanału): `?fps=25` (animacje najwyżej N kl./s) · `?fx=step` (efekty uwagi schodkami, efekty ruchowe wyłączone); szczegóły w DOKUMENTACJA §10.
 Taśma crawla przesuwana przez playout (DevTools `Runtime.evaluate` na `/output`): `window.vizrsTape.state()` · `.external(id, on)` · `.film(id, s)`; szczegóły w DOKUMENTACJA §10.

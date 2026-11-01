@@ -111,6 +111,7 @@
   <span class="brand">Viz<b>RS</b> Trio</span>
   <nav><a href="/artist">Artist</a><a href="/trio" class="on">Trio</a><a href="/output?checker=1&status=1" target="_blank">Wyjście ↗</a></nav>
   <span class="sep navsep"></span>
+  <select id="antSel" title="Antena, na którą działają TAKE, CONTINUE, OUT i CLEAR oraz monitor PGM"></select>
   <select id="showSel" title="Show / paczka grafiki audycji – przełączenie zdejmuje wszystko z anteny"></select>
   <button id="bShowMenu" title="Nowy show, kopia bieżącego, usuwanie z listy">▾</button>
   <span id="conn" class="pill">łączenie…</span>
@@ -255,6 +256,26 @@ import { mountTickerEditor } from '/ticker-items.js';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// ------------------------------------------------------------ antena: główna ('') albo kanał playoutu
+let ant = new URLSearchParams(location.search).get('channel');
+try { ant ??= localStorage.getItem('vizrs.ant') || ''; } catch { ant ??= ''; }
+/** Adres komendy na wybranej antenie. */
+const onAnt = (url) => ant ? `${url}${url.includes('?') ? '&' : '?'}channel=${encodeURIComponent(ant)}` : url;
+const antQuery = () => ant ? '&bus=ch-' + encodeURIComponent(ant) : '';
+function renderAnt() {
+  const names = state.channels || [];
+  const opts = `<option value="">Antena główna</option>${names.map((n) => `<option value="${esc(n)}">Kanał ${esc(n)}</option>`).join('')}<option value="+">+ nowy kanał…</option>${ant ? `<option value="-">− usuń kanał ${esc(ant)}</option>` : ''}`;
+  if ($('#antSel').dataset.opts !== opts) { $('#antSel').innerHTML = opts; $('#antSel').dataset.opts = opts; }
+  $('#antSel').value = ant;
+  $('#pgmTag').textContent = ant ? 'KANAŁ ' + ant : 'PGM';
+}
+function setAnt(name) {
+  ant = name;
+  try { localStorage.setItem('vizrs.ant', ant); } catch { /* ignoruj */ }
+  $('#pgm').src = '/output?checker=1' + antQuery();
+  renderAnt(); applyPgmBg(); loadState();
+}
+
 async function api(method, url, body) {
   const r = await fetch(url, { method, headers: body !== undefined ? { 'Content-Type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
@@ -291,8 +312,8 @@ let stTimer;
 function loadState() {
   clearTimeout(stTimer);
   stTimer = setTimeout(async () => {
-    state = await api('GET', '/api/state').catch(() => state);
-    renderLayers(); renderPages(); renderStatus(); renderPlaylist(); renderRundown();
+    state = await api('GET', onAnt('/api/state')).catch(() => state);
+    renderAnt(); renderLayers(); renderPages(); renderStatus(); renderPlaylist(); renderRundown();
   }, 40);
 }
 
@@ -830,7 +851,7 @@ function pageHotkey(e) {
   if (!p) return false;
   e.preventDefault();
   const L = onAirLayer(p.id);
-  act(() => (L ? api('POST', '/api/out/' + encodeURIComponent(L.layer)) : api('POST', `/api/take/${p.number}`)), 'Skrót');
+  act(() => (L ? api('POST', onAnt('/api/out/' + encodeURIComponent(L.layer))) : api('POST', onAnt(`/api/take/${p.number}`))), 'Skrót');
   return true;
 }
 $('#ename').addEventListener('input', () => { draft.name = $('#ename').value; setDirtyPage(true); });
@@ -871,7 +892,7 @@ function applyPgmBg() {
   const mon = $('#pgm').parentElement; mon.classList.toggle('checker', bg === 'checker'); mon.style.background = bg === 'checker' ? '' : bg;
   const b = $('#pgm').contentDocument?.body; // ta sama domena – ustawiamy tło bezpośrednio
   if (b) { b.classList.toggle('checker', bg === 'checker'); b.style.background = bg === 'checker' ? '' : bg; }
-  $('#pgmOpen').href = '/output?status=1&' + (bg === 'checker' ? 'checker=1' : 'bg=' + encodeURIComponent(bg));
+  $('#pgmOpen').href = '/output?status=1&' + (bg === 'checker' ? 'checker=1' : 'bg=' + encodeURIComponent(bg)) + antQuery();
 }
 function setPgmBg(v, col) {
   pgmBg = v; if (col) pgmBgCol = col;
@@ -881,21 +902,33 @@ function setPgmBg(v, col) {
 $('#bgSel').onchange = (e) => setPgmBg(e.target.value);
 $('#bgCol').oninput = (e) => setPgmBg('custom', e.target.value);
 $('#pgm').addEventListener('load', applyPgmBg);
+$('#antSel').onchange = (e) => {
+  const v = e.target.value;
+  if (v === '-') {
+    if (!confirm(`Usunąć kanał ${ant}? Jego grafika zejdzie z anteny.`)) return renderAnt();
+    return act(async () => { await api('DELETE', '/api/channels/' + encodeURIComponent(ant)); setAnt(''); }, 'Kanał');
+  }
+  if (v !== '+') return setAnt(v);
+  const name = (prompt('Numer kanału (jak w ErsatzTV):') || '').trim();
+  if (!/^[\w.-]{1,32}$/.test(name)) return renderAnt();
+  act(async () => { await api('POST', '/api/channels/' + encodeURIComponent(name)); setAnt(name); }, 'Kanał');
+};
+if (ant) setAnt(ant);
 applyPgmBg();
 
 // ------------------------------------------------------------ playout
 async function act(fn, label) { try { await fn(); loadState(); } catch (e) { toast(`${label}: ${e.message}`, true); } }
-const take = () => draft && (applyFinalRules(), true) && act(() => api('POST', `/api/take/${draft.number}`, { values: draft.values }), 'TAKE');
+const take = () => draft && (applyFinalRules(), true) && act(() => api('POST', onAnt(`/api/take/${draft.number}`), { values: draft.values }), 'TAKE');
 // strona na antenie: jej rzeczywista warstwa (szablon mógł w tym czasie dostać inną w Artist)
 const airKey = () => encodeURIComponent(onAirLayer(draft.id)?.layer ?? draft.number);
-const cont = () => draft && act(() => api('POST', `/api/continue/${airKey()}`), 'CONTINUE');
-const out = () => draft && act(() => api('POST', `/api/out/${airKey()}`), 'OUT');
+const cont = () => draft && act(() => api('POST', onAnt(`/api/continue/${airKey()}`)), 'CONTINUE');
+const out = () => draft && act(() => api('POST', onAnt(`/api/out/${airKey()}`)), 'OUT');
 const upd = () => draft && (applyFinalRules(), true) && act(async () => {
   const r = await api('POST', `/api/update/${draft.number}?save=0`, { values: draft.values });
   if (!r.onAir) toast('Strona nie jest na antenie – nic do aktualizacji');
 }, 'UPDATE');
 const arm = () => draft && (applyFinalRules(), true) && act(() => api('POST', `/api/arm/${draft.number}`, { values: draft.values }), 'ARM');
-const clearAll = () => act(() => api('POST', '/api/clear'), 'CLEAR');
+const clearAll = () => act(() => api('POST', onAnt('/api/clear')), 'CLEAR');
 $('#bArm').onclick = arm; $('#bTake').onclick = take; $('#bCont').onclick = cont; $('#bOut').onclick = out; $('#bUpd').onclick = upd;
 $('#bClear').onclick = () => { if (confirm('Zdjąć wszystkie grafiki z anteny?')) clearAll(); };
 
@@ -918,12 +951,12 @@ function renderLayers() {
 }
 $('#layers').addEventListener('click', (e) => {
   const dk = e.target.closest('[data-ldock]');
-  if (dk) { act(() => api('POST', `/api/dock/${encodeURIComponent(dk.dataset.ldock)}/${dk.dataset.off === '1' ? 'off' : 'on'}`), 'Dock'); return; }
+  if (dk) { act(() => api('POST', onAnt(`/api/dock/${encodeURIComponent(dk.dataset.ldock)}/${dk.dataset.off === '1' ? 'off' : 'on'}`)), 'Dock'); return; }
   const d = e.target.closest('[data-ldeploy]');
-  if (d) { e.preventDefault(); act(() => api('POST', '/api/deploy/' + encodeURIComponent(d.dataset.ldeploy)), 'Wdrożenie'); return; }
+  if (d) { e.preventDefault(); act(() => api('POST', onAnt('/api/deploy/' + encodeURIComponent(d.dataset.ldeploy))), 'Wdrożenie'); return; }
   const c = e.target.closest('[data-lcont]'), o = e.target.closest('[data-lout]');
-  if (c) act(() => api('POST', '/api/continue/' + encodeURIComponent(c.dataset.lcont)), 'CONTINUE');
-  if (o) act(() => api('POST', '/api/out/' + encodeURIComponent(o.dataset.lout)), 'OUT');
+  if (c) act(() => api('POST', onAnt('/api/continue/' + encodeURIComponent(c.dataset.lcont))), 'CONTINUE');
+  if (o) act(() => api('POST', onAnt('/api/out/' + encodeURIComponent(o.dataset.lout))), 'OUT');
 });
 
 // ------------------------------------------------------------ playlisty
@@ -973,8 +1006,8 @@ $('#pl').addEventListener('click', (e) => {
   if (mv) { const i = +mv.dataset.mv; if (i > 0) { [pl.items[i - 1], pl.items[i]] = [pl.items[i], pl.items[i - 1]]; savePl(pl); } return; }
   const it = e.target.closest('.item[data-i]'); if (it && e.target.tagName !== 'INPUT') { const p = pl.items[+it.dataset.i]; if (p) trySelect(p.page); }
 });
-$('#plStart').onclick = () => { const pl = curPl(); if (pl) act(() => api('POST', '/api/carousel/start/' + pl.id), 'Karuzela'); };
-$('#plStop').onclick = () => act(() => api('POST', '/api/carousel/stop'), 'Karuzela');
+$('#plStart').onclick = () => { const pl = curPl(); if (pl) act(() => api('POST', onAnt('/api/carousel/start/' + pl.id)), 'Karuzela'); };
+$('#plStop').onclick = () => act(() => api('POST', onAnt('/api/carousel/stop')), 'Karuzela');
 
 // ------------------------------------------------------------ zakładki (playlista / rundown / makra)
 let tab = 'pl';
@@ -1027,20 +1060,20 @@ $('#rdDel').onclick = async () => {
   await api('DELETE', '/api/rundowns/' + rd.id); show.rundowns = show.rundowns.filter((r) => r.id !== rd.id); rdId = null; renderRundown();
 };
 $('#rdAdd').onclick = () => { const rd = curRd(); if (!rd || !draft) return; (rd.items ||= []).push({ id: newItemId(), page: draft.id, note: '' }); saveRd(rd); };
-$('#rdReset').onclick = () => { const rd = curRd(); if (rd) act(() => api('POST', `/api/rundown/${rd.id}/reset`), 'Rundown'); };
-function rdNext() { const rd = curRd(); if (rd) act(() => api('POST', `/api/rundown/${rd.id}/next`), 'NEXT'); }
+$('#rdReset').onclick = () => { const rd = curRd(); if (rd) act(() => api('POST', onAnt(`/api/rundown/${rd.id}/reset`)), 'Rundown'); };
+function rdNext() { const rd = curRd(); if (rd) act(() => api('POST', onAnt(`/api/rundown/${rd.id}/next`)), 'NEXT'); }
 $('#rdNext').onclick = rdNext;
 $('#rd').addEventListener('click', (e) => {
   const rd = curRd(); if (!rd) return;
   const rm = e.target.closest('[data-rdrm]'), cur = e.target.closest('[data-rdcur]');
   if (rm) { rd.items = rd.items.filter((i) => i.id !== rm.dataset.rdrm); saveRd(rd); return; }
-  if (cur) { act(() => api('POST', `/api/rundown/${rd.id}/cursor/${encodeURIComponent(cur.dataset.rdcur)}`), 'Rundown'); return; }
+  if (cur) { act(() => api('POST', onAnt(`/api/rundown/${rd.id}/cursor/${encodeURIComponent(cur.dataset.rdcur)}`)), 'Rundown'); return; }
   const it = e.target.closest('.item[data-iid]');
   if (it && e.target.tagName !== 'INPUT') { const x = rd.items.find((i) => i.id === it.dataset.iid); if (x) trySelect(x.page); }
 });
 $('#rd').addEventListener('dblclick', (e) => {
   const rd = curRd(), it = e.target.closest('.item[data-iid]');
-  if (rd && it && e.target.tagName !== 'INPUT') act(() => api('POST', `/api/rundown/${rd.id}/take/${encodeURIComponent(it.dataset.iid)}`), 'Rundown');
+  if (rd && it && e.target.tagName !== 'INPUT') act(() => api('POST', onAnt(`/api/rundown/${rd.id}/take/${encodeURIComponent(it.dataset.iid)}`)), 'Rundown');
 });
 $('#rd').addEventListener('change', (e) => {
   const id = e.target.dataset.note; if (!id) return;
@@ -1133,8 +1166,8 @@ $('#mcSave').onclick = async () => {
   try { const r = await api('PUT', '/api/macros/' + m.id, { ...m, steps: textToSteps($('#mcText').value) }); Object.assign(m, r); toast('Zapisano makro'); renderMacros(); }
   catch (e) { toast(e.message, true); if (isConflict(e)) loadShow(); }
 };
-$('#mcRun').onclick = async () => { await $('#mcSave').onclick(); const m = curMc(); if (m) act(() => api('POST', '/api/macro/' + encodeURIComponent(m.id)), 'Makro'); };
-$('#mcStop').onclick = () => act(() => api('POST', '/api/macro/stop'), 'Makro');
+$('#mcRun').onclick = async () => { await $('#mcSave').onclick(); const m = curMc(); if (m) act(() => api('POST', onAnt('/api/macro/' + encodeURIComponent(m.id))), 'Makro'); };
+$('#mcStop').onclick = () => act(() => api('POST', onAnt('/api/macro/stop')), 'Makro');
 $('#mcFromAir').onclick = () => {
   if (!state.layers.length) return toast('Antena jest czysta – nie ma czego zapisać', true);
   const n = prompt('Nazwa presetu (makra) z bieżącego stanu anteny', 'Preset ' + new Date().toLocaleTimeString('pl-PL', { timeZone: DEFAULT_TZ })); if (!n) return;

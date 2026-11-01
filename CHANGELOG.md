@@ -2,6 +2,11 @@
 
 ## Niewydane
 
+## 2.0.12 (2026-11-01) – „Anteny kanałów”
+
+- **Anteny kanałów playoutu:** jeden serwer ma osobną antenę na kanał: TCP `@<kanał> <komenda>`, HTTP `?channel=<kanał>`, wyjście `/output?bus=ch-<kanał>` (także `vizrs-render`). Każda antena ma własną karuzelę, kursor rundownu, makro i dock; lista kanałów przeżywa restart.
+- **Trio:** lista Antena przełącza sterowanie i monitor PGM między anteną główną a kanałami.
+
 ## 2.0.11 (2026-11-01) – „Porządkowe”
 
 - Wydanie techniczne razem z VizRS CG Playout 2.3.1. Bez zmian w działaniu aplikacji.
