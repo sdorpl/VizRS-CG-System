@@ -101,6 +101,9 @@ fn motion(m: &Json) -> R {
     Ok(())
 }
 
+/// Najdłuższy czas strony na kanale (doba), jak w VizRS CG Playout.
+const MAX_PLAYOUT_SECONDS: f64 = 86_400.0;
+
 fn num_in(v: &Json, what: &str, lo: f64, hi: f64) -> R {
     match v {
         Json::Num(n) if n.is_finite() && *n >= lo && *n <= hi => Ok(()),
@@ -453,6 +456,29 @@ pub fn page(p: &Json) -> R {
     if let Some(v) = opt(p, "values") {
         values(v)?;
     }
+    if let Some(v) = opt(p, "playout") {
+        playout(v)?;
+    }
+    Ok(())
+}
+
+/// Czas strony na kanale VizRS CG Playout: `at` – sekundy po starcie pozycji
+/// (ujemne = przed końcem), `out` – zejście przed końcem, `ref` – koniec pozycji
+/// (`item`) albo audycji z EPG (`programme`). Czyta go sidecar, VizRS tylko przechowuje.
+fn playout(v: &Json) -> R {
+    let Json::Obj(fields) = v else { return Err("strona.playout: oczekiwano obiektu".into()) };
+    for (k, x) in fields {
+        if *x == Json::Null {
+            continue;
+        }
+        let what = format!("strona.playout.{k}");
+        match k.as_str() {
+            "at" => num_in(x, &what, -MAX_PLAYOUT_SECONDS, MAX_PLAYOUT_SECONDS)?,
+            "out" => num_in(x, &what, 0.0, MAX_PLAYOUT_SECONDS)?,
+            "ref" => one_of(x, &what, |r| r == "item" || r == "programme")?,
+            _ => return Err(format!("{what}: nieznane pole")),
+        }
+    }
     Ok(())
 }
 
@@ -624,6 +650,20 @@ mod tests {
         assert!(page(&p(r#"{"number":1e300}"#)).is_err());
         assert!(page(&p(r#"{"number":100000}"#)).is_err());
         assert!(page(&p(r#"{"number":1.5}"#)).is_err());
+    }
+
+    #[test]
+    fn page_playout_times() {
+        assert!(page(&p(r#"{"playout":{"at":-60,"out":5,"ref":"programme"}}"#)).is_ok());
+        assert!(page(&p(r#"{"playout":{"at":10}}"#)).is_ok());
+        assert!(page(&p(r#"{"playout":{"at":null,"ref":"item"}}"#)).is_ok());
+        assert!(page(&p(r#"{"playout":{}}"#)).is_ok());
+        assert!(page(&p(r#"{"playout":"-60"}"#)).is_err());
+        assert!(page(&p(r#"{"playout":{"at":"-60"}}"#)).is_err());
+        assert!(page(&p(r#"{"playout":{"at":-100000}}"#)).is_err());
+        assert!(page(&p(r#"{"playout":{"out":-1}}"#)).is_err());
+        assert!(page(&p(r#"{"playout":{"ref":"show"}}"#)).is_err());
+        assert!(page(&p(r#"{"playout":{"cmd":"CLEAR"}}"#)).is_err());
     }
 
     #[test]

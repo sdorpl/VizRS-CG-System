@@ -129,6 +129,7 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
   +2.5 TAKE 3001
   ```
   **⇥ z anteny** zapisuje bieżący zestaw grafik jako makro (preset segmentu).
+- **Czas na kanale** (tylko z VizRS CG Playout i ErsatzTV): rozwiń **⏱ kanał** pod nazwą strony i wybierz np. wejście *przed końcem* 60 s, zejście 5 s – belka „Za chwilę” pojawi się minutę przed końcem audycji. Zapisz stronę.
 - **Skrót strony**: kliknij pole „skrót” w nagłówku edytora i naciśnij np. Ctrl+1 – ten skrót robi TAKE strony, a gdy jest na antenie, OUT.
 
 ### Sterowanie z telefonu

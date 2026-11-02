@@ -96,7 +96,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 | Obiekt | Pola | Uwagi |
 |---|---|---|
 | **scena** | `id`, `name`, `layer`, `width`, `height`, `duration`, `stops[]`, `markers[]`, `dock[]`, `packAssets[]` (pliki dołączone do paczki .cgpack), `fieldMeta{}`, `nodes[]`, `rev` | warstwa: litery, cyfry, `-`, `_` (maks. 50) |
-| **strona** | `id`, `number` (całkowita), `name`, `scene` (id sceny), `values{}`, `hotkey`, `note`, `rev` | `values` tylko wartości proste (tekst, liczba, tak/nie) |
+| **strona** | `id`, `number` (całkowita), `name`, `scene` (id sceny), `values{}`, `hotkey`, `note`, `playout{at, out, ref}`, `rev` | `values` tylko wartości proste (tekst, liczba, tak/nie); `playout` – czas strony na kanale (niżej) |
 | **playlista** | `id`, `name`, `loop`, `items[{page, duration}]` | karuzela odtwarzana przez serwer |
 | **rundown** | `id`, `name`, `items[{id, page, note}]` | kursor i „odegrane” żyją w pamięci serwera (do restartu) |
 | **makro** | `id`, `name`, `steps[{cmd, delay}]` | `cmd` w składni portu TCP; makro nie może wywołać `MACRO` |
@@ -404,7 +404,7 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 | Kolumna | Zawartość |
 |---|---|
 | Lewa | **Strony** (pole `nr` + Enter = wczytaj, szukaj, ⧉ Duplikuj, 🗑) i **Szablony** (＋ = nowa strona z wartościami domyślnymi) |
-| Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, **wybór warstwy**, ● ON AIR, 🔒); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
+| Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, **wybór warstwy**, ● ON AIR, 🔒, **⏱ kanał**); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
 | Prawa | monitor **PGM** (rzeczywiste wyjście, wybór tła monitora), **Na antenie – warstwy** (⏭ continue, ⏏ out, ⇅ dock, Wdróż teraz), zakładki **Playlista / Rundown / Makra** |
 | Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇩ Eksport show, ⇧ Import show, ✖ CLEAR ALL |
 
@@ -449,6 +449,8 @@ F2 i F3 działają na warstwie, na której strona faktycznie gra, także gdy sza
 | Shift+Esc | CLEAR ALL |
 | Ctrl+Spacja (w polu) | Word Replace |
 | skrót strony | TAKE tej strony, a gdy jest na antenie – OUT |
+
+**Czas na kanale (⏱ kanał):** pod nagłówkiem edytora rozwiń **⏱ kanał** i ustaw, kiedy VizRS CG Playout (sidecar ErsatzTV) bierze stronę na antenę kanału: **wejście** – domyślnie, *po starcie* (sekundy po starcie pozycji) albo *przed końcem* (np. 60 s – belka „Za chwilę”; puste = 60), **zejście** – sekundy przed końcem (puste = domyślne sidecara), **koniec** – audycji z EPG albo pozycji. Zapis trafia do strony jako `playout` (`at` – ujemne = przed końcem, 0–86 400 s; `out` 0–86 400 s; `ref` – `programme`/`item`). VizRS tylko go przechowuje; sidecar przepisuje go do adresu elementu strony w ErsatzTV przy synchronizacji (dokumentacja VizRS CG Playout, §3 „Grafika przed końcem audycji”). Bez sidecara pole nic nie zmienia.
 
 **Skrót strony:** kliknij pole „skrót” w nagłówku edytora i naciśnij kombinację (Ctrl lub Alt + klawisz albo F7, F9–F12, także z Shift); Backspace lub Delete usuwa skrót.
 

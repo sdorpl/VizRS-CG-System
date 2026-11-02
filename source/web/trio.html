@@ -72,6 +72,11 @@
   .status b.on { color: #ff6a66; }
   .elayer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   #elayer { font-family: var(--mono); font-size: 11px; padding: 1px 2px; max-width: 240px; }
+  #eplay summary { cursor: pointer; }
+  #eplay[open] summary { color: var(--text); }
+  #eplay .row { gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  #eplay input { width: 64px; font-size: 11px; padding: 1px 4px; }
+  #eplay select { font-size: 11px; padding: 1px 2px; }
   .segm { display: flex; gap: 0; flex-wrap: wrap; }
   .segm label { padding: 6px 14px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); cursor: pointer; margin-right: -1px; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
   .segm label:first-child { border-radius: 4px 0 0 4px; } .segm label:last-child { border-radius: 0 4px 4px 0; }
@@ -153,7 +158,13 @@
         <input id="ename" placeholder="Nazwa strony">
         <div class="row"><input id="ehotkey" placeholder="skrót" readonly title="Kliknij i naciśnij skrót (Ctrl/Alt/Shift+klawisz lub F7, F9–F12). Backspace = usuń. Skrót wywołuje TAKE, a gdy strona jest na antenie – OUT."><button id="eSave" class="acc" title="Zapisz stronę (Ctrl+S)">Zapisz</button><button id="eRevert" title="Przywróć zapisane">↺</button></div>
       </div>
-      <div class="status elayer"><span id="estatus"></span><label id="elayerBox" hidden>warstwa <select id="elayer"></select></label></div>
+      <div class="status elayer"><span id="estatus"></span><label id="elayerBox" hidden>warstwa <select id="elayer"></select></label>
+        <details id="eplay" hidden><summary id="eplaySum" title="Kiedy VizRS CG Playout bierze tę stronę na antenę kanału ErsatzTV (element strony w harmonogramie). Zapisuje się ze stroną; sidecar odczyta zmianę przy synchronizacji."></summary>
+          <div class="row"><label>wejście <select id="eplAt"><option value="">domyślnie</option><option value="start">po starcie</option><option value="end">przed końcem</option></select></label>
+            <input id="eplSec" type="number" min="0" max="86400" step="1" placeholder="s"> s
+            <label>zejście <input id="eplOut" type="number" min="0" max="86400" step="1" placeholder="dom."> s przed końcem</label>
+            <label>koniec <select id="eplRef"><option value="">domyślny</option><option value="programme">audycji (EPG)</option><option value="item">pozycji</option></select></label></div>
+        </details></div>
       <div class="scroll" id="fields"></div>
       <div id="pvBox" class="checker"><span id="pvTag">PODGLĄD</span><div id="pvStage"></div><div class="pvhit" id="pvHit"></div></div>
       <div class="row" style="padding:6px;border-top:1px solid var(--line)">
@@ -396,6 +407,36 @@ function selectPage(id, keepScroll) {
   renderEditor(); renderPages(); renderStatus();
   if (!keepScroll) $(`#pages .item[data-id="${id}"]`)?.scrollIntoView({ block: 'nearest' });
 }
+// ------------------------------------------------------------ czas strony na kanale (VizRS CG Playout)
+/** Opis `page.playout` dla nagłówka: `at` < 0 = przed końcem, `out` = zejście przed końcem. */
+function playoutLabel(P) {
+  if (!P || (P.at == null && P.out == null && !P.ref)) return '⏱ kanał: domyślnie';
+  const at = P.at == null ? 'wejście domyślne' : P.at < 0 ? `${-P.at} s przed końcem` : `${P.at} s po starcie`;
+  return `⏱ kanał: ${at}${P.out != null ? `, zejście ${P.out} s przed końcem` : ''}${P.ref ? ` (${P.ref === 'item' ? 'pozycji' : 'audycji'})` : ''}`;
+}
+function renderPlayout() {
+  const P = draft?.playout || {};
+  $('#eplay').hidden = !draft;
+  $('#eplAt').value = P.at == null ? '' : P.at < 0 ? 'end' : 'start';
+  $('#eplSec').value = P.at == null ? '' : Math.abs(P.at);
+  $('#eplSec').disabled = P.at == null;
+  $('#eplOut').value = P.out ?? '';
+  $('#eplRef').value = P.ref || '';
+  $('#eplaySum').textContent = playoutLabel(draft?.playout);
+}
+function readPlayout() {
+  const num = (el) => { const v = parseFloat(el.value); return Number.isFinite(v) ? Math.min(86400, Math.max(0, v)) : null; };
+  const mode = $('#eplAt').value, sec = num($('#eplSec')), out = num($('#eplOut')), ref = $('#eplRef').value;
+  const P = {};
+  // „przed końcem” bez liczby = 60 s – typowa belka „Za chwilę”
+  if (mode) P.at = mode === 'end' ? -(sec || 60) : (sec ?? 0);
+  if (out != null) P.out = out;
+  if (ref) P.ref = ref;
+  if (Object.keys(P).length) draft.playout = P; else delete draft.playout;
+  renderPlayout(); setDirtyPage(true);
+}
+for (const id of ['#eplAt', '#eplSec', '#eplOut', '#eplRef']) $(id).addEventListener('change', () => { if (draft) readPlayout(); });
+
 function setDirtyPage(d) { dirtyPage = d; $('#eSave').classList.toggle('dirty', d); $('#eSave').textContent = d ? 'Zapisz ●' : 'Zapisz'; }
 
 function fieldInput(f, v) {
@@ -431,8 +472,9 @@ const hex6 = (c) => { const p = parseColor(c); if (!p) return '#000000'; return 
 
 function renderEditor() {
   pv?.destroy(); pv = null; lastGood.clear();
-  if (!draft) { $('#fields').innerHTML = '<div class="empty">Wybierz stronę z listy lub wpisz jej numer.</div>'; $('#enum').value = ''; $('#ename').value = ''; return; }
+  if (!draft) { $('#fields').innerHTML = '<div class="empty">Wybierz stronę z listy lub wpisz jej numer.</div>'; $('#enum').value = ''; $('#ename').value = ''; $('#eplay').hidden = true; return; }
   $('#enum').value = draft.number; $('#ename').value = draft.name; $('#ehotkey').value = draft.hotkey || '';
+  renderPlayout();
   const s = sceneOf(draft);
   if (!s) { $('#fields').innerHTML = '<div class="empty">⚠ Szablon tej strony nie istnieje.</div>'; return; }
   // kolejność Tab: pola z regułą `tab` rosnąco, reszta w kolejności sceny

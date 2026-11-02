@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Trio – czas strony na kanale (⏱ kanał):** wejście po starcie albo przed końcem audycji, zejście i koniec (audycji z EPG / pozycji), zapisywane w stronie jako `playout`. Odczytuje go VizRS CG Playout 2.7.0 (belka „Za chwilę” przed końcem audycji w ErsatzTV).
+
 ## 2.0.15 (2026-11-01) – „Telefon”
 
 - **Trio na telefonie, wygląd i obsługa aplikacji:** pasek zakładek na dole, przesuwanie zakładek palcem, arkusze zamiast okienek przeglądarki, przycisk Wstecz, wibracje, czerwony nagłówek przy zajętej antenie. Nowe: podgląd strony, wiersze wiadomości tickera, pola koloru i obrazu (ze zdjęciem z telefonu), karuzela, ARM, wdrażanie szablonu.

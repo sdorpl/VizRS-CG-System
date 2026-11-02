@@ -1,6 +1,6 @@
 # PLAN – belka „Za chwilę / Następnie” przed końcem audycji
 
-> Status (2026-11-02): **propozycja**, czeka na decyzje z §6. Prace głównie w **VizRS CG Playout** (`../VirtRS CG Playout`, sidecar ErsatzTV), a w VizRS CG System tylko scena i strona. Zgoda użytkownika na zmiany w obu repozytoriach: 2026-11-02.
+> Status (2026-11-02): **Z1, Z2, Z3 i Z6 wdrożone** – VizRS CG Playout 2.7.0 (gałąź `za-chwile`), VizRS: pole strony `playout` i **⏱ kanał** w Trio. Czeka: Z4 (odliczanie), Z5 (osobna scena, jeśli KafelProgramu nie wystarczy), weryfikacja na stosie (§5). Zgoda użytkownika na zmiany w obu repozytoriach: 2026-11-02.
 
 ## 1. Cel
 
@@ -25,6 +25,7 @@ Brakuje więc tylko **planowania komendy względem końca**. Silnik VizRS nie po
 3. **Z3:** parametry czasu w adresie elementu strony (`page=1405&at=-60`), żeby belkę można było zaznaczać w ErsatzTV tylko przy wybranych pozycjach.
 4. **Z4 (opcjonalnie):** symbol pełnej daty startu następnej audycji do odliczania zegarem VizRS.
 5. **Z5:** w VizRS scena i strona belki gotowe dla kanału (renderer natywny, lekkie `/output`).
+6. **Z6:** czas strony na kanale ustawiany w Trio (`page.playout`), przepisywany przez synchronizację sidecara do adresu elementu.
 
 Przykład docelowej konfiguracji sidecara:
 
@@ -78,6 +79,16 @@ Przykład docelowej konfiguracji sidecara:
 - Długość animacji wyjścia sceny musi być ≤ `end_out_seconds`, żeby belka zeszła przed cięciem.
 - Opcjonalnie: wariant sceny z dwoma wierszami („Za chwilę” i „Następnie”: `{next_title}` oraz kolejny wpis EPG) wymaga symbolu `{after_next_*}` w sidecarze (EPG ma 3 wpisy). Decyzja w §6 p. 4.
 - Sprawdzenie: `vizrs-render check` (renderer natywny) i `/output?fps=…` (lekkie wyjście, [PLAN-lekkie-output.md](PLAN-lekkie-output.md)). Jeśli powstanie nowa scena, trafia do paczki w `examples/` (`tools/build-packs.mjs`) i do danych startowych sidecara (`seed/`).
+
+### Z6 – czas strony na kanale w Trio (oba repozytoria)
+
+- VizRS: strona ma opcjonalne `playout: { at, out, ref }` (`at` −86 400…86 400 s, ujemne = przed końcem; `out` 0…86 400 s; `ref` `item`/`programme`), reguła w `validate.rs` z testem. Silnik tylko je przechowuje.
+- Trio: w statusie edytora rozwijane **⏱ kanał** (wejście: domyślnie / po starcie / przed końcem + sekundy, zejście, koniec), zapis razem ze stroną.
+- Sidecar: `parse_pages` czyta `playout` (wartości spoza zakresu pomija), `/etv/pages` je przekazuje, a synchronizacja wpisuje `at`/`out`/`ref` do URL wygenerowanych `page-<ID>.yml` – także istniejących (reszta URL zostaje). Pliki ręczne bez zmian.
+
+### Decyzje (2026-11-02)
+
+Przyjęte propozycje z §6: koniec domyślnie `programme`; pierwsze wydanie Z1+Z2+Z3, a do tego Z6 (prośba o ustawianie czasu w Trio); treść jednowierszowa (KafelProgramu); Z4 później. Pliki elementów (§6 p. 3): wariant „przed końcem” dostaje się, ustawiając czas strony w Trio (Z6), bez osobnych plików `-end`.
 
 ## 5. Weryfikacja na stosie
 
