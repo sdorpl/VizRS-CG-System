@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 2.0.16 (2026-11-02) – „Za chwilę”
+
 - **Trio – czas strony na kanale (⏱ kanał):** wejście po starcie albo przed końcem audycji, zejście i koniec (audycji z EPG / pozycji), zapisywane w stronie jako `playout`. Odczytuje go VizRS CG Playout 2.7.0 (belka „Za chwilę” przed końcem audycji w ErsatzTV).
 
 ## 2.0.15 (2026-11-01) – „Telefon”

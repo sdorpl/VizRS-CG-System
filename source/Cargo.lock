@@ -4,4 +4,4 @@ version = 4
 
 [[package]]
 name = "vizrs"
-version = "2.0.15"
+version = "2.0.16"

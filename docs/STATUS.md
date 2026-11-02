@@ -2,10 +2,10 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [plany/PLAN-rozbudowy.md](plany/PLAN-rozbudowy.md), raport: [plany/RAPORT-analiza-VizRS-vs-BTB.md](plany/RAPORT-analiza-VizRS-vs-BTB.md).
 >
-> **Ostatnia aktualizacja:** 2026-11-01
+> **Ostatnia aktualizacja:** 2026-11-02
 
 ## Bieżący etap
-**Wydanie 2.0.15 „Telefon”** (2026-11-01). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
+**Wydanie 2.0.16 „Za chwilę”** (2026-11-02). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
 **Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
