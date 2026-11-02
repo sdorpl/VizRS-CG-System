@@ -11,6 +11,7 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-gtk4.md](PLAN-gtk4.md) | propozycja (G0–G6), czeka na prototyp G0 | przebudowa okna natywnego na Linuksie na GTK 4 i WebKitGTK 6.0 |
 | [PLAN-kanal.md](PLAN-kanal.md) | realizacja w ffplayout porzucona (2026-10-24, repo archiwalne); kanał: VizRS CG Playout (ErsatzTV) | VizRS Playout – branding kanału sterowany harmonogramem (Viz Multichannel) |
 | [PLAN-native.md](PLAN-native.md) | N1 w toku (gałąź `render-native`, renderer 0.1) | renderer natywny `vizrs-render` dla playoutu kanału bez GPU: sceny rysowane bez Chromium, braki do Chromium |
+| [PLAN-za-chwile.md](PLAN-za-chwile.md) | propozycja (Z1–Z5), czeka na decyzje §6 | belka „Za chwilę / Następnie” N s przed końcem audycji: planowanie względem końca w VizRS CG Playout (`on_end`, parametry elementu), scena w VizRS |
 | [PLAN-lekkie-output.md](PLAN-lekkie-output.md) | L1–L4 wdrożone (2026-10-24), L5 później | lekkie `/output` dla bezgłowego Chromium bez GPU (Ampere A1): `?fps=N`, schodkowe efekty, wskazówki dla scen kanału |
 
 Założenia Z1–Z10 z planu rozbudowy obowiązują przy każdej nowej funkcji.
