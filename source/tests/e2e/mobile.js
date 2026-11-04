@@ -109,6 +109,25 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await sleep(100);
     ok(!(await api('/api/state')).locks?.some((l) => l.kind === 'pages'), 'zapis zwalnia blokadę');
 
+    // czas strony na kanale (⏱ kanał) jak w Trio: przed końcem bez liczby = 60 s, zapis w page.playout
+    ok((await p.textContent('#eplaySum')).includes('domyślnie'), '⏱ kanał: domyślnie bez page.playout');
+    await p.tap('#eplaySum');
+    await p.selectOption('#eplAt', 'end');
+    ok(await p.inputValue('#eplSec') === '60' && (await p.textContent('#eplaySum')).includes('60 s przed końcem'), '„przed końcem” bez liczby = 60 s');
+    await p.fill('#eplOut', '5'); await p.dispatchEvent('#eplOut', 'change');
+    await p.selectOption('#eplRef', 'item');
+    ok(await p.evaluate(() => document.querySelector('#eplay').open), 'sekcja ⏱ kanał zostaje otwarta po zmianie');
+    await p.tap('#eSave');
+    await p.waitForFunction(() => document.querySelector('#eSave').disabled);
+    const pl = (await api('/api/show')).pages.find((x) => x.number === num).playout;
+    ok(JSON.stringify(pl) === JSON.stringify({ at: -60, out: 5, ref: 'item' }), 'Zapisz zapisuje page.playout', pl);
+    await shot('3b-kanal');
+    await p.selectOption('#eplAt', ''); await p.fill('#eplOut', ''); await p.dispatchEvent('#eplOut', 'change'); await p.selectOption('#eplRef', '');
+    await p.tap('#eSave');
+    await p.waitForFunction(() => document.querySelector('#eSave').disabled);
+    ok((await api('/api/show')).pages.find((x) => x.number === num).playout === undefined, 'domyślne ustawienia usuwają page.playout');
+    await sleep(500); // po zapisie zmienia się pasek, a ResizeObserver wyrównuje zakładkę – dalsze kroki przesuwają widok
+
     // reguły pól jak w Trio
     const rules = await p.evaluate(async () => { const m = await import('/field-rules.js'); return [m.limitText('abc', { upper: true }).v, m.limitText('a\nb', { oneLine: true }).v, m.limitText('abcd', { maxChars: 3 }, 'abc').v, m.visLen('{b}ab{/b}\nc')]; });
     ok(JSON.stringify(rules) === JSON.stringify(['ABC', 'a b', 'abc', 3]), 'wspólne reguły pól', rules);
