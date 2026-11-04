@@ -1,5 +1,6 @@
 name: Release
-# Wydanie po wypchnięciu znacznika v* (np. v2.1.0) albo ręcznie (Actions → Release → Run workflow).
+# Wydanie po wypchnięciu znacznika v* (np. v2.1.0) albo ręcznie (Actions → Release → Run workflow):
+#   ręcznie bez `publish` – szkic; z `publish` – wydanie i znacznik na commicie z wybranej gałęzi.
 #   binarki vizrs + vizrs-app + vizrs-shell: Windows (.zip), macOS (.tar.gz), Linux (.tar.gz)
 #   AppImage: VizRS Artist i VizRS Trio (Linux x86_64, okno natywne WebKitGTK)
 #   .deb: pakiet Debian/Ubuntu vizrs_<wersja>_amd64.deb (deploy/deb/build.sh)
@@ -12,6 +13,10 @@ on:
       version:
         description: 'Wersja (np. 2.1.0) – bez znacznika powstaje tylko szkic wydania'
         required: true
+      publish:
+        description: 'Opublikuj od razu: znacznik powstaje na tym commicie, szkic tej wersji jest zastępowany'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -115,10 +120,20 @@ jobs:
           merge-multiple: true
       - name: Sumy kontrolne
         run: cd dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Usuń szkic tej wersji (publikacja ręczna)
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.draft and .name == \"$VERSION\") | .id" |
+            xargs -r -I{} gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/{}"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
-          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          # znacznik tworzony przy publikacji wskazuje zbudowany commit, nie gałąź domyślną
+          target_commitish: ${{ github.sha }}
+          draft: ${{ github.event_name == 'workflow_dispatch' && !inputs.publish }}
+          make_latest: ${{ github.event_name == 'push' || inputs.publish }}
           generate_release_notes: true
           files: dist/*
           body: |
