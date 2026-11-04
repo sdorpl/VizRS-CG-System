@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 2.0.17 (2026-11-04) – „Za chwilę w telefonie”
+
 - **Trio na telefonie – czas strony na kanale (⏱ kanał):** w Edycji, pod polami strony, te same ustawienia co w Trio: wejście po starcie albo przed końcem audycji, zejście i koniec (audycji z EPG / pozycji). Zapis w `playout` strony dla VizRS CG Playout.
 
 ## 2.0.16 (2026-11-02) – „Za chwilę”
