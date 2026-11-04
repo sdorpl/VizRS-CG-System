@@ -1,6 +1,6 @@
 # VizRS – dokumentacja aplikacji
 
-> Wersja 2.0.16 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
+> Wersja 2.0.17 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
 > Instrukcja krok po kroku dla nowych osób: [INSTRUKCJA-poczatkujacy.md](INSTRUKCJA-poczatkujacy.md).
 > API: [API.md](API.md) · Companion: [COMPANION.md](COMPANION.md) · awarie: [RUNBOOK.md](RUNBOOK.md) · braki: [LUKI.md](LUKI.md).
 
@@ -501,6 +501,7 @@ Zakładki zmienia pasek na dole albo przesunięcie palcem w bok. Pytania i menu 
 
 - **Ochrona anteny:** dotknięcie strony lub pozycji rundownu niczego nie wysyła. Kolejna komenda czeka na odpowiedź serwera i krótką przerwę, więc podwójne dotknięcie TAKE nie gra grafiki dwa razy.
 - **Pola:** tekst, liczby, przełączniki, listy, warianty, kolor, obraz (lista grafik, **⤒** wgrywa zdjęcie z telefonu) i wiadomości tickera (wiersz: kategoria i treść, **＋ Wiadomość**, kolor wiadomości zostaje). Reguły pól działają jak w Trio. Czcionkę zmienia się w Trio; strona podaje, ile takich pól pominięto, a ich wartości zostają bez zmian.
+- **⏱ kanał** pod polami strony: czas strony na kanale dla VizRS CG Playout – te same ustawienia co w Trio (§9, „Czas na kanale”): wejście domyślne / po starcie / przed końcem (puste = 60 s), zejście w sekundach przed końcem, koniec audycji (EPG) albo pozycji. Zapisuje się ze stroną (**Zapisz**) jako `playout`.
 - **Blokada edycji** (§9.8) zakłada się przy pierwszej zmianie pola, nie przy wybraniu strony. Nazwa operatora to `vizrs.who`, domyślnie `Telefon NN`.
 - **Antena:** lista pojawia się, gdy są kanały playoutu; `?channel=<kanał>` i wybór są wspólne z Trio w tej samej przeglądarce. Po usunięciu wybranego kanału strona wraca na antenę główną i o tym informuje.
 - **Sieć:** komenda bez odpowiedzi przez 6 s zgłasza błąd i nie jest ponawiana. Po takim błędzie sprawdź antenę, bo komenda mogła dojść. Zanik połączenia widać na pasku; po powrocie sieci albo telefonu z uśpienia strona sama się łączy i odświeża dane.

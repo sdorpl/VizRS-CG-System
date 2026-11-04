@@ -62,6 +62,11 @@
   .cnt.warn { color: var(--acc); } .cnt.bad { color: #ff6a66; font-weight: 700; }
   .row > input, .row > select { flex: 1; width: auto; }
   input[type=color] { flex: none !important; width: 48px; height: 44px; }
+  #eplay { padding: 4px 10px 10px; border-top: 1px solid var(--line); margin-top: 6px; }
+  #eplay summary { cursor: pointer; padding: 10px 0; font-size: 13.5px; color: var(--dim); }
+  #eplay[open] summary { color: var(--text); }
+  #eplay .fl { padding: 5px 0; }
+  #eplay .hint { font-size: 12px; color: var(--dim); margin-top: 4px; }
   .tk { display: grid; grid-template-columns: 76px minmax(0, 1fr) 44px; gap: 6px; margin-bottom: 6px; }
   .tk button { padding: 0; font-size: 18px; }
   .tkadd { width: 100%; }
@@ -415,9 +420,50 @@ function renderEdit() {
   $('#fields').innerHTML = fields.map((f) => {
     return `<div class="fl ${f.type === 'bool' && f.nodeType !== 'variant' ? 'chk' : ''}"><label>${esc(f.label)}</label>${fieldInput(f, draft.values[f.id] ?? f.default)}</div>`;
   }).join('') + (rest ? `<div class="empty">Pola czcionki zmienisz w Trio: ${rest}.</div>` : fields.length ? '' : '<div class="empty">Ta strona nie ma pól.</div>');
+  $('#fields').insertAdjacentHTML('beforeend', playoutHtml());
   $$('[data-tkhost]').forEach((h) => renderTicker(h.dataset.tkhost));
   updateCounters(); renderHead();
 }
+
+// ------------------------------------------------------------ czas strony na kanale (VizRS CG Playout) – jak ⏱ kanał w Trio
+/** Opis `page.playout`: `at` < 0 = przed końcem, `out` = zejście przed końcem. */
+function playoutLabel(P) {
+  if (!P || (P.at == null && P.out == null && !P.ref)) return '⏱ kanał: domyślnie';
+  const at = P.at == null ? 'wejście domyślne' : P.at < 0 ? `${-P.at} s przed końcem` : `${P.at} s po starcie`;
+  return `⏱ kanał: ${at}${P.out != null ? `, zejście ${P.out} s przed końcem` : ''}${P.ref ? ` (${P.ref === 'item' ? 'pozycji' : 'audycji'})` : ''}`;
+}
+let playOpen = false;
+function playoutHtml() {
+  const P = draft.playout || {};
+  const mode = P.at == null ? '' : P.at < 0 ? 'end' : 'start';
+  const opt = (v, t, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${t}</option>`;
+  return `<details id="eplay" ${playOpen ? 'open' : ''}><summary id="eplaySum">${esc(playoutLabel(draft.playout))}</summary>
+    <div class="fl"><label>Wejście</label><select id="eplAt">${opt('', 'domyślnie', mode)}${opt('start', 'po starcie', mode)}${opt('end', 'przed końcem', mode)}</select></div>
+    <div class="fl"><label>Sekundy wejścia</label><input id="eplSec" type="number" inputmode="numeric" min="0" max="86400" step="1" placeholder="${mode === 'end' ? '60' : 's'}" value="${P.at == null ? '' : Math.abs(P.at)}" ${P.at == null ? 'disabled' : ''}></div>
+    <div class="fl"><label>Zejście – sekundy przed końcem</label><input id="eplOut" type="number" inputmode="numeric" min="0" max="86400" step="1" placeholder="domyślnie" value="${P.out ?? ''}"></div>
+    <div class="fl"><label>Koniec</label><select id="eplRef">${opt('', 'domyślny', P.ref || '')}${opt('programme', 'audycji (EPG)', P.ref || '')}${opt('item', 'pozycji', P.ref || '')}</select></div>
+    <div class="hint">Kiedy VizRS CG Playout bierze tę stronę na antenę kanału ErsatzTV. Zapisuje się ze stroną; sidecar odczyta zmianę przy synchronizacji.</div></details>`;
+}
+function readPlayout() {
+  const num = (el) => { const v = parseFloat(el.value); return Number.isFinite(v) ? Math.min(86400, Math.max(0, v)) : null; };
+  const mode = $('#eplAt').value, sec = num($('#eplSec')), out = num($('#eplOut')), ref = $('#eplRef').value;
+  const P = {};
+  // „przed końcem” bez liczby = 60 s – typowa belka „Za chwilę”
+  if (mode) P.at = mode === 'end' ? -(sec || 60) : (sec ?? 0);
+  if (out != null) P.out = out;
+  if (ref) P.ref = ref;
+  if (Object.keys(P).length) draft.playout = P; else delete draft.playout;
+  // na miejscu, bez podmiany HTML: pole z fokusem zostaje (zmiana fokusu wywołałaby kolejne `change`)
+  const Q = draft.playout || {};
+  $('#eplaySum').textContent = playoutLabel(draft.playout);
+  $('#eplSec').disabled = Q.at == null;
+  $('#eplSec').value = Q.at == null ? '' : Math.abs(Q.at);
+  $('#eplSec').placeholder = mode === 'end' ? '60' : 's';
+  $('#eplOut').value = Q.out ?? '';
+  if (!dirty) setDirty(true);
+}
+$('#fields').addEventListener('change', (e) => { if (draft && /^epl/.test(e.target.id)) readPlayout(); });
+$('#fields').addEventListener('toggle', (e) => { if (e.target.id === 'eplay') playOpen = e.target.open; }, true);
 
 // podgląd strony z tym samym rendererem co antena, zatrzymany w pierwszym stopie; działa tylko na widocznej zakładce
 let pv = null;
