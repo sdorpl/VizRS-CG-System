@@ -41,6 +41,10 @@
   #tree .item.hid span:not(.eye) { opacity: .4; }
   #tree .eye { opacity: .5; font-size: 11px; padding: 0 3px; }
   #tree .eye:hover { opacity: 1; }
+  #tree .lock { opacity: .35; font-size: 11px; padding: 0 3px; }
+  #tree .lock.on { opacity: 1; color: var(--acc); }
+  #tree .lock:hover { opacity: 1; }
+  #tree .item.lockd .grow { font-style: italic; }
   .pill.fld { background: #1b3157; border-color: var(--blue); color: #a9c8ff; }
   #props .phead { display: flex; gap: 6px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); }
   #props .phead .ic { color: var(--acc); font-size: 16px; }
@@ -162,6 +166,7 @@
       <button class="icon" id="tOut" title="Wyjmij z grupy">⇤</button>
       <button class="icon" id="tIn" title="Włóż do poprzedniej grupy">⇥</button>
       <button class="icon" id="tDupN" title="Duplikuj (Ctrl+D)">⧉</button>
+      <button class="icon" id="tFit" title="Dopasuj wymiar grupy do zawartości">⤢</button>
       <span class="grow"></span>
       <button class="icon danger" id="tDel" title="Usuń (Del)"><i class="ico del"></i></button>
     </div>
@@ -284,6 +289,16 @@ function locate(id, nodes = scene.nodes, parent = null) {
   return null;
 }
 const selNode = () => (selId ? locate(selId)?.node : null);
+/** Zablokowany węzeł (sam albo przez zablokowanego przodka) – nie da się go chwycić na kanwie ani przesunąć. */
+function isLocked(id) { let cur = locate(id); while (cur) { if (cur.node.locked) return true; cur = cur.parent ? locate(cur.parent.id) : null; } return false; }
+/** Wymiar grupy = zasięg zawartości (największy element razem z przesunięciem), jak obrys w Viz Artist. */
+function fitGroup(g) {
+  if (!g || g.type !== 'group' || !g.children?.length) return false;
+  let w = 0, h = 0;
+  for (const c of g.children) { const p = c.props || {}; w = Math.max(w, (+p.x || 0) + (+p.w || 0)); h = Math.max(h, (+p.y || 0) + (+p.h || 0)); }
+  if (!(w > 0 && h > 0)) return false;
+  g.props ||= {}; g.props.w = Math.round(w); g.props.h = Math.round(h); return true;
+}
 
 // ------------------------------------------------------------ ładowanie
 async function loadAssets() { assets = await api('GET', '/api/assets').catch(() => []); updateFontList(); }
@@ -375,10 +390,12 @@ function renderTree() {
   const rec = (nodes, d) => {
     for (const n of nodes) {
       const fl = Object.values(n.fields || {}).filter(Boolean);
-      h += `<div class="item ${n.id === selId ? 'sel' : ''} ${n.hidden ? 'hid' : ''}" data-id="${n.id}" draggable="true" style="padding-left:${10 + d * 16}px">
+      const lk = isLocked(n.id);
+      h += `<div class="item ${n.id === selId ? 'sel' : ''} ${n.hidden ? 'hid' : ''} ${lk ? 'lockd' : ''}" data-id="${n.id}" draggable="${!lk}" style="padding-left:${10 + d * 16}px">
         <span class="ic">${TYPES[n.type]?.icon || '?'}</span><span class="grow">${esc(n.name || n.type)}</span>
         ${fl.map((f) => `<span class="pill fld" title="pole kontrolne">${esc(f)}</span>`).join('')}
         ${Object.values(n.anim || {}).some((a) => a?.length) ? '<span class="dim" title="animowany">◆</span>' : ''}
+        <span class="lock ${n.locked ? 'on' : ''}" data-lock="${n.id}" title="${n.locked ? 'odblokuj' : lk ? 'zablokowany przez grupę' : 'zablokuj na kanwie'}">${n.locked ? '🔒' : lk ? '·' : '🔓'}</span>
         <span class="eye" data-eye="${n.id}" title="pokaż/ukryj">${n.hidden ? '○' : '◉'}</span></div>`;
       if (n.children) rec(n.children, d + 1);
     }
@@ -1094,6 +1111,8 @@ $('#tree').addEventListener('click', (e) => {
   lastArea = 'tree';
   const eye = e.target.closest('[data-eye]');
   if (eye) { const n = locate(eye.dataset.eye)?.node; if (n) { checkpoint(); n.hidden = !n.hidden; refresh(); renderTree(); } return; }
+  const lock = e.target.closest('[data-lock]');
+  if (lock) { const n = locate(lock.dataset.lock)?.node; if (n) { checkpoint(); if (n.locked) delete n.locked; else n.locked = true; renderTree(); } return; }
   const it = e.target.closest('.item'); if (it) select(it.dataset.id);
 });
 $('#tree').addEventListener('dblclick', (e) => {
@@ -1109,6 +1128,7 @@ const DEFAULTS = {
   ellipse: { w: 200, h: 200, color: '#3d8bfd' },
   text: { w: 800, h: 100, text: 'Nowy tekst', size: 64, color: '#ffffff', font: 'Inter', textFit: 'squeeze', squeezeMin: 0.6 },
   image: { w: 400, h: 300 },
+  qr: { w: 240, h: 240, text: 'https://example.com', color: '#000000', qrBg: '#ffffff' },
   clock: { w: 300, h: 80, size: 48, color: '#ffffff', font: 'Roboto Mono', align: 'center' },
   ticker: { w: 1920, h: 70, text: 'Pierwsza wiadomość\nDruga wiadomość', size: 32, color: '#ffffff' },
 };
@@ -1145,21 +1165,24 @@ function addPreset(key) {
 }
 function addNode(type) {
   if (type.startsWith('preset:')) { addPreset(type.slice(7)); return; }
+  if (!scene) return toast('Najpierw otwórz albo utwórz scenę', true);
+  if (!TYPES[type]) return;
   checkpoint();
   let count = 0; walk(scene.nodes, (n) => { if (n.type === type) count++; });
-  const props = { ...DEFAULTS[type] };
+  const props = { w: 200, h: 200, ...DEFAULTS[type] };
   const sel = selId ? locate(selId) : null;
-  const intoParent = sel && TYPES[sel.node.type].children;
-  if (intoParent) { props.x = 20; props.y = 20; }
-  else if (sel?.parent) { props.x = 20; props.y = 20; }
+  // do środka wkładamy tylko do zaznaczonej grupy (prostokąt też bywa kontenerem, ale nowy element znikał w nim pod przycięciem)
+  const intoParent = sel && sel.node.type === 'group';
+  if (intoParent || sel?.parent) { props.x = 0; props.y = 0; }
   else { props.x = Math.round((scene.width - props.w) / 2); props.y = Math.round((scene.height - props.h) / 2); }
   const n = { id: uid('n'), type, name: TYPES[type].label.toLowerCase().replace(/[^a-ząćęłńóśźż]/g, '') + (count + 1), props, anim: {}, fields: {} };
   if (TYPES[type].children) n.children = [];
-  if (intoParent) sel.node.children.push(n);
-  else if (sel) sel.list.splice(sel.index + 1, 0, n);
+  if (intoParent) { (sel.node.children ||= []).push(n); fitGroup(sel.node); }
+  else if (sel) { sel.list.splice(sel.index + 1, 0, n); if (sel.parent) fitGroup(sel.parent); }
   else scene.nodes.push(n);
   player.setScene(scene); player.seek(t);
   select(n.id);
+  if (intoParent || sel?.parent) toast(`Dodano do grupy „${(intoParent ? sel.node : sel.parent).name}” – odznacz (klik w puste miejsce), aby dodać na najwyższy poziom`);
 }
 $('#addSel').addEventListener('change', (e) => { if (e.target.value) addNode(e.target.value); e.target.value = ''; });
 
@@ -1174,10 +1197,11 @@ function treeOp(op) {
   checkpoint();
   if (op === 'up' && i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]];
   else if (op === 'down' && i < list.length - 1) [list[i + 1], list[i]] = [list[i], list[i + 1]];
-  else if (op === 'in' && i > 0 && TYPES[list[i - 1].type].children) {
+  else if (op === 'in' && i > 0 && TYPES[list[i - 1].type]?.children) {
     const P = list[i - 1];
     list.splice(i, 1); (P.children ||= []).push(n);
     n.props.x = (n.props.x || 0) - (P.props?.x || 0); n.props.y = (n.props.y || 0) - (P.props?.y || 0);
+    fitGroup(P);
   } else if (op === 'out' && parent) {
     const PL = locate(parent.id);
     list.splice(i, 1); PL.list.splice(PL.index + 1, 0, n);
@@ -1185,7 +1209,10 @@ function treeOp(op) {
   } else if (op === 'dup') {
     const c = cloneNode(n); c.name = n.name + '_kopia';
     list.splice(i + 1, 0, c); selId = c.id;
+  } else if (op === 'fit') {
+    if (!fitGroup(n)) { undo.pop(); return toast('Dopasowanie działa dla grupy z elementami', true); }
   } else if (op === 'del') {
+    if (isLocked(n.id)) { undo.pop(); return toast('Element jest zablokowany – odblokuj go w drzewie (🔒)', true); }
     list.splice(i, 1); selId = null; selKey = null;
   } else { undo.pop(); return; }
   player.setScene(scene); player.seek(t);
@@ -1197,6 +1224,7 @@ $('#tIn').onclick = () => treeOp('in');
 $('#tOut').onclick = () => treeOp('out');
 $('#tDupN').onclick = () => treeOp('dup');
 $('#tDel').onclick = () => treeOp('del');
+$('#tFit').onclick = () => treeOp('fit');
 
 // ------------------------------------------------------------ podgląd / płótno
 // zoom podglądu (jak w Trio): k – krotność względem dopasowania, x/y – przesunięcie w px pudełka
@@ -1284,11 +1312,12 @@ box.addEventListener('mousedown', (e) => {
   }
   if (e.button !== 0) return;
   const handle = e.target.closest('#sel .h');
-  const nodeEl = !handle && e.target.closest('.vz-node');
+  // zablokowane elementy są „przezroczyste” dla myszy: chwytamy pierwszy niezablokowany pod kursorem
+  const nodeEl = !handle && document.elementsFromPoint(e.clientX, e.clientY).find((x) => x.classList?.contains('vz-node') && stage.contains(x) && !isLocked(x.dataset.id));
   if (!handle && !nodeEl) { if (selId) select(null); return; }
   e.preventDefault();
   if (nodeEl && nodeEl.dataset.id !== selId) select(nodeEl.dataset.id);
-  const n = selNode(); if (!n) return;
+  const n = selNode(); if (!n || isLocked(n.id)) return;
   const sx = e.clientX, sy = e.clientY;
   const k = handle ? ['w', 'h'] : ['x', 'y'];
   const v0 = k.map((p) => propAt(n, p, t, null));
@@ -1539,7 +1568,7 @@ const isDesc = (anc, id) => { let f = false; walk(anc.children || [], (n) => { i
 function moveNode(srcId, dstId, mode) {
   const S = locate(srcId), D = dstId ? locate(dstId) : null; if (!S) return;
   if (D && (D.node.id === srcId || isDesc(S.node, D.node.id))) return toast('Nie można przenieść węzła do własnego potomka', true);
-  if (mode === 'into' && !(D && TYPES[D.node.type].children)) return;
+  if (mode === 'into' && !(D && TYPES[D.node.type]?.children)) return;
   checkpoint();
   const abs = absPos(srcId);
   S.list.splice(S.index, 1);
@@ -1551,13 +1580,14 @@ function moveNode(srcId, dstId, mode) {
   // zachowaj położenie na scenie: współrzędne względem nowego rodzica
   const pa = parent ? absPos(parent.id) : { x: 0, y: 0 };
   S.node.props ||= {}; S.node.props.x = Math.round(abs.x - pa.x); S.node.props.y = Math.round(abs.y - pa.y);
+  if (mode === 'into') fitGroup(parent);
   player.setScene(scene); player.seek(t); renderTree(); renderProps(); renderTimeline();
 }
 let dragNode = null;
 $('#tree').addEventListener('dragstart', (e) => { const it = e.target.closest('.item[data-id]'); if (!it || !it.dataset.id) { e.preventDefault(); return; } dragNode = it.dataset.id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragNode); } catch { /* ignoruj */ } });
 function dropMode(e, it) {
   const r = it.getBoundingClientRect(), n = locate(it.dataset.id)?.node;
-  return n && TYPES[n.type].children && e.clientY > r.top + r.height * 0.25 && e.clientY < r.bottom - r.height * 0.25 ? 'into' : 'after';
+  return n && TYPES[n.type]?.children && e.clientY > r.top + r.height * 0.25 && e.clientY < r.bottom - r.height * 0.25 ? 'into' : 'after';
 }
 $('#tree').addEventListener('dragover', (e) => {
   const it = e.target.closest('.item'); if (!dragNode || !it) return;
@@ -1850,7 +1880,7 @@ addEventListener('keydown', (e) => {
   if (e.key === 'End') { setTime(scene.duration); return; }
   const n = selNode();
   const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-  if (n && arrows[e.key]) {
+  if (n && arrows[e.key] && !isLocked(n.id)) {
     e.preventDefault(); checkpoint();
     const m = e.shiftKey ? 10 : 1, [dx, dy] = arrows[e.key];
     setProp(n, 'x', propAt(n, 'x', t, null) + dx * m); setProp(n, 'y', propAt(n, 'y', t, null) + dy * m);

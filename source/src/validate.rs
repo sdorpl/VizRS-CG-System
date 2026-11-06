@@ -166,6 +166,14 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
     if let Some(m) = opt(n, "motion") {
         motion(m)?;
     }
+    // przełączniki z drzewa sceny Artist: ukrycie i blokada na kanwie
+    for k in ["hidden", "locked"] {
+        if let Some(v) = opt(n, k) {
+            if !matches!(v, Json::Bool(_)) {
+                return Err(format!("węzeł.{k}: oczekiwano tak/nie"));
+            }
+        }
+    }
     for k in ["props", "anim", "fields", "showIf"] {
         if let Some(v) = opt(n, k) {
             if !v.is_obj() {
@@ -686,6 +694,9 @@ mod tests {
         assert!(node(r#"{"textIn":{"type":"words-explode"}}"#).is_err());
         assert!(node(r#"{"loop":{"type":"pulse","x":1}}"#).is_err());
         assert!(node(r#"{"magic":{}}"#).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"group","locked":true,"hidden":false,"children":[{"type":"rect","locked":false}]}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"rect","locked":"tak"}]}"#)).is_err());
+        assert!(scene(&p(r#"{"nodes":[{"type":"rect","hidden":1}]}"#)).is_err());
         assert!(node(r#"{"bg":"shimmer","origin":[0,0]}"#).is_ok());
         assert!(node(r#"{"bg":"sparkle"}"#).is_err());
         assert!(node(r#"{"origin":[0,2]}"#).is_err());

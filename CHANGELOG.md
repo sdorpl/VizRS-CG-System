@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Artist – drzewo sceny:** blokada elementów i grup (🔒, pole `locked`, sprawdzane w `validate.rs`); wymiar grupy dopasowuje się do zawartości (automatycznie po dodaniu elementu, ręcznie ⤢). Poprawka: nowy element nie ginie już wewnątrz zaznaczonego prostokąta (do środka trafia tylko przy zaznaczonej grupie), Kod QR dostaje domyślny rozmiar, nieznany typ węzła (import) nie blokuje dodawania.
+
 ## 2.0.17 (2026-11-04) – „Za chwilę w telefonie”
 
 - **Trio na telefonie – czas strony na kanale (⏱ kanał):** w Edycji, pod polami strony, te same ustawienia co w Trio: wejście po starcie albo przed końcem audycji, zejście i koniec (audycji z EPG / pozycji). Zapis w `playout` strony dla VizRS CG Playout.
