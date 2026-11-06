@@ -14,4 +14,12 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-za-chwile.md](PLAN-za-chwile.md) | Z1–Z3 i Z6 wdrożone (Playout 2.7.0, Trio ⏱ kanał); Z4, Z5 i test na stosie czekają | belka „Za chwilę / Następnie” N s przed końcem audycji: planowanie względem końca w VizRS CG Playout (`on_end`, parametry elementu), scena w VizRS |
 | [PLAN-lekkie-output.md](PLAN-lekkie-output.md) | L1–L4 wdrożone (2026-10-24), L5 później | lekkie `/output` dla bezgłowego Chromium bez GPU (Ampere A1): `?fps=N`, schodkowe efekty, wskazówki dla scen kanału |
 
+## Plany dalekosiężne
+
+Pomysły na rozwój pakietu VizRS bez decyzji i terminu – kierunek, nie zobowiązanie.
+
+| Dokument | Stan | Zakres |
+|---|---|---|
+| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | pomysł (2026-11-06), do rozpoznania | **VizRS Live** – klient ErsatzTV Next z interfejsem i funkcjami ErsatzTV legacy (kanały, media, harmonogramy, EPG) spiętymi z grafiką VizRS |
+
 Założenia Z1–Z10 z planu rozbudowy obowiązują przy każdej nowej funkcji.
