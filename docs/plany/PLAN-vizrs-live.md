@@ -1,6 +1,6 @@
 # VizRS Live – nakładka na ErsatzTV legacy z funkcjami jego UI
 
-> Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). **Decyzja użytkownika (2026-11-06): VizRS Live jest nakładką na ErsatzTV legacy** – bez pisania własnego planisty, bazy i skanera („nie wymyślamy koła na nowo”), ale w zakresie funkcji UI legacy (§4). Dalsze decyzje (2026-11-06): **osobne repozytorium** (modułowość), **nic nie zgłaszamy do projektu ErsatzTV**. Etapów i terminu jeszcze nie ma – otwarte pytania w §5. Wizualizacja architektury i obu wersji dostępu do UI legacy (A/B, §4.1): [claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws](https://claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws).
+> Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). **Decyzja użytkownika (2026-11-06): VizRS Live jest nakładką na ErsatzTV legacy** – bez pisania własnego planisty, bazy i skanera („nie wymyślamy koła na nowo”), ale w zakresie funkcji UI legacy (§4). Dalsze decyzje (2026-11-06): **osobne repozytorium** (modułowość), **nic nie zgłaszamy do projektu ErsatzTV**, **cel: operator w ogóle nie korzysta z web GUI legacy** (§4.2). Etapów i terminu jeszcze nie ma – otwarte pytania w §5. Wizualizacja architektury i obu wersji dostępu do UI legacy (A/B, §4.1): [claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws](https://claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws).
 
 ## 1. Pomysł
 
@@ -93,6 +93,19 @@ Jak uzyskać zakres funkcji UI legacy – warstwy, od najtańszej:
 
 Zalecenie: **start od B**, przejście do A, gdy kanał ma być obsługiwany z internetu pod jednym adresem z jednym logowaniem. A dokłada proxy przed tymi samymi odnośnikami, więc nie wymaga przebudowy.
 
+### 4.2 Cel: bez web GUI legacy (decyzja 2026-11-06)
+
+Docelowo operator robi wszystko w VizRS Live, a UI legacy jest zamknięte (tylko wewnętrzne API). Warstwy 1 i 3 z §4 tego nie dają: oficjalne API legacy obejmuje mało funkcji (§3.3), a bez niego kanałów, profili FFmpeg, bibliotek, harmonogramów, bloków ani playoutów nie da się założyć. Każdy ekran legacy wywołuje jednak w tym samym procesie gotową komendę z `ErsatzTV.Application` (187 komend MediatR, np. `CreateChannel`, `UpdateFFmpegProfile`, `CreateLocalLibrary`, `ReplaceProgramScheduleItems`, `CreateBlockPlayout`, `UpdateDeco`, `CreateWatermark`). Brakuje tylko drogi do nich z zewnątrz.
+
+**Most VizRS ↔ legacy (propozycja, do sprawdzenia prototypem):** mała wtyczka .NET ładowana do procesu legacy bez zmiany jego kodu – mechanizm ASP.NET Core *hosting startup* (`ASPNETCORE_HOSTINGSTARTUPASSEMBLIES`; legacy używa `ConfigureWebHostDefaults` i publikuje się bez przycinania, więc DLL dołożony do `/app` powinien się załadować). Wtyczka dokłada kontrolery REST, które wywołują istniejące komendy i zapytania legacy, z jego uwierzytelnianiem kluczem API. Obraz: `FROM ghcr.io/ersatztv/legacy:<wersja>` + DLL + zmienna środowiskowa.
+
+- Zgodne z decyzjami: logika zostaje w legacy (nie wymyślamy koła), kod legacy bez zmian, nic nie zgłaszamy, brak zapisu wprost do bazy.
+- Cena: VizRS Live musi mieć **własne ekrany dla wszystkich funkcji z §3** (to główna praca – po stronie UI, nie logiki); wtyczka w C# (drugi język w rodzinie VizRS); komendy legacy to kod wewnętrzny, więc każde wydanie legacy (co tydzień) wymaga przebudowy i testu wtyczki – wersja legacy przypięta w compose, aktualizacja dopiero po zielonych testach.
+- Nie wszystko da się przenieść 1:1: logowanie do Plex (przepływ w przeglądarce) i podobne – do sprawdzenia, ewentualnie na końcu.
+- Dojście etapami: dopóki ekran VizRS Live nie istnieje, dana funkcja zostaje w UI legacy (odnośnik, wersja B z §4.1); po pokryciu wszystkich ekranów UI legacy jest zamykane.
+
+Odrzucone drogi do tego celu: **zapis wprost do bazy legacy** (omija walidację i przebudowę playoutu, psuje się przy migracjach – legacy ma ich kilka w miesiącu); **sterowanie UI legacy automatem przeglądarki** (kruche); **planista VizRS Live bezpośrednio dla Next bez legacy** (to pisanie legacy od nowa).
+
 Miejsce w rodzinie VizRS: VizRS Live jest **interfejsem** kanału, a VizRS CG Playout zostaje **wykonawcą** obok legacy (komendy na start klipu, reklamy bez grafiki, wtapianie, live ingest). VizRS Live konfiguruje Playout i pokazuje jego stan – nie dubluje go.
 
 Na później, jako opcja: warstwa `canvas` i źródło `dynamic` z Next (§2) mogą zastąpić wtapianie i nakładkę ffmpeg w CG Playout – przez element graficzny legacy (Motion/Script), bez obchodzenia legacy.
@@ -100,7 +113,8 @@ Na później, jako opcja: warstwa `canvas` i źródło `dynamic` z Next (§2) mo
 ## 5. Do ustalenia przed etapami
 
 1. **Pierwszy zakres własnych widoków** (§4 warstwa 2): który widok jest najpilniejszy – widok operatora, ramówka z grafiką VizRS, sloty na żywo, podgląd i monitoring?
-2. **Dostęp do UI legacy**: B na start i A później (zalecane, §4.1), czy od razu A?
-3. **Technika VizRS Live**: serwer w Ruście + UI w czystym JS jak w VizRS (w osobnym repozytorium zależności dozwolone) – do potwierdzenia przy pierwszym etapie.
+2. **Most w procesie legacy** (§4.2): zgoda na wtyczkę .NET (hosting startup) jako jedyny element w C#? Pierwszy krok: prototyp – wtyczka z jednym endpointem (`CreateChannel`) w obrazie legacy, test na dwóch kolejnych wydaniach.
+3. **Przejście**: do czasu pokrycia wszystkich ekranów brakujące funkcje przez odnośniki do UI legacy (§4.1 B).
+4. **Technika VizRS Live**: serwer w Ruście + UI w czystym JS jak w VizRS (w osobnym repozytorium zależności dozwolone) – do potwierdzenia przy pierwszym etapie.
 
-Ustalone: osobne repozytorium (2026-11-06), bez zgłoszeń do ErsatzTV (2026-11-06).
+Ustalone: osobne repozytorium (2026-11-06), bez zgłoszeń do ErsatzTV (2026-11-06), cel bez web GUI legacy (2026-11-06).
