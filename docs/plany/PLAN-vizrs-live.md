@@ -1,6 +1,6 @@
 # VizRS Live – nakładka na ErsatzTV legacy z funkcjami jego UI
 
-> Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). **Decyzja użytkownika (2026-11-06): VizRS Live jest nakładką na ErsatzTV legacy** – bez pisania własnego planisty, bazy i skanera („nie wymyślamy koła na nowo”), ale w zakresie funkcji UI legacy (§4). Etapów i terminu jeszcze nie ma – otwarte pytania w §5.
+> Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). **Decyzja użytkownika (2026-11-06): VizRS Live jest nakładką na ErsatzTV legacy** – bez pisania własnego planisty, bazy i skanera („nie wymyślamy koła na nowo”), ale w zakresie funkcji UI legacy (§4). Dalsze decyzje (2026-11-06): **osobne repozytorium** (modułowość), **nic nie zgłaszamy do projektu ErsatzTV**. Etapów i terminu jeszcze nie ma – otwarte pytania w §5. Wizualizacja architektury i obu wersji dostępu do UI legacy (A/B, §4.1): [claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws](https://claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws).
 
 ## 1. Pomysł
 
@@ -77,14 +77,21 @@ Zasada: **legacy liczy, VizRS Live pokazuje i spina z VizRS.** Baza, skaner medi
 
 Jak uzyskać zakres funkcji UI legacy – warstwy, od najtańszej:
 
-1. **UI legacy wewnątrz VizRS Live.** Legacy działa pod podścieżką (`ETV_BASE_URL=/etv`) za odwrotnym proxy VizRS Live, z jednym logowaniem (OpenID Connect). Od pierwszego dnia są wszystkie funkcje z §3 – nakładka obudowuje je, nie przepisuje.
+1. **UI legacy dostępne z VizRS Live** (wersja A albo B, §4.1). Od pierwszego dnia są wszystkie funkcje z §3 – nakładka obudowuje je, nie przepisuje.
 2. **Oficjalne wejścia legacy** (§3.3): REST API (kanały, reset/continue playoutu, skan, sesje), API Scripted Schedule, pliki Sequential YAML, elementy graficzne YAML, M3U/XMLTV. Na nich powstają **własne widoki VizRS Live** tam, gdzie VizRS daje coś ponad legacy:
    - polski widok operatora kanału: co jest na antenie, co następne, stan kanałów i sesji;
    - ramówka z grafiką VizRS: strony VizRS przypięte do pozycji (dziś element VizRS w CG Playout), „Za chwilę” ([PLAN-za-chwile.md](PLAN-za-chwile.md));
    - sloty na żywo (live ingest z CG Playout);
    - podgląd kanału z grafiką i monitoring.
-3. **Brakujące API – do legacy, nie obok.** Gdy własny widok potrzebuje funkcji, której API legacy nie ma (np. edycja kanału, pozycji harmonogramu, bloków), dokładamy endpoint REST nad istniejącymi komendami legacy jako **zmianę zgłaszaną do projektu ErsatzTV** (pull request), a nie we własnym forku. Tak samo **polskie tłumaczenie UI** (dziś pl: tylko menu, wspólne napisy i kanały) – do legacy, korzyść dla wszystkich.
+3. **Bez zmian w ErsatzTV** (decyzja 2026-11-06): nie zgłaszamy API ani tłumaczeń i nie utrzymujemy forka. Granica jest stała – własne widoki robią tylko to, na co pozwalają istniejące API i pliki legacy; resztę (edycja kanałów, harmonogramów, bloków, mediów) operator robi w UI legacy. Po polsku są tylko widoki VizRS Live; UI legacy zostaje po angielsku (z jego częściowym pl).
 4. **Bez zapisu wprost do bazy legacy** (SQLite/MySQL): omija walidację i przebudowę playoutu, psuje się przy każdej migracji.
+
+### 4.1 Dostęp do UI legacy – dwie wersje
+
+- **A – jedna domena, legacy za proxy.** Przeglądarka łączy się tylko z VizRS Live (np. `live.kanal.pl`). Ścieżki `/etv/*` VizRS Live przekazuje do legacy w sieci wewnętrznej; legacy ustawione na `ETV_BASE_URL=/etv`. UI legacy to Blazor po stronie serwera – działa na stałym połączeniu WebSocket (`/etv/_blazor`), które proxy też musi przekazywać. Logowanie raz: w VizRS Live (legacy osiągalne tylko przez proxy) albo przez wspólnego dostawcę OpenID Connect (legacy go obsługuje). Operator nie wychodzi z aplikacji: pasek VizRS Live na górze, pod nim ekran legacy (ten sam adres, więc może być w ramce), z widoku VizRS jedno kliknięcie do właściwego ekranu legacy. Koszt: proxy z WebSocketem, sesje, kontrola dostępu; zmiana ścieżek albo logowania w nowej wersji legacy może zepsuć proxy i głębokie odnośniki.
+- **B – odnośniki do osobnej karty.** Legacy ma własny adres (np. `etv.kanal.pl` albo `:8409` w sieci lokalnej) i własne logowanie. Widoki VizRS Live mają przyciski „Edytuj w ErsatzTV ↗”, które otwierają właściwy ekran legacy w nowej karcie. Koszt prawie zerowy, nic się nie psuje przy aktualizacji legacy; minusy: dwa adresy, dwa logowania, przy dostępie z internetu dwa serwisy do zabezpieczenia (albo legacy tylko w sieci lokalnej / VPN).
+
+Zalecenie: **start od B**, przejście do A, gdy kanał ma być obsługiwany z internetu pod jednym adresem z jednym logowaniem. A dokłada proxy przed tymi samymi odnośnikami, więc nie wymaga przebudowy.
 
 Miejsce w rodzinie VizRS: VizRS Live jest **interfejsem** kanału, a VizRS CG Playout zostaje **wykonawcą** obok legacy (komendy na start klipu, reklamy bez grafiki, wtapianie, live ingest). VizRS Live konfiguruje Playout i pokazuje jego stan – nie dubluje go.
 
@@ -92,7 +99,8 @@ Na później, jako opcja: warstwa `canvas` i źródło `dynamic` z Next (§2) mo
 
 ## 5. Do ustalenia przed etapami
 
-1. **Pierwszy zakres własnych widoków** (warstwa 2): który z czterech widoków jest najpilniejszy?
-2. **Forma VizRS Live**: osobna aplikacja (proxy + widoki) w nowym repozytorium, czy rozszerzenie UI VizRS CG Playout (już stoi obok legacy, ma serwer HTTP i stan kanałów)?
-3. **Współpraca z ErsatzTV**: czy zgłaszamy brakujące API i tłumaczenie pl do projektu (warstwa 3)? Do sprawdzenia z opiekunem legacy, czy przyjmie rozszerzenia API.
-4. **Osadzenie UI legacy**: proxy pod jedną domeną z jednym logowaniem, czy tylko odnośniki do legacy w osobnej karcie.
+1. **Pierwszy zakres własnych widoków** (§4 warstwa 2): który widok jest najpilniejszy – widok operatora, ramówka z grafiką VizRS, sloty na żywo, podgląd i monitoring?
+2. **Dostęp do UI legacy**: B na start i A później (zalecane, §4.1), czy od razu A?
+3. **Technika VizRS Live**: serwer w Ruście + UI w czystym JS jak w VizRS (w osobnym repozytorium zależności dozwolone) – do potwierdzenia przy pierwszym etapie.
+
+Ustalone: osobne repozytorium (2026-11-06), bez zgłoszeń do ErsatzTV (2026-11-06).

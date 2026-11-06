@@ -20,6 +20,6 @@ Pomysły na rozwój pakietu VizRS bez decyzji i terminu – kierunek, nie zobowi
 
 | Dokument | Stan | Zakres |
 |---|---|---|
-| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | kierunek ustalony (2026-11-06): nakładka na ErsatzTV legacy; zakres i forma do ustalenia (§5) | **VizRS Live** – nakładka na ErsatzTV legacy z funkcjami jego UI (kanały, media, harmonogramy, EPG), spięta z grafiką VizRS i VizRS CG Playout |
+| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | kierunek ustalony (2026-11-06): nakładka na ErsatzTV legacy, osobne repozytorium, bez zmian w ErsatzTV; pierwszy widok i dostęp do UI legacy do ustalenia (§5) | **VizRS Live** – nakładka na ErsatzTV legacy z funkcjami jego UI (kanały, media, harmonogramy, EPG), spięta z grafiką VizRS i VizRS CG Playout |
 
 Założenia Z1–Z10 z planu rozbudowy obowiązują przy każdej nowej funkcji.
