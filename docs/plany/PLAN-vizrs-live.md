@@ -104,6 +104,8 @@ Docelowo operator robi wszystko w VizRS Live, a UI legacy jest zamknięte (tylko
 - Nie wszystko da się przenieść 1:1: logowanie do Plex (przepływ w przeglądarce) i podobne – do sprawdzenia, ewentualnie na końcu.
 - Dojście etapami: dopóki ekran VizRS Live nie istnieje, dana funkcja zostaje w UI legacy (odnośnik, wersja B z §4.1); po pokryciu wszystkich ekranów UI legacy jest zamykane.
 
+Makieta UI VizRS Live (wszystkie ekrany legacy po polsku + widoki VizRS, z komendami legacy pod każdym ekranem): [claude.ai/artifact/9ajuiXeKEZD6ntYLxtAzbM](https://claude.ai/artifact/9ajuiXeKEZD6ntYLxtAzbM).
+
 Odrzucone drogi do tego celu: **zapis wprost do bazy legacy** (omija walidację i przebudowę playoutu, psuje się przy migracjach – legacy ma ich kilka w miesiącu); **sterowanie UI legacy automatem przeglądarki** (kruche); **planista VizRS Live bezpośrednio dla Next bez legacy** (to pisanie legacy od nowa).
 
 Miejsce w rodzinie VizRS: VizRS Live jest **interfejsem** kanału, a VizRS CG Playout zostaje **wykonawcą** obok legacy (komendy na start klipu, reklamy bez grafiki, wtapianie, live ingest). VizRS Live konfiguruje Playout i pokazuje jego stan – nie dubluje go.
