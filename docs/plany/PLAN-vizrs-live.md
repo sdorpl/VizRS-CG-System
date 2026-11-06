@@ -1,16 +1,16 @@
-# VizRS Live – klient ErsatzTV Next z interfejsem na wzór ErsatzTV legacy
+# VizRS Live – nakładka na ErsatzTV legacy z funkcjami jego UI
 
-> Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). Brak decyzji, etapów i terminu – pytania w §5.
+> Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). **Decyzja użytkownika (2026-11-06): VizRS Live jest nakładką na ErsatzTV legacy** – bez pisania własnego planisty, bazy i skanera („nie wymyślamy koła na nowo”), ale w zakresie funkcji UI legacy (§4). Etapów i terminu jeszcze nie ma – otwarte pytania w §5.
 
 ## 1. Pomysł
 
-**VizRS Live** to przyszła aplikacja rodziny VizRS: graficzny klient (GUI) dla **ErsatzTV Next**, z funkcjami, które dziś daje interfejs WWW **ErsatzTV legacy**. Operator kanału prowadzi w jednym miejscu kanały, ramówkę i grafikę VizRS, a pod spodem pracuje ErsatzTV Next.
+**VizRS Live** to przyszła aplikacja rodziny VizRS: **nakładka na ErsatzTV legacy** z tymi samymi funkcjami, które daje interfejs WWW legacy, spiętymi z grafiką VizRS. Operator kanału prowadzi w jednym miejscu kanały, ramówkę i grafikę VizRS. Pod spodem pracuje niezmienione ErsatzTV legacy (baza, skaner, planowanie), a nadaje ErsatzTV Next – silnik legacy (§2).
 
 | Repozytorium / aplikacja | Rola |
 |---|---|
 | VizRS CG System | silnik grafiki: Artist, Trio, `/output`, API TCP / HTTP / SSE |
 | VizRS CG Playout | sidecar dla ErsatzTV: komendy na start klipu, reklamy bez grafiki, wtapianie, live ingest |
-| **VizRS Live** (przyszłość) | GUI kanału nad ErsatzTV Next: to, co w legacy robi interfejs WWW, plus spięcie z grafiką i live ingest VizRS |
+| **VizRS Live** (przyszłość) | UI kanału nad ErsatzTV legacy: funkcje UI legacy plus spięcie z grafiką i live ingest VizRS |
 
 ## 2. ErsatzTV Next – co to jest
 
@@ -35,7 +35,7 @@
 
 ## 3. ErsatzTV legacy – funkcje UI
 
-Źródła: [github.com/ErsatzTV/legacy](https://github.com/ErsatzTV/legacy) (`ErsatzTV/Pages/*.razor`, `Shared/MainLayout.razor`, `Controllers/`), [ersatztv.org/docs](https://ersatztv.org/docs/). Aplikacja C#/.NET, UI w Blazor + MudBlazor, baza SQLite albo MySQL, licencja zlib. Strona projektu: legacy dostaje poprawki bezpieczeństwa „w dającej się przewidzieć przyszłości”.
+Źródła: [github.com/ErsatzTV/legacy](https://github.com/ErsatzTV/legacy) (`ErsatzTV/Pages/*.razor`, `Shared/MainLayout.razor`, `Controllers/`), [ersatztv.org/docs](https://ersatztv.org/docs/). Aplikacja C#/.NET, UI w Blazor + MudBlazor, baza SQLite albo MySQL, licencja zlib. Legacy **rozwija się aktywnie** (wydania co tydzień, 26.11.x; baner strony mówi o poprawkach bezpieczeństwa „w dającej się przewidzieć przyszłości”). W wersji niewydanej usunięto silnik legacy: **wszystkie kanały nadaje już ErsatzTV Next**. UI to Blazor po stronie serwera; działa pod podścieżką (`ETV_BASE_URL`, np. `/etv`) za odwrotnym proxy, logowanie przez OpenID Connect, API przez klucz API albo JWT.
 
 ### 3.1 Menu (układ nawigacji)
 
@@ -68,23 +68,31 @@ Tłumaczenia: en, pt-br i **częściowe pl** (tylko `MainLayout`, `Common`, `Cha
 
 Niewielkie: lista kanałów, **reset/continue playoutu**, skan biblioteki, sesje (lista, zamknięcie), diagnostyka, oraz **API Scripted Schedule** – zewnętrzny skrypt buduje playout komendami: `add_collection`, `add_count`, `add_duration`, `add_all`, `pad_to_next`, `pad_until(_exact)`, `wait_until(_exact)`, `start/stop_epg_group`, **`graphics_on/off`**, `watermark_on/off`, `pre_roll_on/off`, `skip_items`, `peek_next`. Większości funkcji UI (kanały, harmonogramy, bloki) przez API nie da się ustawić.
 
-## 4. Wnioski dla VizRS Live
 
-1. **„Klient Next” = planista, nie pilot.** Next nie ma API sterowania ani UI – przyjmuje tylko pliki (`lineup.json`, `channel.json` + nakładki, `playout/*.json`, `xmltv/*.xml`) i odpytuje adresy HTTP (`dynamic`, `canvas`). VizRS Live musiałby więc przejąć rolę legacy: bazę kanałów, mediów i ramówek, budowanie playoutu i EPG, uruchamianie serwera Next. To duży zakres – legacy to wieloletni projekt z bazą danych, skanerem i pięcioma rodzajami planowania.
-2. **Nie kopiować legacy 1:1, tylko jego model pracy dla kanału nadawczego.** Legacy celuje w domowe IPTV z bibliotek Plex/Jellyfin/Emby (seriale, sezony, teledyski, Trakt). Dla VizRS ważniejsze są: kanały, profile kodowania, ramówka dnia z godzinami stałymi, bloki z szablonami w kalendarzu, wypełniacze i przerwy (deco, filler presets), EPG, podgląd i diagnostyka. Integracje z serwerami mediów – na końcu albo wcale.
-3. **Grafika VizRS bez obejść.** Warstwa `canvas` Next przyjmuje strumień z alfą z adresu HTTP i podaje mu kanał, pozycję i klatkaż. VizRS (`vizrs-render` z [PLAN-native.md](PLAN-native.md) albo Chromium) mógłby podawać taki strumień wprost – bez nakładki ffmpeg i wtapiania z VizRS CG Playout. Do sprawdzenia: synchronizacja z `x-etv-offset-ms` (canvas jest przewijany z treścią, a grafika VizRS sterowana komendami żyje w czasie rzeczywistym).
-4. **Live ingest przez `dynamic`.** Slot audycji na żywo może być elementem `dynamic`: w chwili emisji VizRS Live odpowiada `PlayoutItem` ze źródłem studia (`http`/`rtsp`, `is_live`) albo planszą. Zastępuje to dzisiejsze rozpoznawanie slotu w nakładce ffmpeg (CG Playout, DOKUMENTACJA §1).
-5. **Komendy grafiki na start klipu** – dziś CG Playout zgaduje start pozycji z procesu ffmpeg. Gdy playout pisze VizRS Live, zna dokładne `start`/`finish` każdego elementu i może sam wysyłać `TAKE`/`OUT`/`UPDATE` (jak Viz Multichannel, [PLAN-kanal.md](PLAN-kanal.md)) – także „Za chwilę” N s przed końcem ([PLAN-za-chwile.md](PLAN-za-chwile.md)).
-6. **Ryzyka:** Next jest przed 1.0 (zmiany niezgodne w wersjach `0.B`) – trzeba przypiąć wersje schematów i testować na `describe`; wymagany ErsatzTV-ffmpeg; serwer Next bez uwierzytelniania (tylko w sieci wewnętrznej / za proxy); duży zakres pracy przy samodzielnym planiście.
-7. **Licencje:** Next MIT, legacy zlib – pomysły i ewentualnie fragmenty wolno przenosić z zachowaniem informacji o autorach.
+Inne oficjalne wejścia legacy dla narzędzi zewnętrznych: harmonogramy **Sequential** (pliki YAML), playout z **zewnętrznego pliku JSON**, **elementy graficzne** w YAML (z nich korzysta dziś element VizRS w VizRS CG Playout), odczyt `channels.m3u` i `xmltv.xml`.
 
-## 5. Decyzje do podjęcia przed etapami
+## 4. Kierunek: nakładka na legacy
 
-1. **Wariant:**
-   - **A – pełny zamiennik legacy**: VizRS Live ma własną bazę, media, harmonogramy i UI, pisze pliki dla Next. Największa praca, pełna kontrola.
-   - **B – UI nad legacy**: VizRS Live korzysta z legacy (baza, planowanie) i dokłada swoje widoki. Ograniczone, bo API legacy obejmuje mało funkcji UI (§3.3).
-   - **C – planista kanału nadawczego (zalecany start)**: wariant A w wąskim zakresie z §4 pkt 2 – kanały, profile, ramówka z blokami i godzinami stałymi, przerwy, EPG, grafika VizRS przez `canvas` i live przez `dynamic`. Biblioteki: katalogi lokalne i źródła zdalne, bez Plex/Jellyfin/Emby.
-2. **Relacja z VizRS CG Playout**: przy C sidecar przestaje być potrzebny dla kanałów VizRS Live (komendy, live i grafika idą wprost), a zostaje dla kanałów legacy. Czy go utrzymywać równolegle?
-3. **Przejście z legacy**: import kanałów, profili i harmonogramów z bazy legacy (SQLite) – potrzebny, czy kanały zakładamy od nowa?
-4. **Forma aplikacji**: serwer WWW + przeglądarka (jak VizRS), okno natywne (`vizrs-shell`), czy oba. Osobne repozytorium z własnymi zależnościami; rdzeń `vizrs` bez zmian.
-5. **Pierwszy prototyp**: najmniejszy krok, który sprawdza pkt 3 i 4 z §4 – jeden kanał Next z playoutem pisanym ręcznie, warstwą `canvas` z VizRS i slotem `dynamic`.
+Zasada: **legacy liczy, VizRS Live pokazuje i spina z VizRS.** Baza, skaner mediów, budowanie playoutu, EPG i uruchamianie Next zostają w legacy. VizRS Live nie powiela tej logiki, więc nie trzeba odtwarzać ~157 tys. linii legacy ani ręcznie pilnować zgodności ramówek.
+
+Jak uzyskać zakres funkcji UI legacy – warstwy, od najtańszej:
+
+1. **UI legacy wewnątrz VizRS Live.** Legacy działa pod podścieżką (`ETV_BASE_URL=/etv`) za odwrotnym proxy VizRS Live, z jednym logowaniem (OpenID Connect). Od pierwszego dnia są wszystkie funkcje z §3 – nakładka obudowuje je, nie przepisuje.
+2. **Oficjalne wejścia legacy** (§3.3): REST API (kanały, reset/continue playoutu, skan, sesje), API Scripted Schedule, pliki Sequential YAML, elementy graficzne YAML, M3U/XMLTV. Na nich powstają **własne widoki VizRS Live** tam, gdzie VizRS daje coś ponad legacy:
+   - polski widok operatora kanału: co jest na antenie, co następne, stan kanałów i sesji;
+   - ramówka z grafiką VizRS: strony VizRS przypięte do pozycji (dziś element VizRS w CG Playout), „Za chwilę” ([PLAN-za-chwile.md](PLAN-za-chwile.md));
+   - sloty na żywo (live ingest z CG Playout);
+   - podgląd kanału z grafiką i monitoring.
+3. **Brakujące API – do legacy, nie obok.** Gdy własny widok potrzebuje funkcji, której API legacy nie ma (np. edycja kanału, pozycji harmonogramu, bloków), dokładamy endpoint REST nad istniejącymi komendami legacy jako **zmianę zgłaszaną do projektu ErsatzTV** (pull request), a nie we własnym forku. Tak samo **polskie tłumaczenie UI** (dziś pl: tylko menu, wspólne napisy i kanały) – do legacy, korzyść dla wszystkich.
+4. **Bez zapisu wprost do bazy legacy** (SQLite/MySQL): omija walidację i przebudowę playoutu, psuje się przy każdej migracji.
+
+Miejsce w rodzinie VizRS: VizRS Live jest **interfejsem** kanału, a VizRS CG Playout zostaje **wykonawcą** obok legacy (komendy na start klipu, reklamy bez grafiki, wtapianie, live ingest). VizRS Live konfiguruje Playout i pokazuje jego stan – nie dubluje go.
+
+Na później, jako opcja: warstwa `canvas` i źródło `dynamic` z Next (§2) mogą zastąpić wtapianie i nakładkę ffmpeg w CG Playout – przez element graficzny legacy (Motion/Script), bez obchodzenia legacy.
+
+## 5. Do ustalenia przed etapami
+
+1. **Pierwszy zakres własnych widoków** (warstwa 2): który z czterech widoków jest najpilniejszy?
+2. **Forma VizRS Live**: osobna aplikacja (proxy + widoki) w nowym repozytorium, czy rozszerzenie UI VizRS CG Playout (już stoi obok legacy, ma serwer HTTP i stan kanałów)?
+3. **Współpraca z ErsatzTV**: czy zgłaszamy brakujące API i tłumaczenie pl do projektu (warstwa 3)? Do sprawdzenia z opiekunem legacy, czy przyjmie rozszerzenia API.
+4. **Osadzenie UI legacy**: proxy pod jedną domeną z jednym logowaniem, czy tylko odnośniki do legacy w osobnej karcie.
