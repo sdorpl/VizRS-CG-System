@@ -14,6 +14,7 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-za-chwile.md](PLAN-za-chwile.md) | Z1–Z3 i Z6 wdrożone (Playout 2.7.0, Trio ⏱ kanał); Z4, Z5 i test na stosie czekają | belka „Za chwilę / Następnie” N s przed końcem audycji: planowanie względem końca w VizRS CG Playout (`on_end`, parametry elementu), scena w VizRS |
 | [PLAN-lekkie-output.md](PLAN-lekkie-output.md) | L1–L4 wdrożone (2026-10-24), L5 później | lekkie `/output` dla bezgłowego Chromium bez GPU (Ampere A1): `?fps=N`, schodkowe efekty, wskazówki dla scen kanału |
 | [PLAN-panel-wlasciwosci.md](PLAN-panel-wlasciwosci.md) | propozycja (P1–P8), czeka na decyzję | prostszy panel Właściwości w Artist: zwijane sekcje, wiersze złożone, tryb podstawowy, widoczność warunkowa, szukanie, zakładki |
+| [PLAN-jeden-ruch.md](PLAN-jeden-ruch.md) | propozycja (J1–J7), wariant C wybrany | jeden model ruchu w Artist: presety BTB jako klipy na wspólnej osi czasu z kluczami, import BTB bez ręcznych poprawek (LUKI #7, #8, #11) |
 
 ## Plany dalekosiężne
 
