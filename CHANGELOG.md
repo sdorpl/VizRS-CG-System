@@ -2,6 +2,9 @@
 
 ## Niewydane
 
+## 2.0.19 (2026-11-07) – „Porządek”
+
+- **Wydanie:** AppImage budowane lokalnie i dołączane do wydania (akcja Release buduje binarki, `.deb` i obraz Docker).
 - **Artist – prostszy panel Właściwości:** zakładki Właściwości / Ruch / Dane, zwijane grupy z licznikiem zmian, tryb Podstawowe / Wszystko, ukrywanie właściwości, które przy obecnych ustawieniach nic nie robią, wiersze złożone (X/Y, szer./wys. z blokadą proporcji, siatka punktu zaczepienia, przyciski wyrównania), oznaczenie zmienionych, animowanych i podpiętych pól, prawy klik = wartość domyślna, szukanie właściwości (`/`). Format show bez zmian.
 - **Artist – położenie całej sceny:** pola X/Y sceny (`scene.x`, `scene.y`, sprawdzane w `validate.rs`), przeciąganie pustego miejsca kanwy i strzałki przy zaznaczonej scenie przesuwają wszystko naraz, bez zmiany kluczy animacji i właściwości elementów. Obsługuje to też renderer natywny.
 

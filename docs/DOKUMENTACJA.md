@@ -1,6 +1,6 @@
 # VizRS – dokumentacja aplikacji
 
-> Wersja 2.0.18 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
+> Wersja 2.0.19 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
 > Instrukcja krok po kroku dla nowych osób: [INSTRUKCJA-poczatkujacy.md](INSTRUKCJA-poczatkujacy.md).
 > API: [API.md](API.md) · Companion: [COMPANION.md](COMPANION.md) · awarie: [RUNBOOK.md](RUNBOOK.md) · braki: [LUKI.md](LUKI.md).
 
@@ -707,7 +707,7 @@ Wyszukiwanie przeglądarki: Linux – `chromium`, `chromium-browser`, `google-ch
 
 **Skróty systemowe:**
 - Debian / Ubuntu 22.04+: `sudo apt install ./vizrs_<wersja>_amd64.deb` z wydania na GitHub (budowa: `deploy/deb/build.sh vizrs vizrs-shell wersja [wyjście]`). W menu: **VizRS Artist**, **VizRS Trio**, **VizRS Trio – serwer zdalny** (od razu okno „Połącz z serwerem”, §13.2); dane okien w `~/.local/share/vizrs` (`VIZRS_DATA`). Pakiet zawiera usługę systemd `vizrs` (serwer bez GUI, dane `/var/lib/vizrs`, użytkownik `vizrs`) – domyślnie wyłączoną: `sudo systemctl edit vizrs` (token), `sudo systemctl enable --now vizrs`. Pakiet zbudowany lokalnie działa tylko na systemach z glibc co najmniej taką jak u budującego – wydanie budowane jest na Ubuntu 22.04.
-- Linux bez instalacji: `VizRS-Artist-<wersja>-x86_64.AppImage` i `VizRS-Trio-…AppImage` z wydania na GitHub (budowa: `deploy/appimage/build.sh vizrs vizrs-shell wersja`). Okno natywne wymaga systemowego WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`), bez niego otwiera się okno Chromium. Dane: `$VIZRS_DATA`, domyślnie `~/.local/share/vizrs` – wspólne dla obu, drugie okno dołącza do serwera; binarka serwera kopiowana do `~/.cache/vizrs/<wersja>/` (serwer działa dłużej niż zamontowany obraz).
+- Linux bez instalacji: `VizRS-Artist-<wersja>-x86_64.AppImage` i `VizRS-Trio-…AppImage` z wydania na GitHub (budowa: `deploy/appimage/build.sh vizrs vizrs-shell wersja`; od 2.0.19 AppImage budowane są lokalnie i dołączane do wydania `gh release upload` razem z `SHA256SUMS-AppImage.txt` – akcja Release ich nie buduje). Okno natywne wymaga systemowego WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`), bez niego otwiera się okno Chromium. Dane: `$VIZRS_DATA`, domyślnie `~/.local/share/vizrs` – wspólne dla obu, drugie okno dołącza do serwera; binarka serwera kopiowana do `~/.cache/vizrs/<wersja>/` (serwer działa dłużej niż zamontowany obraz).
 - Linux: `deploy/install-desktop-linux.sh [vizrs] [katalog-danych]` – „VizRS Artist” i „VizRS Trio” w menu aplikacji (pliki `.desktop`, ikona `deploy/vizrs.svg`).
 - Windows: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1` – skróty w menu Start uruchamiają `vizrs-app.exe` (to samo co `vizrs.exe`, ale **bez okna konsoli**; błąd startu pokazuje w okienku systemowym) oraz „VizRS Serwer” (konsola). `start-windows.bat [artist|trio|serve]` – domyślnie okno Trio.
 
