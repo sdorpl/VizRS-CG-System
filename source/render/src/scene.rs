@@ -588,15 +588,22 @@ impl Player {
         root.overflow = Some(0.0);
         let (dx, dy) = self.dock_at(now);
         root.m = Transform::from_translate(dx as f32, dy as f32);
+        // przesunięcie całej sceny (scene.x / scene.y) – wewnątrz przycięcia kadru, jak .vz-root w renderer.js
+        let mut content = DNode::new(
+            Transform::from_translate(self.scene.x as f32, self.scene.y as f32),
+            self.scene.width as f32,
+            self.scene.height as f32,
+        );
         for i in 0..n {
             if self.parents[i].is_none() {
                 if let Some(d) = built[i].take() {
                     if d.opacity > 0.0 {
-                        root.children.push(d);
+                        content.children.push(d);
                     }
                 }
             }
         }
+        root.children.push(content);
         self.tree = Some(root);
     }
 

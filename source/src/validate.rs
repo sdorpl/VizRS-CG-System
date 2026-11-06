@@ -254,6 +254,12 @@ pub fn scene(s: &Json) -> R {
             num_in(v, &format!("scena.{k}"), 1.0, 16_384.0)?;
         }
     }
+    // przesunięcie całej sceny w Artist (renderer.js: .vz-root)
+    for k in ["x", "y"] {
+        if let Some(v) = opt(s, k) {
+            num_in(v, &format!("scena.{k}"), -16_384.0, 16_384.0)?;
+        }
+    }
     if let Some(v) = opt(s, "duration") {
         num_in(v, "scena.duration", 0.0, 3_600.0)?;
     }
@@ -680,6 +686,9 @@ mod tests {
         assert!(scene(&p(r#"{"stops":[-1]}"#)).is_err());
         assert!(scene(&p(r#"{"duration":99999}"#)).is_err());
         assert!(scene(&p(r#"{"width":0}"#)).is_err());
+        assert!(scene(&p(r#"{"x":-120,"y":40.5}"#)).is_ok());
+        assert!(scene(&p(r#"{"x":"10"}"#)).is_err());
+        assert!(scene(&p(r#"{"y":99999}"#)).is_err());
         assert!(scene(&p(r#"{"layer":"a b"}"#)).is_err());
         assert!(scene(&p(r#"{"packAssets":["logo.png","Font.ttf"]}"#)).is_ok());
         assert!(scene(&p(r#"{"packAssets":["../show.json"]}"#)).is_err());

@@ -174,7 +174,7 @@
   </section>
   <div class="gutter" id="gL" data-k="l" title="Przeciągnij, aby zmienić szerokość (dwuklik = domyślna)"></div>
 
-  <section class="panel" id="canvasP" data-hint="Kanwa: przeciągnij element · róg = rozmiar · strzałki = 1 px (Shift = 10 px) · klik w puste miejsce = ustawienia sceny · kółko = zoom · środkowy przycisk = przesuwanie widoku · Shift+1 / 2 / 3 = dopasuj / 100% / zaznaczony">
+  <section class="panel" id="canvasP" data-hint="Kanwa: przeciągnij element · róg = rozmiar · strzałki = 1 px (Shift = 10 px) · klik w puste miejsce = ustawienia sceny (przeciągnięcie = przesuń całą scenę) · kółko = zoom · środkowy przycisk = przesuwanie widoku · Shift+1 / 2 / 3 = dopasuj / 100% / zaznaczony">
     <div id="box" class="checker">
       <div id="stage"></div>
       <div id="safe"><div style="inset:5%"></div><div style="inset:10%"></div></div>
@@ -291,6 +291,16 @@ function locate(id, nodes = scene.nodes, parent = null) {
 const selNode = () => (selId ? locate(selId)?.node : null);
 /** Zablokowany węzeł (sam albo przez zablokowanego przodka) – nie da się go chwycić na kanwie ani przesunąć. */
 function isLocked(id) { let cur = locate(id); while (cur) { if (cur.node.locked) return true; cur = cur.parent ? locate(cur.parent.id) : null; } return false; }
+/** Położenie całej sceny (scene.x / scene.y): przesuwa wszystko naraz, bez zmiany kluczy animacji i props węzłów. */
+function setSceneOffset(x, y) {
+  x = Math.max(-16384, Math.min(16384, Math.round(x) || 0)); y = Math.max(-16384, Math.min(16384, Math.round(y) || 0));
+  if (x) scene.x = x; else delete scene.x;
+  if (y) scene.y = y; else delete scene.y;
+  player.placeRoot();
+  const ix = document.querySelector('[data-sp="x"]'), iy = document.querySelector('[data-sp="y"]');
+  if (ix && document.activeElement !== ix) ix.value = x; if (iy && document.activeElement !== iy) iy.value = y;
+  const pl = document.querySelector('#tree .item[data-id=""] .off'); if (pl) pl.textContent = x || y ? `${x}, ${y}` : '';
+}
 /** Wymiar grupy = zasięg zawartości (największy element razem z przesunięciem), jak obrys w Viz Artist. */
 function fitGroup(g) {
   if (!g || g.type !== 'group' || !g.children?.length) return false;
@@ -386,7 +396,7 @@ async function newScene(name, base) {
 function renderAll() { renderSceneSel(); renderTree(); renderProps(); renderTimeline(); }
 
 function renderTree() {
-  let h = `<div class="item ${selId ? '' : 'sel'}" data-id=""><span class="ic"><i class="ico scene"></i></span><b class="grow">${esc(scene.name)}</b><span class="pill">${esc(scene.layer || 'main')}</span></div>`;
+  let h = `<div class="item ${selId ? '' : 'sel'}" data-id=""><span class="ic"><i class="ico scene"></i></span><b class="grow">${esc(scene.name)}</b><span class="dim off" title="położenie sceny (X, Y)">${+scene.x || +scene.y ? `${+scene.x || 0}, ${+scene.y || 0}` : ''}</span><span class="pill">${esc(scene.layer || 'main')}</span></div>`;
   const rec = (nodes, d) => {
     for (const n of nodes) {
       const fl = Object.values(n.fields || {}).filter(Boolean);
@@ -599,6 +609,7 @@ function renderSceneProps() {
   <div class="sp"><label>Nazwa</label><input data-sp="name" value="${esc(scene.name)}"></div>
   <div class="sp"><label>Warstwa (layer)</label><input data-sp="layer" list="layerlist" value="${esc(scene.layer || 'main')}"></div>
   <div class="sp"><label>Rozdzielczość</label><div class="row"><input data-sp="width" type="number" value="${scene.width}"> × <input data-sp="height" type="number" value="${scene.height}"></div></div>
+  <div class="sp"><label>Położenie sceny</label><div class="row"><input data-sp="x" type="number" value="${+scene.x || 0}" title="X – przesunięcie całej sceny (nie zmienia animacji)"> × <input data-sp="y" type="number" value="${+scene.y || 0}" title="Y – przesunięcie całej sceny (nie zmienia animacji)"><button class="icon" data-scene0 title="Wyzeruj położenie">⟲</button></div></div>
   <div class="sp"><label>Długość (s)</label><input data-sp="duration" type="number" step="0.1" value="${scene.duration}"></div>
   <div class="sp"><label>Stop pointy</label><div class="chips">${scene.stops.map((s, i) => `<span class="chip">${(+s).toFixed(2)}s<button data-rmstop="${i}" title="usuń">×</button></span>`).join('') || '<span class="dim">brak – grafika gra do końca</span>'}</div></div>
   <div class="sp"><label>Markery</label><div class="chips">${(scene.markers || []).map((m, i) => `<span class="chip mk">${esc(m.name)} ${(+m.t).toFixed(2)}s<button data-mkstop="${i}" title="Utwórz stop point z markera">⏹</button><button data-rmmk="${i}" title="usuń">×</button></span>`).join('') || '<span class="dim">M lub dwuklik na linijce = marker</span>'}</div></div>
@@ -958,6 +969,7 @@ function onPropInput(e) {
     if (e.type === 'change' && inp.tagName !== 'SELECT') return;
     cp();
     const k = inp.dataset.sp;
+    if (k === 'x' || k === 'y') { const v = Math.round(parseFloat(inp.value) || 0); setSceneOffset(k === 'x' ? v : +scene.x || 0, k === 'y' ? v : +scene.y || 0); return; }
     const num = ['width', 'height', 'duration'].includes(k);
     let v = num ? parseFloat(inp.value) : inp.value;
     if (num && !(v > 0)) return;
@@ -1045,6 +1057,7 @@ $('#props').addEventListener('click', async (e) => {
   if (mkr) { checkpoint(); scene.markers.splice(+mkr.dataset.rmmk, 1); renderProps(); renderTimeline(); return; }
   const ft = e.target.closest('[data-frtoggle]');
   if (ft) { const id = ft.dataset.frtoggle; if (openRules.has(id)) openRules.delete(id); else openRules.add(id); renderProps(); return; }
+  if (e.target.closest('[data-scene0]')) { checkpoint(); setSceneOffset(0, 0); return; }
   const rs = e.target.closest('[data-rmstop]');
   if (rs) { checkpoint(); scene.stops.splice(+rs.dataset.rmstop, 1); renderProps(); renderTimeline(); return; }
   const vd = e.target.closest('[data-vdel]');
@@ -1314,7 +1327,22 @@ box.addEventListener('mousedown', (e) => {
   const handle = e.target.closest('#sel .h');
   // zablokowane elementy są „przezroczyste” dla myszy: chwytamy pierwszy niezablokowany pod kursorem
   const nodeEl = !handle && document.elementsFromPoint(e.clientX, e.clientY).find((x) => x.classList?.contains('vz-node') && stage.contains(x) && !isLocked(x.dataset.id));
-  if (!handle && !nodeEl) { if (selId) select(null); return; }
+  if (!handle && !nodeEl) {
+    // puste miejsce: zaznacz scenę; przeciągnięcie przesuwa całą scenę (scene.x / y)
+    if (selId) select(null);
+    e.preventDefault();
+    const sx = e.clientX, sy = e.clientY, x0 = +scene.x || 0, y0 = +scene.y || 0; let moved = false;
+    const mv = (ev) => {
+      let dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
+      if (!moved && Math.abs(dx) + Math.abs(dy) < 2) return;
+      if (!moved) { checkpoint(); moved = true; }
+      if (ev.shiftKey) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0; }
+      setSceneOffset(x0 + dx, y0 + dy);
+    };
+    const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); };
+    addEventListener('mousemove', mv); addEventListener('mouseup', up);
+    return;
+  }
   e.preventDefault();
   if (nodeEl && nodeEl.dataset.id !== selId) select(nodeEl.dataset.id);
   const n = selNode(); if (!n || isLocked(n.id)) return;
@@ -1880,6 +1908,11 @@ addEventListener('keydown', (e) => {
   if (e.key === 'End') { setTime(scene.duration); return; }
   const n = selNode();
   const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (!n && arrows[e.key] && lastArea !== 'timeline') {
+    e.preventDefault(); checkpoint();
+    const m = e.shiftKey ? 10 : 1, [dx, dy] = arrows[e.key];
+    setSceneOffset((+scene.x || 0) + dx * m, (+scene.y || 0) + dy * m); return;
+  }
   if (n && arrows[e.key] && !isLocked(n.id)) {
     e.preventDefault(); checkpoint();
     const m = e.shiftKey ? 10 : 1, [dx, dy] = arrows[e.key];

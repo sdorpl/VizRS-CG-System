@@ -108,6 +108,13 @@ add('Autofollow', ['Krótko', 'Średnia długość tekstu', 'Bardzo długi podpi
   node('rect', { x: 1500, y: 100 + i * 150, w: 300, h: 40, anchorX: 'center', color: '#1c3f94', follow: `fh${i}`, followAxis: 'h', followPad: 20 }),
   node('text', { x: 1360, y: 110 + i * 150, w: 280, h: 300, text: t.split(' ').join('\n'), maxLines: 4, textFit: 'none', size: 22, font: 'Inter', valign: 'top' }, { name: `fh${i}` }),
 ]));
+// 13. przesunięcie całej sceny (scene.x / scene.y): treść wychodząca za kadr jest przycinana
+add('Położenie sceny', [
+  node('rect', { x: 0, y: 0, w: 1920, h: 1080, color: '#20262e' }),
+  node('group', { x: 1500, y: 800, w: 600, h: 300 }, { children: [node('rect', { x: 0, y: 0, w: 600, h: 300, color: '#c8102e', radius: 20 })] }),
+  node('ellipse', { x: -100, y: -100, w: 300, h: 300, color: '#1c3f94' }),
+]);
+Object.assign(scenes[scenes.length - 1], { x: 140, y: -60 });
 
 const show = { name: 'Plansze renderera natywnego', scenes, pages: scenes.map((s, i) => ({ id: `p${i + 1}`, number: 9001 + i, name: s.name, scene: s.id, values: {} })), playlists: [] };
 fs.writeFileSync(path.join(out, 'show.json'), JSON.stringify(show, null, 1));

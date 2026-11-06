@@ -431,6 +431,9 @@ pub struct Scene {
     pub nodes: Vec<Node>,
     pub field_meta: Map<String, Value>,
     pub dock: Vec<Value>,
+    /// Przesunięcie całej sceny (`scene.x`, `scene.y`), niezależne od animacji.
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Scene {
@@ -449,6 +452,8 @@ impl Scene {
             nodes: v.get("nodes").and_then(Value::as_array).map(|n| n.iter().map(Node::from_json).collect()).unwrap_or_default(),
             field_meta: v.get("fieldMeta").and_then(Value::as_object).cloned().unwrap_or_default(),
             dock: v.get("dock").and_then(Value::as_array).cloned().unwrap_or_default(),
+            x: v.get("x").map(num_of).filter(|x| x.is_finite()).unwrap_or(0.0),
+            y: v.get("y").map(num_of).filter(|x| x.is_finite()).unwrap_or(0.0),
         }
     }
 

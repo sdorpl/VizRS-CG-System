@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Artist – położenie całej sceny:** pola X/Y sceny (`scene.x`, `scene.y`, sprawdzane w `validate.rs`), przeciąganie pustego miejsca kanwy i strzałki przy zaznaczonej scenie przesuwają wszystko naraz, bez zmiany kluczy animacji i właściwości elementów. Obsługuje to też renderer natywny.
+
 ## 2.0.18 (2026-11-06) – „Kłódka”
 
 - **Artist – drzewo sceny:** blokada elementów i grup (🔒, pole `locked`, sprawdzane w `validate.rs`); wymiar grupy dopasowuje się do zawartości (automatycznie po dodaniu elementu, ręcznie ⤢). Poprawka: nowy element nie ginie już wewnątrz zaznaczonego prostokąta (do środka trafia tylko przy zaznaczonej grupie), Kod QR dostaje domyślny rozmiar, nieznany typ węzła (import) nie blokuje dodawania.

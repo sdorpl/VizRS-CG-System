@@ -843,7 +843,13 @@ export class ScenePlayer {
         if (n.children?.length) mk(n.children, el);
       }
     };
-    mk(this.scene.nodes, this.el);
+    // przesunięcie całej sceny (scene.x / scene.y) – niezależne od animacji węzłów; przycięcie zostaje na kadrze
+    this.root = document.createElement('div');
+    this.root.className = 'vz-root';
+    this.root.style.position = 'absolute'; this.root.style.left = '0'; this.root.style.top = '0';
+    this.placeRoot();
+    this.el.appendChild(this.root);
+    mk(this.scene.nodes, this.root);
   }
 
   // ---- sterowanie (logika Viz: stop pointy w dyrektorze) ----
@@ -898,6 +904,12 @@ export class ScenePlayer {
     const st = this.el.style;
     st.transition = dur > 0 ? `transform ${dur}s cubic-bezier(.4,0,.2,1)` : 'none';
     st.transform = dx || dy ? `translate(${dx}px, ${dy}px)` : '';
+  }
+  /** Położenie całej sceny względem kadru (px). */
+  placeRoot() {
+    if (!this.root) return;
+    const x = +this.scene.x || 0, y = +this.scene.y || 0;
+    this.root.style.transform = x || y ? `translate(${x}px, ${y}px)` : '';
   }
   setScene(scene) { this.scene = scene; this.el.style.width = (scene.width || 1920) + 'px'; this.el.style.height = (scene.height || 1080) + 'px'; this.build(); this.apply(this.t); }
   destroy() {
