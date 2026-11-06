@@ -330,7 +330,7 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 | Położenie sceny | przesuwa całą scenę naraz (`scene.x`, `scene.y`): pola „Położenie sceny” w ustawieniach sceny (⟲ zeruje), przeciągnięcie pustego miejsca kanwy albo strzałki (Shift = 10 px), gdy zaznaczona jest scena. Nie zmienia kluczy animacji ani `props` węzłów – animacje grają względem nowego położenia; to, co wychodzi poza kadr, jest przycinane. Działa na wyjściu, w podglądzie Trio i w rendererze natywnym; `dock` dodaje się do niego |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów; przy zaznaczonej **grupie** nowy element trafia do niej, przy elemencie w grupie – obok niego, przy elemencie na najwyższym poziomie albo bez zaznaczenia – na najwyższy poziom), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, ⤢ dopasuj wymiar grupy do zawartości, kosz; przeciąganie zmienia rodzica z zachowaniem położenia. 🔒/🔓 w wierszu blokuje element (`locked`, tak/nie) – zablokowanego, ani elementów wewnątrz zablokowanej grupy, nie da się chwycić na kanwie (klik trafia w element pod spodem), przesunąć strzałkami, przeciągnąć w drzewie ani usunąć; właściwości nadal edytuje się w panelu. Blokada działa tylko w Artist, nie wpływa na wyjście. **Wiersz sceny** (pierwszy, nadrzędny) pokazuje położenie całej sceny (X, Y), gdy różni się od 0. **Wymiar grupy** ustawia się sam, gdy grupa dostaje element (dodanie, ⇥, przeciągnięcie): szerokość i wysokość = zasięg zawartości, czyli największy element z jego przesunięciem w grupie |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny. **Zoom podglądu** (10–800%): kółko wokół kursora, −/＋, ⤢ dopasuj (Shift+1), 1:1 (Shift+2), ⌖ kadr na zaznaczony element (Shift+3); środkowy przycisk przesuwa widok. Zmiana rozmiaru panelu zachowuje zoom, zmiana sceny lub jej rozdzielczości wraca do dopasowania |
-| Właściwości (prawo) | grupy: Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker; „widoczny gdy”; presety animacji |
+| Właściwości (prawo) | trzy zakładki: **Właściwości** (grupy Transform, Maska / efekty, Autofollow, Wygląd, Tekst, Obraz, Zegar, Ticker), **Ruch** (ruch bez kluczy, presety animacji, lista kluczy węzła), **Dane** („widoczny gdy”, pola kontrolne węzła); kropka na zakładce = coś jest ustawione. Szczegóły panelu: poniżej |
 | Oś czasu (dół) | pasek: czas, ⏮, ▶ Take, ⏭ Continue, ⏏ Out, ▶/⏸, ＋ Stop, Dł. (długość sceny), ≣ Sekwencja, ▾ marker (M), ⧉ / ⎘ kopiuj / wklej klucze, suwak powiększenia, ↔ dopasuj. Pod nim stały **pasek klucza** (czas, wartość, krzywa i usunięcie zaznaczonego klucza), a w trybie sekwencji w tym miejscu **pasek sekwencji** (§8.4) – oś czasu nie przeskakuje |
 | Pasek stanu (dół okna) | podpowiedź ze skrótami panelu pod kursorem; wskaźnik **połączono / brak połączenia** z serwerem |
 
@@ -340,7 +340,16 @@ Panele są zadokowane jak w programie desktopowym: szerokość drzewa i właści
 
 Nazwa, **warstwa**, rozdzielczość, długość, stop pointy (× usuwa), markery (⏹ = stop point z markera), **powiązania (dock)**, **warianty** (＋ Wariant), **pola kontrolne** (etykieta w Trio + ⚙ reguły), **zasoby paczki** (grafiki i czcionki, §8.7) i **＋ Utwórz stronę w Trio**.
 
-Właściwości węzła mają grupę **Ruch – bez kluczy**: wejście, wyjście, tekst IN/OUT (tekst i zegar), pętla – z czasem, opóźnieniem, kierunkiem, krzywą, odstępem i kolejnością jednostek (§4.5).
+**Panel Właściwości** (zaznaczony węzeł):
+
+- **Grupy zwijane** – klik w nagłówek; stan zapamiętany w przeglądarce (`vizrs.propsUI`), wspólny dla wszystkich węzłów. Domyślnie zwinięte: Maska / efekty, Autofollow. Nagłówek pokazuje licznik: `N zm.` (wartości inne niż domyślne), `◆N` (animowane), `⛓N` (pola kontrolne).
+- **Podstawowe / Wszystko** – w trybie podstawowym rzadkie właściwości (pochylenie, miganie, rozmycie, maski, cień, ściśnięcia, łamanie wierszy, wyróżnienia `[[ ]]`, rotacja wierszy, część tickera i zegara) są ukryte, chyba że mają wartość inną niż domyślna, klucze albo pole kontrolne. Przycisk „＋ N rzadziej używanych” na końcu listy przełącza na wszystko.
+- **Właściwości zależne** są ukryte, gdy nic nie robią: min. ściśnięcie (tylko przy dopasowaniu `squeeze…`), ściśnięcie przy wypełnianiu (łamanie `fill`), kąt gradientu (gdy jest kolor 2), kolor ramki (ramka > 0), oś / margines / minimum autofollow (gdy jest `follow`), start i cel zegara (wg trybu), zapętlenie (plik wideo). Użyta, a nieaktywna właściwość zostaje widoczna, przygaszona.
+- **Wiersze złożone** – X/Y, szer./wys. (⛓ = zachowaj proporcje), obrót/skala/krycie, maska L P G D, kolor/kolor 2/kąt, font/grubość, rozmiar/odstęp/interlinia w jednej linii; **punkt** zaczepienia jako siatka 3×3; **wyrównanie** tekstu jako przyciski; kursywa i WERSALIKI obok siebie. Każde pole ma własny ◆ i łańcuch.
+- **Stan wiersza** – pogrubiona etykieta z kropką = wartość inna niż domyślna; pomarańczowy pasek z lewej = animowana; niebieski = pole kontrolne. **Prawy klik na etykiecie** przywraca wartość domyślną (gdy właściwość nie ma kluczy). ◆ i łańcuch są przygaszone, dopóki wiersz nie jest wskazany albo aktywny.
+- **Szukaj** (`/`) – filtruje właściwości po nazwie polskiej i kluczu (np. „odstęp”, `spacing`), rozwija zwinięte grupy; Esc czyści.
+
+Zakładka **Ruch** zawiera grupę **Ruch – bez kluczy**: wejście, wyjście, tekst IN/OUT (tekst i zegar), pętla – z czasem, opóźnieniem, kierunkiem, krzywą, odstępem i kolejnością jednostek (§4.5).
 
 ### 8.3 Klucze animacji
 
@@ -378,6 +387,7 @@ Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu 
 | Spacja | odtwórz / pauza |
 | Home / End | początek / koniec sceny |
 | M | marker w bieżącym czasie |
+| / | szukaj właściwości (panel Właściwości, przy zaznaczonym węźle) |
 | Ctrl+C / Ctrl+V (na osi czasu) | kopiuj / wklej klucze |
 | strzałki (Shift = ×10) | przesuń zaznaczony węzeł o 1 px (10 px) |
 

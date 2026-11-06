@@ -102,6 +102,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
 
     // presety animacji
     await pg.click('#tree .item[data-id="r1"]'); await sleep(200);
+    await pg.click('[data-ptab="ruch"]'); await sleep(100); // presety kluczy są w zakładce Ruch
     promptAnswer = 'Wjazd testowy';
     await pg.click('[data-ap="save"]'); await sleep(500);
     const presets = await api('/api/animpresets');
@@ -148,6 +149,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     // presety tickerów i panel węzła ticker (tylko właściwości bieżącego trybu, edytor wiadomości próbnych)
     await pg.goto(B + '/artist?scene=at'); await sleep(1000);
     await pg.selectOption('#addSel', 'preset:whip'); await sleep(400);
+    await pg.click('[data-ptab="wl"]'); await sleep(150);
     ok((await pg.locator('#props .tkx').count()) === 1, 'preset tickera: węzeł zaznaczony, edytor wiadomości w panelu');
     ok((await pg.locator('#props [data-prop="speed"]').count()) === 0 && (await pg.locator('#props [data-prop="hold"]').count()) === 1, 'ticker whip: panel bez prędkości crawla, z czasem wiadomości');
     await pg.selectOption('[data-p="tickerMode"]', 'crawl'); await sleep(300);

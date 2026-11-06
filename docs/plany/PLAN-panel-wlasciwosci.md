@@ -1,6 +1,7 @@
 # Plan: prostszy panel Właściwości w Artist (P1–P8)
 
-Stan: propozycja (2026-11-07), czeka na decyzję użytkownika.
+Stan: P1–P7 wdrożone (2026-11-07); P8 (edycja wielu zaznaczonych) czeka na zaznaczanie wielokrotne w drzewie.
+Różnica względem propozycji: lista właściwości zaawansowanych (`ADV`) i reguły widoczności (`WHEN`) są w `artist.html`, nie w `PROPS` – renderer zostaje bez zmian.
 
 ## Diagnoza
 

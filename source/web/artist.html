@@ -49,6 +49,58 @@
   #props .phead { display: flex; gap: 6px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); }
   #props .phead .ic { color: var(--acc); font-size: 16px; }
   .pgroup { padding: 8px 8px 3px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--acc); opacity: .8; }
+  #propsP { display: flex; flex-direction: column; }
+  .ptools { padding: 4px 6px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+  .ptools[hidden] { display: none; }
+  .ptabs { display: flex; gap: 2px; }
+  .ptabs button { flex: 1; padding: 3px 4px; font-size: 12px; position: relative; }
+  .ptabs button.on { background: var(--acc); color: #1a1100; border-color: var(--acc); }
+  .ptabs button.dot::after { content: '•'; position: absolute; right: 4px; top: -1px; color: var(--blue); font-size: 14px; }
+  #pall.on { border-color: var(--acc); color: var(--acc); }
+  button.pgroup { display: flex; width: 100%; gap: 4px; align-items: center; background: none; border: none; border-top: 1px solid var(--line); border-radius: 0; text-align: left; cursor: pointer; }
+  button.pgroup:hover { opacity: 1; }
+  .pgroup .car { display: inline-block; transition: transform .12s; }
+  .pgroup .cnt { margin-left: auto; text-transform: none; letter-spacing: 0; color: var(--dim); font-size: 10px; }
+  .pgsec.fold .pgbody { display: none; }
+  .pgsec.fold .car { transform: rotate(-90deg); }
+  .searching .pgsec.fold .pgbody { display: block; }
+  .pgsec[hidden], #props [data-q][hidden] { display: none; }
+  .pmulti { padding: 2px 8px; }
+  .pmlbl { font-size: 11px; color: var(--dim); }
+  .pmgrid { display: grid; gap: 4px; align-items: end; }
+  .pmgrid .cell { min-width: 0; display: flex; flex-direction: column; gap: 1px; border-left: 2px solid transparent; padding-left: 3px; }
+  .pmgrid .cell > input, .pmgrid .cell > select, .pmgrid .cell > .row { width: 100%; min-width: 0; }
+  .pmgrid .cell .row input:not([type=color]) { min-width: 0; }
+  .cell .ch { display: flex; align-items: center; gap: 1px; min-width: 0; }
+  .cell .ch label { font-size: 11px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell .ch label[data-scrub]:not([data-scrub=""]) { cursor: ew-resize; }
+  .cell .kbtn, .cell .fbtn { padding: 0 3px; min-width: 0; height: 16px; line-height: 14px; font-size: 9px; }
+  .ratio { align-self: end; height: 24px; }
+  .ratio.on { color: var(--acc); border-color: var(--acc); }
+  .pr, .pmgrid .cell { border-left: 2px solid transparent; }
+  #props .mod > label, #props .mod > .ch label { color: var(--text); font-weight: 600; }
+  #props .mod > label::after, #props .mod > .ch label::after { content: ' •'; color: var(--acc); }
+  #props .anim { border-left-color: var(--acc); }
+  #props .fld { border-left-color: var(--blue); }
+  #props .fld > label, #props .fld > .ch label { color: #a9c8ff; }
+  #props .inert { opacity: .55; }
+  #props .kbtn:not(.has):not(.on), #props .fbtn:not(.on) { opacity: .35; }
+  #props .pr:hover .kbtn, #props .pr:hover .fbtn, #props .cell:hover .kbtn, #props .cell:hover .fbtn { opacity: 1; }
+  .anchor-row, .seg-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .anchor-row { flex-wrap: nowrap; }
+  .anchor-row .cell, .seg-row .cell { display: inline-flex; align-items: center; gap: 1px; }
+  .agrid { display: grid; grid-template-columns: repeat(3, 12px); gap: 2px; }
+  .agrid button { width: 12px; height: 12px; min-width: 0; padding: 0; border-radius: 2px; }
+  .agrid button.on { background: var(--acc); border-color: var(--acc); }
+  .segb { display: inline-flex; }
+  .segb button { border-radius: 0; padding: 0 7px; height: 22px; min-width: 24px; font-size: 13px; line-height: 20px; }
+  .segb button:first-child { border-radius: 4px 0 0 4px; } .segb button:last-child { border-radius: 0 4px 4px 0; }
+  .segb button.on { background: var(--acc); color: #1a1100; border-color: var(--acc); }
+  .chk { font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
+  .pmore { padding: 6px 8px; } .pmore button { width: 100%; font-size: 12px; }
+  .pnote { padding: 2px 10px; font-size: 12px; line-height: 1.5; }
+  .pnone { padding: 10px; font-size: 12px; }
+  .plist { padding: 2px 8px; }
   .pr { display: grid; grid-template-columns: 100px 1fr 24px 24px; gap: 4px; align-items: center; padding: 2px 8px; }
   .pr label { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pr label[data-scrub]:not([data-scrub=""]) { cursor: ew-resize; }
@@ -189,6 +241,10 @@
   <div class="gutter" id="gR" data-k="r" title="Przeciągnij, aby zmienić szerokość (dwuklik = domyślna)"></div>
   <section class="panel" id="propsP" data-hint="Właściwości: przeciągnij nazwę w poziomie = zmiana wartości · ◆ = klucz animacji w bieżącym czasie · łańcuch = pole kontrolne w Trio">
     <header><h3 id="propsTitle">Właściwości</h3></header>
+    <div class="ptools" id="ptools" hidden>
+      <div class="ptabs"><button data-ptab="wl" title="Wygląd, położenie, tekst">Właściwości</button><button data-ptab="ruch" title="Presety wejścia/wyjścia, efekty tekstu, pętle, presety kluczy">Ruch</button><button data-ptab="dane" title="Pola kontrolne i wariant widoczności">Dane</button></div>
+      <div class="row"><input id="psearch" class="grow" type="search" placeholder="Szukaj właściwości… (/)"><button id="pall" title="Podstawowe: rzadkie właściwości ukryte, o ile nie są użyte · Wszystko: pełna lista">Podstawowe</button></div>
+    </div>
     <div class="scroll" id="props"></div>
   </section>
 
@@ -432,59 +488,218 @@ function inputFor(p, d) {
   return '';
 }
 
+// ------------------------------------------------------------ panel Właściwości (plan PLAN-panel-wlasciwosci.md)
+/** Stan panelu (per przeglądarka): zwinięte grupy, tryb „Wszystko”, zakładka, blokada proporcji. */
+const pui = (() => { try { return { fold: {}, all: false, tab: 'wl', ratio: false, ...JSON.parse(localStorage.getItem('vizrs.propsUI')) }; } catch { return { fold: {}, all: false, tab: 'wl', ratio: false }; } })();
+const savePui = () => { try { localStorage.setItem('vizrs.propsUI', JSON.stringify(pui)); } catch { /* ignoruj */ } };
+/** Grupy domyślnie zwinięte (rzadko używane). */
+const FOLD0 = new Set(['Maska / efekty', 'Autofollow']);
+const folded = (g) => pui.fold[g] ?? FOLD0.has(g);
+/** Właściwości zaawansowane: w trybie „Podstawowe” widoczne tylko, gdy są użyte (wartość, klucz, pole kontrolne). */
+const ADV = new Set(['skewX', 'blink', 'blur', 'clipL', 'clipR', 'clipT', 'clipB', 'followMin', 'fillSqueeze', 'squeezeMin', 'lineBreak', 'hlColor', 'hlText',
+  'cycle', 'gleam', 'labelSize', 'labelWeight', 'sepColor', 'sepStyle', 'crawlFrom', 'tz', 'shadow']);
+/** Widoczność warunkowa: właściwość nie działa przy obecnych ustawieniach węzła (nadal widoczna, gdy jest użyta). */
+const VIDEO_RE = /\.(mp4|webm|mov|m4v)$/i;
+const WHEN = {
+  squeezeMin: (v) => /^squeeze/.test(v('textFit') || ''),
+  fillSqueeze: (v) => v('lineBreak') === 'fill',
+  gradAngle: (v) => !!v('color2'),
+  borderColor: (v) => +v('borderWidth') > 0,
+  followAxis: (v) => !!v('follow'), followPad: (v) => !!v('follow'), followMin: (v) => !!v('follow'),
+  seconds: (v) => ['up', 'down'].includes(v('mode')),
+  target: (v) => v('mode') === 'target',
+  loop: (v) => VIDEO_RE.test(v('src') || ''),
+};
+/** Właściwości, od których zależy widoczność innych – po zmianie panel układa się od nowa. */
+const WHEN_SRC = new Set(['textFit', 'lineBreak', 'color2', 'borderWidth', 'follow', 'mode', 'src', 'tickerMode']);
+/** Wiersze złożone: kilka właściwości w jednej linii (krótkie etykiety). */
+const COMBOS = [
+  { props: ['x', 'y'], short: ['X', 'Y'] },
+  { props: ['w', 'h'], short: ['szer.', 'wys.'], ratio: true },
+  { props: ['anchorX', 'anchorY'], kind: 'anchor', label: 'punkt' },
+  { props: ['rotation', 'scale', 'opacity'], short: ['obrót°', 'skala', 'krycie'] },
+  { props: ['clipL', 'clipR', 'clipT', 'clipB'], short: ['L', 'P', 'G', 'D'], label: 'maska %' },
+  { props: ['blur', 'skewX'], short: ['rozmycie', 'pochyl.°'] },
+  { props: ['followAxis', 'followPad', 'followMin'], short: ['oś', 'margines', 'min.'] },
+  { props: ['color', 'color2', 'gradAngle'], short: ['kolor', 'kolor 2', 'kąt'], kind: 'fill' },
+  { props: ['borderWidth', 'borderColor'], short: ['ramka px', 'kolor ramki'] },
+  { props: ['radius', 'shadow'], short: ['zaokr.', 'cień'] },
+  { props: ['font', 'weight'], short: ['font', 'grubość'], kind: 'wide1' },
+  { props: ['size', 'spacing', 'lineHeight'], short: ['rozmiar', 'odstęp', 'interl.'] },
+  { props: ['italic', 'upper'], kind: 'bools', label: 'styl' },
+  { props: ['align', 'valign'], kind: 'seg', label: 'wyrównanie' },
+  { props: ['hlColor', 'hlText'], short: ['tło [[ ]]', 'tekst [[ ]]'] },
+  { props: ['catBg', 'catFg'], short: ['tło kat.', 'tekst kat.'] },
+  { props: ['labelSize', 'labelWeight'], short: ['rozm. etyk.', 'grub. etyk.'] },
+];
+const SEG = { align: [['left', '⇤'], ['center', '↔'], ['right', '⇥']], valign: [['top', '⤒'], ['middle', '↕'], ['bottom', '⤓']] };
+const SEG_T = { left: 'do lewej', center: 'do środka', right: 'do prawej', top: 'do góry', middle: 'w pionie do środka', bottom: 'do dołu' };
+
+/** Czy właściwość jest „użyta”: wartość różna od domyślnej, klucze albo pole kontrolne. */
+function propState(n, p) {
+  const d = PROPS[p], has = n.props && p in n.props;
+  const mod = has && String(n.props[p] ?? '') !== String(d.d ?? '');
+  const anim = !!n.anim?.[p]?.length, fld = n.fields?.[p] || '';
+  return { mod, anim, fld, used: mod || anim || !!fld };
+}
+const btns = (p, d) => `${d.anim ? `<button class="icon kbtn" data-key="${p}" title="Klucz animacji w bieżącym czasie (dodaj/usuń)">◆</button>` : ''}<button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button>`;
+const scrubLbl = (p, d, txt) => `<label data-scrub="${d.t === 'num' ? p : ''}" title="${esc(d.label || p)} (${p})${d.t === 'num' ? ' – przeciągnij, aby zmienić' : ''} · prawy klik = wartość domyślna">${esc(txt)}</label>`;
+
 function renderProps() {
   const el = $('#props');
   const n = selNode();
+  $('#ptools').hidden = !n;
   if (!n) { $('#propsTitle').textContent = 'Scena'; renderSceneProps(); return; }
   const def = TYPES[n.type];
   $('#propsTitle').textContent = 'Właściwości – ' + def.label;
-  let h = `<div class="phead"><span class="ic">${def.icon}</span><input id="pname" class="grow" value="${esc(n.name)}" title="Nazwa kontenera"></div>`;
-  let g = null;
-  const tkMode = n.type === 'ticker' ? propAt(n, 'tickerMode', t, null) : null;
+  for (const b of $$('[data-ptab]')) b.classList.toggle('on', b.dataset.ptab === pui.tab);
+  $('#pall').classList.toggle('on', pui.all);
+  $('#pall').textContent = pui.all ? 'Wszystko' : 'Podstawowe';
+  const ruchOn = !!n.motion || Object.values(n.anim || {}).some((a) => a?.length);
+  const daneOn = !!n.showIf || Object.keys(n.fields || {}).length > 0;
+  $('[data-ptab="ruch"]').classList.toggle('dot', ruchOn);
+  $('[data-ptab="dane"]').classList.toggle('dot', daneOn);
+
+  const val = (k) => propAt(n, k, t, null);
+  const tkMode = n.type === 'ticker' ? val('tickerMode') : null;
   const TK_HIDE = { crawl: ['hold'], roll: ['speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor'], wipe: ['speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor'], whip: ['speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor'] };
+  const own = new Set(def.props);
+  const shown = (p) => {
+    if (!own.has(p) || (tkMode && TK_HIDE[tkMode]?.includes(p))) return false;
+    const s = propState(n, p);
+    if (s.used) return true;
+    if (WHEN[p] && !WHEN[p](val)) return false;
+    return pui.all || !ADV.has(p);
+  };
+  const inert = (p) => WHEN[p] && !WHEN[p](val);
+  const comboOf = new Map(); for (const c of COMBOS) for (const p of c.props) comboOf.set(p, c);
+
+  let wl = `<div class="phead"><span class="ic">${def.icon}</span><input id="pname" class="grow" value="${esc(n.name)}" title="Nazwa kontenera"></div>`;
+  const groups = []; // [nazwa, html]
+  const add = (g, html) => { let e = groups.find((x) => x[0] === g); if (!e) groups.push(e = [g, '']); e[1] += html; };
+  const done = new Set();
+  let hidden = 0;
   for (const p of def.props) {
+    if (done.has(p)) continue;
     const d = PROPS[p];
-    if (tkMode && TK_HIDE[tkMode]?.includes(p)) continue;
     if (tkMode && p === 'text') {
-      if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
-      h += `<div class="prtk" data-prop="text"><div class="prtk-h"><span class="grow">wiadomości próbne <span class="dim">(w Trio: pole strony)</span></span><button class="icon fbtn" data-field="text" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button></div><div data-tkhost></div><textarea data-p="text" hidden></textarea></div>`;
+      done.add(p);
+      add(d.g, `<div class="prtk" data-prop="text"><div class="prtk-h"><span class="grow">wiadomości próbne <span class="dim">(w Trio: pole strony)</span></span><button class="icon fbtn" data-field="text" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button></div><div data-tkhost></div><textarea data-p="text" hidden></textarea></div>`);
       continue;
     }
-    if (d.g !== g) { g = d.g; h += `<div class="pgroup">${esc(g)}</div>`; }
-    h += `<div class="pr" data-prop="${p}">
-      <label data-scrub="${d.t === 'num' ? p : ''}" title="${p}${d.t === 'num' ? ' – przeciągnij, aby zmienić' : ''}">${esc(d.label || p)}</label>
-      <div class="pin">${inputFor(p, d)}</div>
-      ${d.anim ? `<button class="icon kbtn" data-key="${p}" title="Klucz animacji w bieżącym czasie (dodaj/usuń)">◆</button>` : '<span></span>'}
-      <button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button>
-    </div>`;
-    if (p === 'squeezeMin' && n.type === 'text') h += `<div class="sqinfo" id="sqInfo"></div>`;
+    const c = comboOf.get(p);
+    const members = c ? c.props.filter((x) => own.has(x) && !done.has(x)) : [p];
+    for (const x of members) done.add(x);
+    const vis = members.filter(shown);
+    hidden += members.length - vis.length;
+    if (!vis.length) continue;
+    if (!c || vis.length === 1) { for (const x of vis) add(PROPS[x].g, rowOne(x)); }
+    else add(d.g, rowCombo(c, vis));
+    if (p === 'textFit' || (vis.includes('textFit'))) add(d.g, `<div class="sqinfo" id="sqInfo"></div>`);
   }
-  h += motionForm(n);
+  for (const [g, body] of groups) {
+    wl += `<div class="pgsec ${folded(g) ? 'fold' : ''}" data-sec="${esc(g)}"><button class="pgroup" data-fold="${esc(g)}"><span class="car">▾</span> ${esc(g)}<span class="cnt"></span></button><div class="pgbody">${body}</div></div>`;
+  }
+  if (hidden && !pui.all) wl += `<div class="pmore"><button data-pall>＋ ${hidden} rzadziej używanych – pokaż wszystkie</button></div>`;
+  wl += `<div class="pnone dim" hidden>Brak właściwości pasujących do szukanej frazy.</div>`;
+
+  function rowOne(p) {
+    const d = PROPS[p];
+    if (comboOf.get(p)?.kind === 'seg' || comboOf.get(p)?.kind === 'anchor') return rowCombo(comboOf.get(p), [p]);
+    return `<div class="pr ${inert(p) ? 'inert' : ''}" data-prop="${p}" data-q="${esc(p + ' ' + (d.label || ''))}" ${inert(p) ? 'title="Nie działa przy obecnych ustawieniach węzła"' : ''}>
+      ${scrubLbl(p, d, d.label || p)}<div class="pin">${inputFor(p, d)}</div>${d.anim ? `<button class="icon kbtn" data-key="${p}" title="Klucz animacji w bieżącym czasie (dodaj/usuń)">◆</button>` : '<span></span>'}
+      <button class="icon fbtn" data-field="${p}" title="Pole kontrolne (Control Object) – edytowalne w Trio"><i class="ico link"></i></button></div>`;
+  }
+  function rowCombo(c, vis) {
+    const q = esc(vis.map((x) => x + ' ' + (PROPS[x].label || '')).join(' ') + ' ' + (c.label || ''));
+    if (c.kind === 'anchor') {
+      const cells = [];
+      for (const yv of ['top', 'middle', 'bottom']) for (const xv of ['left', 'center', 'right']) cells.push(`<button class="icon" data-anchor="${xv},${yv}" title="punkt: ${xv} / ${yv}"></button>`);
+      return `<div class="pr pcombo" data-q="${q}"><label title="Punkt zaczepienia (anchorX / anchorY): right/bottom = element rośnie w lewo/w górę">${esc(c.label)}</label>
+        <div class="pin anchor-row"><div class="agrid">${cells.join('')}</div><span class="dim mono" data-anchorlbl></span>
+        ${vis.map((x) => `<span class="cell" data-prop="${x}"><select data-p="${x}" hidden>${PROPS[x].opts.map((o) => `<option>${o}</option>`).join('')}</select>${btns(x, PROPS[x])}</span>`).join('')}</div><span></span><span></span></div>`;
+    }
+    if (c.kind === 'seg') {
+      return `<div class="pr pcombo" data-q="${q}"><label>${esc(c.label)}</label><div class="pin seg-row">${vis.map((x) => `<span class="cell" data-prop="${x}"><span class="segb">${SEG[x].map(([v, ic]) => `<button class="icon" data-seg="${x}" data-v="${v}" title="${SEG_T[v]}">${ic}</button>`).join('')}</span><select data-p="${x}" hidden>${PROPS[x].opts.map((o) => `<option>${o}</option>`).join('')}</select>${btns(x, PROPS[x])}</span>`).join('')}</div><span></span><span></span></div>`;
+    }
+    if (c.kind === 'bools') {
+      return `<div class="pr pcombo" data-q="${q}"><label>${esc(c.label)}</label><div class="pin seg-row">${vis.map((x) => `<span class="cell" data-prop="${x}"><label class="chk"><input type="checkbox" data-p="${x}"> ${esc(PROPS[x].label)}</label>${btns(x, PROPS[x])}</span>`).join('')}</div><span></span><span></span></div>`;
+    }
+    const cols = c.kind === 'wide1' && vis.length === 2 ? '2fr 1fr' : `repeat(${vis.length}, minmax(0, 1fr))`;
+    const lockBtn = c.ratio && vis.length === 2 ? `<button class="icon ratio ${pui.ratio ? 'on' : ''}" data-ratio title="Zachowaj proporcje szerokości i wysokości">⛓</button>` : '';
+    return `<div class="pmulti" data-q="${q}">${c.label ? `<div class="pmlbl">${esc(c.label)}</div>` : ''}<div class="pmgrid" style="grid-template-columns:${cols}${lockBtn ? ' 22px' : ''}">
+      ${vis.map((x) => { const d = PROPS[x], i = c.props.indexOf(x); return `<div class="cell ${inert(x) ? 'inert' : ''}" data-prop="${x}"><div class="ch">${scrubLbl(x, d, c.short?.[i] || d.label || x)}<span class="grow"></span>${btns(x, d)}</div>${inputFor(x, d)}</div>`; }).join('')}${lockBtn}</div></div>`;
+  }
+
+  let ruch = motionForm(n);
+  ruch += `<div class="pgroup">Presety animacji (klucze)</div>
+  <div class="pr" style="grid-template-columns:1fr auto auto"><select id="apSel"><option value="">— wybierz —</option>${animPresets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} (${x.duration}s)</option>`).join('')}</select><button data-ap="apply" title="Wstaw klucze presetu od bieżącego czasu">Zastosuj</button><button data-ap="save" title="Zapisz klucze tego węzła jako preset">＋ zapisz</button></div>
+  <div class="pr" style="grid-template-columns:1fr auto auto auto"><span class="dim" style="font-size:11px">preset = zestaw kluczy (czasy względne)</span><button data-ap="export" title="Pobierz preset do pliku">⇩</button><button data-ap="import" title="Wczytaj preset z pliku">⇧</button><button data-ap="del" class="icon danger" title="Usuń preset"><i class="ico del"></i></button></div>`;
+  const keyed = Object.keys(n.anim || {}).filter((p) => n.anim[p]?.length);
+  ruch += `<div class="pgroup">Klucze węzła</div>` + (keyed.length
+    ? `<div class="chips plist">${keyed.map((p) => `<span class="pill" title="${n.anim[p].length} kluczy">◆ ${esc(PROPS[p]?.label || p)} · ${n.anim[p].length}</span>`).join('')}</div>`
+    : `<div class="dim pnote">Brak kluczy. ◆ przy właściwości dodaje klucz w bieżącym czasie; gdy właściwość ma już klucze, zmiana wartości tworzy/aktualizuje klucz.</div>`);
+
   const vf = variantFields(scene);
-  h += `<div class="pgroup">Wariant – widoczność</div>`;
+  let dane = `<div class="pgroup">Wariant – widoczność</div>`;
   if (vf.length) {
     const si = n.showIf || {};
-    h += `<div class="pr" style="grid-template-columns:100px 1fr 1fr"><label>widoczny gdy</label>
+    dane += `<div class="pr" style="grid-template-columns:100px 1fr 1fr"><label>widoczny gdy</label>
       <select data-si="field"><option value="">— zawsze —</option>${vf.map((f) => `<option value="${esc(f.id)}" ${si.field === f.id ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select>
       <input data-si="value" list="si_vals" value="${esc(si.value || '')}" placeholder="wartość (a,b)" ${si.field ? '' : 'disabled'}>
       <datalist id="si_vals">${(vf.find((f) => f.id === si.field)?.opts || []).map((o) => `<option>${esc(o)}</option>`).join('')}</datalist></div>`;
-  } else h += `<div class="dim" style="padding:2px 10px;font-size:12px">Zdefiniuj warianty w ustawieniach sceny (kliknij puste tło), aby pokazywać ten węzeł tylko w wybranym wariancie.</div>`;
-  h += `<div class="pgroup">Presety animacji</div>
-  <div class="pr" style="grid-template-columns:1fr auto auto"><select id="apSel"><option value="">— wybierz —</option>${animPresets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} (${x.duration}s)</option>`).join('')}</select><button data-ap="apply" title="Wstaw klucze presetu od bieżącego czasu">Zastosuj</button><button data-ap="save" title="Zapisz klucze tego węzła jako preset">＋ zapisz</button></div>
-  <div class="pr" style="grid-template-columns:1fr auto auto auto"><span class="dim" style="font-size:11px">preset = zestaw kluczy (czasy względne)</span><button data-ap="export" title="Pobierz preset do pliku">⇩</button><button data-ap="import" title="Wczytaj preset z pliku">⇧</button><button data-ap="del" class="icon danger" title="Usuń preset"><i class="ico del"></i></button></div>
-  <div class="help">◆ – klucz animacji w bieżącym czasie. Gdy właściwość ma już animację, zmiana wartości tworzy/aktualizuje klucz automatycznie.<br><i class="ico link"></i> – wystawia właściwość jako <b>pole kontrolne</b>: operator Trio wpisze tu wartość na stronie.<br><b>[[tekst]]</b> w tekście = wyróżnienie (kolor tła/tekstu w grupie Tekst).<br><b>Autofollow</b> – prostokąt dopasowuje szerokość/wysokość do tekstu (np. pasek nazwiska). <b>Punkt X/Y</b> = right/bottom sprawia, że element rośnie w lewo/w górę.</div>`;
-  el.innerHTML = h;
+  } else dane += `<div class="dim pnote">Zdefiniuj warianty w ustawieniach sceny (kliknij puste tło), aby pokazywać ten węzeł tylko w wybranym wariancie.</div>`;
+  const fl = Object.entries(n.fields || {});
+  dane += `<div class="pgroup">Pola kontrolne węzła</div>` + (fl.length
+    ? fl.map(([p, f]) => `<div class="pr" style="grid-template-columns:1fr 1fr 24px"><span>${esc(PROPS[p]?.label || p)}</span><span class="pill fld">${esc(f)}</span><button class="icon fbtn on" data-field="${p}" title="Zmień lub usuń pole kontrolne"><i class="ico link"></i></button></div>`).join('')
+    : `<div class="dim pnote"><i class="ico link"></i> przy właściwości wystawia ją jako pole kontrolne: operator Trio wpisze tu wartość na stronie. <b>[[tekst]]</b> w tekście = wyróżnienie.</div>`);
+
+  el.innerHTML = `<div class="ptab" data-tab="wl" ${pui.tab === 'wl' ? '' : 'hidden'}>${wl}</div><div class="ptab" data-tab="ruch" ${pui.tab === 'ruch' ? '' : 'hidden'}>${ruch}</div><div class="ptab" data-tab="dane" ${pui.tab === 'dane' ? '' : 'hidden'}>${dane}</div>`;
   syncProps(true);
+  applySearch();
   showSqueeze();
   const host = $('[data-tkhost]', el);
   if (host) {
     const ta = $('textarea[data-p="text"]', el);
     mountTickerEditor(host, {
-      value: ta.value, catColors: propAt(n, 'catColors', t, null), catBg: propAt(n, 'catBg', t, null), catFg: propAt(n, 'catFg', t, null), label: propAt(n, 'label', t, null), rules: scene.fieldMeta?.[n.fields?.text] || {},
+      value: ta.value, catColors: val('catColors'), catBg: val('catBg'), catFg: val('catFg'), label: val('label'), rules: scene.fieldMeta?.[n.fields?.text] || {},
       onChange: (v) => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); },
       onHover: (i) => player.tickerPin(n.id, i),
     });
   }
+}
+/** Szukanie właściwości: filtruje wiersze zakładki Właściwości i rozwija pasujące grupy. */
+function applySearch() {
+  const q = ($('#psearch')?.value || '').trim().toLowerCase();
+  const tab = $('#props .ptab[data-tab="wl"]'); if (!tab) return;
+  tab.classList.toggle('searching', !!q);
+  let any = false;
+  for (const sec of $$('.pgsec', tab)) {
+    let n = 0;
+    for (const r of $$('[data-q]', sec)) { const m = !q || r.dataset.q.toLowerCase().includes(q) || sec.dataset.sec.toLowerCase().includes(q); r.hidden = !m; if (m) n++; }
+    for (const r of $$('.sqinfo, .prtk', sec)) if (q) r.hidden = !sec.dataset.sec.toLowerCase().includes(q) && !(r.classList.contains('prtk') && 'tekst text'.includes(q)); else r.hidden = false;
+    sec.hidden = q && !n; any ||= n > 0;
+  }
+  $('.pnone', tab).hidden = !q || any;
+  const more = $('.pmore', tab); if (more) more.hidden = !!q;
+  if (q && pui.tab !== 'wl') { pui.tab = 'wl'; savePui(); renderProps(); }
+}
+/** Stany wierszy: zmieniona / animowana / pole kontrolne + liczniki na nagłówkach grup. */
+function markProps(n) {
+  for (const r of $$('#props [data-prop]')) {
+    const p = r.dataset.prop; if (!PROPS[p]) continue;
+    const s = propState(n, p);
+    r.classList.toggle('mod', s.mod); r.classList.toggle('anim', s.anim); r.classList.toggle('fld', !!s.fld);
+  }
+  for (const sec of $$('#props .pgsec')) {
+    const c = (k) => $$(`[data-prop].${k}`, sec).length;
+    const m = c('mod'), a = c('anim'), f = c('fld');
+    $('.cnt', sec).textContent = [m && `${m} zm.`, a && `◆${a}`, f && `⛓${f}`].filter(Boolean).join(' · ');
+  }
+  const ax = propAt(n, 'anchorX', t, null), ay = propAt(n, 'anchorY', t, null);
+  for (const b of $$('#props [data-anchor]')) b.classList.toggle('on', b.dataset.anchor === `${ax},${ay}`);
+  const al = $('#props [data-anchorlbl]'); if (al) al.textContent = `${ax} / ${ay}`;
+  for (const b of $$('#props [data-seg]')) b.classList.toggle('on', propAt(n, b.dataset.seg, t, null) === b.dataset.v);
 }
 
 /** Ruch jak w BTB CG (node.motion): presety IN/OUT, efekt tekstu, pętla uwagi – bez kluczy, liczone przez renderer. */
@@ -576,6 +791,7 @@ function syncProps(force) {
     const f = n.fields?.[b.dataset.field];
     b.classList.toggle('on', !!f); b.title = f ? `Pole kontrolne: ${f} (kliknij, aby zmienić)` : 'Wystaw jako pole kontrolne (Control Object)';
   }
+  markProps(n);
 }
 
 const openRules = new Set();
@@ -866,6 +1082,14 @@ function setProp(n, p, v) {
   if (tr?.length && PROPS[p]?.anim) setKey(n, p, t, v);
   else { n.props ||= {}; n.props[p] = v; }
 }
+/** Zmiana z panelu: przy blokadzie proporcji szerokość i wysokość zmieniają się razem. */
+function setPropUI(n, p, v) {
+  if (pui.ratio && (p === 'w' || p === 'h')) {
+    const o = p === 'w' ? 'h' : 'w', old = +propAt(n, p, t, null), oo = +propAt(n, o, t, null);
+    if (old > 0 && oo > 0) setProp(n, o, Math.round(oo * v / old * 1000) / 1000);
+  }
+  setProp(n, p, v);
+}
 function setKey(n, p, at, v) {
   n.anim ||= {};
   const tr = (n.anim[p] ||= []);
@@ -914,7 +1138,11 @@ $('#props').addEventListener('change', onPropInput);
 function cp() { if (pendingCP) { checkpoint(); pendingCP = false; } else setDirty(true); }
 function onPropInput(e) {
   const inp = e.target;
-  if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') { pendingCP = true; return; }
+  if (e.type === 'change' && inp.type !== 'checkbox' && inp.tagName !== 'SELECT' && inp.type !== 'color') {
+    pendingCP = true;
+    if (WHEN_SRC.has(inp.dataset.p) && selNode()) renderProps(); // widoczność zależnych właściwości (P4)
+    return;
+  }
   const n = selNode();
   if (n && (inp.dataset.mobg !== undefined || inp.dataset.moorg !== undefined)) {
     if (e.type !== 'change') return;
@@ -952,8 +1180,9 @@ function onPropInput(e) {
   if (inp.id === 'pkPick') { if (inp.value && e.type === 'change') { checkpoint(); scene.packAssets = [...new Set([...(scene.packAssets || []), inp.value])]; renderProps(); } return; }
   if (inp.id === 'pname' && n) { cp(); n.name = inp.value; renderTree(); return; }
   if (n && inp.dataset.p) {
-    cp(); setProp(n, inp.dataset.p, parseVal(inp.dataset.p, inp)); refresh();
+    cp(); setPropUI(n, inp.dataset.p, parseVal(inp.dataset.p, inp)); refresh();
     if (n.type === 'ticker' && (inp.dataset.p === 'tickerMode' || (inp.dataset.p === 'catColors' && e.type === 'change'))) { renderProps(); return; }
+    if (e.type === 'change' && WHEN_SRC.has(inp.dataset.p)) { renderProps(); return; }
     if (n.anim?.[inp.dataset.p]?.length) renderTimeline();
     syncProps(); return;
   }
@@ -1028,6 +1257,14 @@ function onPropInput(e) {
 }
 $('#props').addEventListener('click', async (e) => {
   const n = selNode();
+  const fo = e.target.closest('[data-fold]');
+  if (fo) { const g = fo.dataset.fold; pui.fold[g] = !folded(g); savePui(); fo.parentElement.classList.toggle('fold', folded(g)); return; }
+  if (e.target.closest('[data-pall]')) { pui.all = true; savePui(); renderProps(); return; }
+  if (e.target.closest('[data-ratio]')) { pui.ratio = !pui.ratio; savePui(); e.target.closest('[data-ratio]').classList.toggle('on', pui.ratio); return; }
+  const an = e.target.closest('[data-anchor]');
+  if (an && n) { const [ax, ay] = an.dataset.anchor.split(','); checkpoint(); setProp(n, 'anchorX', ax); setProp(n, 'anchorY', ay); refresh(); syncProps(); return; }
+  const sg = e.target.closest('[data-seg]');
+  if (sg && n) { checkpoint(); setProp(n, sg.dataset.seg, sg.dataset.v); refresh(); syncProps(); return; }
   const kb = e.target.closest('[data-key]');
   if (kb && n) { checkpoint(); toggleKey(n, kb.dataset.key); refresh(); syncProps(); renderTimeline(); renderTree(); return; }
   const fb = e.target.closest('[data-field]');
@@ -1078,6 +1315,26 @@ $('#props').addEventListener('click', async (e) => {
     catch (err) { toast(err.message, true); }
   }
 });
+// prawy klik na etykiecie = wartość domyślna (gdy właściwość nie ma kluczy)
+$('#props').addEventListener('contextmenu', (e) => {
+  const lb = e.target.closest('label[data-scrub]'), n = selNode();
+  const p = lb?.closest('[data-prop]')?.dataset.prop;
+  if (!lb || !n || !p || !PROPS[p]) return;
+  e.preventDefault();
+  if (n.anim?.[p]?.length) return toast('Właściwość ma klucze – usuń je na osi czasu', true);
+  if (!n.props || !(p in n.props)) return;
+  checkpoint(); delete n.props[p]; refresh();
+  if (WHEN_SRC.has(p)) renderProps(); else syncProps();
+  toast(`${PROPS[p].label || p}: wartość domyślna`);
+});
+// pasek panelu: zakładki, tryb Podstawowe/Wszystko, szukanie
+$('#ptools').addEventListener('click', (e) => {
+  const tb = e.target.closest('[data-ptab]');
+  if (tb) { pui.tab = tb.dataset.ptab; savePui(); renderProps(); return; }
+  if (e.target.id === 'pall') { pui.all = !pui.all; savePui(); renderProps(); }
+});
+$('#psearch').addEventListener('input', () => applySearch());
+$('#psearch').addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.target.value = ''; applySearch(); e.target.blur(); } });
 // przeciąganie etykiety = zmiana wartości liczbowej
 $('#props').addEventListener('mousedown', (e) => {
   const lb = e.target.closest('label[data-scrub]');
@@ -1091,9 +1348,9 @@ $('#props').addEventListener('mousedown', (e) => {
     if (!moved) { checkpoint(); moved = true; }
     let v = start + (ev.clientX - sx) * (d.step || 1) * (ev.shiftKey ? 10 : 1);
     if (d.min != null) v = Math.max(d.min, v); if (d.max != null) v = Math.min(d.max, v);
-    setProp(n, p, Math.round(v * 1000) / 1000); refresh(); syncProps();
+    setPropUI(n, p, Math.round(v * 1000) / 1000); refresh(); syncProps();
   };
-  const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); if (moved && n.anim?.[p]) renderTimeline(); };
+  const up = () => { removeEventListener('mousemove', mv); removeEventListener('mouseup', up); if (moved && n.anim?.[p]) renderTimeline(); if (moved && WHEN_SRC.has(p)) renderProps(); };
   addEventListener('mousemove', mv); addEventListener('mouseup', up);
 });
 
@@ -1893,6 +2150,7 @@ addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
   if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); save(); return; }
   if (typing) return;
+  if (e.key === '/' && !mod && selNode()) { e.preventDefault(); $('#psearch').focus(); $('#psearch').select(); return; }
   if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); return; }
   if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); doRedo(); return; }
   if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); treeOp('dup'); return; }

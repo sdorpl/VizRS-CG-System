@@ -45,6 +45,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
 
     // tło: wjazd z lewej, wyjście – przenikanie, pętla – połysk
     await pg.click('#tree .item[data-id="bg"]');
+    await pg.click('[data-ptab="ruch"]'); // ruch bez kluczy jest w zakładce Ruch
     await pg.selectOption('select[data-mo="in.type"]', 'slide'); await sleep(150);
     ok(await pg.locator('select[data-mo="in.dir"]').count() === 1, 'Preset z kierunkiem pokazuje wybór kierunku');
     await pg.selectOption('select[data-mo="in.dir"]', 'left');
@@ -121,6 +122,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     ok(c2.motion.after === 'r1' && c3.anim?.opacity?.length === 2 && !c3.motion?.in && c3.anim.opacity[0].t > 1, 'Zapis: po kolei + klucze z przesunięciem sekwencji', [c2.motion, c3.anim, c3.motion]);
     // „po węźle” w panelu Ruch
     await pg.click('#tree .item[data-id="r2"]'); await sleep(150);
+    await pg.click('[data-ptab="ruch"]'); await sleep(100);
     await pg.selectOption('select[data-moafter]', ''); await sleep(150);
     await pg.keyboard.press('Control+s'); await sleep(500);
     s2 = (await api('/api/show')).scenes.find((x) => x.id === 'sq');
