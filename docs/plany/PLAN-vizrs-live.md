@@ -1,5 +1,7 @@
 # VizRS Live – nakładka na ErsatzTV legacy z funkcjami jego UI
 
+> **Prototyp 0.1.0 działa (2026-11-06)** w osobnym repozytorium `../VizRS Live`: most C# (ogólny dyspozytor, hak startowy + hosting startup, bez zmian w legacy) i panel w Ruście bez zależności; sprawdzone z legacy v26.11.6 – kanał i ramówka zbudowane wyłącznie przez panel nadają przez Next. Zakres i ograniczenia: `VizRS Live/docs/DOKUMENTACJA.md`.
+>
 > Stan (2026-11-06): **plan dalekosiężny.** Rozpoznanie obu projektów zrobione (§2–§3, stan repozytoriów z 2026-11-05/06: `ErsatzTV/next` 92e93d7, `ErsatzTV/legacy` 06c008b). **Decyzja użytkownika (2026-11-06): VizRS Live jest nakładką na ErsatzTV legacy** – bez pisania własnego planisty, bazy i skanera („nie wymyślamy koła na nowo”), ale w zakresie funkcji UI legacy (§4). Dalsze decyzje (2026-11-06): **osobne repozytorium** (modułowość), **nic nie zgłaszamy do projektu ErsatzTV**, **cel: operator w ogóle nie korzysta z web GUI legacy** (§4.2). Etapów i terminu jeszcze nie ma – otwarte pytania w §5. Wizualizacja architektury i obu wersji dostępu do UI legacy (A/B, §4.1): [claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws](https://claude.ai/artifact/53Wbamc9qDDPJiBmrrSKws).
 
 ## 1. Pomysł
@@ -116,7 +118,7 @@ Na później, jako opcja: warstwa `canvas` i źródło `dynamic` z Next (§2) mo
 ## 5. Do ustalenia przed etapami
 
 1. **Pierwszy zakres własnych widoków** (§4 warstwa 2): który widok jest najpilniejszy – widok operatora, ramówka z grafiką VizRS, sloty na żywo, podgląd i monitoring?
-2. **Most w procesie legacy** (§4.2): zgoda na wtyczkę .NET (hosting startup) jako jedyny element w C#? Pierwszy krok: prototyp – wtyczka z jednym endpointem (`CreateChannel`) w obrazie legacy, test na dwóch kolejnych wydaniach.
+2. **Most w procesie legacy** (§4.2): zgoda na C# (2026-11-06); prototyp zrobiony (`../VizRS Live`). Do sprawdzenia: zachowanie na kolejnym wydaniu legacy (`commandsMissing`, e2e).
 3. **Przejście**: do czasu pokrycia wszystkich ekranów brakujące funkcje przez odnośniki do UI legacy (§4.1 B).
 4. **Technika VizRS Live**: serwer w Ruście + UI w czystym JS jak w VizRS (w osobnym repozytorium zależności dozwolone) – do potwierdzenia przy pierwszym etapie.
 
