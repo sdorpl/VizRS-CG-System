@@ -20,6 +20,6 @@ Pomysły na rozwój pakietu VizRS bez decyzji i terminu – kierunek, nie zobowi
 
 | Dokument | Stan | Zakres |
 |---|---|---|
-| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | pomysł (2026-11-06), do rozpoznania | **VizRS Live** – klient ErsatzTV Next z interfejsem i funkcjami ErsatzTV legacy (kanały, media, harmonogramy, EPG) spiętymi z grafiką VizRS |
+| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | pomysł; rozpoznanie Next i legacy zrobione (2026-11-06), czeka na wybór wariantu (§5) | **VizRS Live** – klient ErsatzTV Next z interfejsem i funkcjami ErsatzTV legacy (kanały, media, harmonogramy, EPG) spiętymi z grafiką VizRS |
 
 Założenia Z1–Z10 z planu rozbudowy obowiązują przy każdej nowej funkcji.
