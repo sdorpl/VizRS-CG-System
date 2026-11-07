@@ -1,10 +1,11 @@
-//! vizrs-shell – natywne okno VizRS Artist (i Trio/Wyjście) z systemowym WebView.
+//! vizrs-shell – natywne okno VizRS Trio i wyjścia (podglądu) z systemowym WebView.
 //!
-//!   vizrs-shell [artist|trio|output|connect] [--data KAT] [--port N] [--token T] [--connect URL] [--vizrs ŚCIEŻKA]
+//!   vizrs-shell [trio|output|connect] [--data KAT] [--port N] [--token T] [--connect URL] [--vizrs ŚCIEŻKA]
 //!
 //! Strony UI są te same co w przeglądarce (serwuje je `vizrs`), więc jeden renderer (`web/renderer.js`)
-//! obsługuje okno, Trio i wyjście OBS. Powłoka dodaje okno systemowe, menu, zapisywanie plików
-//! (eksport sceny, paczka `.cgpack`) przez systemowe okno dialogowe i otwieranie kolejnych okien.
+//! obsługuje okno Trio i wyjście OBS. Powłoka dodaje okno systemowe, menu, zapisywanie plików przez systemowe
+//! okno dialogowe i otwieranie kolejnych okien. Artist (projektowanie scen) to osobny program VizRS CG Artist
+//! (`vizrs-cg-artist`); `/artist` serwera zostaje w przeglądarce jako zamrożony zapas.
 
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
@@ -31,15 +32,16 @@ use serde_json::Value;
 use wry::{NewWindowResponse, PageLoadEvent, WebView, WebViewBuilder};
 
 const ICON_PNG: &[u8] = include_bytes!("../../../deploy/vizrs-256.png");
-/// Największy plik przekazywany stronie (paczka, obraz).
-const MAX_FILE: u64 = 512 * 1024 * 1024;
 /// Po takim czasie bez odpowiedzi strony (zawieszona, serwer padł) kolejne zamknięcie nie pyta.
 const CLOSE_PATIENCE: Duration = Duration::from_secs(5);
 const RELEASES: &str = "https://github.com/sdorpl/VizRS-CG-System/releases";
+/// Artist jest osobnym programem (od 2026-11-07).
+const ARTIST_MOVED: &str = "Artist (projektowanie scen) to osobny program VizRS CG Artist (vizrs-cg-artist):
+https://github.com/sdorpl/VizRS-CG-Artist/releases – pliki .cgpack i .vizrs.json otwiera on.
+W przeglądarce zostaje zamrożony /artist serwera.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
-    Artist,
     Trio,
     Output,
     Other,
@@ -50,7 +52,6 @@ enum Kind {
 impl Kind {
     fn path(self) -> &'static str {
         match self {
-            Kind::Artist => "/artist",
             Kind::Trio => "/trio",
             Kind::Output => "/output?checker=1&status=1",
             Kind::Other | Kind::Connect => "/",
@@ -59,7 +60,6 @@ impl Kind {
     /// Klucz w `window.json`.
     fn key(self) -> &'static str {
         match self {
-            Kind::Artist => "artist",
             Kind::Trio => "trio",
             Kind::Output => "output",
             Kind::Other | Kind::Connect => "inne",
@@ -67,7 +67,6 @@ impl Kind {
     }
     fn title(self) -> &'static str {
         match self {
-            Kind::Artist => "VizRS Artist",
             Kind::Trio => "VizRS Trio",
             Kind::Output => "VizRS Wyjście",
             Kind::Other => "VizRS",
@@ -89,15 +88,12 @@ struct Args {
     probe: Option<(PathBuf, PathBuf)>,
     /// akceleracja GPU stron: tak, nie, None = domyślnie silnika
     gpu: Option<bool>,
-    /// plik do otwarcia (skojarzenie .cgpack, .vizrs.json)
-    file: Option<PathBuf>,
 }
 
 fn help() -> &'static str {
     "vizrs-shell – natywne okno VizRS
 
-Użycie: vizrs-shell [artist|trio|output|connect] [opcje] [PLIK]   (domyślnie artist; connect – najpierw wybór serwera;
-       PLIK .cgpack albo .vizrs.json – import w Artist)
+Użycie: vizrs-shell [trio|output|connect] [opcje]   (domyślnie trio; connect – najpierw wybór serwera)
 
   --data KAT      katalog danych serwera (VIZRS_DATA; domyślnie ./vizrs-data, jeśli jest, inaczej ~/.local/share/vizrs)
   --port N        port serwera uruchamianego przez okno (VIZRS_PORT; domyślnie 8088, a gdy zajęty – następny wolny)
@@ -112,13 +108,15 @@ Plik → Połącz z serwerem… (Ctrl+Shift+K): adres i token serwera zdalnego (
 
 Jeśli serwer na tym katalogu danych już działa, okno dołącza do niego. Inaczej powłoka uruchamia
 `vizrs serve` jako osobny proces: zamknięcie okna nie zdejmuje grafiki z anteny, a serwer kończy pracę
-sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS)."
+sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS).
+
+Artist (projektowanie scen) to osobny program VizRS CG Artist (vizrs-cg-artist)."
 }
 
 fn parse_args() -> Result<Args, String> {
     let env = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
     let mut a = Args {
-        kind: Kind::Artist,
+        kind: Kind::Trio,
         data: env("VIZRS_DATA").map(PathBuf::from).unwrap_or_else(paths::default_data),
         port: env("VIZRS_PORT").map(|p| p.parse().map_err(|_| "VIZRS_PORT: zły numer portu".to_string())).transpose()?.unwrap_or(8088),
         port_set: env("VIZRS_PORT").is_some(),
@@ -132,7 +130,6 @@ fn parse_args() -> Result<Args, String> {
             Some("off") => Some(false),
             _ => None,
         },
-        file: None,
     };
     let mut probe_js = None;
     let mut probe_out = None;
@@ -145,7 +142,7 @@ fn parse_args() -> Result<Args, String> {
             args.get(i).cloned().ok_or(format!("{flag}: brak wartości"))
         };
         match flag.as_str() {
-            "artist" => a.kind = Kind::Artist,
+            "artist" => return Err(ARTIST_MOVED.into()),
             "trio" => a.kind = Kind::Trio,
             "output" => a.kind = Kind::Output,
             "connect" => a.kind = Kind::Connect,
@@ -176,7 +173,7 @@ fn parse_args() -> Result<Args, String> {
                 println!("vizrs-shell {}", env!("CARGO_PKG_VERSION"));
                 std::process::exit(0);
             }
-            other if !other.starts_with('-') && Path::new(other).is_file() => a.file = Some(PathBuf::from(other)),
+            other if !other.starts_with('-') && Path::new(other).is_file() => return Err(ARTIST_MOVED.into()),
             other => return Err(format!("nieznany argument {other} (vizrs-shell --help)")),
         }
         i += 1;
@@ -243,7 +240,7 @@ enum UserEvent {
     Conn(String),
     /// Wynik sprawdzenia serwera przed przełączeniem (błąd albo None).
     Checked(connect::Request, Option<String>),
-    /// Komunikat strony Artist/Trio (most, JSON).
+    /// Komunikat strony Trio (most, JSON).
     Page(WindowId, String),
     /// Prośba kolejnego uruchomienia (JSON).
     Remote(String),
@@ -257,19 +254,16 @@ struct Win {
     dirty: bool,
     undo: bool,
     redo: bool,
-    /// scena otwarta w Artist; zmiana = sprawdzenie kopii roboczej
+    /// scena zgłoszona przez stronę (most); zmiana = sprawdzenie kopii roboczej
     scene: Option<String>,
     /// kiedy zapytano stronę o zamknięcie
     asked: Option<Instant>,
-    /// plik do przekazania po wczytaniu strony
-    pending: Option<PathBuf>,
     /// pełnoekranowe wyjście: bez zapamiętywania wyglądu
     keep_state: bool,
 }
 
 struct MenuIds {
     connect: MenuId,
-    artist: MenuId,
     trio: MenuId,
     output: MenuId,
     close: MenuId,
@@ -282,16 +276,9 @@ struct MenuIds {
     devtools: MenuId,
     docs: MenuId,
     about: MenuId,
-    import: MenuId,
     logs: MenuId,
     data_dir: MenuId,
     updates: MenuId,
-    /// komendy wysyłane do strony Artist (`__vizrsCmd`)
-    cmds: Vec<(MenuId, &'static str)>,
-    /// pozycje czynne tylko w Artist
-    artist_only: Vec<MenuItem>,
-    undo: MenuItem,
-    redo: MenuItem,
     /// wyjście na monitorze (numer na liście monitorów)
     screens: Vec<(MenuId, usize)>,
     fill_key: Option<MenuId>,
@@ -309,7 +296,6 @@ fn monitor_label(i: usize, m: &MonitorHandle) -> String {
 fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
     let ctrl = if cfg!(target_os = "macos") { Modifiers::META } else { Modifiers::CONTROL };
     let connect = item("Połącz z serwerem…", Some(Accelerator::new(ctrl | Modifiers::SHIFT, Code::KeyK)));
-    let artist = item("Nowe okno Artist", None);
     let trio = item("Nowe okno Trio", None);
     let output = item("Okno wyjścia (podgląd)", None);
     let close = item("Zamknij okno", Some(Accelerator::new(ctrl, Code::KeyW)));
@@ -325,26 +311,10 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
     let logs = item("Pokaż logi", None);
     let data_dir = item("Otwórz katalog danych", None);
     let updates = item("Sprawdź aktualizacje", None);
-    // skróty edycji zostają w stronie: akcelerator menu przechwyciłby Ctrl+Z i Ctrl+S także w polach tekstowych
-    let new = item("Nowa scena", None);
-    let save = item("Zapisz (Ctrl+S)", None);
-    let import = item("Importuj…", None);
-    let export = item("Eksportuj scenę…", None);
-    let pack = item("Paczka .cgpack…", None);
-    let undo = item("Cofnij (Ctrl+Z)", None);
-    let redo = item("Ponów (Ctrl+Y)", None);
-    let dup = item("Duplikuj (Ctrl+D)", None);
-    let del = item("Usuń (Delete)", None);
-    let fit = item("Dopasuj kanwę (Shift+1)", None);
-    let z100 = item("Kanwa 100% (Shift+2)", None);
-    let zsel = item("Kanwa do zaznaczenia (Shift+3)", None);
-    let play = item("Odtwórz / zatrzymaj (Spacja)", None);
-    let marker = item("Dodaj marker (M)", None);
     let screen_items: Vec<MenuItem> = monitors.iter().enumerate().map(|(i, m)| item(&monitor_label(i, m), None)).collect();
     let fill_key_item = (monitors.len() >= 2).then(|| item("Fill + Key na monitorach 1 i 2", None));
     let ids = MenuIds {
         connect: connect.id().clone(),
-        artist: artist.id().clone(),
         trio: trio.id().clone(),
         output: output.id().clone(),
         close: close.id().clone(),
@@ -357,24 +327,15 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
         devtools: devtools.id().clone(),
         docs: docs.id().clone(),
         about: about.id().clone(),
-        import: import.id().clone(),
         logs: logs.id().clone(),
         data_dir: data_dir.id().clone(),
         updates: updates.id().clone(),
-        cmds: [(&new, "new"), (&save, "save"), (&export, "export"), (&pack, "pack"), (&undo, "undo"), (&redo, "redo"), (&dup, "dup"), (&del, "del"), (&fit, "fit"), (&z100, "z100"), (&zsel, "zsel"), (&play, "play"), (&marker, "marker")]
-            .map(|(i, c)| (i.id().clone(), c))
-            .to_vec(),
-        artist_only: [&new, &save, &import, &export, &pack, &dup, &del, &fit, &z100, &zsel, &play, &marker].map(|i| i.clone()).to_vec(),
-        undo: undo.clone(),
-        redo: redo.clone(),
         screens: screen_items.iter().enumerate().map(|(i, m)| (m.id().clone(), i)).collect(),
         fill_key: fill_key_item.as_ref().map(|m| m.id().clone()),
     };
     let sep = PredefinedMenuItem::separator;
-    let file = Submenu::with_items("Plik", true, &[&new, &save, &import, &export, &pack, &sep(), &connect, &sep(), &artist, &trio, &output, &sep(), &close, &quit]).expect("menu Plik");
-    let edit = Submenu::with_items("Edycja", true, &[&undo, &redo, &sep(), &dup, &del]).expect("menu Edycja");
-    let view = Submenu::with_items("Widok", true, &[&fit, &z100, &zsel, &sep(), &reload, &fullscreen, &sep(), &zoom_in, &zoom_out, &zoom_reset, &sep(), &devtools]).expect("menu Widok");
-    let scene = Submenu::with_items("Scena", true, &[&play, &marker]).expect("menu Scena");
+    let file = Submenu::with_items("Plik", true, &[&connect, &sep(), &trio, &output, &sep(), &close, &quit]).expect("menu Plik");
+    let view = Submenu::with_items("Widok", true, &[&reload, &fullscreen, &sep(), &zoom_in, &zoom_out, &zoom_reset, &sep(), &devtools]).expect("menu Widok");
     let out = Submenu::new("Wyjście", true);
     for m in &screen_items {
         out.append(m as &dyn IsMenuItem).expect("menu Wyjście");
@@ -384,7 +345,7 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
         out.append(m).expect("menu Wyjście");
     }
     let help = Submenu::with_items("Pomoc", true, &[&docs, &sep(), &logs, &data_dir, &sep(), &updates, &about]).expect("menu Pomoc");
-    let menu = Menu::with_items(&[&file, &edit, &view, &scene, &out, &help]).expect("menu");
+    let menu = Menu::with_items(&[&file, &view, &out, &help]).expect("menu");
     (menu, ids)
 }
 
@@ -416,15 +377,15 @@ impl App {
     fn open(&mut self, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>, kind: Kind, url: String, monitor: Option<MonitorHandle>) -> Result<(), String> {
         let size = if kind == Kind::Output { LogicalSize::new(960.0, 540.0) } else { LogicalSize::new(1600.0, 900.0) };
         let size = if kind == Kind::Connect { LogicalSize::new(560.0, 600.0) } else { size };
-        let keep_state = matches!(kind, Kind::Artist | Kind::Trio | Kind::Output) && monitor.is_none();
+        let keep_state = matches!(kind, Kind::Trio | Kind::Output) && monitor.is_none();
         let st = if keep_state { paths::load(kind.key()) } else { paths::WinState::default() };
         let size = st.size.map(|(w, h)| LogicalSize::new(w, h)).unwrap_or(size);
         let mut wb = WindowBuilder::new()
             .with_title(self.title(kind))
             .with_inner_size(size)
             .with_min_inner_size(LogicalSize::new(480.0, 270.0))
-            // Artist i Trio to stanowiska pracy – bez zapisanego wyglądu od razu na cały ekran (wyjście: okno 960×540)
-            .with_maximized(st.maximized.unwrap_or(matches!(kind, Kind::Artist | Kind::Trio)))
+            // Trio to stanowisko pracy – bez zapisanego wyglądu od razu na cały ekran (wyjście: okno 960×540)
+            .with_maximized(st.maximized.unwrap_or(kind == Kind::Trio))
             .with_window_icon(icon());
         if let Some((x, y)) = st.pos {
             wb = wb.with_position(LogicalPosition::new(x, y));
@@ -470,7 +431,7 @@ impl App {
         };
         let builder = builder
             .with_devtools(true)
-            // znacznik okna natywnego: strony chowają zakładki „Artist / Trio / Wyjście” (są w menu) i menu przeglądarki
+            // znacznik okna natywnego: strony chowają zakładki „Artist / Trio / Wyjście” (Trio i wyjście są w menu) i menu przeglądarki
             .with_initialization_script(concat!("window.__vizrsShell = { version: '", env!("CARGO_PKG_VERSION"), "' };"))
             .with_clipboard(true)
             // odnośniki poza serwer VizRS otwiera przeglądarka systemowa
@@ -526,7 +487,7 @@ impl App {
                 } else if let Some(rest) = body.strip_prefix("app:") {
                     // tylko strony naszego serwera, nie „about:” ani „data:”
                     let from = req.uri().to_string();
-                    if matches!(kind, Kind::Artist | Kind::Trio) && page_ok(&from) && from.starts_with("http") {
+                    if kind == Kind::Trio && page_ok(&from) && from.starts_with("http") {
                         p_ipc.send_event(UserEvent::Page(id, rest.to_string())).ok();
                     }
                 }
@@ -557,19 +518,14 @@ impl App {
         if zoom != 1.0 {
             webview.zoom(zoom).ok();
         }
-        self.wins.insert(id, Win { window, webview, zoom, kind, dirty: false, undo: false, redo: false, scene: None, asked: None, pending: None, keep_state });
+        self.wins.insert(id, Win { window, webview, zoom, kind, dirty: false, undo: false, redo: false, scene: None, asked: None, keep_state });
         self.focused = Some(id);
         Ok(())
     }
 
-    /// Adres okna: Artist na serwerze lokalnym wraca do ostatniej sceny.
+    /// Adres okna.
     fn start_url(&self, kind: Kind) -> String {
-        let url = self.url(kind);
-        let last = (kind == Kind::Artist && self.local.as_deref() == Some(self.base().as_str())).then(|| paths::load(kind.key()).scene).flatten();
-        match last {
-            Some(s) => format!("{url}{}scene={}", if url.contains('?') { '&' } else { '?' }, s.bytes().map(|b| if b.is_ascii_alphanumeric() { (b as char).to_string() } else { format!("%{b:02X}") }).collect::<String>()),
-            None => url,
-        }
+        self.url(kind)
     }
 
     fn remember(&self, w: &Win) {
@@ -629,16 +585,6 @@ impl App {
         }
     }
 
-    fn sync_menu(&self) {
-        let w = self.focused.and_then(|f| self.wins.get(&f));
-        let artist = w.is_some_and(|w| w.kind == Kind::Artist);
-        for i in &self.ids.artist_only {
-            i.set_enabled(artist);
-        }
-        self.ids.undo.set_enabled(artist && w.is_some_and(|w| w.undo));
-        self.ids.redo.set_enabled(artist && w.is_some_and(|w| w.redo));
-    }
-
     fn on_page(&mut self, id: WindowId, body: &str, flow: &mut ControlFlow) {
         let Some(msg) = bridge::parse(body) else { return };
         match msg {
@@ -656,7 +602,6 @@ impl App {
                         w.webview.evaluate_script(&js).ok();
                     }
                 }
-                self.sync_menu();
             }
             bridge::Msg::Close => {
                 self.drop_window(id, flow);
@@ -686,52 +631,13 @@ impl App {
         }
     }
 
-    /// Przekazuje plik stronie porcjami (strona składa `File` i decyduje o imporcie).
-    fn send_file(&self, w: &Win, path: &Path) {
-        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        let data = match std::fs::metadata(path) {
-            Ok(m) if m.len() > MAX_FILE => return error_dialog(&format!("{name}: plik większy niż {} MB", MAX_FILE / 1024 / 1024)),
-            _ => std::fs::read(path),
-        };
-        let data = match data {
-            Ok(d) => d,
-            Err(e) => return error_dialog(&format!("{}: {e}", path.display())),
-        };
-        w.webview.evaluate_script(&format!("window.__vizrsFile.begin({})", Value::from(name))).ok();
-        for c in data.chunks(3 * 1024 * 1024) {
-            w.webview.evaluate_script(&format!("window.__vizrsFile.chunk('{}')", bridge::base64(c))).ok();
-        }
-        w.webview.evaluate_script("window.__vizrsFile.end()").ok();
-    }
-
-    /// Plik trafia do okna Artist: istniejącego albo nowego (po wczytaniu strony).
-    fn open_file(&mut self, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>, path: PathBuf) {
-        if let Some(w) = self.wins.values().find(|w| w.kind == Kind::Artist) {
-            w.window.set_focus();
-            return self.send_file(w, &path);
-        }
-        let url = self.start_url(Kind::Artist);
-        match self.open(target, proxy, Kind::Artist, url, None) {
-            Ok(()) => {
-                if let Some(w) = self.focused.and_then(|f| self.wins.get_mut(&f)) {
-                    w.pending = Some(path);
-                }
-            }
-            Err(e) => error_dialog(&e),
-        }
-    }
-
     /// Prośba kolejnego uruchomienia: istniejące okno na wierzch albo nowe.
     fn on_remote(&mut self, body: &str, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>) {
         let Ok(v) = serde_json::from_str::<Value>(body) else { return };
-        if let Some(f) = v["file"].as_str() {
-            return self.open_file(target, proxy, PathBuf::from(f));
-        }
         let kind = match v["kind"].as_str() {
-            Some("trio") => Kind::Trio,
             Some("output") => Kind::Output,
             Some("connect") => return self.open_connect(target, proxy),
-            _ => Kind::Artist,
+            _ => Kind::Trio,
         };
         if let Some(w) = self.wins.values().find(|w| w.kind == kind) {
             return w.window.set_focus();
@@ -880,19 +786,6 @@ impl App {
         if *id == ids.connect {
             return self.open_connect(target, proxy);
         }
-        if let Some((_, c)) = ids.cmds.iter().find(|(m, _)| m == id) {
-            if let Some(w) = self.focused.and_then(|f| self.wins.get(&f)) {
-                w.webview.evaluate_script(&format!("window.__vizrsCmd && window.__vizrsCmd('{c}')")).ok();
-            }
-            return;
-        }
-        if *id == ids.import {
-            let picked = rfd::FileDialog::new().set_title("Importuj").add_filter("Paczka, scena, obraz, czcionka", &["cgpack", "json", "png", "jpg", "jpeg", "webp", "gif", "svg", "mp4", "webm", "ttf", "otf", "woff", "woff2"]).pick_file();
-            if let Some(p) = picked {
-                self.open_file(target, proxy, p);
-            }
-            return;
-        }
         if *id == ids.logs {
             return open_external(&paths::state_dir().to_string_lossy());
         }
@@ -911,9 +804,7 @@ impl App {
             self.open_screen(target, proxy, 1, "?mode=key");
             return;
         }
-        let kind = if *id == ids.artist {
-            Some(Kind::Artist)
-        } else if *id == ids.trio {
+        let kind = if *id == ids.trio {
             Some(Kind::Trio)
         } else if *id == ids.output {
             Some(Kind::Output)
@@ -969,8 +860,7 @@ fn main() {
     // pojedyncza instancja: prośba do działającej powłoki na tym katalogu danych
     let single = args.connect.is_none() && args.probe.is_none();
     if single {
-        let file = args.file.as_ref().and_then(|f| std::fs::canonicalize(f).ok());
-        let msg = serde_json::json!({ "kind": args.kind.key(), "file": file });
+        let msg = serde_json::json!({ "kind": args.kind.key() });
         if instance::forward(&args.data, &msg.to_string()) {
             return;
         }
@@ -1034,7 +924,6 @@ fn main() {
     let local_start = (args.data.clone(), port, args.vizrs.clone());
     let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note, data: args.data.clone(), quitting: false, gpu: args.gpu, monitors };
     let first = args.kind;
-    let first_file = args.file.clone();
 
     event_loop.run(move |event, target, flow| {
         *flow = ControlFlow::Wait;
@@ -1042,22 +931,12 @@ fn main() {
             Event::NewEvents(StartCause::Init) if first == Kind::Connect => app.open_connect(target, &proxy),
             Event::NewEvents(StartCause::Init) => {
                 let url = app.start_url(first);
-                match app.open(target, &proxy, first, url, None) {
-                    Ok(()) => {
-                        if let Some(w) = app.focused.and_then(|f| app.wins.get_mut(&f)) {
-                            w.pending = first_file.clone();
-                        }
-                    }
-                    Err(e) => {
-                        error_dialog(&e);
-                        *flow = ControlFlow::Exit;
-                    }
+                if let Err(e) = app.open(target, &proxy, first, url, None) {
+                    error_dialog(&e);
+                    *flow = ControlFlow::Exit;
                 }
             }
-            Event::WindowEvent { window_id, event: WindowEvent::Focused(true), .. } => {
-                app.focused = Some(window_id);
-                app.sync_menu();
-            }
+            Event::WindowEvent { window_id, event: WindowEvent::Focused(true), .. } => app.focused = Some(window_id),
             Event::WindowEvent { window_id, event: WindowEvent::CloseRequested, .. } => app.request_close(window_id, flow),
             Event::UserEvent(UserEvent::Menu(id)) => app.on_menu(&id, target, &proxy, flow),
             Event::UserEvent(UserEvent::Page(id, body)) => app.on_page(id, &body, flow),
@@ -1073,13 +952,6 @@ fn main() {
             Event::UserEvent(UserEvent::PageLoaded(id)) => {
                 if let (Some((code, _)), Some(w)) = (&app.probe, app.wins.get(&id)) {
                     w.webview.evaluate_script(code).ok();
-                }
-                if let Some(w) = app.wins.get_mut(&id) {
-                    if let Some(p) = w.pending.take() {
-                        if let Some(w) = app.wins.get(&id) {
-                            app.send_file(w, &p);
-                        }
-                    }
                 }
             }
             Event::UserEvent(UserEvent::Probe(json)) => {
@@ -1106,7 +978,7 @@ fn local_server(data: &Path, port: u16, token: Option<&str>, vizrs: Option<&str>
 }
 
 /// Przed przełączeniem okien: `/api/state` serwera `http://` (token, dostępność). `https://` sprawdza dopiero strona
-/// (powłoka nie ma TLS) – wskaźnik połączenia w Trio/Artist.
+/// (powłoka nie ma TLS) – wskaźnik połączenia w Trio.
 fn check_server(url: &str, token: Option<&str>) -> Result<(), String> {
     let Some((addr, path)) = connect::check_target(url) else { return Ok(()) };
     match server::http_get(&addr, &path, token, Duration::from_secs(3)) {
@@ -1125,8 +997,8 @@ mod tests {
 
     #[test]
     fn urls_with_token() {
-        assert_eq!(page_url("http://h:1", "/artist", None), "http://h:1/artist");
-        assert_eq!(page_url("http://h:1", "/artist", Some("t")), "http://h:1/artist?token=t");
+        assert_eq!(page_url("http://h:1", "/trio", None), "http://h:1/trio");
+        assert_eq!(page_url("http://h:1", "/trio", Some("t")), "http://h:1/trio?token=t");
         assert_eq!(page_url("http://h:1", "/output?checker=1", Some("t")), "http://h:1/output?checker=1&token=t");
     }
 }

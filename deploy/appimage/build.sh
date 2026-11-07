@@ -1,5 +1,5 @@
 #!/bin/sh
-# Buduje VizRS-Artist-<wersja>-x86_64.AppImage i VizRS-Trio-<wersja>-x86_64.AppImage.
+# Buduje VizRS-Trio-<wersja>-x86_64.AppImage (Artist: osobny program VizRS CG Artist, własny AppImage).
 # Użycie: deploy/appimage/build.sh ŚCIEŻKA/vizrs ŚCIEŻKA/vizrs-shell WERSJA [katalog-wyjściowy]
 # appimagetool: $APPIMAGETOOL albo pobierany do katalogu wyjściowego.
 set -e
@@ -12,9 +12,9 @@ if [ ! -x "$TOOL" ]; then
   curl -fsSL -o "$TOOL" https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
   chmod +x "$TOOL"
 fi
-for w in Artist Trio; do
+for w in Trio; do
   kind=$(echo "$w" | tr 'A-Z' 'a-z')
-  if [ "$w" = Artist ]; then desc="Projektowanie szablonów grafiki CG"; else desc="Playout grafiki CG na żywo"; fi
+  desc="Playout grafiki CG na żywo"
   dir="$OUT/VizRS-$w.AppDir"
   rm -rf "$dir"; mkdir -p "$dir/usr/bin"
   install -m755 "$VIZRS" "$SHELLBIN" "$dir/usr/bin/"

@@ -1,7 +1,7 @@
 // Zgodność silników: Chromium (jak OBS/vMix) vs WebView okna natywnego (vizrs-shell: WebKitGTK / WebView2 / WKWebView).
 //   node tools/engines.js [ścieżka-do-vizrs] [ścieżka-do-vizrs-shell] [--json wynik.json]
 // Każda strona zestawów INFO24, R7 i BTB_PILNE jest brana na wyjście w obu silnikach; porównujemy dla każdego pola tekstowego
-// ściśnięcie (scaleX), szerokość i wysokość w układzie 1920×1080. Różnica = Artist w oknie natywnym pokazałby co innego niż antena.
+// ściśnięcie (scaleX), szerokość i wysokość w układzie 1920×1080. Różnica = podgląd w oknie natywnym (Trio, wyjście) pokazałby co innego niż antena.
 // Uwaga: vizrs-shell otwiera na kilka minut widoczne okno „VizRS Wyjście” (test lokalny, poza CI).
 // Playwright: zmienna PLAYWRIGHT_DIR (katalog z node_modules/playwright) albo zwykłe `require('playwright')`.
 const { spawn, spawnSync } = require('child_process');
@@ -96,6 +96,6 @@ const PROBE = `(async () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
   console.log(`\npól tekstowych: ${total}, różnych: ${bad}`);
-  console.log(bad ? 'NIEZGODNE – Artist w oknie natywnym pokaże co innego niż antena' : 'Silniki zgodne');
+  console.log(bad ? 'NIEZGODNE – okno natywne pokaże co innego niż antena' : 'Silniki zgodne');
   process.exit(bad ? 1 : 0);
 })();

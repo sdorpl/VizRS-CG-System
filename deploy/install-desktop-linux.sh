@@ -1,11 +1,11 @@
 #!/bin/sh
-# Skróty VizRS w menu aplikacji (Linux, GNOME/KDE/XFCE…): „VizRS Artist” i „VizRS Trio”.
+# Skrót VizRS w menu aplikacji (Linux, GNOME/KDE/XFCE…): „VizRS Trio” (Artist: osobny program VizRS CG Artist).
 # Gdy obok vizrs leży vizrs-shell – okno natywne (WebKitGTK, menu, „Zapisz jako”), inaczej okno aplikacji
-# Chromium/Chrome/Edge (vizrs artist|trio). Serwer startuje na wskazanym katalogu danych; drugie okno dołącza do niego.
+# Chromium/Chrome/Edge (vizrs trio). Serwer startuje na wskazanym katalogu danych; drugie okno dołącza do niego.
 #
 # Użycie: deploy/install-desktop-linux.sh [--chromium] [ścieżka-do-vizrs] [katalog-danych]
 #   domyślnie: bin/linux-x86_64/vizrs i vizrs-data/ obok repozytorium; --chromium = bez okna natywnego
-# Usunięcie: rm ~/.local/share/applications/vizrs-*.desktop ~/.local/share/icons/hicolor/scalable/apps/vizrs.svg ~/.local/share/mime/packages/vizrs.xml
+# Usunięcie: rm ~/.local/share/applications/vizrs-*.desktop ~/.local/share/icons/hicolor/scalable/apps/vizrs.svg
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CHROMIUM=0
@@ -20,14 +20,12 @@ SHELLBIN="$(dirname "$BIN")/vizrs-shell"
 case "$BIN$DATA$SHELLBIN" in *'"'*|*'`'*|*'$'*|*'\'*|*%*) echo "Ścieżka zawiera znak niedozwolony w pliku .desktop (\" \` \$ \\ %)" >&2; exit 1 ;; esac
 
 SHARE="${XDG_DATA_HOME:-$HOME/.local/share}"
-mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps" "$SHARE/mime/packages"
-cp "$ROOT/deploy/vizrs-mime.xml" "$SHARE/mime/packages/vizrs.xml"
-command -v update-mime-database >/dev/null && update-mime-database "$SHARE/mime" 2>/dev/null || true
+mkdir -p "$SHARE/applications" "$SHARE/icons/hicolor/scalable/apps"
 cp "$ROOT/deploy/vizrs.svg" "$SHARE/icons/hicolor/scalable/apps/vizrs.svg"
 
-for w in Artist Trio; do
+for w in Trio; do
   lower=$(echo "$w" | tr 'A-Z' 'a-z')
-  if [ "$w" = Artist ]; then desc="Projektowanie szablonów grafiki CG"; else desc="Playout grafiki CG na żywo"; fi
+  desc="Playout grafiki CG na żywo"
   if [ -n "$SHELLBIN" ]; then
     exec_line="\"$SHELLBIN\" --vizrs \"$BIN\" --data \"$DATA\" $lower"; wmclass=vizrs-shell
   else
@@ -44,11 +42,6 @@ Terminal=false
 Categories=AudioVideo;Video;
 StartupWMClass=$wmclass
 EOF
-  # skojarzenie .cgpack i .vizrs.json: dwuklik importuje w Artist (tylko okno natywne)
-  if [ "$w" = Artist ] && [ -n "$SHELLBIN" ]; then
-    sed -i -e 's/^\(Exec=.*\)$/\1 %f/' "$SHARE/applications/vizrs-artist.desktop"
-    echo "MimeType=application/x-vizrs-cgpack;application/x-vizrs-scene;" >> "$SHARE/applications/vizrs-artist.desktop"
-  fi
   echo "Utworzono $SHARE/applications/vizrs-$lower.desktop"
 done
 if [ -n "$SHELLBIN" ]; then
@@ -58,7 +51,7 @@ if [ -n "$SHELLBIN" ]; then
 Type=Application
 Name=VizRS
 Comment=Okno natywne VizRS
-Exec="$SHELLBIN" --vizrs "$BIN" --data "$DATA" artist
+Exec="$SHELLBIN" --vizrs "$BIN" --data "$DATA" trio
 Icon=vizrs
 Terminal=false
 NoDisplay=true

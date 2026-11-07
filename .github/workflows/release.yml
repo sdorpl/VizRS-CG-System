@@ -135,6 +135,7 @@ jobs:
           files: dist/*
           body: |
             **Serwer (Docker):** `docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data ghcr.io/${{ github.repository_owner }}/vizrs:${{ env.VERSION }}`
-            **Linux:** `VizRS-Artist-*.AppImage`, `VizRS-Trio-*.AppImage` – dołączane po budowie lokalnej (sumy: `SHA256SUMS-AppImage.txt`; wymaga WebKitGTK 4.1, bez niego okno Chromium; dane w `~/.local/share/vizrs`).
-            **Debian / Ubuntu (22.04+):** `sudo apt install ./vizrs_*_amd64.deb` – okna Artist, Trio i „Trio – serwer zdalny” w menu, usługa `vizrs` (wyłączona).
+            **Linux:** `VizRS-Trio-*.AppImage` – dołączane po budowie lokalnej (sumy: `SHA256SUMS-AppImage.txt`; wymaga WebKitGTK 4.1, bez niego okno Chromium; dane w `~/.local/share/vizrs`).
+            **Debian / Ubuntu (22.04+):** `sudo apt install ./vizrs_*_amd64.deb` – okna Trio i „Trio – serwer zdalny” w menu, usługa `vizrs` (wyłączona).
+            **Projektowanie scen:** osobny program [VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases) (Linux, Windows, macOS); `/artist` serwera – zamrożony zapas w przeglądarce.
             **Windows / macOS / Linux:** archiwum z `vizrs`, `vizrs-app`, `vizrs-shell`.

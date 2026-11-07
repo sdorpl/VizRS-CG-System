@@ -13,7 +13,7 @@
 5. [Pola kontrolne i reguły pól](#5-pola-kontrolne-i-reguły-pól)
 6. [Tekst](#6-tekst)
 7. [Ticker](#7-ticker)
-8. [Artist – projektowanie scen](#8-artist--projektowanie-scen)
+8. [Artist – projektowanie scen (VizRS CG Artist, zamrożony /artist)](#8-artist--projektowanie-scen)
 9. [Trio – playout](#9-trio--playout)
 10. [Wyjście dla OBS i mikserów](#10-wyjście-dla-obs-i-mikserów)
 11. [Sterowanie zewnętrzne](#11-sterowanie-zewnętrzne)
@@ -31,7 +31,7 @@ VizRS to system grafiki telewizyjnej (CG) na żywo, wzorowany na duecie Vizrt:
 
 | Vizrt | VizRS | Do czego |
 |---|---|---|
-| Viz Artist | **Artist** (`/artist`) | projektowanie szablonów: drzewo kontenerów, klucze animacji, stop pointy, pola kontrolne |
+| Viz Artist | **Artist** (osobny program [VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist); w serwerze zamrożony `/artist`) | projektowanie szablonów: drzewo kontenerów, klucze animacji, stop pointy, pola kontrolne |
 | Viz Trio | **Trio** (`/trio`) | playout: strony z danymi, TAKE / CONTINUE / OUT / UPDATE, rundown, playlisty, makra |
 | Viz Engine | **wyjście** (`/output`) | przezroczysta strona 1920×1080 w źródle Przeglądarka (OBS) albo Fill/Key dla mikserów |
 
@@ -322,11 +322,15 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 ## 8. Artist – projektowanie scen
 
+> **Projektowanie scen:** od wersji 0.3.0 (2026-11-07) do projektowania i edycji szablonów służy osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist)** (`vizrs-cg-artist`, Tauri 2 dla systemów Linux, Windows i macOS; repozytorium: https://github.com/sdorpl/VizRS-CG-Artist). Aplikacja działa bez serwera (zapis/odczyt plików `.cgpack` i `.show.json`), a gotowe sceny wdraża bezpośrednio na serwer vizrs.
+>
+> Poniższy opis dotyczy **zamrożonego edytora `/artist`** serwowanego przez serwer VizRS jako zapas do pracy w przeglądarce (np. na zdalnym VPS bez instalacji aplikacji, zachowany do wydania 3.0). Nowe funkcje projektowania scen powstają wyłącznie w VizRS CG Artist.
+
 ### 8.1 Układ
 
 | Obszar | Zawartość |
 |---|---|
-| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.7), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ Element (import elementu BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W oknie natywnym (`vizrs-shell`) bez logo i zakładek Artist / Trio / Wyjście – są w menu okna |
+| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.7), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ Element (import elementu BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W przeglądarce widoczne są zakładki i pasek górny; okno natywne `vizrs-shell` służy do pracy w Trio i podglądu wyjścia, a Artist do projektowania scen to VizRS CG Artist |
 | Położenie sceny | przesuwa całą scenę naraz (`scene.x`, `scene.y`): pola „Położenie sceny” w ustawieniach sceny (⟲ zeruje), przeciągnięcie pustego miejsca kanwy albo strzałki (Shift = 10 px), gdy zaznaczona jest scena. Nie zmienia kluczy animacji ani `props` węzłów – animacje grają względem nowego położenia; to, co wychodzi poza kadr, jest przycinane. Działa na wyjściu, w podglądzie Trio i w rendererze natywnym; `dock` dodaje się do niego |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów; przy zaznaczonej **grupie** nowy element trafia do niej, przy elemencie w grupie – obok niego, przy elemencie na najwyższym poziomie albo bez zaznaczenia – na najwyższy poziom), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, ⤢ dopasuj wymiar grupy do zawartości, kosz; przeciąganie zmienia rodzica z zachowaniem położenia. 🔒/🔓 w wierszu blokuje element (`locked`, tak/nie) – zablokowanego, ani elementów wewnątrz zablokowanej grupy, nie da się chwycić na kanwie (klik trafia w element pod spodem), przesunąć strzałkami, przeciągnąć w drzewie ani usunąć; właściwości nadal edytuje się w panelu. Blokada działa tylko w Artist, nie wpływa na wyjście. **Wiersz sceny** (pierwszy, nadrzędny) pokazuje położenie całej sceny (X, Y), gdy różni się od 0. **Wymiar grupy** ustawia się sam, gdy grupa dostaje element (dodanie, ⇥, przeciągnięcie): szerokość i wysokość = zasięg zawartości, czyli największy element z jego przesunięciem w grupie |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny. **Zoom podglądu** (10–800%): kółko wokół kursora, −/＋, ⤢ dopasuj (Shift+1), 1:1 (Shift+2), ⌖ kadr na zaznaczony element (Shift+3); środkowy przycisk przesuwa widok. Zmiana rozmiaru panelu zachowuje zoom, zmiana sceny lub jej rozdzielczości wraca do dopasowania |
@@ -681,18 +685,20 @@ Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 
 **Docker / VPS:** `docker build -t vizrs .` (statyczna binarka musl na pustym obrazie, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`, dane w wolumenie `/data`, port komend TCP domyślnie wyłączony). Serwer z HTTPS: `deploy/docker-compose.yml` (VizRS + Caddy, Let's Encrypt), przykład nginx: `deploy/nginx-vizrs.conf`. Instrukcja krok po kroku: [RUNBOOK.md](RUNBOOK.md#vps-i-docker). Gotowy obraz z każdego wydania: `ghcr.io/sdorpl/vizrs:<wersja>` / `:latest` (amd64, arm64).
 
-### 13.1 Okna aplikacji (Artist, Trio, Output)
+### 13.1 Okna aplikacji (Trio, Output, zamrożony Artist)
 
-`vizrs artist` / `vizrs trio` otwiera Artist albo Trio w **osobnym oknie aplikacji** – bez pasków adresu i kart, z własną pozycją w pasku zadań – i uruchamia serwer w tym samym procesie. Okno to przeglądarka z silnikiem **Chromium** (Edge, Chrome, Chromium, Brave, Vivaldi) w trybie `--app` z osobnym profilem (`~/.config/vizrs/browser`, Windows `%APPDATA%\VizRS\browser`, macOS `~/Library/Application Support/VizRS/browser`). Chromium dlatego, że wyjście w OBS i vMix też rysuje Chromium – Artist pokazuje dokładnie to, co antena (pomiar tekstu, ściskanie, łamanie wierszy). Bez Chromium okno otwiera się w przeglądarce systemowej (z paskami).
+Głównym narzędziem do projektowania scen jest osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist)** (`vizrs-cg-artist`, Tauri 2 dla systemów Linux, Windows i macOS; działa bez serwera i wysyła sceny na serwer).
+
+`vizrs trio` otwiera Trio w **osobnym oknie aplikacji** – bez pasków adresu i kart, z własną pozycją w pasku zadań – i uruchamia serwer w tym samym procesie. `vizrs artist` otwiera w analogicznym oknie zamrożony edytor `/artist` serwera (zapas do pracy lokalnej lub w przeglądarce). Okno to przeglądarka z silnikiem **Chromium** (Edge, Chrome, Chromium, Brave, Vivaldi) w trybie `--app` z osobnym profilem (`~/.config/vizrs/browser`, Windows `%APPDATA%\VizRS\browser`, macOS `~/Library/Application Support/VizRS/browser`). Chromium dlatego, że wyjście w OBS i vMix też rysuje Chromium – podgląd pokazuje dokładnie to, co antena (pomiar tekstu, ściskanie, łamanie wierszy). Bez Chromium okno otwiera się w przeglądarce systemowej (z paskami).
 
 | Sytuacja | Co się dzieje |
 |---|---|
 | pierwsze okno na danym `--data` | start serwera (port z `--port`, domyślnie 8088 – adres wyjścia dla OBS bez zmian) + okno |
-| kolejne okno (np. `vizrs trio` przy otwartym Artist) | wykrywa działający serwer na tym katalogu danych (`.vizrs.lock`), otwiera tylko okno i kończy się |
-| zamknięcie okna, z którym wystartował serwer | serwer **działa dalej, dopóki podłączone jest jakiekolwiek okno lub wyjście (OBS)** – zamknięcie Artist nie zdejmuje grafiki z anteny; po `--linger` s (domyślnie 10) bez nikogo serwer kończy pracę. Ctrl+C / SIGTERM kończy od razu |
+| kolejne okno (np. `vizrs trio` przy otwartym innym oknie) | wykrywa działający serwer na tym katalogu danych (`.vizrs.lock`), otwiera tylko okno i kończy się |
+| zamknięcie okna, z którym wystartował serwer | serwer **działa dalej, dopóki podłączone jest jakiekolwiek okno lub wyjście (OBS)** – zamknięcie okna Trio nie zdejmuje grafiki z anteny; po `--linger` s (domyślnie 10) bez nikogo serwer kończy pracę. Ctrl+C / SIGTERM kończy od razu |
 | `--connect https://cg.example.pl` | tylko okno dla serwera zdalnego (VPS), bez serwera lokalnego; token z `--token`/`VIZRS_TOKEN` trafia do adresu okna |
 
-`vizrs output` – okno wyjścia 1920×1080, np. na drugi monitor albo wyjście HDMI do miksera: `vizrs output --fullscreen --position 1920,0` (pełny ekran bez ramek, zamknięcie: Alt+F4); Key/Fill przez `--query mode=key` / `--query mode=fill`. Wyjście ma osobny profil przeglądarki (pełny ekran i pozycja działają niezależnie od okien Artist/Trio). Wszystkie okna mają wyłączone usypianie animacji w tle i autoodtwarzanie wideo bez kliknięcia.
+`vizrs output` – okno wyjścia 1920×1080, np. na drugi monitor albo wyjście HDMI do miksera: `vizrs output --fullscreen --position 1920,0` (pełny ekran bez ramek, zamknięcie: Alt+F4); Key/Fill przez `--query mode=key` / `--query mode=fill`. Wyjście ma osobny profil przeglądarki (pełny ekran i pozycja działają niezależnie od okien Trio). Wszystkie okna mają wyłączone usypianie animacji w tle i autoodtwarzanie wideo bez kliknięcia.
 
 | Opcja okna | Zmienna | Opis |
 |---|---|---|
@@ -706,24 +712,26 @@ Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 Wyszukiwanie przeglądarki: Linux – `chromium`, `chromium-browser`, `google-chrome(-stable)`, `microsoft-edge(-stable)`, `brave-browser`, `vivaldi` w `PATH`, potem Flatpak i Snap; Windows – Edge, Chrome, Brave, Chromium w `Program Files` i `%LOCALAPPDATA%` (Edge jest w każdym Windows 10/11); macOS – `/Applications` i `~/Applications`.
 
 **Skróty systemowe:**
-- Debian / Ubuntu 22.04+: `sudo apt install ./vizrs_<wersja>_amd64.deb` z wydania na GitHub (budowa: `deploy/deb/build.sh vizrs vizrs-shell wersja [wyjście]`). W menu: **VizRS Artist**, **VizRS Trio**, **VizRS Trio – serwer zdalny** (od razu okno „Połącz z serwerem”, §13.2); dane okien w `~/.local/share/vizrs` (`VIZRS_DATA`). Pakiet zawiera usługę systemd `vizrs` (serwer bez GUI, dane `/var/lib/vizrs`, użytkownik `vizrs`) – domyślnie wyłączoną: `sudo systemctl edit vizrs` (token), `sudo systemctl enable --now vizrs`. Pakiet zbudowany lokalnie działa tylko na systemach z glibc co najmniej taką jak u budującego – wydanie budowane jest na Ubuntu 22.04.
-- Linux bez instalacji: `VizRS-Artist-<wersja>-x86_64.AppImage` i `VizRS-Trio-…AppImage` z wydania na GitHub (budowa: `deploy/appimage/build.sh vizrs vizrs-shell wersja`; od 2.0.19 AppImage budowane są lokalnie i dołączane do wydania `gh release upload` razem z `SHA256SUMS-AppImage.txt` – akcja Release ich nie buduje). Okno natywne wymaga systemowego WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`), bez niego otwiera się okno Chromium. Dane: `$VIZRS_DATA`, domyślnie `~/.local/share/vizrs` – wspólne dla obu, drugie okno dołącza do serwera; binarka serwera kopiowana do `~/.cache/vizrs/<wersja>/` (serwer działa dłużej niż zamontowany obraz).
-- Linux: `deploy/install-desktop-linux.sh [vizrs] [katalog-danych]` – „VizRS Artist” i „VizRS Trio” w menu aplikacji (pliki `.desktop`, ikona `deploy/vizrs.svg`).
-- Windows: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1` – skróty w menu Start uruchamiają `vizrs-app.exe` (to samo co `vizrs.exe`, ale **bez okna konsoli**; błąd startu pokazuje w okienku systemowym) oraz „VizRS Serwer” (konsola). `start-windows.bat [artist|trio|serve]` – domyślnie okno Trio.
+- Debian / Ubuntu 22.04+: `sudo apt install ./vizrs_<wersja>_amd64.deb` z wydania na GitHub (budowa: `deploy/deb/build.sh vizrs vizrs-shell wersja [wyjście]`). W menu: **VizRS Trio**, **VizRS Trio – serwer zdalny** (od razu okno „Połącz z serwerem”, §13.2); pakiet bez wpisu „VizRS Artist” i bez typów MIME (usunięto `deploy/vizrs-mime.xml` – skojarzenia `.cgpack`/`.vizrs.json` należą do paczki VizRS CG Artist). Dane okien w `~/.local/share/vizrs` (`VIZRS_DATA`). Pakiet zawiera usługę systemd `vizrs` (serwer bez GUI, dane `/var/lib/vizrs`, użytkownik `vizrs`) – domyślnie wyłączoną: `sudo systemctl edit vizrs` (token), `sudo systemctl enable --now vizrs`. Pakiet zbudowany lokalnie działa tylko na systemach z glibc co najmniej taką jak u budującego – wydanie budowane jest na Ubuntu 22.04.
+- Linux bez instalacji: `VizRS-Trio-…AppImage` z wydania na GitHub (budowa: `deploy/appimage/build.sh vizrs vizrs-shell wersja`; od 2.0.19 AppImage budowane są lokalnie i dołączane do wydania `gh release upload` razem z `SHA256SUMS-AppImage.txt` – akcja Release ich nie buduje; paczka AppImage dla Artist wydawana jest w repozytorium VizRS CG Artist). Okno natywne wymaga systemowego WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`), bez niego otwiera się okno Chromium. Dane: `$VIZRS_DATA`, domyślnie `~/.local/share/vizrs` – drugie okno dołącza do serwera; binarka serwera kopiowana do `~/.cache/vizrs/<wersja>/` (serwer działa dłużej niż zamontowany obraz).
+- Linux: `deploy/install-desktop-linux.sh [vizrs] [katalog-danych]` – „VizRS Trio” w menu aplikacji (pliki `.desktop`, ikona `deploy/vizrs.svg`; skrót Artist tworzy instalator VizRS CG Artist).
+- Windows: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1` – skróty w menu Start: „VizRS Trio” (uruchamia `vizrs-app.exe` lub `vizrs-shell.exe` bez okna konsoli; błąd startu pokazuje w okienku systemowym) oraz „VizRS Serwer” (konsola). `start-windows.bat [trio|artist|serve]` – domyślnie okno Trio; `artist` otwiera zamrożony `/artist`.
 
-Artist i Trio pokazują w pasku górnym wskaźnik **połączono / brak połączenia** z serwerem – przy pracy zdalnej (`--connect`) widać zerwanie łącza.
+Trio pokazuje w pasku górnym wskaźnik **połączono / brak połączenia** z serwerem – przy pracy zdalnej (`--connect`) widać zerwanie łącza.
 
 ### 13.2 Okno natywne (`vizrs-shell`)
 
-`vizrs-shell` to osobny program z prawdziwym oknem systemowym i systemowym silnikiem stron: **WebKitGTK** (Linux), **WebView2** (Windows, to Chromium), **WKWebView** (macOS). Pokazuje te same strony Artist i Trio co przeglądarka, więc renderer jest jeden.
+`vizrs-shell` to okno **tylko Trio i wyjścia (podglądu)** z systemowym silnikiem stron: **WebKitGTK** (Linux), **WebView2** (Windows, to Chromium), **WKWebView** (macOS). Domyślnym rodzajem okna jest Trio. Projektowanie scen to osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist)** (`vizrs-cg-artist`), a `/artist` w serwerze pozostaje jako zamrożony zapas w przeglądarce.
 
 ```bash
-vizrs-shell                 # okno Artist (domyślnie)
+vizrs-shell                 # okno Trio (domyślnie)
 vizrs-shell trio            # okno Trio
 vizrs-shell output          # podgląd wyjścia 960×540
-vizrs-shell artist --connect https://cg.example.pl --token …   # serwer zdalny
+vizrs-shell trio --connect https://cg.example.pl --token …   # serwer zdalny
 vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 ```
+
+Wywołanie `vizrs-shell artist` oraz podanie pliku (`.cgpack`, `.vizrs.json`) kończą się komunikatem odsyłającym do VizRS CG Artist i kodem wyjścia 2.
 
 | Opcja | Zmienna | Opis |
 |---|---|---|
@@ -737,24 +745,23 @@ vizrs-shell connect         # najpierw okno „Połącz z serwerem”
 | | `VIZRS_CONFIG` | katalog listy serwerów (domyślnie niżej) |
 
 - **Serwer:** jeśli na danym katalogu danych działa już serwer VizRS, okno dołącza do niego. Jeśli nie, powłoka uruchamia `vizrs serve --idle-exit 10` jako **osobny proces**. Awaria okna nie zdejmuje anteny, a serwer kończy pracę sam, gdy przez 10 s nie ma żadnego okna ani wyjścia (OBS). Komunikaty serwera trafiają do `~/.local/state/vizrs/serwer.log` (poprzedni przebieg: `serwer.log.1`; Pomoc → Pokaż logi). Błąd startu (np. zajęty port) okno pokazuje w okienku systemowym.
-- **Połącz z serwerem** (Plik → Połącz z serwerem…, Ctrl+Shift+K): okno z adresem serwera (`https://cg.example.pl`, sam host = `https://`) i tokenem operatora. Dla serwera `http://` okno najpierw sprawdza token (`/api/state`: zły token, token wyjścia OBS i brak serwera – komunikat w oknie); `https://` sprawdza wskaźnik połączenia w Trio/Artist (powłoka nie ma TLS). Po połączeniu **wszystkie okna** przechodzą na ten serwer (tytuł z nazwą hosta), a gdy żadne nie było otwarte – otwiera się Trio. Lista zapisanych serwerów (klik – wypełnij, dwuklik – połącz, × – usuń) leży w `connections.json`: Linux `~/.config/vizrs/`, Windows `%APPDATA%\VizRS\`, macOS `~/Library/Application Support/VizRS/` (plik z prawami tylko dla właściciela); token zapisuje się tylko przy „zapamiętaj token” – puste pole tokenu = token zapamiętany. „Łącz z tym serwerem przy uruchomieniu” – kolejne starty okna idą od razu do tego serwera, bez serwera lokalnego (`--local` – mimo to lokalny). **Serwer lokalny** wraca do serwera na katalogu danych (w razie potrzeby uruchamia go). Przełączenie serwera nie zmienia niczego na antenie żadnego z serwerów.
-- **Menu:** Plik – Nowa scena, Zapisz, Importuj…, Eksportuj scenę…, Paczka .cgpack…, Połącz z serwerem… (Ctrl+Shift+K), nowe okno Artist / Trio, okno wyjścia, Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Edycja – Cofnij, Ponów, Duplikuj, Usuń; Widok – kanwa (dopasuj, 100%, do zaznaczenia), Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Scena – Odtwórz / zatrzymaj, Dodaj marker; Wyjście – pełny ekran na monitorze, Fill + Key na monitorach 1 i 2 (przy dwóch ekranach); Pomoc – strona startowa i API, Pokaż logi, Otwórz katalog danych, Sprawdź aktualizacje (strona wydań w przeglądarce), O programie. Pozycje Artist są wyszarzone w innych oknach, Cofnij i Ponów – gdy nie ma czego cofać. Skróty edycji obsługuje strona (w polach tekstowych działają jak w polu), dlatego w menu są tylko podpisem. Lista monitorów powstaje przy starcie programu. Pełnoekranowe wyjście nie ma paska menu: zamknięcie Ctrl+W.
-- **Zamykanie:** okno ze zmianami pyta „Zapisz / Nie zapisuj / Anuluj” (zamknięcie okna, Ctrl+W, Zakończ; Artist i Trio). Gdy strona nie odpowiada, ponowne zamknięcie po 5 s zamyka okno bez pytania.
-- **Tytuł okna:** nazwa sceny i `●` przy niezapisanych zmianach.
-- **Kopia robocza:** Artist co 5 s zapisuje zmienioną scenę w `~/.local/state/vizrs/drafts/`; po awarii proponuje przywrócenie przy otwarciu sceny. Zapis i „Nie zapisuj” kasują kopię.
-- **Pamięć okna:** rozmiar, pozycja (tylko X11), maksymalizacja, powiększenie i ostatnia scena Artist (serwer lokalny) w `window.json` obok listy serwerów.
-- **Jedna instancja (Linux, macOS):** kolejne uruchomienie na tym samym katalogu danych przekazuje prośbę działającemu programowi: okno na wierzch, nowe okno albo import pliku. Nie dotyczy `--connect`.
-- **Otwieranie plików:** `vizrs-shell plik.cgpack`, dwuklik (skojarzenia `.cgpack` i `.vizrs.json` zakładają `.deb` i `install-desktop-linux.sh`; AppImage nie), Plik → Importuj albo przeciągnięcie na okno Artist. Paczka i scena – import; obraz i wideo – wgranie i nowy element; czcionka – wgranie do zasobów. Limit 512 MB. Przeciąganie działa też w przeglądarce.
-- **Skalowanie ułamkowe (Linux):** GTK3 zna tylko skale całkowite. Przy 125% strona rysuje się w skali 2, a kompozytor zmniejsza obraz, więc tekst jest ostry, ale nie co do piksela. Dokładne piksele przy skali ułamkowej daje okno Chromium (`vizrs artist`).
+- **Połącz z serwerem** (Plik → Połącz z serwerem…, Ctrl+Shift+K): okno z adresem serwera (`https://cg.example.pl`, sam host = `https://`) i tokenem operatora. Dla serwera `http://` okno najpierw sprawdza token (`/api/state`: zły token, token wyjścia OBS i brak serwera – komunikat w oknie); `https://` sprawdza wskaźnik połączenia w Trio (powłoka nie ma TLS). Po połączeniu **wszystkie okna** przechodzą na ten serwer (tytuł z nazwą hosta), a gdy żadne nie było otwarte – otwiera się Trio. Lista zapisanych serwerów (klik – wypełnij, dwuklik – połącz, × – usuń) leży w `connections.json`: Linux `~/.config/vizrs/`, Windows `%APPDATA%\VizRS\`, macOS `~/Library/Application Support/VizRS/` (plik z prawami tylko dla właściciela); token zapisuje się tylko przy „zapamiętaj token” – puste pole tokenu = token zapamiętany. „Łącz z tym serwerem przy uruchomieniu” – kolejne starty okna idą od razu do tego serwera, bez serwera lokalnego (`--local` – mimo to lokalny). **Serwer lokalny** wraca do serwera na katalogu danych (w razie potrzeby uruchamia go). Przełączenie serwera nie zmienia niczego na antenie żadnego z serwerów.
+- **Menu:** Plik – Połącz z serwerem… (Ctrl+Shift+K), Nowe okno Trio, Okno wyjścia (podgląd), Zamknij okno (Ctrl+W), Zakończ (Ctrl+Q); Widok – Odśwież (F5), Pełny ekran (F11), Powiększ / Pomniejsz / 100% (Ctrl+= / Ctrl+− / Ctrl+0), Narzędzia deweloperskie (Ctrl+Shift+I); Wyjście – wyjście na wybranym monitorze, Fill + Key na monitorach 1 i 2 (przy co najmniej dwóch ekranach); Pomoc – Strona startowa i API, Pokaż logi, Otwórz katalog danych, Sprawdź aktualizacje (strona wydań w przeglądarce), O programie. Z menu usunięto pozycje projektowania scen (Nowe okno Artist, Nowa scena, Zapisz, Importuj…, Eksportuj scenę…, Paczka .cgpack…, całe menu Edycja [Cofnij, Ponów, Duplikuj, Usuń], pozycje kanwy w Widoku [Dopasuj kanwę, Kanwa 100%, Kanwa do zaznaczenia] oraz menu Scena) – te zadania realizuje VizRS CG Artist. Pełnoekranowe wyjście nie ma paska menu: zamknięcie Ctrl+W.
+- **Zamykanie:** okno ze zmianami pyta „Zapisz / Nie zapisuj / Anuluj” (zamknięcie okna, Ctrl+W, Zakończ; Trio). Gdy strona nie odpowiada, ponowne zamknięcie po 5 s zamyka okno bez pytania.
+- **Tytuł okna:** tytuł okna Trio lub wyjścia oraz `●` przy niezapisanych zmianach.
+- **Pamięć okna:** rozmiar, pozycja (tylko X11), maksymalizacja i powiększenie w `window.json` obok listy serwerów.
+- **Jedna instancja (Linux, macOS):** kolejne uruchomienie na tym samym katalogu danych przekazuje prośbę działającemu programowi: okno na wierzch albo nowe okno Trio/wyjścia. Nie dotyczy `--connect`.
+- **Otwieranie plików:** `vizrs-shell artist` i próba otwarcia pliku (.cgpack/.vizrs.json) kończą się komunikatem odsyłającym do VizRS CG Artist (kod 2). Skojarzenia plików `.cgpack` i `.vizrs.json` należą do paczki VizRS CG Artist. Przekazywanie plików do strony zostało usunięte z powłoki.
+- **Skalowanie ułamkowe (Linux):** GTK3 zna tylko skale całkowite. Przy 125% strona rysuje się w skali 2, a kompozytor zmniejsza obraz, więc tekst jest ostry, ale nie co do piksela. Dokładne piksele przy skali ułamkowej daje okno Chromium (`vizrs trio`).
 - **Ikona na Waylandzie:** bez instalacji okno zakłada ukryty wpis `~/.local/share/applications/vizrs-shell.desktop` i ikonę; istniejącego wpisu nie zmienia.
-- **Pliki:** ⇩ Eksport i ⇩ Paczka otwierają systemowe okno „Zapisz jako”; ⇧ Import – systemowe okno wyboru pliku.
-- **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Artist / Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.
-- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi wynik skryptu testowego `--probe`, wybór serwera wyłącznie z wbudowanego okna połączenia (strony serwera nie mogą przełączyć okien), a ze stron Artist/Trio serwera biała lista komunikatów (`shell/src/bridge.rs`: stan okna, decyzja o zamknięciu, kopia robocza pod nazwą ze skrótu).
+- **Pliki:** systemowe okno „Zapisz jako” obsługuje pobieranie plików zainicjowane przez stronę.
+- **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.
+- **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi wynik skryptu testowego `--probe`, wybór serwera wyłącznie z wbudowanego okna połączenia (strony serwera nie mogą przełączyć okien), a ze strony Trio serwera biała lista komunikatów (`shell/src/bridge.rs`: stan okna, decyzja o zamknięciu, kopia robocza pod nazwą ze skrótu). Most w `source/web/native.js` woła `window.__vizrsPost` (okno Tauri VizRS CG Artist), inaczej `window.ipc.postMessage` (wry).
 - **Pisownia:** na Linuksie polska (słownik hunspell `pl_PL` z systemu, pakiet `hunspell-pl`); na Windows i macOS według ustawień systemu.
 - **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24, R7 i BTB_PILNE – 82/82 pól tekstowych z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.
 - **Wymagania:** Linux – biblioteki `libwebkit2gtk-4.1` i GTK 3 (są w typowym pulpicie; do budowy pakiety `-dev`); Windows – WebView2 Runtime (w Windows 10/11); macOS 10.15+.
 - **Budowa:** `cd source/shell && cargo build --release` (osobny workspace z zależnościami – rdzeń `vizrs` dalej ich nie ma). Linux: `bin/linux-x86_64/vizrs-shell`; Windows: `build-windows.bat` buduje też `vizrs-shell.exe`.
-- **Skróty:** `deploy/install-desktop-linux.sh` i `deploy\install-windows-shortcuts.ps1` używają okna natywnego, gdy `vizrs-shell` leży obok `vizrs` (wymuszenie okna Chromium: `--chromium` / `-Chromium`). Skrypt zakłada też typy MIME i skojarzenia plików.
+- **Skróty:** `deploy/install-desktop-linux.sh` i `deploy\install-windows-shortcuts.ps1` używają okna natywnego dla Trio, gdy `vizrs-shell` leży obok `vizrs` (wymuszenie okna Chromium: `--chromium` / `-Chromium`). Skróty dotyczą Trio i serwera (skojarzenia plików i Artist należą do VizRS CG Artist).
 
 ## 14. Dane na dysku i kopie zapasowe
 

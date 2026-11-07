@@ -54,20 +54,6 @@ pub fn draft_path(base: &str, id: &str) -> PathBuf {
     crate::paths::state_dir().join("drafts").join(format!("{h:016x}.json"))
 }
 
-/// Kod Base64 fragmentu pliku przekazywanego stronie.
-pub fn base64(data: &[u8]) -> String {
-    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
-    for c in data.chunks(3) {
-        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
-        out.push(T[(n >> 18) as usize & 63] as char);
-        out.push(T[(n >> 12) as usize & 63] as char);
-        out.push(if c.len() > 1 { T[(n >> 6) as usize & 63] as char } else { '=' });
-        out.push(if c.len() > 2 { T[n as usize & 63] as char } else { '=' });
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,13 +79,5 @@ mod tests {
         let p = draft_path("http://h", "../../etc/passwd");
         assert_eq!(p.parent().unwrap().file_name().unwrap(), "drafts");
         assert_ne!(p, draft_path("http://g", "../../etc/passwd"));
-    }
-
-    #[test]
-    fn base64_vectors() {
-        assert_eq!(base64(b""), "");
-        assert_eq!(base64(b"f"), "Zg==");
-        assert_eq!(base64(b"fo"), "Zm8=");
-        assert_eq!(base64(b"foo"), "Zm9v");
     }
 }

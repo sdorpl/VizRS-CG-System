@@ -2,12 +2,14 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [plany/PLAN-rozbudowy.md](plany/PLAN-rozbudowy.md), raport: [plany/RAPORT-analiza-VizRS-vs-BTB.md](plany/RAPORT-analiza-VizRS-vs-BTB.md).
 >
-> **Ostatnia aktualizacja:** 2026-11-04
+> **Ostatnia aktualizacja:** 2026-11-07
 
 ## Bieżący etap
 **Wydanie 2.0.19 „Porządek”** (2026-11-07). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
-**Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Artist/Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
+**Osobny Artist (VizRS CG Artist)** – krok A7 planu [plany/PLAN-artist-osobny.md](plany/PLAN-artist-osobny.md) wdrożony (2026-11-07): projektowanie scen to od teraz osobny program **VizRS CG Artist** (`vizrs-cg-artist`, repo https://github.com/sdorpl/VizRS-CG-Artist, wydanie 0.3.0 z 2026-11-07, Tauri 2). W `vizrs-shell` okno Artist usunięte – powłoka obsługuje tylko Trio i wyjście (podgląd); `vizrs-shell artist` i podanie pliku kończą się błędem (kod 2) z odesłaniem do VizRS CG Artist. Paczki `.deb` i AppImage bez wpisów Artist (tylko Trio; brak skojarzeń MIME `.cgpack`/`.vizrs.json`), a `/artist` serwera zostaje jako zamrożony zapas w przeglądarce do 3.0.
+
+**Okna aplikacji i serwer** – [plany/PLAN-natywne-i-serwer.md](plany/PLAN-natywne-i-serwer.md): okna aplikacji Trio i serwer na VPS/Docker (wydane w 2.0.1, w `main`).
 
 **Playout kanału** – [plany/PLAN-kanal.md](plany/PLAN-kanal.md): własny playout na bazie ffplayout („VizRS Playout”, repo `VizRS ffPlayout System`) **porzucony 2026-10-24** – repozytorium zostaje jako archiwum i wzorzec. Kanał z grafiką VizRS: **VizRS CG Playout** (sidecar dla ErsatzTV, `../VizRS CG Playout`) – komendy na start klipu, reklamy bez grafiki, wtapianie `/output` bezgłowym Chromium.
 
@@ -18,9 +20,9 @@
 | N0 fundament CLI (`VIZRS_*`, `serve`, `--healthcheck`, blokada katalogu danych, token wymagany w sieci) | zrobione |
 | N1 Docker i VPS (`Dockerfile`, compose + Caddy, nginx, RUNBOOK, job CI `docker`) | zrobione; obraz sprawdza CI (lokalnie brak Dockera – sprawdzona statyczna binarka musl w pustym środowisku) |
 | N2 bezpieczeństwo sieciowe (token wyjścia, spowalnianie prób, limit na adres, termin nagłówków, `--trust-proxy`, `--log-stdout`, SIGTERM) | zrobione |
-| N3 okna aplikacji (`vizrs artist|trio|output`, `--connect`, `vizrs-app` bez konsoli, skróty Linux/Windows, wskaźnik połączenia w Artist, `tests/e2e/app.js`) | zrobione; Windows/macOS: sprawdzona kompilacja (clippy dla celów), uruchomienie okien – do sprawdzenia na tych systemach |
-| N4.1 okno natywne `vizrs-shell` (Artist/Trio/wyjście, menu, „Zapisz jako”, pisownia pl, dołączanie/uruchamianie serwera, skróty, CI, `tools/engines.js` 82/82 zgodnych z Chromium) | zrobione; Linux sprawdzony w działaniu, Windows – kompilacja (clippy), macOS – CI |
-| Etap 1 natywnego Artist na Linuksie (most strona–okno, pytanie przy zamykaniu, menu, pamięć okna, jedna instancja, kopia robocza, skojarzenia, przeciąganie, wybór monitora) | zrobione; następny: etap 2 Windows |
+| N3 okna aplikacji (`vizrs artist|trio|output`, `--connect`, `vizrs-app` bez konsoli, skróty Linux/Windows, wskaźnik połączenia, `tests/e2e/app.js`) | zrobione; Windows/macOS: sprawdzona kompilacja (clippy dla celów), uruchomienie okien – do sprawdzenia na tych systemach |
+| N4.1 okno natywne `vizrs-shell` (Trio i wyjście; menu, pisownia pl, dołączanie/uruchamianie serwera, skróty, CI, `tools/engines.js`; Artist to osobny program VizRS CG Artist) | zrobione; Linux sprawdzony w działaniu, Windows – kompilacja (clippy), macOS – CI |
+| Krok A7 planu PLAN-artist-osobny (wydzielenie Artist do osobnego programu VizRS CG Artist 0.3.0 na Tauri 2; w `vizrs-shell` tylko Trio i wyjście, `/artist` jako zamrożony zapas w przeglądarce) | zrobione (2026-11-07) |
 | N4.2, N4.3, instalatory Windows/macOS, N5 relay i kanały | opcjonalne – czekają na decyzję |
 
 ## Zrobione (wg planu)

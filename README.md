@@ -5,7 +5,8 @@ napisany w Rust. Odpowiedniki pojęć Vizrt: [DOKUMENTACJA §1](docs/DOKUMENTACJ
 OBS (albo vMix, Tricaster, ATEM przez Fill/Key) pobiera przez źródło **Przeglądarka (Browser Source)**.
 
 - Jeden plik wykonywalny, **zero zależności** (własny HTTP/1.1, SSE, JSON, OSC) — kompiluje się i działa offline, z wbudowanymi fontami.
-- UI (Artist, Trio, wyjście) jest wbudowane w binarkę. Opcjonalne okno natywne `vizrs-shell` to osobny program.
+- UI (Trio, wyjście; zamrożony Artist) jest wbudowane w binarkę. Opcjonalne okno natywne `vizrs-shell` (Trio, wyjście) to osobny program.
+- Projektowanie scen: zainstaluj osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases)** (`vizrs-cg-artist`, Tauri 2: Linux .deb/.rpm/AppImage, Windows .msi/instalator, macOS .dmg; działa bez serwera, sceny wysyła na serwer vizrs).
 - Show w `vizrs-data/show.json`, pliki graficzne w `vizrs-data/assets/`, kopie zapasowe w `vizrs-data/backups/`.
 
 ## Uruchomienie
@@ -18,12 +19,12 @@ cd source && cargo build --release        # budowa ze źródeł
 ./target/release/vizrs trio --connect https://cg.example.pl --token …   # okno dla serwera na VPS
 ```
 
-Paczki `.deb` i AppImage, binarki oraz obraz Docker są w [wydaniach na GitHub](https://github.com/sdorpl/VizRS-CG-System/releases).
+Paczki `.deb` i AppImage (`VizRS-Trio-…AppImage`), binarki oraz obraz Docker są w [wydaniach na GitHub](https://github.com/sdorpl/VizRS-CG-System/releases).
 
 | Adres | Co to jest |
 |---|---|
 | http://localhost:8088/ | strona startowa, podłączenie OBS, skrót API |
-| http://localhost:8088/artist | **Artist** – projektowanie scen |
+| http://localhost:8088/artist | **Artist** – zamrożony zapas w przeglądarce (główny edytor: [VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases)) |
 | http://localhost:8088/trio | **Trio** – playout |
 | http://localhost:8088/mobile | **Trio na telefonie** – sterowanie anteną z ekranu dotykowego |
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |

@@ -1,4 +1,5 @@
-# Skróty VizRS w menu Start (Windows): „VizRS Artist” i „VizRS Trio” z serwerem na wskazanym katalogu danych.
+# Skróty VizRS w menu Start (Windows): „VizRS Trio” z serwerem na wskazanym katalogu danych
+# (Artist: osobny program VizRS CG Artist z własnym instalatorem).
 # Gdy obok vizrs.exe jest vizrs-shell.exe – okno natywne (WebView2, menu, „Zapisz jako”), inaczej okno aplikacji
 # Edge/Chrome bez okna konsoli (vizrs-app.exe). Przełącznik -Chromium wymusza to drugie.
 #
@@ -23,7 +24,6 @@ $dir = Join-Path ([Environment]::GetFolderPath('Programs')) 'VizRS'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 $shell = New-Object -ComObject WScript.Shell
 $items = @(
-    @{ Name = 'VizRS Artist'; Mode = 'artist'; Desc = 'Projektowanie szablonów grafiki CG' },
     @{ Name = 'VizRS Trio'; Mode = 'trio'; Desc = 'Playout grafiki CG na żywo' }
 )
 foreach ($it in $items) {

@@ -3,6 +3,9 @@
 Lekki klon duetu **Viz Artist** (projektowanie szablonów) + **Viz Trio** (playout stron) dla grafiki telewizyjnej na żywo.
 Serwer w Rust bez zależności zewnętrznych; grafika renderuje się w przeglądarce jako przezroczysta strona 1920×1080,
 którą OBS (albo vMix, Tricaster, ATEM przez Fill/Key) pobiera jako źródło **Przeglądarka**.
+Projektowanie scen to od 2026-11-07 osobny program **VizRS CG Artist** (`../VizRS CG Artist`, Tauri 2) – kopiuje moduły
+rysowania z `source/web` (`tools/sync-cg.sh` po jego stronie), więc zmiana w `renderer.js` i spółce trafia tam przez synchronizację.
+`/artist` w serwerze jest **zamrożony** (zapas do pracy w przeglądarce, do 3.0): tylko poprawki błędów, nowe funkcje Artist – w VizRS CG Artist.
 
 Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komunikaty UI też są po polsku — pisz zgodnie z otoczeniem.
 
@@ -41,7 +44,7 @@ cd source && cargo build --release                 # budowa
 | Adres | Co |
 |---|---|
 | `http://localhost:8088/` | strona startowa |
-| `/artist` | Artist — projektowanie scen |
+| `/artist` | Artist — projektowanie scen (zamrożony; właściwy edytor: VizRS CG Artist) |
 | `/trio` | Trio — playout |
 | `/mobile` | Trio na telefonie — sterowanie anteną z dotykowego ekranu |
 | `/output` | wyjście dla OBS (przezroczyste) |
@@ -58,7 +61,7 @@ cargo build --release
 node tests/vectors/run.js && node tests/vectors/btb.js
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
 node tests/e2e/mobile.js target/release/vizrs     # Trio na telefonie
-node tests/e2e/artist.js target/release/vizrs     # Artist
+node tests/e2e/artist.js target/release/vizrs     # Artist (zamrożony /artist)
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
 node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana przeglądarka)
 (cd shell && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # okno natywne
@@ -83,7 +86,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
 | `source/src/bin/vizrs-app.rs` | uruchamianie okien bez konsoli (Windows) |
 | `source/render/` | `vizrs-render` – renderer natywny dla playoutu kanału (tiny-skia, rustybuzz): `stream` (klatki przez stdin/stdout), `frame`, `check`, `bench`; osobny workspace z zależnościami (DOKUMENTACJA §10.1) |
-| `source/shell/` | `vizrs-shell` – okno natywne Artist/Trio (tao + wry: WebKitGTK / WebView2 / WKWebView), menu, „Zapisz jako”, pisownia pl; osobny workspace z zależnościami |
+| `source/shell/` | `vizrs-shell` – okno natywne Trio i wyjścia (tao + wry: WebKitGTK / WebView2 / WKWebView), menu, „Zapisz jako”, pisownia pl; bez Artist (`artist` odsyła do VizRS CG Artist); osobny workspace z zależnościami |
 | `source/src/engine.rs` | show, warstwy on-air, TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, dock, karuzela, rundown, makra, blokady, SSE |
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |
 | `source/src/ticker.rs` | zapis wiadomości tickera (`KAT|treść`), komendy `TICKER` |
@@ -93,7 +96,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/http.rs`, `json.rs` | własny parser HTTP/1.1 i JSON |
 | `source/src/fonts.rs`, `fonts_data.rs` | wbudowane fonty offline (`/fonts/fonts.css`) |
 | `source/web/renderer.js` | `ScenePlayer`, `PROPS`, `TYPES`, krzywe, pola, autofollow, tekst, ticker, zegar |
-| `source/web/artist.html` | edytor scen |
+| `source/web/artist.html` | edytor scen (zamrożony – zapas w przeglądarce) |
 | `source/web/trio.html` | playout |
 | `source/web/mobile.html` | Trio na telefonie: osobna lekka strona, to samo API, bez `ScenePlayer` (monitor PGM to `/output` w ramce) |
 | `source/web/mobile-sw.js`, `mobile.webmanifest`, `mobile-icon.*`, `mobile-login.html` | aplikacja na telefon (PWA): service worker, manifest, ikony, ekran logowania |

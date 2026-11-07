@@ -2,6 +2,19 @@
 
 ## Niewydane
 
+- **VizRS CG Artist jako osobna aplikacja (krok A7 planu):** projektowanie scen to od teraz osobny program **VizRS CG Artist** (`vizrs-cg-artist`, repozytorium https://github.com/sdorpl/VizRS-CG-Artist, wydanie 0.3.0 z 2026-11-07, Tauri 2: Linux .deb/.rpm/AppImage, Windows .msi/instalator, macOS .dmg). Działa bez serwera (zapis/odczyt plików `.cgpack` i `.show.json`), a gotowe sceny wysyła na serwer vizrs.
+- **Okno natywne `vizrs-shell` tylko dla Trio i wyjścia:**
+  - Domyślny rodzaj okna to `trio`; `vizrs-shell artist` oraz przekazanie pliku (`.cgpack`, `.vizrs.json`) kończą się komunikatem odsyłającym do VizRS CG Artist i kodem wyjścia 2.
+  - Z menu okna usunięto pozycje projektowania scen: Nowe okno Artist, Nowa scena, Zapisz, Importuj…, Eksportuj scenę…, Paczka .cgpack…, całe menu Edycja (Cofnij, Ponów, Duplikuj, Usuń), w menu Widok pozycje kanwy (Dopasuj kanwę, Kanwa 100%, Kanwa do zaznaczenia) oraz całe menu Scena.
+  - Zostają menu: Plik (Połącz z serwerem…, Nowe okno Trio, Okno wyjścia (podgląd), Zamknij okno, Zakończ), Widok (Odśwież, Pełny ekran, Powiększ/Pomniejsz/100%, Narzędzia deweloperskie), Wyjście (monitory, Fill+Key) i Pomoc.
+  - Most strony (`native.js`): obsługa `state`, `close`, `stay`, `draft` bez zmian; przekazywanie plików do strony z powłoki zostało usunięte. Most woła `window.__vizrsPost`, gdy jest obecny (okno Tauri VizRS CG Artist), inaczej `window.ipc.postMessage` (wry).
+  - Test E2E `source/tests/e2e/shell.js` sprawdza okno Trio oraz odrzucenie `artist` (15/15 zaliczone 2026-11-07).
+- **`/artist` w serwerze jako zamrożony zapas:** edytor `/artist` serwowany przez serwer vizrs pozostaje jako zamrożony zapas do pracy w przeglądarce (np. na zdalnym VPS bez instalacji) do wydania 3.0; komendy `vizrs artist` (okno aplikacji Chromium) i `start-*.bat/sh artist` otwierają ten zamrożony `/artist`. Nowe funkcje edytora powstają wyłącznie w VizRS CG Artist. Testy `tests/e2e/artist.js` zostają w repozytorium.
+- **Paczki instalacyjne i skróty:**
+  - Pakiet `.deb` (`deploy/deb/build.sh`) bez wpisu „VizRS Artist” i bez typów MIME (usunięto `deploy/vizrs-mime.xml` – skojarzenia `.cgpack`/`.vizrs.json` należą do paczki VizRS CG Artist).
+  - AppImage budowany wyłącznie jako `VizRS-Trio-…AppImage` (`deploy/appimage/build.sh`).
+  - Skróty na Linuksie (`deploy/install-desktop-linux.sh`) i Windowsie (`deploy/install-windows-shortcuts.ps1`) tworzą tylko wpisy „VizRS Trio” (+ „VizRS Serwer” na Windows).
+
 ## 2.0.19 (2026-11-07) – „Porządek”
 
 - **Wydanie:** AppImage budowane lokalnie i dołączane do wydania (akcja Release buduje binarki, `.deb` i obraz Docker).

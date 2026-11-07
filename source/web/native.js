@@ -1,7 +1,8 @@
 // Most stron Artist/Trio z oknem natywnym vizrs-shell (w przeglądarce nic nie robi).
 // Strona zgłasza stan (tytuł, zmiany, cofanie, kopia robocza), powłoka wysyła komendy z menu i pliki.
 const shell = window.__vizrsShell;
-const post = (o) => { try { window.ipc.postMessage('app:' + JSON.stringify(o)); } catch { /* okno zamykane */ } };
+// __vizrsPost: okno Tauri (tam `window.ipc` należy do Tauri i nie da się go podmienić); inaczej `window.ipc` (GTK, wry)
+const post = (o) => { try { const m = 'app:' + JSON.stringify(o); if (window.__vizrsPost) window.__vizrsPost(m); else window.ipc.postMessage(m); } catch { /* okno zamykane */ } };
 
 // pytanie przy zamykaniu okna: strona zna stan, więc i zapis należy do niej
 function askClose(what, save, discard) {

@@ -1,7 +1,7 @@
 #!/bin/sh
-# AppRun AppImage VizRS Artist / Trio (szablon; build.sh wstawia rodzaj okna w miejsce @KIND@).
+# AppRun AppImage VizRS Trio (szablon; build.sh wstawia rodzaj okna w miejsce @KIND@).
 # Okno natywne vizrs-shell używa systemowego WebKitGTK 4.1; gdy go brak – okno aplikacji Chromium/Chrome/Edge.
-# Dane: $VIZRS_DATA, domyślnie ~/.local/share/vizrs – wspólne dla obu AppImage (drugie okno dołącza do serwera).
+# Dane: $VIZRS_DATA, domyślnie ~/.local/share/vizrs – drugie okno dołącza do serwera.
 HERE="$(dirname "$(readlink -f "$0")")"
 KIND=@KIND@
 : "${VIZRS_DATA:=${XDG_DATA_HOME:-$HOME/.local/share}/vizrs}"

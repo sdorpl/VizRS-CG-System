@@ -1,8 +1,8 @@
 # PLAN: VizRS CG Artist jako osobna aplikacja (osobne repo), Rust tam, gdzie się opłaca
 
-> Stan (2026-11-07): **zaplanowany (A0–A8), decyzje §7 podjęte**, start od A0. Decyzja użytkownika (2026-11-07): **nie przepisujemy wszystkiego na Rust
+> Stan (2026-11-07): **A0, A2–A4, A6, A7 wykonane (2026-11-07); A1 (`vizrs-model`) i A5 (import BTB i `.cgpack` w Ruście) – do zrobienia**, VizRS CG Artist wydany (0.3.0). Decyzja użytkownika (2026-11-07): **nie przepisujemy wszystkiego na Rust
 > na siłę – kanwa zostaje w JS** (`renderer.js`, `ScenePlayer`), zasada „Jeden renderer” obowiązuje dalej.
-> Opis bieżącego działania Artist zostaje w [DOKUMENTACJA](../DOKUMENTACJA.md) do czasu przeniesienia.
+> Opis bieżącego działania Artist w [DOKUMENTACJA](../DOKUMENTACJA.md) dotyczy zamrożonego `/artist`.
 
 ## 1. Cel
 
@@ -79,7 +79,7 @@ Zasady:
 | **A4** | Tryb anteny: połączenie z `vizrs` (token, `rev`/409, blokady, `/events`), deploy sceny / zestawu scen, okno scalania | edycja lokalna → deploy → strona w Trio na antenie | M |
 | **A5** | Import BTB i `.cgpack` w Ruście (`vizrs-btb`, `vizrs-pack`); strona woła IPC/API zamiast `btb-io.js`/`cgpack.js` | dla `tests/fixtures/btb/` i `examples/*.cgpack` wynik identyczny z JS (test porównawczy), potem usunięcie JS | M |
 | **A6** | Integracja z systemem: AppImage/.deb (Linux), potem Windows (§7 pkt 1), skojarzenia `.show.json`/`.cgpack`, ostatnie pliki | instalacja na czystym Linuksie i Windows | S |
-| **A7** | Przełączenie w CG System: `/artist` z serwera zamrożony albo usunięty (§7 pkt 2), menu Artist znika z `source/shell/`, CLAUDE.md i DOKUMENTACJA odsyłają do nowego repo | tydzień pracy projektowej tylko w nowym Artist | S |
+| **A7** | Przełączenie w CG System: `/artist` z serwera zamrożony (§7 pkt 2), menu Artist znika z `source/shell/`, CLAUDE.md i DOKUMENTACJA odsyłają do nowego repo | wykonane (2026-11-07): `vizrs-shell` tylko Trio/wyjście, `/artist` zamrożony zapas w przeglądarce, testy E2E zaliczone | S |
 | **A8** (opcja) | Kolejne części do Rusta tylko z konkretnym powodem (np. eksport filmu/miniatur przez `vizrs-render`, wyszukiwanie w dużych show) | – | – |
 
 ## 6. Ryzyka
@@ -94,11 +94,12 @@ Zasady:
 
 ## 7. Decyzje (2026-11-07)
 
-1. **Okno: GTK 4 + WebKitGTK 6.0** (`gtk4`, `webkit6`). Kolejność platform: Linux, potem Windows. GTK 4 nie ma
-   WebView na Windows – tam okno zostaje na wry (WebView2) z tymi samymi modułami bez GUI i tym samym mostem IPC;
-   wybór okna w osobnym module, reszta aplikacji wspólna. macOS pominięty.
+1. **Okno: Tauri 2** (Linux, Windows, macOS) od wersji 0.3.0 (zmiana decyzji z 2026-11-07, wcześniej planowano GTK 4).
+   Paczki: Linux (.deb, .rpm, AppImage), Windows (.msi, instalator), macOS (.dmg). Program działa bez serwera
+   (magazyn lokalny: `show.json`, `assets/` w katalogu danych), a sceny wysyła na serwer `vizrs`.
 2. **`/artist` w serwerze:** zostaje **zamrożony** jako zapas do pracy zdalnej na VPS (bez instalacji) do wydania 3.0;
-   nowe funkcje Artist powstają tylko w VizRS CG Artist.
+   nowe funkcje Artist powstają tylko w VizRS CG Artist. Opcja na przyszłość: podawanie przez serwer pod `/artist`
+   strony z wydań VizRS CG Artist zamiast zamrożonej (decyzja użytkownika – jeszcze nie podjęta).
 3. **`vizrs-model` zostaje w tym repo** (serwer jest właścicielem formatu show); VizRS CG Artist zależy od niego przez git z tagiem.
 4. **Nazwa:** repo i aplikacja **VizRS CG Artist** (binarka `vizrs-cg-artist`). Licencja – do ustalenia przy zakładaniu repo (A2).
 
