@@ -1,12 +1,12 @@
-# PLAN: VizRS Artist jako osobna aplikacja (osobne repo), Rust tam, gdzie się opłaca
+# PLAN: VizRS CG Artist jako osobna aplikacja (osobne repo), Rust tam, gdzie się opłaca
 
-> Stan (2026-11-07): **propozycja (A0–A8)**. Decyzja użytkownika (2026-11-07): **nie przepisujemy wszystkiego na Rust
+> Stan (2026-11-07): **zaplanowany (A0–A8), decyzje §7 podjęte**, start od A0. Decyzja użytkownika (2026-11-07): **nie przepisujemy wszystkiego na Rust
 > na siłę – kanwa zostaje w JS** (`renderer.js`, `ScenePlayer`), zasada „Jeden renderer” obowiązuje dalej.
 > Opis bieżącego działania Artist zostaje w [DOKUMENTACJA](../DOKUMENTACJA.md) do czasu przeniesienia.
 
 ## 1. Cel
 
-Artist (projektowanie scen) staje się osobnym programem **VizRS Artist** w osobnym repozytorium, z własnym
+Artist (projektowanie scen) staje się osobnym programem **VizRS CG Artist** w osobnym repozytorium, z własnym
 cyklem wydań. Serwer `vizrs` + Trio + `/output` + telefon zostają w VizRS CG System (podział Viz Artist / Viz Trio).
 
 Do Rusta przechodzi to, co tam naturalnie pasuje: okno, menu, pliki, import i paczki, walidacja, praca bez serwera.
@@ -34,7 +34,7 @@ Zyski:
 |---|---|---|
 | Kanwa, odtwarzanie, podgląd (`renderer.js`, `motion.js`, `richtext.js`, ticker) | **JS** (bez zmian) | jeden renderer z anteną, zero ryzyka rozjazdu |
 | Panele (drzewo, oś czasu, Właściwości, presety, kolory) | **JS** | działają, są świeżo przebudowane (PLAN-panel-wlasciwosci); przepisanie nic nie daje użytkownikowi |
-| Okno, menu, skróty systemowe, dialogi plików, jedna instancja, skojarzenia, pamięć okna | **Rust** – `vizrs-artist` (z kodu `source/shell/`) | już jest w Ruście |
+| Okno, menu, skróty systemowe, dialogi plików, jedna instancja, skojarzenia, pamięć okna | **Rust** – `vizrs-cg-artist` na **GTK 4 + WebKitGTK 6.0** (`gtk4`, `webkit6`, opcjonalnie `libadwaita`); moduły bez GUI (`bridge`, `connect`, `instance`, `paths`, `server`) przeniesione z `source/shell/` | decyzja 2026-11-07; prace z [PLAN-gtk4.md](PLAN-gtk4.md) (G0–G6) realizowane w nowym repo |
 | Lokalny magazyn show (plik, kopia robocza, kopie zapasowe, assets, fonty) | **Rust** | tryb bez serwera; strona mówi do niego tym samym API co do serwera |
 | Walidacja show | **Rust** – wspólny crate `vizrs-model` (wydzielony z `validate.rs`, bez zależności) | ten sam strażnik w serwerze i w Artist |
 | Import BTB (`btb-io.js`) i paczki `.cgpack` (`cgpack.js`) | **Rust** – `vizrs-btb` / `vizrs-pack` | parsowanie wrogich danych, ZIP, duże pliki – lepiej natywnie; testy na `tests/fixtures/btb/` |
@@ -44,9 +44,9 @@ Zyski:
 ## 4. Architektura
 
 ```
-repo „VizRS Artist”                                   repo „VizRS CG System”
+repo „VizRS CG Artist”                                 repo „VizRS CG System”
 ┌────────────────────────────────────────────┐        ┌──────────────────────────────┐
-│ vizrs-artist (Rust: tao + wry + muda + rfd)│        │ vizrs (serwer, zero zależn.) │
+│ vizrs-cg-artist (Rust: gtk4 + webkit6)     │        │ vizrs (serwer, zero zależn.) │
 │  ├─ lokalny serwer API na 127.0.0.1:losowy │  HTTP  │  /api/show rev+409, assets,  │
 │  │   (show z pliku, assets, fonty)         │◀──────▶│  locks, /events, /fonts      │
 │  ├─ import BTB, .cgpack, walidacja         │ deploy │ Trio, /output, /mobile       │
@@ -74,11 +74,11 @@ Zasady:
 |---|---|---|---|
 | **A0** | Decyzje §7; spis, czego `artist.html` używa z serwera i z `native.js` | lista API i komunikatów IPC zatwierdzona | S |
 | **A1** | Wydzielenie `vizrs-model` (typy show, `validate.rs`, JSON) w tym repo jako crate bez zależności; serwer z niego korzysta | `cargo test`, E2E bez zmian | M |
-| **A2** | Nowe repo **VizRS Artist**: workspace, CI (Linux, potem Windows), kopia `web/` Artist + `sync-cg.sh --check`, okno z kodu `source/shell/` (tylko Artist) | okno otwiera Artist z działającym zdalnym serwerem | S |
+| **A2** | Nowe repo **VizRS CG Artist**: workspace, CI (Linux), kopia `web/` Artist + `sync-cg.sh --check`, okno GTK 4 + WebKitGTK 6.0 (prototyp G0 z PLAN-gtk4: skalowanie ułamkowe, pisownia pl, most IPC), moduły bez GUI z `source/shell/` | okno otwiera Artist z działającym zdalnym serwerem; `tools/engines.js` – 0 różnic WebKitGTK 6.0 wobec Chromium | M |
 | **A3** | Lokalny serwer API w procesie Artist: show z pliku, assets, fonty, kopia robocza, kopie zapasowe, walidacja | Artist działa bez `vizrs`; `tests/e2e/artist.js` przechodzi na trybie pliku | M |
 | **A4** | Tryb anteny: połączenie z `vizrs` (token, `rev`/409, blokady, `/events`), deploy sceny / zestawu scen, okno scalania | edycja lokalna → deploy → strona w Trio na antenie | M |
 | **A5** | Import BTB i `.cgpack` w Ruście (`vizrs-btb`, `vizrs-pack`); strona woła IPC/API zamiast `btb-io.js`/`cgpack.js` | dla `tests/fixtures/btb/` i `examples/*.cgpack` wynik identyczny z JS (test porównawczy), potem usunięcie JS | M |
-| **A6** | Integracja z systemem: AppImage/.deb, Windows, skojarzenia `.show.json`/`.cgpack`, ostatnie pliki | instalacja na czystym Linuksie i Windows | S |
+| **A6** | Integracja z systemem: AppImage/.deb (Linux), potem Windows (§7 pkt 1), skojarzenia `.show.json`/`.cgpack`, ostatnie pliki | instalacja na czystym Linuksie i Windows | S |
 | **A7** | Przełączenie w CG System: `/artist` z serwera zamrożony albo usunięty (§7 pkt 2), menu Artist znika z `source/shell/`, CLAUDE.md i DOKUMENTACJA odsyłają do nowego repo | tydzień pracy projektowej tylko w nowym Artist | S |
 | **A8** (opcja) | Kolejne części do Rusta tylko z konkretnym powodem (np. eksport filmu/miniatur przez `vizrs-render`, wyszukiwanie w dużych show) | – | – |
 
@@ -89,17 +89,21 @@ Zasady:
 | Rozjazd kopii `renderer.js` między repo → Artist nie jest WYSIWYG | `sync-cg.sh --check` w CI; Artist wydawany z wersją modułów oznaczoną tagiem CG System |
 | Rozjazd formatu show | `vizrs-model` jako jedna implementacja walidacji, wersja schematu, test kontraktu w obu repo |
 | Import w Ruście daje inny wynik niż `btb-io.js` | test porównawczy na wszystkich fixture'ach przed usunięciem JS |
-| Utrata Artist w przeglądarce na VPS | decyzja §7 pkt 2 – rekomendacja: zostawić zamrożony do 3.0 |
+| Utrata Artist w przeglądarce na VPS | `/artist` zamrożony do 3.0 (§7 pkt 2) |
+| WebKitGTK 6.0 renderuje inaczej niż Chromium (tekst, skalowanie ułamkowe – WebKit #271714) | `tools/engines.js` jako bramka w A2; zapas: okno wry/GTK 3 do czasu poprawki |
 
-## 7. Decyzje do podjęcia
+## 7. Decyzje (2026-11-07)
 
-1. **Toolkit okna:** zostajemy przy tao + wry (jak `source/shell/`) – rekomendacja, bo kanwa i panele to WebView.
-2. **Los `/artist` w serwerze:** zamrożony zapas (praca zdalna na VPS bez instalacji) czy usunięty po A7?
-3. **Gdzie `vizrs-model`:** w tym repo (rekomendacja, serwer jest właścicielem formatu) czy w osobnym „VizRS Core”.
-4. **Nazwa i licencja** nowego repo.
+1. **Okno: GTK 4 + WebKitGTK 6.0** (`gtk4`, `webkit6`). Kolejność platform: Linux, potem Windows. GTK 4 nie ma
+   WebView na Windows – tam okno zostaje na wry (WebView2) z tymi samymi modułami bez GUI i tym samym mostem IPC;
+   wybór okna w osobnym module, reszta aplikacji wspólna. macOS pominięty.
+2. **`/artist` w serwerze:** zostaje **zamrożony** jako zapas do pracy zdalnej na VPS (bez instalacji) do wydania 3.0;
+   nowe funkcje Artist powstają tylko w VizRS CG Artist.
+3. **`vizrs-model` zostaje w tym repo** (serwer jest właścicielem formatu show); VizRS CG Artist zależy od niego przez git z tagiem.
+4. **Nazwa:** repo i aplikacja **VizRS CG Artist** (binarka `vizrs-cg-artist`). Licencja – do ustalenia przy zakładaniu repo (A2).
 
 ## 8. Zmiany w tym repo wynikające z planu
 
 - A1: crate `vizrs-model` (struktura w CLAUDE.md, DOKUMENTACJA – walidacja).
 - A2: źródło prawdy dla modułów JS współdzielonych z Artist (opis w CLAUDE.md jak przy `text-model.js`).
-- A7: CLAUDE.md, DOKUMENTACJA, `tests/e2e/artist.js`, `source/shell/` – odesłania do nowego repo; `docs/plany/README.md` – stan.
+- A7: CLAUDE.md, DOKUMENTACJA, `source/shell/` – odesłania do VizRS CG Artist; `/artist` i `tests/e2e/artist.js` zostają jako zamrożony zapas; `docs/plany/README.md` – stan.

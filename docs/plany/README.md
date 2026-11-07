@@ -15,7 +15,7 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-lekkie-output.md](PLAN-lekkie-output.md) | L1–L4 wdrożone (2026-10-24), L5 później | lekkie `/output` dla bezgłowego Chromium bez GPU (Ampere A1): `?fps=N`, schodkowe efekty, wskazówki dla scen kanału |
 | [PLAN-panel-wlasciwosci.md](PLAN-panel-wlasciwosci.md) | P1–P7 wdrożone (2026-11-07), P8 czeka | prostszy panel Właściwości w Artist: zwijane sekcje, wiersze złożone, tryb podstawowy, widoczność warunkowa, szukanie, zakładki |
 | [PLAN-jeden-ruch.md](PLAN-jeden-ruch.md) | propozycja (J1–J7), wariant C wybrany | jeden model ruchu w Artist: presety BTB jako klipy na wspólnej osi czasu z kluczami, import BTB bez ręcznych poprawek (LUKI #7, #8, #11) |
-| [PLAN-artist-osobny.md](PLAN-artist-osobny.md) | propozycja (A0–A8), kanwa zostaje w JS (decyzja 2026-11-07) | VizRS Artist jako osobna aplikacja w osobnym repo: okno, pliki, import BTB, paczki i walidacja w Ruście, kanwa i panele w JS |
+| [PLAN-artist-osobny.md](PLAN-artist-osobny.md) | zaplanowany (A0–A8), decyzje podjęte 2026-11-07 | **VizRS CG Artist** – osobne repo i aplikacja: okno GTK 4 + WebKitGTK 6.0, pliki, import BTB, paczki i walidacja w Ruście, kanwa i panele w JS; `/artist` w serwerze zamrożony do 3.0 |
 
 ## Plany dalekosiężne
 
