@@ -33,6 +33,16 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 - **Gdzie co opisywać:** README tylko wprowadza i odsyła; opis działania tylko w `docs/DOKUMENTACJA.md` (nie powielaj go w README ani w planach); wdrożenie i awarie – `docs/RUNBOOK.md`; paczki – `examples/README.md`; nowy plan – `docs/plany/` + wiersz w `docs/plany/README.md`.
 - **Dokumentacja razem z kodem:** commit zmieniający zachowanie (UI, skróty, format show, API, opcje CLI) aktualizuje w tym samym commicie `docs/DOKUMENTACJA.md`, a gdy dotyczy codziennej pracy — także `docs/INSTRUKCJA-poczatkujacy.md`; API → `docs/API.md`; zmiany wydania → `CHANGELOG.md` (sekcja „Niewydane”); zamknięta luka → wiersz z `docs/LUKI.md`.
 
+## Współpraca z Gemini
+
+Szczegóły: [docs/AGENCI.md](docs/AGENCI.md) (ten sam podział co w `../VizRS CG Artist`). W skrócie:
+
+- **Claude dowodzi i jako jedyny pisze kod** (także `source/web/`, `source/shell/src/bridge.rs` z białą listą, `validate.rs`, `deploy/`, `.github/`, pliki zasad).
+- **Gemini wykonuje lekkie zadania:** redaguje wskazane pliki `.md`, uruchamia kompilację i bramkę, streszcza długie wyjścia, przeszukuje źródła (także `../VizRS CG Artist`, BTB CG). Nie commituje.
+- Gemini to Antigravity CLI: `~/.gemini/bin/agy` (poza `PATH`), wywołanie i przełączniki – AGENCI §5. Logi (bramka, kompilacja, testy) czytaj sam przez plik i filtr (`tail`, `grep`) – to tańsze niż zlecenie (AGENCI §4). Zlecaj Gemini prozę dokumentacji, przeszukiwanie dużych źródeł i nieustrukturyzowane logi; decyzje i kod zostają u Claude.
+- Po zleceniu porównaj `git status` z migawką sprzed zlecenia i przejrzyj diff – wynik Gemini to propozycja; każdą liczbę, ścieżkę i stan etapu sprawdź z kodem (Gemini dopowiada fakty).
+- `GEMINI.md` tylko odsyła do `CLAUDE.md` i `docs/AGENCI.md`, nie powiela zasad.
+
 ## Uruchamianie
 
 ```bash

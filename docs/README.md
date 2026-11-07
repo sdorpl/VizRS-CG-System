@@ -27,4 +27,5 @@
 | [LUKI.md](LUKI.md) | znane braki, uszeregowane G1 → G2 → G3 |
 | [plany/](plany/README.md) | plany i analizy (rozbudowa 2.0, tickery, okna i serwer, playout kanału, lekkie wyjście, raport porównawczy z BTB) |
 | [../CLAUDE.md](../CLAUDE.md) | zasady pracy z kodem, struktura, testy, commity (programiści i agenci) |
+| [AGENCI.md](AGENCI.md), [../GEMINI.md](../GEMINI.md) | podział pracy Claude (kod, decyzje) i Gemini / Antigravity CLI (dokumentacja, bramka, streszczenia) |
 | [../examples/archiwum/BTB_CG/README.md](../examples/archiwum/BTB_CG/README.md), [BTB_ALPHA](../examples/archiwum/BTB_ALPHA/README.md), [BTB_TRIO](../examples/archiwum/BTB_TRIO/README.md) | źródła paczek BTB: pochodzenie wzorców, różnice względem BTB CG |
