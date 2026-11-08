@@ -9,6 +9,10 @@ OBS (albo vMix, Tricaster, ATEM przez Fill/Key) pobiera przez źródło **Przegl
 - Projektowanie scen: zainstaluj osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases)** (`vizrs-cg-artist`, Tauri 2: Linux .deb/.rpm/AppImage, Windows .msi/instalator, macOS .dmg; działa bez serwera, sceny wysyła na serwer vizrs).
 - Show w `vizrs-data/show.json`, pliki graficzne w `vizrs-data/assets/`, kopie zapasowe w `vizrs-data/backups/`.
 
+## Pakiet VizRS
+
+VizRS CG System to jedna z czterech aplikacji pakietu VizRS, które mają być ze sobą **zawsze zgodne**: **VizRS CG System** (to repo; silnik grafiki, Trio, `/output`), [VizRS CG Playout](../VirtRS%20CG%20Playout) (grafika i sloty na żywo na kanałach ErsatzTV), [VizRS Live](../VizRS%20Live) (panel kanału nad ErsatzTV legacy) i [VizRS CG Artist](../VizRS%20CG%20Artist) (edytor grafik i animacji). Styki i zasady zgodności: [DOKUMENTACJA §1](docs/DOKUMENTACJA.md#pakiet-vizrs--zgodność-aplikacji).
+
 ## Uruchomienie
 
 ```bash
