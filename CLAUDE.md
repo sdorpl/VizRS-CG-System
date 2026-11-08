@@ -35,13 +35,14 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 
 ## Współpraca z Gemini
 
-Szczegóły: [docs/AGENCI.md](docs/AGENCI.md) (ten sam podział co w `../VizRS CG Artist`). W skrócie:
+Szczegóły: [docs/AGENCI.md](docs/AGENCI.md); ten sam podział obowiązuje w całym pakiecie VizRS. W skrócie:
 
 - **Claude dowodzi i jako jedyny pisze kod** (także `source/web/`, `source/shell/src/bridge.rs` z białą listą, `validate.rs`, `deploy/`, `.github/`, pliki zasad).
 - **Gemini wykonuje lekkie zadania:** redaguje wskazane pliki `.md`, uruchamia kompilację i bramkę, streszcza długie wyjścia, przeszukuje źródła (także `../VizRS CG Artist`, BTB CG). Nie commituje.
-- Gemini to Antigravity CLI: `~/.gemini/bin/agy` (poza `PATH`), wywołanie i przełączniki – AGENCI §5. Logi (bramka, kompilacja, testy) czytaj sam przez plik i filtr (`tail`, `grep`) – to tańsze niż zlecenie (AGENCI §4). Zlecaj Gemini prozę dokumentacji, przeszukiwanie dużych źródeł i nieustrukturyzowane logi; decyzje i kod zostają u Claude.
-- Po zleceniu porównaj `git status` z migawką sprzed zlecenia i przejrzyj diff – wynik Gemini to propozycja; każdą liczbę, ścieżkę i stan etapu sprawdź z kodem (Gemini dopowiada fakty).
-- `GEMINI.md` tylko odsyła do `CLAUDE.md` i `docs/AGENCI.md`, nie powiela zasad.
+- **Kontekst Gemini:** `AGENTS.md` to dowiązanie do tego pliku – `agy` sam wczytuje `AGENTS.md` i `GEMINI.md`, także w `-p` (pomiar agy 1.5.3, 2026-11-08: plik 19 KB w całości); importów `@plik` nie rozwija. Zasady zmieniaj tylko tutaj, `GEMINI.md` opisuje wyłącznie rolę wykonawcy i niczego stąd nie powiela.
+- **Wywołanie:** `~/.gemini/bin/agy` (poza `PATH`), przełączniki – AGENCI §5. Wygodniej przez wrapper wtyczki antigravity: `PATH="$HOME/.gemini/bin:$PATH" agy-delegate [--tier flash|flash-lo] [--digest] [--mode plan] --dir . "<zlecenie>"`. Wrapper sam stawia `-p` na końcu i odcina stdin. Zamiast kodu 0 zwraca kod błędu: 10 – limit, 11 – logowanie, 12 – przekroczony czas, 14 – brak modelu, 15 – odmowa uprawnień, 3 – pusta odpowiedź. Na stderr wypisuje wiersz `AGY_USAGE` z tokenami i modelem. Tylko subskrypcja Google (bez kluczy API). `--yolo` / `--dangerously-skip-permissions` – nigdy: daje zgodę na cały komputer, a `--sandbox` jej nie ogranicza.
+- **Próg opłacalności:** każde zlecenie ma koszt stały (zlecenie, czekanie, przegląd). Małe, jednorazowe i wymagające decyzji zadania rób sam – ich zlecanie to zmierzona strata. Zlecaj duże porcje tekstu przy niewielu decyzjach: prozę dokumentacji (też w kilku repozytoriach naraz, AGENCI §5), przeszukanie dużych źródeł, nieustrukturyzowane logi. Jedno duże zlecenie zamiast wielu małych. Bierz streszczenie (`--digest`), nie surowe wyjście; plików, które przerobił Gemini, nie czytaj ponownie – przeglądaj diff. Logi (bramka, kompilacja, testy) czytaj sam przez plik i filtr (`tail`, `grep`) – AGENCI §4.
+- **Weryfikacja:** przed zleceniem migawka `git status` (i `git diff`, gdy pliki mają już zmiany), po zleceniu przegląd diffu – razem z usuniętymi wierszami. Kod 0 i raport „gotowe” niczego nie dowodzą. Bramkę uruchom sam, w czystym stanie – `agy` potrafi zmienić środowisko (połatać pakiety, podstawić atrapy), żeby test przeszedł. Każdą liczbę, ścieżkę i stan etapu sprawdź z kodem (Gemini dopowiada fakty).
 
 ## Uruchamianie
 
