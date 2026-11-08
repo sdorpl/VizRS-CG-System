@@ -11,6 +11,7 @@
   - Test E2E `source/tests/e2e/shell.js` sprawdza okno Trio oraz odrzucenie `artist` (15/15 zaliczone 2026-11-07).
 - **`/artist` w serwerze jako zamrożony zapas:** edytor `/artist` serwowany przez serwer vizrs pozostaje jako zamrożony zapas do pracy w przeglądarce (np. na zdalnym VPS bez instalacji) do wydania 3.0; komendy `vizrs artist` (okno aplikacji Chromium) i `start-*.bat/sh artist` otwierają ten zamrożony `/artist`. Nowe funkcje edytora powstają wyłącznie w VizRS CG Artist. Testy `tests/e2e/artist.js` zostają w repozytorium.
 - **Paczki instalacyjne i skróty:**
+  - **Pakowanie Windows (Inno Setup & launchery):** dodano skrypt Inno Setup `deploy/windows/installer.iss` generujący instalator `VizRS-Trio-<wersja>-windows-x86_64-setup.exe` w GitHub Actions oraz zestaw skryptów startowych `.bat` (Trio, Trio zdalne, Serwer) z ikoną `vizrs.ico` i dokumentacją dołączany do archiwum `.zip`.
   - Pakiet `.deb` (`deploy/deb/build.sh`) bez wpisu „VizRS Artist” i bez typów MIME (usunięto `deploy/vizrs-mime.xml` – skojarzenia `.cgpack`/`.vizrs.json` należą do paczki VizRS CG Artist).
   - AppImage budowany wyłącznie jako `VizRS-Trio-…AppImage` (`deploy/appimage/build.sh`).
   - Skróty na Linuksie (`deploy/install-desktop-linux.sh`) i Windowsie (`deploy/install-windows-shortcuts.ps1`) tworzą tylko wpisy „VizRS Trio” (+ „VizRS Serwer” na Windows).

@@ -54,9 +54,23 @@ jobs:
           done
           cp README.md CHANGELOG.md dist/$d/ 2>/dev/null || true
           cp -r examples/*.cgpack dist/$d/ 2>/dev/null || true
+          if [ "$RUNNER_OS" = Windows ]; then
+            cp deploy/windows/*.bat dist/$d/ 2>/dev/null || true
+            cp deploy/windows/README-Windows.txt dist/$d/ 2>/dev/null || true
+            cp deploy/windows/vizrs.ico dist/$d/ 2>/dev/null || true
+            cp deploy/install-windows-shortcuts.ps1 dist/$d/ 2>/dev/null || true
+          fi
           cd dist
           if [ "$RUNNER_OS" = Windows ]; then 7z a -tzip $d.zip $d >/dev/null; else tar czf $d.tar.gz $d; fi
           rm -rf $d; ls -la
+      - name: Buduj instalator Windows (Inno Setup)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $v = "${{ env.VERSION }}".TrimStart('v')
+          if (-not $v) { $v = "2.0.2" }
+          iscc "/DAppVersion=$v" deploy/windows/installer.iss
+          Get-ChildItem dist
       - uses: actions/upload-artifact@v4
         with:
           name: bin-${{ matrix.name }}
@@ -137,5 +151,6 @@ jobs:
             **Serwer (Docker):** `docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data ghcr.io/${{ github.repository_owner }}/vizrs:${{ env.VERSION }}`
             **Linux:** `VizRS-Trio-*.AppImage` – dołączane po budowie lokalnej (sumy: `SHA256SUMS-AppImage.txt`; wymaga WebKitGTK 4.1, bez niego okno Chromium; dane w `~/.local/share/vizrs`).
             **Debian / Ubuntu (22.04+):** `sudo apt install ./vizrs_*_amd64.deb` – okna Trio i „Trio – serwer zdalny” w menu, usługa `vizrs` (wyłączona).
+            **Windows:** `VizRS-Trio-*-windows-x86_64-setup.exe` (instalator) lub archiwum przenośne `.zip` z launcherami `.bat`.
             **Projektowanie scen:** osobny program [VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases) (Linux, Windows, macOS); `/artist` serwera – zamrożony zapas w przeglądarce.
             **Windows / macOS / Linux:** archiwum z `vizrs`, `vizrs-app`, `vizrs-shell`.
