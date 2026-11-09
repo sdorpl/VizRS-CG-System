@@ -423,11 +423,19 @@ impl App {
         let p_load = proxy.clone();
         let p_ipc = proxy.clone();
         let page_ok = nav_ok.clone();
+        // Windows: bez wskazanego katalogu WebView2 zakłada dane obok programu („vizrs-shell.exe.WebView2”),
+        // a w C:\Program Files nie ma prawa zapisu – okno nie powstaje (instalator „dla wszystkich”)
+        #[cfg(target_os = "windows")]
+        let mut web_ctx = wry::WebContext::new(Some(paths::state_dir().join("WebView2")));
+        #[cfg(target_os = "windows")]
+        let builder = WebViewBuilder::new_with_web_context(&mut web_ctx);
+        #[cfg(not(target_os = "windows"))]
+        let builder = WebViewBuilder::new();
         let builder = if kind == Kind::Connect {
             let data = connect::page_data(&connect::Saved::load(), &self.base(), self.token.as_deref(), self.local.as_deref());
-            WebViewBuilder::new().with_html(connect::PAGE).with_initialization_script(data)
+            builder.with_html(connect::PAGE).with_initialization_script(data)
         } else {
-            WebViewBuilder::new().with_url(url)
+            builder.with_url(url)
         };
         let builder = builder
             .with_devtools(true)

@@ -1,5 +1,9 @@
 # VizRS – historia zmian
 
+## Niewydane
+
+- **Windows – instalator 2.0.20 nie uruchamiał okna Trio:** `vizrs-shell` nie wskazywał WebView2 katalogu danych, więc silnik zakładał go obok programu (`vizrs-shell.exe.WebView2`). Przy instalacji „dla wszystkich użytkowników” (`C:\Program Files\VizRS`) brak prawa zapisu kończył się błędem tworzenia WebView i okno się nie otwierało. Dane WebView2 trafiają teraz do `%LOCALAPPDATA%\VizRS\WebView2`.
+
 ## 2.0.20 (2026-11-09) – „Ampere A1 & Trio”
 
 - **Optymalizacja obrazu Docker pod Oracle Ampere A1 (ARM64, Neoverse-N1):**
