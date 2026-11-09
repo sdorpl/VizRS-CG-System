@@ -35,7 +35,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 ; Binarki i skrypty
 Source: "..\..\source\target\release\vizrs.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\source\target\release\vizrs-app.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: ; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\source\target\release\vizrs-app.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\..\source\shell\target\release\vizrs-shell.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "vizrs.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README-Windows.txt"; DestDir: "{app}"; Flags: ignoreversion
