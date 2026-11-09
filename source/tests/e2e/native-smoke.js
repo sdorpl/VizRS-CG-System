@@ -49,12 +49,19 @@ const health = (port) => new Promise((res) => {
     ok(fs.existsSync(BIN) && fs.existsSync(SHELL), 'programy istnieją', [BIN, SHELL]);
     const out = path.join(tmp, 'probe.json');
     const args = ['trio', '--port', String(PORT), '--probe', PROBE, '--probe-out', out];
-    if (!INSTALLED) args.push('--data', path.join(tmp, 'data'), '--vizrs', BIN);
+    // katalog danych: podany albo domyślny okna (Windows bez --data: %LOCALAPPDATA%\VizRS, jak skrót instalatora)
+    const data = INSTALLED ? (process.platform === 'win32' ? path.join(process.env.LOCALAPPDATA || '', 'VizRS') : null) : path.join(tmp, 'data');
+    if (!INSTALLED) args.push('--data', data, '--vizrs', BIN);
     const t0 = Date.now();
+    // wyjście okna do pliku, nie do potoku: serwer uruchomiony przez okno mógłby odziedziczyć uchwyt potoku (Windows)
+    // i spawnSync czekałby na jego zakończenie zamiast na zamknięcie okna
+    const logPath = path.join(tmp, 'okno.log'), log = fs.openSync(logPath, 'w');
     // jak skrót: katalog roboczy = katalog programu
-    const run = spawnSync(SHELL, args, { cwd: path.dirname(SHELL), encoding: 'utf8', timeout: 150000 });
+    const run = spawnSync(SHELL, args, { cwd: path.dirname(SHELL), stdio: ['ignore', log, log], timeout: 150000 });
+    fs.closeSync(log);
+    const stderr = fs.readFileSync(logPath, 'utf8').split('\n').filter((l) => l.trim() && !/libEGL|Gtk-WARNING|^\s*$/.test(l)).join('\n');
     const r = fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, 'utf8')) : null;
-    console.log(`okno: ${((Date.now() - t0) / 1000).toFixed(1)} s, kod ${run.status}${run.stderr ? ', stderr: ' + run.stderr.trim().slice(0, 400) : ''}`);
+    console.log(`okno: ${((Date.now() - t0) / 1000).toFixed(1)} s, kod ${run.status}${stderr ? ', komunikaty: ' + stderr.trim().slice(0, 400) : ''}`);
     ok(!!r && !r.error, 'okno Trio wstaje i wykonuje skrypt w WebView', r || { status: run.status, signal: run.signal, error: run.error?.message });
     if (r) {
       ok(r.title?.startsWith('VizRS Trio') && r.conn === 'połączono' && r.pages > 0, 'Trio łączy się z serwerem uruchomionym przez okno i pokazuje strony', r);
@@ -68,13 +75,20 @@ const health = (port) => new Promise((res) => {
       ok(!fs.existsSync(SHELL + '.WebView2'), 'brak danych WebView2 obok programu (Program Files bez prawa zapisu)');
       if (INSTALLED && local) ok(fs.existsSync(path.join(local, 'VizRS', 'show.json')) || fs.existsSync(path.join(local, 'VizRS', '.vizrs.lock')), 'bez --data: dane w %LOCALAPPDATA%\\VizRS');
     }
-    // serwer uruchomiony przez okno kończy pracę sam (--idle-exit); port to pierwszy wolny od PORT
-    let alive = null;
-    for (let p = PORT; p < PORT + 20 && !alive; p++) if (await health(p)) alive = p;
-    if (alive) {
+    // serwer uruchomiony przez okno: adres z jego blokady katalogu danych; po zamknięciu okna działa jeszcze --idle-exit (10 s),
+    // potem kończy pracę sam i zwalnia blokadę
+    if (data) {
+      const lockFile = path.join(data, '.vizrs.lock');
+      let lock = null;
+      try { lock = JSON.parse(fs.readFileSync(lockFile, 'utf8')); } catch { /* brak blokady */ }
+      const port = Number(String(lock?.addr || '').split(':').pop());
+      const h = port ? await health(port) : null;
+      ok(!!h && h.instance === lock.instance, 'serwer uruchomiony przez okno działa po jego zamknięciu (czeka --idle-exit)', { lock, h });
       let gone = false;
-      for (let i = 0; i < 40 && !gone; i++) { await sleep(1000); gone = !(await health(alive)); }
-      ok(gone, 'serwer uruchomiony przez okno kończy pracę sam po zamknięciu okna');
+      for (let i = 0; i < 40 && !gone && port; i++) { await sleep(1000); gone = !(await health(port)); }
+      ok(gone, 'serwer kończy pracę sam, gdy nie ma okien ani wyjść');
+      for (let i = 0; i < 10 && fs.existsSync(lockFile); i++) await sleep(300);
+      ok(!fs.existsSync(lockFile), 'serwer zwolnił blokadę katalogu danych');
     }
   } catch (e) {
     console.error(e);
