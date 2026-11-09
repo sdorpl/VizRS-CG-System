@@ -103,7 +103,7 @@ Gotowy zestaw kluczy możesz zapisać jako **preset animacji** (Właściwości, 
 ## 6. Wyświetlenie w OBS
 
 1. OBS → Źródła → **+** → **Przeglądarka**.
-2. URL `http://localhost:8088/output`, szerokość 1920, wysokość 1080.
+2. URL wyjścia, szerokość 1920, wysokość 1080. Adres najprościej skopiować z Trio: przycisk **OBS ⧉** nad monitorem PGM (w oknie natywnym także menu **Wyjście → Adres dla OBS…**) – okno sam wybiera port, więc nie zawsze jest to `http://localhost:8088/output`.
 3. Zaznacz **„Odśwież przeglądarkę, gdy scena staje się aktywna”** – po odświeżeniu VizRS odtwarza bieżący stan anteny.
 4. Opcjonalnie: Trio jako dock w OBS (*Docki → Niestandardowe docki przeglądarki* → `http://localhost:8088/trio`).
 

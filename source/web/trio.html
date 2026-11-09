@@ -192,6 +192,7 @@
       <header><h3>Program (wyjście OBS)</h3>
         <select id="bgSel" title="Tło monitora PGM (nie wpływa na wyjście OBS)"><option value="checker">szachownica</option><option value="#000000">czarne</option><option value="#ffffff">białe</option><option value="#00b140">zielone (key)</option><option value="#0047bb">niebieskie (key)</option><option value="custom">inne…</option></select>
         <input type="color" id="bgCol" value="#808080" title="Własny kolor tła" style="display:none">
+        <button id="pgmObs" class="icon" title="Adres wyjścia do wklejenia w OBS (źródło Przeglądarka)">OBS ⧉</button>
         <a id="pgmOpen" href="/output?checker=1&status=1" target="_blank" class="dim" style="font-size:12px">otwórz ↗</a></header>
       <div id="monitors">
         <div class="mon checker"><span id="pgmTag" style="position:absolute;left:6px;top:6px;z-index:5;font-size:11px;font-weight:700;color:#fff;background:var(--red);padding:1px 6px;border-radius:3px">PGM</span><iframe id="pgm" src="/output?checker=1"></iframe></div>
@@ -941,6 +942,25 @@ function setPgmBg(v, col) {
 $('#bgSel').onchange = (e) => setPgmBg(e.target.value);
 $('#bgCol').oninput = (e) => setPgmBg('custom', e.target.value);
 $('#pgm').addEventListener('load', applyPgmBg);
+
+// adres wyjścia dla OBS: w oknie natywnym nie ma paska adresu, a okno samo wybiera wolny port (8088 albo kolejny)
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch { /* np. strona spoza bezpiecznego kontekstu */ }
+  const ta = Object.assign(document.createElement('textarea'), { value: t });
+  ta.style.cssText = 'position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select();
+  const ok = document.execCommand('copy'); ta.remove(); return ok;
+}
+async function showObsUrl() {
+  const h = await api('GET', '/health').catch(() => ({}));
+  const url = location.origin + '/output' + (ant ? '?bus=ch-' + encodeURIComponent(ant) : '') + (h.tokenRequired ? (ant ? '&' : '?') + 'token=' + (h.outputToken ? 'TOKEN_WYJŚCIA' : 'TOKEN') : '');
+  const text = 'OBS Studio → Źródła → ＋ → Przeglądarka: wklej adres, szerokość 1920, wysokość 1080.' +
+    (ant ? `\nAdres dotyczy kanału ${ant}.` : '') +
+    (h.tokenRequired ? `\nSerwer wymaga tokenu: w miejsce ${h.outputToken ? 'TOKEN_WYJŚCIA wpisz token wyjścia (--output-token, tylko odczyt)' : 'TOKEN wpisz token serwera'}.` : '') +
+    '\nOBS na innym komputerze: zamiast 127.0.0.1 / localhost adres tego komputera w sieci (serwer uruchomiony z --bind 0.0.0.0 i tokenem).';
+  const v = await askText(text, { title: 'Adres wyjścia dla OBS', value: url, ok: 'Kopiuj', cancel: 'Zamknij' });
+  if (v) toast(await copyText(v) ? 'Skopiowano adres dla OBS' : 'Nie udało się skopiować – zaznacz adres i Ctrl+C', false);
+}
+$('#pgmObs').onclick = showObsUrl;
 $('#antSel').onchange = async (e) => {
   const v = e.target.value;
   if (v === '-') {
@@ -1351,6 +1371,7 @@ const winTitle = () => {
   return `${dirtyPage ? '● ' : ''}VizRS Trio${connected ? '' : ' – ⚠ BRAK POŁĄCZENIA'}${n ? ` – NA ANTENIE (${n})` : ''}`;
 };
 nativeBridge({
+  commands: { obs: showObsUrl },
   state: () => ({ title: winTitle(), dirty: dirtyPage, undo: false, redo: false, alert: !connected, scene: null }),
   save: () => savePage(),
   whatChanged: () => `Strona ${draft?.number ?? ''} ma niezapisane zmiany.`,

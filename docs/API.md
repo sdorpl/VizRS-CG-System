@@ -13,7 +13,7 @@ Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna a
 | `POST /<rodzaj>`, `PUT /<rodzaj>/<id>`, `DELETE /<rodzaj>/<id>` | rodzaje: `scenes`, `pages`, `playlists`, `rundowns`, `macros`; `rev` w ciele = wykrywanie konfliktu (409) |
 | `GET /state` | stan anteny (warstwy, `pending`, `hasDock`/`dockOff`), preview, rundowny (kursor, odegrane), `errors`, `saveError`, `locks`, `rev` |
 | `GET /variables` | płaski słownik zmiennych dla Companion (`layer_main`, `layer_main_name`, `layers_on_air`, `rundown_<id>_next`…) |
-| `GET /health`, `GET /api/health` | zdrowie systemu: status, wersja, uptime, wyjścia, błędy scen, ostatnie zdarzenie, kopie, `instance` (identyfikator procesu serwera z blokady katalogu danych). `?attach=1` – pyta okno, które zaraz się podłączy: serwer `--idle-exit` / `--linger` zaczyna odliczanie od nowa (zwykłe `/health` z monitoringu go nie podtrzymuje) |
+| `GET /health`, `GET /api/health` | zdrowie systemu: status, wersja, uptime, wyjścia, błędy scen, ostatnie zdarzenie, kopie, `instance` (identyfikator procesu serwera z blokady katalogu danych), `tokenRequired` / `outputToken` – czy serwer wymaga tokenu i czy ma token wyjścia (same flagi, bez wartości). `?attach=1` – pyta okno, które zaraz się podłączy: serwer `--idle-exit` / `--linger` zaczyna odliczanie od nowa (zwykłe `/health` z monitoringu go nie podtrzymuje) |
 
 ## Playout
 | Ścieżka | Opis |

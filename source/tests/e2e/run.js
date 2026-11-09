@@ -675,6 +675,15 @@ async function waitUp() {
     await trio.click('#bClear'); await trio.waitForSelector('.dlg'); await trio.keyboard.press('Enter'); await sleep(500);
     ok((await api('/api/state')).layers.length === 0, 'okno pytania: Enter zatwierdza (antena czysta)');
 
+    // --- Trio: adres wyjścia dla OBS (okno natywne nie ma paska adresu, port wybiera samo) ---
+    await trio.click('#pgmObs');
+    const obsUrl = await trio.locator('.dlg-input').inputValue();
+    ok(obsUrl === B + '/output?token=TOKEN', 'adres dla OBS: host i port serwera, przypomnienie o tokenie', obsUrl);
+    ok(/1920/.test(await trio.locator('.dlg-text').innerText()), 'adres dla OBS: wymiary źródła Przeglądarka');
+    await trio.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+    await trio.click('.dlg button.acc'); await sleep(300);
+    ok(await trio.evaluate(() => navigator.clipboard.readText()) === obsUrl, 'adres dla OBS: Kopiuj kładzie adres do schowka');
+
     // --- Trio: okno Stan systemu ---
     await trio.click('#bSys');
     await sleep(600);

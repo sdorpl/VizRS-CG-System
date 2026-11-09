@@ -288,6 +288,7 @@ struct MenuIds {
     logs: MenuId,
     data_dir: MenuId,
     updates: MenuId,
+    obs: MenuId,
     /// wyjście na monitorze (numer na liście monitorów)
     screens: Vec<(MenuId, usize)>,
     fill_key: Option<MenuId>,
@@ -320,6 +321,7 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
     let logs = item("Pokaż logi", None);
     let data_dir = item("Otwórz katalog danych", None);
     let updates = item("Sprawdź aktualizacje", None);
+    let obs = item("Adres dla OBS…", None);
     let screen_items: Vec<MenuItem> = monitors.iter().enumerate().map(|(i, m)| item(&monitor_label(i, m), None)).collect();
     let fill_key_item = (monitors.len() >= 2).then(|| item("Fill + Key na monitorach 1 i 2", None));
     let ids = MenuIds {
@@ -339,6 +341,7 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
         logs: logs.id().clone(),
         data_dir: data_dir.id().clone(),
         updates: updates.id().clone(),
+        obs: obs.id().clone(),
         screens: screen_items.iter().enumerate().map(|(i, m)| (m.id().clone(), i)).collect(),
         fill_key: fill_key_item.as_ref().map(|m| m.id().clone()),
     };
@@ -354,6 +357,8 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
     .expect("menu Plik");
     let view = Submenu::with_items("Widok", true, &[&reload, &fullscreen, &sep(), &zoom_in, &zoom_out, &zoom_reset, &sep(), &devtools]).expect("menu Widok");
     let out = Submenu::new("Wyjście", true);
+    out.append(&obs).expect("menu Wyjście");
+    out.append(&sep()).expect("menu Wyjście");
     for m in &screen_items {
         out.append(m as &dyn IsMenuItem).expect("menu Wyjście");
     }
@@ -934,6 +939,18 @@ impl App {
         }
         if *id == ids.data_dir {
             return open_external(&std::fs::canonicalize(&self.data).unwrap_or_else(|_| self.data.clone()).to_string_lossy());
+        }
+        if *id == ids.obs {
+            // adres zna strona Trio (host, port, antena, token); okno wyjścia go nie pokazuje
+            let trio = self.focused.filter(|f| self.wins.get(f).is_some_and(|w| w.kind == Kind::Trio)).or_else(|| self.wins.iter().find(|(_, w)| w.kind == Kind::Trio).map(|(i, _)| *i));
+            match trio.and_then(|t| self.wins.get(&t)) {
+                Some(w) => {
+                    w.window.set_focus();
+                    w.webview.evaluate_script("window.__vizrsCmd && window.__vizrsCmd('obs')").ok();
+                }
+                None => error_dialog("Adres dla OBS pokazuje okno Trio – otwórz je: Plik → Nowe okno Trio."),
+            }
+            return;
         }
         if *id == ids.updates {
             return open_external(RELEASES);

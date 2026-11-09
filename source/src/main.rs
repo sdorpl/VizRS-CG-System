@@ -611,6 +611,12 @@ fn res<T>(r: Result<T, String>, f: impl FnOnce(T) -> Response) -> Response {
     }
 }
 
+/// `/health`: stan silnika, instancja serwera i to, czy wyjście potrzebuje tokenu (Trio podpowiada wtedy adres dla OBS
+/// z `?token=`). Same flagi, nigdy wartości tokenów.
+fn health(engine: &Engine, cfg: &Config) -> Json {
+    engine.health().with("instance", cfg.instance.as_str()).with("tokenRequired", cfg.token.is_some()).with("outputToken", cfg.output_token.is_some())
+}
+
 fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
     let m = req.method.as_str();
     if m == "OPTIONS" {
@@ -668,7 +674,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
         if req.q("attach").is_some() {
             HEALTH_PINGS.fetch_add(1, Ordering::SeqCst);
         }
-        return Response::json(&engine.health().with("instance", cfg.instance.as_str()));
+        return Response::json(&health(engine, cfg));
     }
     if s.first() != Some(&"api") {
         return Response::err(404, "nie znaleziono");
@@ -829,7 +835,7 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
             engine.clear_errors();
             Response::ok()
         }
-        ("GET", ["health"]) => Response::json(&engine.health().with("instance", cfg.instance.as_str())),
+        ("GET", ["health"]) => Response::json(&health(engine, cfg)),
         ("GET", ["locks"]) => Response::json(&engine.locks_json()),
         ("POST" | "PUT", ["lock", kind, id]) => res(engine.lock(kind, id, req.q("who").unwrap_or("")), |j| Response::json(&j)),
         ("DELETE" | "POST", ["unlock", kind, id]) => Response::json(&engine.unlock(kind, id, req.q("who").unwrap_or(""), req.q("force") == Some("1"))),
@@ -1298,6 +1304,7 @@ mod tests {
         let (c, b) = call(&e, &cfg, "GET", "/health", "");
         assert_eq!(c, 200);
         assert!(b.contains("\"status\":\"ok\""));
+        assert!(b.contains("\"tokenRequired\":false") && b.contains("\"outputToken\":false"), "{b}");
         assert_eq!(call(&e, &cfg, "GET", "/api/health", "").0, 200);
         assert_eq!(call(&e, &cfg, "POST", "/api/report", r#"{"scene":"s","layer":"main","message":"x"}"#).0, 200);
         assert!(call(&e, &cfg, "GET", "/api/errors", "").1.contains("\"count\":1"));

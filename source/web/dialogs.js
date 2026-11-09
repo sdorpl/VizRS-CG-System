@@ -1,7 +1,7 @@
 // Okna pytań w stylu aplikacji zamiast confirm() / prompt() przeglądarki: tamte w oknie natywnym mają w tytule adres
 // serwera („127.0.0.1:8088 says”) i przyciski OK / Anuluj. Tu przyciski nazywają czynność, Enter zatwierdza, Esc anuluje.
 //   ask(tekst, { title, ok, cancel, danger }) → Promise<boolean>
-//   askText(tekst, { title, value, ok, placeholder }) → Promise<string | null>   (pusty tekst = null)
+//   askText(tekst, { title, value, ok, cancel, placeholder }) → Promise<string | null>   (pusty tekst = null)
 //   choose(tekst, [{ label, value, danger }], { title }) → Promise<value | null>
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -67,11 +67,11 @@ export function ask(text, { title = '', ok = 'OK', cancel = 'Anuluj', danger = f
   });
 }
 
-export function askText(text, { title = '', value = '', ok = 'OK', placeholder = '' } = {}) {
+export function askText(text, { title = '', value = '', ok = 'OK', cancel = 'Anuluj', placeholder = '' } = {}) {
   return open({
     title, text, input: { value, placeholder },
     buttons: [
-      { label: 'Anuluj', cancel: true, value: () => null },
+      { label: cancel, cancel: true, value: () => null },
       { label: ok, main: true, cls: 'acc', value: (v) => (v ?? '').trim() || null },
     ],
   });

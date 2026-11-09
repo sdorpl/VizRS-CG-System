@@ -34,6 +34,11 @@ fs.writeFileSync(PROBE, `(async () => {
     dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await sleep(200);
     r.dialogClosed = !document.querySelector('.dlg');
+    // menu okna Wyjście → Adres dla OBS woła tę samą komendę
+    window.__vizrsCmd('obs');
+    for (let i = 0; i < 30 && !document.querySelector('.dlg-input'); i++) await sleep(100);
+    r.obsUrl = document.querySelector('.dlg-input')?.value || null;
+    dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   } catch (e) { r.error = String(e); }
   window.ipc.postMessage('probe:' + JSON.stringify(r));
 })();`);
@@ -68,6 +73,7 @@ const health = (port) => new Promise((res) => {
       ok(r.native && r.shell?.menu === true, 'most okna natywnego (menu systemowe pod prawym przyciskiem)', r.shell);
       ok(/Zdjąć wszystkie grafiki/.test(r.dialog || '') && r.dialogClosed, 'okno pytania aplikacji (nie confirm przeglądarki), Esc zamyka', r);
       ok(/system-ui/.test(r.font || ''), 'czcionka systemu w oknie natywnym', r.font);
+      ok(/^http:\/\/127\.0\.0\.1:\d+\/output$/.test(r.obsUrl || ''), 'adres wyjścia dla OBS z portem wybranym przez okno', r.obsUrl);
     }
     if (process.platform === 'win32') {
       const local = process.env.LOCALAPPDATA;
