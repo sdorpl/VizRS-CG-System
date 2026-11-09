@@ -16,6 +16,9 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-panel-wlasciwosci.md](PLAN-panel-wlasciwosci.md) | P1–P7 wdrożone (2026-11-07), P8 czeka | prostszy panel Właściwości w Artist: zwijane sekcje, wiersze złożone, tryb podstawowy, widoczność warunkowa, szukanie, zakładki |
 | [PLAN-jeden-ruch.md](PLAN-jeden-ruch.md) | propozycja (J1–J7), wariant C wybrany | jeden model ruchu w Artist: presety BTB jako klipy na wspólnej osi czasu z kluczami, import BTB bez ręcznych poprawek (LUKI #7, #8, #11) |
 | [PLAN-artist-osobny.md](PLAN-artist-osobny.md) | A0, A2–A4, A6, A7 wdrożone (2026-11-07); A1, A5 – do zrobienia | **VizRS CG Artist** – osobne repo i aplikacja (Tauri 2: Linux, Windows, macOS, wydanie 0.3.0 z 2026-11-07): pliki i okno w Ruście, kanwa i panele w JS (walidacja `vizrs-model` i import BTB w Ruście – A1, A5); w VizRS CG System: `vizrs-shell` tylko Trio/wyjście, `/artist` w serwerze zamrożony do 3.0 |
+| [PLAN-ampere-optymalizacja.md](PLAN-ampere-optymalizacja.md) | projekt techniczny (2026-11-09) | optymalizacja VizRS CG System i renderera natywnego `vizrs-render` na Oracle Ampere A1 (ARM64, Neoverse-N1) |
+| [PLAN-playout-ampere-optymalizacja.md](PLAN-playout-ampere-optymalizacja.md) | projekt techniczny (2026-11-09) | optymalizacja VizRS CG Playout, wrappera `vizrs-ffmpeg`, filtru `overlay` i koderów pod Ampere A1 |
+| [PLAN-live-ampere-optymalizacja.md](PLAN-live-ampere-optymalizacja.md) | projekt techniczny (2026-11-09) | optymalizacja VizRS Live (ErsatzTV legacy + Next), środowiska .NET CLR, profili FFmpeg i skanera mediów na Ampere A1 |
 
 ## Plany dalekosiężne
 

@@ -1,7 +1,10 @@
 # VizRS – historia zmian
 
-## Niewydane
+## 2.0.20 (2026-11-09) – „Ampere A1 & Trio”
 
+- **Optymalizacja obrazu Docker pod Oracle Ampere A1 (ARM64, Neoverse-N1):**
+  - Wieloplatformowy `Dockerfile` kompiluje statyczną binarkę `vizrs` na platformie budującej za pomocą `rust-lld` z dedykowanymi flagami mikroarchitektury: `RUSTFLAGS="-C target-cpu=neoverse-n1 -C opt-level=3"` dla `linux/arm64` (szybki build bez narzutu emulacji QEMU).
+  - Wdrożenie planów technicznych optymalizacji toru FFmpeg i renderera natywnego pod bezpłatne instancje OCI Ampere A1 (`PLAN-ampere-optymalizacja.md`, `PLAN-playout-ampere-optymalizacja.md`, `PLAN-live-ampere-optymalizacja.md`).
 - **VizRS CG Artist jako osobna aplikacja (krok A7 planu):** projektowanie scen to od teraz osobny program **VizRS CG Artist** (`vizrs-cg-artist`, repozytorium https://github.com/sdorpl/VizRS-CG-Artist, wydanie 0.3.0 z 2026-11-07, Tauri 2: Linux .deb/.rpm/AppImage, Windows .msi/instalator, macOS .dmg). Działa bez serwera (zapis/odczyt plików `.cgpack` i `.show.json`), a gotowe sceny wysyła na serwer vizrs.
 - **Okno natywne `vizrs-shell` tylko dla Trio i wyjścia:**
   - Domyślny rodzaj okna to `trio`; `vizrs-shell artist` oraz przekazanie pliku (`.cgpack`, `.vizrs.json`) kończą się komunikatem odsyłającym do VizRS CG Artist i kodem wyjścia 2.

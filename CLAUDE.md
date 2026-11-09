@@ -126,7 +126,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json`, `BTB_CG/`, `BTB_ALPHA/`, `BTB_TRIO/`, `assets/` (używane przez testy) |
 | `deploy/`, `render.yaml` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
 | `docs/` | dokumentacja (spis: `docs/README.md`); `docs/plany/` – plany i raport (dokumenty projektowe, nie opis bieżącego działania) |
-| `Dockerfile` | obraz `scratch` ze statyczną binarką musl |
+| `Dockerfile` | obraz `scratch` ze statyczną binarką musl; wieloarchitekturowy (amd64, arm64 z optymalizacją pod Ampere A1 Neoverse-N1: `-C target-cpu=neoverse-n1 -C opt-level=3` przez `rust-lld` bez emulacji QEMU) |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |
 | `vizrs-data/` | dane użytkownika (`show.json`, `assets/`, `backups/`, `log.jsonl`) — w `.gitignore`; przy pustym katalogu serwer wczytuje demo |
 
