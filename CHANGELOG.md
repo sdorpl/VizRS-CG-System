@@ -2,6 +2,10 @@
 
 ## Niewydane
 
+## 2.1.0 (2026-11-09) – „Natywnie”
+
+Naprawiony instalator Windows z 2.0.20 i okno Trio, które mniej przypomina przeglądarkę: pytania aplikacji, menu systemowe, stan anteny w pasku zadań. Okno natywne sprawdzane w CI na prawdziwym Windows (z instalatora) i macOS.
+
 - **Instalator Windows:** skróty bez wpisanej ścieżki danych – każdy użytkownik pracuje na swoim `%LOCALAPPDATA%\VizRS` (wcześniej `{userappdata}` z chwili instalacji, czyli katalog konta, które instalowało); dane z instalatora 2.0.20 (`%APPDATA%\VizRS\vizrs-data`) zostają w użyciu, dopóki w nowym miejscu nie ma show. „VizRS Serwer” przez `serwer.bat` z tym samym wyborem. Brak WebView2 Runtime → instalator po cichu instaluje go z dołączonego instalatora Microsoftu (pobieranego przez akcję Release), a gdy się nie uda – komunikat.
 - **CI – okno natywne na prawdziwym Windows i macOS** (`shell-smoke`, `tests/e2e/native-smoke.js`): Windows buduje instalator, instaluje „dla wszystkich” do `Program Files`, uruchamia Trio jak skrót (bez `--data`), sprawdza połączenie z serwerem, most, okno pytania, położenie danych WebView2, skrót i deinstalację; macOS – okno z budowy.
 - **Okno natywne – menu pod prawym przyciskiem:** systemowe menu (Windows, macOS, GTK) na liście stron Trio (TAKE, ARM, CONTINUE / UPDATE / OUT, Duplikuj, Usuń) i na liście warstw anteny (CONTINUE, OUT, dock, Wdróż); komunikat `menu` mostu z limitami w `bridge.rs`.

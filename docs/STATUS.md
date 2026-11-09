@@ -5,7 +5,7 @@
 > **Ostatnia aktualizacja:** 2026-11-07
 
 ## Bieżący etap
-**Wydanie 2.0.19 „Porządek”** (2026-11-07). Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
+**Wydanie 2.1.0 „Natywnie”** (2026-11-09): naprawiony instalator Windows, okno Trio z pytaniami aplikacji, menu systemowym i stanem anteny w pasku zadań, test okna w CI na Windows i macOS. Plan F0–F4 wdrożony w całości; zawartość wydań: [CHANGELOG.md](../CHANGELOG.md). Kolejne prace wynikają z [LUKI.md](LUKI.md).
 
 **Osobny Artist (VizRS CG Artist)** – krok A7 planu [plany/PLAN-artist-osobny.md](plany/PLAN-artist-osobny.md) wdrożony (2026-11-07): projektowanie scen to od teraz osobny program **VizRS CG Artist** (`vizrs-cg-artist`, repo https://github.com/sdorpl/VizRS-CG-Artist, wydanie 0.3.0 z 2026-11-07, Tauri 2). W `vizrs-shell` okno Artist usunięte – powłoka obsługuje tylko Trio i wyjście (podgląd); `vizrs-shell artist` i podanie pliku kończą się błędem (kod 2) z odesłaniem do VizRS CG Artist. Paczki `.deb` i AppImage bez wpisów Artist (tylko Trio; brak skojarzeń MIME `.cgpack`/`.vizrs.json`), a `/artist` serwera zostaje jako zamrożony zapas w przeglądarce do 3.0.
 
