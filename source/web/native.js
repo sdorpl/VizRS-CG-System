@@ -28,7 +28,17 @@ function askClose(what, save, discard) {
   d.querySelector('.acc').focus();
 }
 
-// state() → { title, dirty, undo, redo, scene }; draft() → { id, text } kopii roboczej albo null
+// Systemowe menu pod prawym przyciskiem (okno vizrs-shell). items: [{ id, label, enabled }, '-'], pick(id) po wyborze.
+// false = okno nie ma menu systemowego (przeglądarka, inne okna) – strona zostawia zwykłe zachowanie.
+let menuPick = null;
+export function contextMenu(items, pick) {
+  if (!shell?.menu) return false;
+  menuPick = pick;
+  post({ t: 'menu', items });
+  return true;
+}
+
+// state() → { title, dirty, undo, redo, alert, scene }; draft() → { id, text } kopii roboczej albo null
 export function nativeBridge({ state, save, whatChanged, draft, commands = {} }) {
   if (!shell) return { sync() {}, clearDraft() {} };
   let last = '', draftId = null, draftText = null, parts = null;
@@ -40,6 +50,7 @@ export function nativeBridge({ state, save, whatChanged, draft, commands = {} })
   };
   window.__vizrsCmd = (name, arg) => {
     if (name === 'close') askClose(whatChanged(), save, clearDraft);
+    else if (name === 'menu') { const f = menuPick; menuPick = null; f?.(arg); }
     else commands[name]?.(arg);
   };
   window.__vizrsFile = {

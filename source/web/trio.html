@@ -263,7 +263,7 @@
 <script type="module">
 import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, layerZ, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor, DEFAULT_TZ } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
-import { nativeBridge } from '/native.js';
+import { nativeBridge, contextMenu } from '/native.js';
 import { ask, askText, choose } from '/dialogs.js';
 import { visLen, limitText, polish } from '/field-rules.js';
 
@@ -1344,8 +1344,14 @@ addEventListener('keydown', (e) => {
 });
 addEventListener('beforeunload', (e) => { if (dirtyPage) { e.preventDefault(); e.returnValue = ''; } });
 // okno natywne: tytuł ze znacznikiem zmian i pytanie przy zamykaniu
+// tytuł widać w pasku zadań / Docku: stan anteny i połączenia bez przełączania się do okna
+let connected = true;
+const winTitle = () => {
+  const n = state.layers.length;
+  return `${dirtyPage ? '● ' : ''}VizRS Trio${connected ? '' : ' – ⚠ BRAK POŁĄCZENIA'}${n ? ` – NA ANTENIE (${n})` : ''}`;
+};
 nativeBridge({
-  state: () => ({ title: `${dirtyPage ? '● ' : ''}VizRS Trio`, dirty: dirtyPage, undo: false, redo: false, scene: null }),
+  state: () => ({ title: winTitle(), dirty: dirtyPage, undo: false, redo: false, alert: !connected, scene: null }),
   save: () => savePage(),
   whatChanged: () => `Strona ${draft?.number ?? ''} ma niezapisane zmiany.`,
 });
@@ -1354,12 +1360,51 @@ nativeBridge({
 if (document.documentElement.classList.contains('native')) {
   addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea, [contenteditable]')) e.preventDefault(); });
 }
+// systemowe menu pod prawym przyciskiem: strona na liście (wybiera ją) i warstwa na antenie
+$('#pages').addEventListener('contextmenu', async (e) => {
+  const it = e.target.closest('.item[data-id]'); if (!it || !window.__vizrsShell?.menu) return;
+  e.preventDefault();
+  if (!(await trySelect(it.dataset.id)) || !draft) return;
+  const pid = draft.id, air = !!onAirLayer(pid);
+  const acts = { take, arm, cont, upd, out, dup: () => $('#pDup').onclick(), del: () => $('#pDel').onclick() };
+  contextMenu([
+    { id: 'take', label: `TAKE ${draft.number} (F1)` },
+    { id: 'arm', label: 'ARM – podgląd (F6)' },
+    '-',
+    { id: 'cont', label: 'CONTINUE (F2)', enabled: air },
+    { id: 'upd', label: 'UPDATE (F4)', enabled: air },
+    { id: 'out', label: 'OUT (F3)', enabled: air },
+    '-',
+    { id: 'dup', label: 'Duplikuj stronę' },
+    { id: 'del', label: 'Usuń stronę…' },
+  ], (id) => { if (draft?.id === pid) acts[id]?.(); }); // TAKE tylko strony, dla której otwarto menu
+});
+$('#layers').addEventListener('contextmenu', (e) => {
+  const row = e.target.closest('.item'), lay = row?.querySelector('[data-lout]')?.dataset.lout;
+  if (lay === undefined || !window.__vizrsShell?.menu) return;
+  e.preventDefault();
+  // lista warstw odświeża się przy każdej zmianie anteny – komendy idą po nazwie warstwy, nie po elemencie wiersza
+  const dock = row.querySelector('[data-ldock]')?.dataset.off, pending = !!row.querySelector('[data-ldeploy]'), L = encodeURIComponent(lay);
+  const acts = {
+    cont: () => act(() => api('POST', onAnt('/api/continue/' + L)), 'CONTINUE'),
+    out: () => act(() => api('POST', onAnt('/api/out/' + L)), 'OUT'),
+    dock: () => act(() => api('POST', onAnt(`/api/dock/${L}/${dock === '1' ? 'off' : 'on'}`)), 'Dock'),
+    deploy: () => act(() => api('POST', onAnt('/api/deploy/' + L)), 'Wdrożenie'),
+  };
+  contextMenu([
+    { id: 'cont', label: `CONTINUE ${lay} – następny stop` },
+    { id: 'out', label: `OUT ${lay} – zdejmij z anteny` },
+    ...(dock !== undefined ? ['-', { id: 'dock', label: dock === '1' ? 'Wyłącz powiązanie (dock)' : 'Włącz powiązanie (dock)' }] : []),
+    ...(pending ? ['-', { id: 'deploy', label: 'Wdróż nową wersję szablonu' }] : []),
+  ], (id) => acts[id]?.());
+});
 
 // ------------------------------------------------------------ zdarzenia z serwera
 connectEvents((ev) => {
   if (ev.t === 'show') { loadShow(); return; }
   loadState();
 }, (ok) => {
+  connected = ok;
   $('#conn').textContent = ok ? 'połączono' : 'brak połączenia';
   $('#conn').className = 'pill ' + (ok ? 'ok' : 'on');
   if (ok) loadState();

@@ -89,6 +89,9 @@ static ACTIVE: AtomicUsize = AtomicUsize::new(0);
 /// Otwarte strumienie zdarzeń (okna Trio/Artist, wyjścia) – po zamknięciu okna aplikacji serwer
 /// działa dalej, dopóki ktoś z niego korzysta.
 static SSE_OPEN: AtomicUsize = AtomicUsize::new(0);
+/// Zapytania `/health?attach=1`: okno sprawdza, czy serwer żyje, zanim do niego dołączy – każde odsuwa `--idle-exit`.
+/// Zwykłe `/health` (monitoring) nie trzyma serwera przy życiu.
+static HEALTH_PINGS: AtomicUsize = AtomicUsize::new(0);
 
 struct SseSlot;
 impl SseSlot {
@@ -201,20 +204,39 @@ fn serve(cfg: Config) {
     }
 }
 
-/// Kończy proces, gdy przez `linger_s` s nie ma żadnego strumienia zdarzeń (okna, wyjścia OBS).
-/// Do pierwszego połączenia czeka co najmniej 30 s (okno mogło jeszcze nie zdążyć się połączyć).
-fn exit_when_idle(linger_s: u64, running: Running, started: std::time::Instant) -> ! {
-    let (mut seen, mut idle) = (false, 0);
-    loop {
-        if SSE_OPEN.load(Ordering::SeqCst) > 0 {
-            seen = true;
-            idle = 0;
-        } else if seen || started.elapsed() > Duration::from_secs(30) {
-            idle += 1;
-            if idle > linger_s {
-                break;
-            }
+/// Odliczanie `--idle-exit` / `--linger` (co sekundę jeden krok).
+struct Idle {
+    linger_s: u64,
+    seen: bool,
+    idle: u64,
+    pings: usize,
+}
+
+impl Idle {
+    fn new(linger_s: u64) -> Idle {
+        Idle { linger_s, seen: false, idle: 0, pings: 0 }
+    }
+    /// true = koniec pracy. Otwarty strumień zdarzeń albo nowe `/health?attach=1` (okno właśnie sprawdziło serwer i zaraz się
+    /// podłączy) zeruje odliczanie – bez tego okno mogło dołączyć do serwera w ostatniej sekundzie przed zakończeniem.
+    /// Do pierwszego połączenia czeka co najmniej 30 s (okno mogło jeszcze nie zdążyć się połączyć).
+    fn tick(&mut self, sse_open: usize, pings: usize, since_start: Duration) -> bool {
+        let pinged = pings != self.pings;
+        self.pings = pings;
+        if sse_open > 0 || pinged {
+            self.seen |= sse_open > 0;
+            self.idle = 0;
+        } else if self.seen || since_start > Duration::from_secs(30) {
+            self.idle += 1;
         }
+        self.idle > self.linger_s
+    }
+}
+
+/// Kończy proces, gdy przez `linger_s` s nie ma żadnego strumienia zdarzeń (okna, wyjścia OBS).
+fn exit_when_idle(linger_s: u64, running: Running, started: std::time::Instant) -> ! {
+    let mut idle = Idle::new(linger_s);
+    idle.pings = HEALTH_PINGS.load(Ordering::SeqCst);
+    while !idle.tick(SSE_OPEN.load(Ordering::SeqCst), HEALTH_PINGS.load(Ordering::SeqCst), started.elapsed()) {
         std::thread::sleep(Duration::from_secs(1));
     }
     println!("Brak podłączonych okien i wyjść – serwer kończy pracę.");
@@ -643,6 +665,9 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
     }
 
     if s == ["health"] && m == "GET" {
+        if req.q("attach").is_some() {
+            HEALTH_PINGS.fetch_add(1, Ordering::SeqCst);
+        }
         return Response::json(&engine.health().with("instance", cfg.instance.as_str()));
     }
     if s.first() != Some(&"api") {
@@ -1057,6 +1082,26 @@ fn tcp_client(stream: TcpStream, engine: Arc<Engine>, token: Option<String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn idle_exit_waits_after_health_ping() {
+        let t = Duration::from_secs(60);
+        let mut i = Idle::new(3);
+        assert!(!i.tick(1, 0, t)); // okno podłączone
+        for _ in 0..3 {
+            assert!(!i.tick(0, 0, t)); // okno zamknięte – odliczanie
+        }
+        // nowe okno sprawdza /health w ostatniej sekundzie: odliczanie od nowa
+        assert!(!i.tick(0, 1, t));
+        for _ in 0..3 {
+            assert!(!i.tick(0, 1, t));
+        }
+        assert!(i.tick(0, 1, t));
+        // przed pierwszym połączeniem 30 s cierpliwości
+        let mut j = Idle::new(0);
+        assert!(!j.tick(0, 0, Duration::from_secs(5)));
+        assert!(j.tick(0, 0, Duration::from_secs(31)));
+    }
     use std::path::PathBuf;
 
     #[test]
@@ -1234,6 +1279,17 @@ mod tests {
             assert_eq!(ACTIVE.load(Ordering::SeqCst), before + 1);
         }
         assert_eq!(ACTIVE.load(Ordering::SeqCst), before);
+    }
+
+    #[test]
+    fn health_attach_counts_only_windows() {
+        let (e, cfg, d) = setup("attach");
+        let before = HEALTH_PINGS.load(Ordering::SeqCst);
+        assert_eq!(call(&e, &cfg, "GET", "/health", "").0, 200);
+        assert_eq!(HEALTH_PINGS.load(Ordering::SeqCst), before, "monitoring nie trzyma serwera przy życiu");
+        assert_eq!(call(&e, &cfg, "GET", "/health?attach=1", "").0, 200);
+        assert!(HEALTH_PINGS.load(Ordering::SeqCst) > before);
+        std::fs::remove_dir_all(d).ok();
     }
 
     #[test]

@@ -33,7 +33,8 @@ pub fn running_server(data: &Path, token: Option<&str>) -> Result<Option<String>
     let Ok(text) = std::fs::read_to_string(data.join(LOCK_FILE)) else { return Ok(None) };
     let Ok(lock) = serde_json::from_str::<serde_json::Value>(&text) else { return Ok(None) };
     let (Some(addr), Some(inst)) = (lock["addr"].as_str(), lock["instance"].as_str()) else { return Ok(None) };
-    match http_get(addr, "/health", token, Duration::from_millis(1500)) {
+    // attach=1: serwer odsuwa --idle-exit, bo okno zaraz się podłączy (inaczej mógłby skończyć pracę w tej chwili)
+    match http_get(addr, "/health?attach=1", token, Duration::from_millis(1500)) {
         Ok((200, body)) => {
             let same = serde_json::from_str::<serde_json::Value>(&body).map(|h| h["instance"].as_str() == Some(inst)).unwrap_or(false);
             Ok(same.then(|| addr.to_string()))

@@ -57,14 +57,14 @@ fn pid_dead(pid: u32) -> bool {
     false
 }
 
-/// Czy właściciel pliku blokady nadal działa.
-fn alive(lock: &Json, token: Option<&str>) -> bool {
+/// Czy właściciel pliku blokady nadal działa. `attach` – pytający zaraz się podłączy (okno), co odsuwa `--idle-exit`.
+fn alive(lock: &Json, token: Option<&str>, attach: bool) -> bool {
     let pid = lock.num("pid").unwrap_or(0.0) as u32;
     if pid == std::process::id() || pid_dead(pid) {
         return false;
     }
     let (Some(addr), Some(inst)) = (lock.str("addr"), lock.str("instance")) else { return false };
-    match client::get(addr, "/health", token, Duration::from_millis(1500)) {
+    match client::get(addr, if attach { "/health?attach=1" } else { "/health" }, token, Duration::from_millis(1500)) {
         Ok((200, body)) => Json::parse(&body).ok().and_then(|h| h.str("instance").map(|i| i == inst)).unwrap_or(false),
         // serwer pod tym adresem odpowiada, ale wymaga innego tokenu – nie ryzykujemy dwóch zapisujących
         Ok((401 | 403, _)) => true,
@@ -75,7 +75,7 @@ fn alive(lock: &Json, token: Option<&str>) -> bool {
 /// Działający serwer, który trzyma katalog danych (bez zakładania blokady) – okno dołącza do niego.
 pub fn owner(data: &Path, token: Option<&str>) -> Option<Owner> {
     let lock = read(&data.join(FILE))?;
-    alive(&lock, token).then(|| Owner { pid: lock.num("pid").unwrap_or(0.0) as u32, addr: lock.str("addr").unwrap_or("").to_string() })
+    alive(&lock, token, true).then(|| Owner { pid: lock.num("pid").unwrap_or(0.0) as u32, addr: lock.str("addr").unwrap_or("").to_string() })
 }
 
 /// Zakłada blokadę dla serwera słuchającego pod `addr`. Błąd = katalog zajęty przez działający serwer.
@@ -107,7 +107,7 @@ pub fn acquire(data: &Path, addr: &str, token: Option<&str>) -> Result<DataLock,
                     read(&path)
                 });
                 match lock {
-                    Some(l) if alive(&l, token) => {
+                    Some(l) if alive(&l, token, false) => {
                         return Err(Owner { pid: l.num("pid").unwrap_or(0.0) as u32, addr: l.str("addr").unwrap_or("").to_string() });
                     }
                     _ => {

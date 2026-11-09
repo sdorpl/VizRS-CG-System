@@ -27,7 +27,7 @@ use tao::dpi::{LogicalPosition, LogicalSize};
 use tao::event::{Event, StartCause, WindowEvent};
 use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy, EventLoopWindowTarget};
 use tao::monitor::MonitorHandle;
-use tao::window::{Fullscreen, Icon, Theme, Window, WindowBuilder, WindowId};
+use tao::window::{Fullscreen, Icon, Theme, UserAttentionType, Window, WindowBuilder, WindowId};
 use serde_json::Value;
 use wry::{NewWindowResponse, PageLoadEvent, WebView, WebViewBuilder};
 
@@ -265,6 +265,8 @@ struct Win {
     scene: Option<String>,
     /// kiedy zapytano stronę o zamknięcie
     asked: Option<Instant>,
+    /// strona zgłosiła stan wymagający uwagi (brak połączenia)
+    alert: bool,
     /// pełnoekranowe wyjście: bez zapamiętywania wyglądu
     keep_state: bool,
 }
@@ -424,6 +426,8 @@ struct App {
     #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     gpu: Option<bool>,
     monitors: Vec<MonitorHandle>,
+    /// otwarte menu pod prawym przyciskiem: okno i identyfikatory pozycji ze strony
+    ctx: Option<(Menu, WindowId, HashMap<MenuId, String>)>,
 }
 
 impl App {
@@ -507,8 +511,8 @@ impl App {
             // podpowiedzi wcześniej wpisanych wartości w polach (WebView2) – to zachowanie przeglądarki, nie programu
             .with_general_autofill_enabled(false)
             .with_devtools(true)
-            // znacznik okna natywnego: strony chowają zakładki „Artist / Trio / Wyjście” (Trio i wyjście są w menu) i menu przeglądarki
-            .with_initialization_script(concat!("window.__vizrsShell = { version: '", env!("CARGO_PKG_VERSION"), "' };"))
+            // znacznik okna natywnego (menu: obsługa systemowego menu pod prawym przyciskiem): strony chowają zakładki „Artist / Trio / Wyjście” (Trio i wyjście są w menu) i menu przeglądarki
+            .with_initialization_script(concat!("window.__vizrsShell = { version: '", env!("CARGO_PKG_VERSION"), "', menu: true };"))
             .with_clipboard(true)
             // odnośniki poza serwer VizRS otwiera przeglądarka systemowa
             .with_navigation_handler(move |u| {
@@ -601,7 +605,7 @@ impl App {
         if zoom != 1.0 {
             webview.zoom(zoom).ok();
         }
-        self.wins.insert(id, Win { window, webview, zoom, kind, dirty: false, undo: false, redo: false, scene: None, asked: None, keep_state });
+        self.wins.insert(id, Win { window, webview, zoom, kind, dirty: false, undo: false, redo: false, scene: None, asked: None, alert: false, keep_state });
         self.focused = Some(id);
         Ok(())
     }
@@ -671,12 +675,17 @@ impl App {
     fn on_page(&mut self, id: WindowId, body: &str, flow: &mut ControlFlow) {
         let Some(msg) = bridge::parse(body) else { return };
         match msg {
-            bridge::Msg::State { title, dirty, undo, redo, scene } => {
+            bridge::Msg::State { title, dirty, undo, redo, alert, scene } => {
                 let suffix = self.title(Kind::Other).strip_prefix("VizRS").unwrap_or("").to_string();
                 let base = self.base();
                 let Some(w) = self.wins.get_mut(&id) else { return };
                 w.window.set_title(&format!("{title}{suffix}"));
                 (w.dirty, w.undo, w.redo) = (dirty, undo, redo);
+                // brak połączenia: okno w tle miga w pasku zadań (Windows), skacze w Docku (macOS), prosi o uwagę (Linux)
+                if alert != w.alert {
+                    w.alert = alert;
+                    w.window.request_user_attention((alert && !w.window.is_focused()).then_some(UserAttentionType::Critical));
+                }
                 if scene.is_some() && scene != w.scene {
                     w.scene = scene.clone();
                     let saved = scene.and_then(|s| std::fs::read_to_string(bridge::draft_path(&base, &s)).ok());
@@ -698,6 +707,7 @@ impl App {
                     w.asked = None;
                 }
             }
+            bridge::Msg::Menu(entries) => self.context_menu(id, entries),
             bridge::Msg::Draft { id: scene, data } => {
                 let p = bridge::draft_path(&self.base(), &scene);
                 match data {
@@ -712,6 +722,49 @@ impl App {
                 }
             }
         }
+    }
+
+    /// Systemowe menu pod prawym przyciskiem w miejscu kursora (pozycje podaje strona Trio).
+    fn context_menu(&mut self, id: WindowId, entries: Vec<bridge::MenuEntry>) {
+        let Some(w) = self.wins.get(&id) else { return };
+        let menu = Menu::new();
+        let mut map = HashMap::new();
+        for e in entries {
+            let ok = match e {
+                bridge::MenuEntry::Separator => menu.append(&PredefinedMenuItem::separator()),
+                bridge::MenuEntry::Item { id: cmd, label, enabled } => {
+                    let it = MenuItem::new(label, enabled, None);
+                    map.insert(it.id().clone(), cmd);
+                    menu.append(&it)
+                }
+            };
+            if ok.is_err() {
+                return;
+            }
+        }
+        #[cfg(target_os = "windows")]
+        {
+            use muda::ContextMenu;
+            use tao::platform::windows::WindowExtWindows;
+            // SAFETY: uchwyt okna żyje razem z `w.window`; menu jest modalne (wraca po wyborze albo zamknięciu)
+            unsafe { menu.show_context_menu_for_hwnd(w.window.hwnd(), None) };
+        }
+        #[cfg(target_os = "linux")]
+        {
+            use muda::ContextMenu;
+            use tao::platform::unix::WindowExtUnix;
+            use webkit2gtk::glib::Cast;
+            menu.show_context_menu_for_gtk_window(w.window.gtk_window().upcast_ref(), None);
+        }
+        #[cfg(target_os = "macos")]
+        {
+            use muda::ContextMenu;
+            use tao::platform::macos::WindowExtMacOS;
+            // SAFETY: widok okna żyje razem z `w.window`
+            unsafe { menu.show_context_menu_for_nsview(w.window.ns_view(), None) };
+        }
+        // menu musi żyć do wyboru pozycji (GTK pokazuje je asynchronicznie)
+        self.ctx = Some((menu, id, map));
     }
 
     /// Prośba kolejnego uruchomienia: istniejące okno na wierzch albo nowe.
@@ -865,6 +918,13 @@ impl App {
     }
 
     fn on_menu(&mut self, id: &MenuId, target: &EventLoopWindowTarget<UserEvent>, proxy: &EventLoopProxy<UserEvent>, flow: &mut ControlFlow) {
+        if let Some((_, win, map)) = &self.ctx {
+            if let (Some(cmd), Some(w)) = (map.get(id), self.wins.get(win)) {
+                let js = format!("window.__vizrsCmd && window.__vizrsCmd('menu', {})", Value::from(cmd.as_str()));
+                w.webview.evaluate_script(&js).ok();
+                return;
+            }
+        }
         let ids = &self.ids;
         if *id == ids.connect {
             return self.open_connect(target, proxy);
@@ -1005,7 +1065,7 @@ fn main() {
         });
     }
     let local_start = (args.data.clone(), port, args.vizrs.clone());
-    let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note, data: args.data.clone(), quitting: false, gpu: args.gpu, monitors };
+    let mut app = App { base: Arc::new(Mutex::new(base)), local, local_token: args.token.clone(), local_start, token, probe, menu, ids, wins: HashMap::new(), focused: None, server_note, data: args.data.clone(), quitting: false, gpu: args.gpu, monitors, ctx: None };
     let first = args.kind;
 
     event_loop.run(move |event, target, flow| {
