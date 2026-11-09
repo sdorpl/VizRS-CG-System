@@ -101,8 +101,9 @@ begin
   if WebView2Installed then
     Exit;
 #endif
-  SuppressibleMsgBox('Okno VizRS Trio potrzebuje Microsoft Edge WebView2 Runtime, którego nie ma w tym systemie' +
-    #13#10 + 'i nie udało się go zainstalować. Pobierz go ze strony Microsoftu (szukaj: „WebView2 Runtime”)' +
-    #13#10 + 'i zainstaluj. Do tego czasu działa skrót „VizRS Serwer” i Trio w przeglądarce: http://localhost:8088/trio',
+  // wiersz nie może zaczynać się od # (preprocesor ISPP wziąłby go za dyrektywę) – znaki nowej linii na końcu wierszy
+  SuppressibleMsgBox('Okno VizRS Trio potrzebuje Microsoft Edge WebView2 Runtime, którego nie ma w tym systemie' + #13#10 +
+    'i nie udało się go zainstalować. Pobierz go ze strony Microsoftu (szukaj: „WebView2 Runtime”)' + #13#10 +
+    'i zainstaluj. Do tego czasu działa skrót „VizRS Serwer” i Trio w przeglądarce: http://localhost:8088/trio',
     mbError, MB_OK, IDOK);
 end;
