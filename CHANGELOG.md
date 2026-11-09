@@ -2,6 +2,10 @@
 
 ## Niewydane
 
+## 2.1.1 (2026-11-09) – wydanie serwisowe
+
+- **Adres wyjścia dla OBS w oknie natywnym:** okno Trio nie ma paska adresu i samo wybiera wolny port, więc operator nie miał skąd wziąć adresu `/output`. Przycisk **OBS ⧉** nad monitorem PGM (także w przeglądarce) i menu okna **Wyjście → Adres dla OBS…** pokazują gotowy adres (host, port, kanał anteny, przypomnienie o `?token=`) z przyciskiem Kopiuj i ustawieniami źródła Przeglądarka. `/health` podaje `tokenRequired` i `outputToken` (same flagi).
+
 ## 2.1.0 (2026-11-09) – „Natywnie”
 
 Naprawiony instalator Windows z 2.0.20 i okno Trio, które mniej przypomina przeglądarkę: pytania aplikacji, menu systemowe, stan anteny w pasku zadań. Okno natywne sprawdzane w CI na prawdziwym Windows (z instalatora) i macOS.
