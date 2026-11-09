@@ -264,6 +264,7 @@
 import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, layerZ, FONTS, TYPES, PROPS, stripMarkup, walk, squeezeFloor, DEFAULT_TZ } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
 import { nativeBridge } from '/native.js';
+import { ask, askText, choose } from '/dialogs.js';
 import { visLen, limitText, polish } from '/field-rules.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -368,7 +369,7 @@ function renderTemplates() {
 }
 
 $('#pages').addEventListener('click', (e) => { const it = e.target.closest('.item[data-id]'); if (it) trySelect(it.dataset.id); });
-$('#pages').addEventListener('dblclick', (e) => { const it = e.target.closest('.item[data-id]'); if (it) { trySelect(it.dataset.id); take(); } });
+$('#pages').addEventListener('dblclick', (e) => { const it = e.target.closest('.item[data-id]'); if (it) trySelect(it.dataset.id).then((ok) => ok && take()); });
 $('#filter').addEventListener('input', renderPages);
 $('#tpls').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-newpage]'); if (!b) return;
@@ -387,16 +388,18 @@ $('#pDup').onclick = async () => {
   } catch (err) { toast(err.message, true); }
 };
 $('#pDel').onclick = async () => {
-  if (!selId || !confirm(`Usunąć stronę ${draft.number} „${draft.name}”?`)) return;
+  if (!selId || !(await ask(`Usunąć stronę ${draft.number} „${draft.name}”?`, { ok: 'Usuń', danger: true }))) return;
   await api('DELETE', '/api/pages/' + selId);
   show.pages = show.pages.filter((p) => p.id !== selId); selId = null; draft = null; dirtyPage = false;
   await loadShow();
 };
 
-function trySelect(id) {
-  if (id === selId) return;
-  if (dirtyPage && !confirm('Strona ma niezapisane zmiany. Porzucić?')) return;
-  selectPage(id);
+// true = strona wybrana; bez niezapisanych zmian wybór dzieje się od razu (przed pierwszym await)
+async function trySelect(id) {
+  if (id === selId) return true;
+  if (dirtyPage && !(await ask('Strona ma niezapisane zmiany.', { ok: 'Porzuć zmiany', cancel: 'Zostań', danger: true }))) return false;
+  if (id !== selId) selectPage(id);
+  return true;
 }
 
 // ------------------------------------------------------------ edytor strony
@@ -671,18 +674,18 @@ async function setLayer(layer) {
   const s = sceneOf(draft); if (!s) return;
   const post = (force) => api('POST', `/api/layer/${draft.number}${force ? '?force=1' : ''}`, { layer });
   try {
-    const r = await post().catch((e) => {
+    const r = await post().catch(async (e) => {
       if (!/^konflikt/.test(e.message)) throw e;
-      return confirm(`${e.message.replace(/^konflikt: /, '')}.\n\nOK = zastąp ją (zejdzie z anteny), Anuluj = nie zmieniaj warstwy.`) ? post(true) : null;
+      return (await ask(`${e.message.replace(/^konflikt: /, '')}.\n\nZastąpienie zdejmie ją z anteny.`, { ok: 'Zastąp', cancel: 'Nie zmieniaj warstwy', danger: true })) ? post(true) : null;
     });
     if (r) toast(`Szablon „${s.name}”: warstwa ${r.layer} (stron: ${r.pages})`);
   } catch (e) { toast(`Warstwa: ${e.message}`, true); }
   loadState();
 }
-$('#elayer').onchange = (e) => {
+$('#elayer').onchange = async (e) => {
   const sel = e.target, s = sceneOf(draft), cur = s?.layer || 'main';
   let layer = sel.value;
-  if (layer === NEW_LAYER) layer = prompt('Nazwa nowej warstwy (litery, cyfry, - i _). Numer z<N>_ ustala kolejność, np. z5_ticker', '')?.trim();
+  if (layer === NEW_LAYER) layer = await askText('Litery, cyfry, - i _. Numer z<N>_ ustala kolejność, np. z5_ticker', { title: 'Nowa warstwa', ok: 'Utwórz', placeholder: 'z5_ticker' });
   sel.blur(); // skróty klawiszowe znów działają od razu
   if (layer && layer !== cur) setLayer(layer); else sel.value = cur;
 };
@@ -895,7 +898,7 @@ const isConflict = (e) => /^konflikt/.test(e.message || '');
 async function savePage(force) {
   if (!draft) return true;
   applyFinalRules();
-  if (lockedBy && !confirm(`Tę stronę edytuje ${lockedBy}. Zapisać mimo to?`)) return false;
+  if (lockedBy && !(await ask(`Tę stronę edytuje ${lockedBy}.`, { ok: 'Zapisz mimo to' }))) return false;
   try {
     const body = force === true ? (({ rev, ...r }) => r)(draft) : draft; // bez rev = świadome nadpisanie
     const p = await api('PUT', '/api/pages/' + draft.id, body);
@@ -904,7 +907,7 @@ async function savePage(force) {
     return true;
   } catch (e) {
     if (isConflict(e)) {
-      if (confirm('Ta strona została zmieniona przez kogoś innego (lub inne okno).\n\nOK = nadpisz moją wersją, Anuluj = zachowaj moje zmiany bez zapisu.')) return savePage(true);
+      if (await ask('Ta strona została zmieniona przez kogoś innego (lub w innym oknie).', { ok: 'Nadpisz moją wersją', cancel: 'Nie zapisuj', danger: true })) return savePage(true);
       toast('Konflikt zapisu – zmiany nie zapisane', true);
     } else toast(e.message, true);
     return false;
@@ -938,14 +941,14 @@ function setPgmBg(v, col) {
 $('#bgSel').onchange = (e) => setPgmBg(e.target.value);
 $('#bgCol').oninput = (e) => setPgmBg('custom', e.target.value);
 $('#pgm').addEventListener('load', applyPgmBg);
-$('#antSel').onchange = (e) => {
+$('#antSel').onchange = async (e) => {
   const v = e.target.value;
   if (v === '-') {
-    if (!confirm(`Usunąć kanał ${ant}? Jego grafika zejdzie z anteny.`)) return renderAnt();
+    if (!(await ask(`Usunąć kanał ${ant}? Jego grafika zejdzie z anteny.`, { ok: 'Usuń kanał', danger: true }))) return renderAnt();
     return act(async () => { await api('DELETE', '/api/channels/' + encodeURIComponent(ant)); setAnt(''); }, 'Kanał');
   }
   if (v !== '+') return setAnt(v);
-  const name = (prompt('Numer kanału (jak w ErsatzTV):') || '').trim();
+  const name = (await askText('Numer kanału (jak w ErsatzTV):', { title: 'Nowy kanał', ok: 'Dodaj' })) || '';
   if (!/^[\w.-]{1,32}$/.test(name)) return renderAnt();
   act(async () => { await api('POST', '/api/channels/' + encodeURIComponent(name)); setAnt(name); }, 'Kanał');
 };
@@ -966,7 +969,7 @@ const upd = () => draft && (applyFinalRules(), true) && act(async () => {
 const arm = () => draft && (applyFinalRules(), true) && act(() => api('POST', `/api/arm/${draft.number}`, { values: draft.values }), 'ARM');
 const clearAll = () => act(() => api('POST', onAnt('/api/clear')), 'CLEAR');
 $('#bArm').onclick = arm; $('#bTake').onclick = take; $('#bCont').onclick = cont; $('#bOut').onclick = out; $('#bUpd').onclick = upd;
-$('#bClear').onclick = () => { if (confirm('Zdjąć wszystkie grafiki z anteny?')) clearAll(); };
+$('#bClear').onclick = async () => { if (await ask('Zdjąć wszystkie grafiki z anteny?', { ok: 'Zdejmij wszystko', danger: true })) clearAll(); };
 
 function renderLayers() {
   $('#layers').innerHTML = state.layers.map((l) => `<div class="item">
@@ -1023,12 +1026,12 @@ async function savePl(pl) {
 }
 $('#plSel').addEventListener('change', (e) => { plId = e.target.value; renderPlaylist(); });
 $('#plNew').onclick = async () => {
-  const n = prompt('Nazwa playlisty', 'Playlista ' + (show.playlists.length + 1)); if (!n) return;
+  const n = await askText('Nazwa playlisty', { title: 'Nowa playlista', value: 'Playlista ' + (show.playlists.length + 1), ok: 'Utwórz' }); if (!n) return;
   const r = await api('POST', '/api/playlists', { name: n, loop: true, items: [] });
   show.playlists.push(r); plId = r.id; renderPlaylist();
 };
 $('#plDel').onclick = async () => {
-  const pl = curPl(); if (!pl || !confirm(`Usunąć playlistę „${pl.name}”?`)) return;
+  const pl = curPl(); if (!pl || !(await ask(`Usunąć playlistę „${pl.name}”?`, { ok: 'Usuń', danger: true }))) return;
   await api('DELETE', '/api/playlists/' + pl.id);
   show.playlists = show.playlists.filter((p) => p.id !== pl.id); plId = show.playlists[0]?.id || null; renderPlaylist();
 };
@@ -1088,11 +1091,11 @@ async function saveRd(rd) {
 const newItemId = () => 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 $('#rdSel').onchange = (e) => { rdId = e.target.value; renderRundown(); };
 $('#rdNew').onclick = async () => {
-  const n = prompt('Nazwa rundownu', 'Rundown ' + ((show.rundowns?.length || 0) + 1)); if (!n) return;
+  const n = await askText('Nazwa rundownu', { title: 'Nowy rundown', value: 'Rundown ' + ((show.rundowns?.length || 0) + 1), ok: 'Utwórz' }); if (!n) return;
   try { const r = await api('POST', '/api/rundowns', { name: n, items: [] }); (show.rundowns ||= []).push(r); rdId = r.id; renderRundown(); } catch (e) { toast(e.message, true); }
 };
 $('#rdDel').onclick = async () => {
-  const rd = curRd(); if (!rd || !confirm(`Usunąć rundown „${rd.name}”?`)) return;
+  const rd = curRd(); if (!rd || !(await ask(`Usunąć rundown „${rd.name}”?`, { ok: 'Usuń', danger: true }))) return;
   await api('DELETE', '/api/rundowns/' + rd.id); show.rundowns = show.rundowns.filter((r) => r.id !== rd.id); rdId = null; renderRundown();
 };
 $('#rdAdd').onclick = () => { const rd = curRd(); if (!rd || !draft) return; (rd.items ||= []).push({ id: newItemId(), page: draft.id, note: '' }); saveRd(rd); };
@@ -1164,7 +1167,7 @@ $('#rdImp').onclick = () => {
       if (p) items.push({ id: newItemId(), page: p.id, note: (r[1] || '').trim() }); else missing.push(r[0]);
     }
     if (!items.length) return toast('Brak pasujących numerów stron w pliku', true);
-    if (rd.items?.length && !confirm(`Zastąpić ${rd.items.length} pozycji rundownu ${items.length} pozycjami z pliku?`)) return;
+    if (rd.items?.length && !(await ask(`Zastąpić ${rd.items.length} pozycji rundownu ${items.length} pozycjami z pliku?`, { ok: 'Zastąp' }))) return;
     rd.items = items; await saveRd(rd);
     toast(missing.length ? `Wczytano ${items.length}, pominięto nieznane numery: ${missing.join(', ')}` : `Wczytano ${items.length} pozycji`, !!missing.length);
   };
@@ -1192,9 +1195,9 @@ async function newMacro(name, steps) {
   try { const m = await api('POST', '/api/macros', { name, steps }); (show.macros ||= []).push(m); mcId = m.id; renderMacros(); setTab('mc'); return m; }
   catch (e) { toast(e.message, true); }
 }
-$('#mcNew').onclick = () => { const n = prompt('Nazwa makra', 'Makro ' + ((show.macros?.length || 0) + 1)); if (n) newMacro(n, []); };
+$('#mcNew').onclick = async () => { const n = await askText('Nazwa makra', { title: 'Nowe makro', value: 'Makro ' + ((show.macros?.length || 0) + 1), ok: 'Utwórz' }); if (n) newMacro(n, []); };
 $('#mcDel').onclick = async () => {
-  const m = curMc(); if (!m || !confirm(`Usunąć makro „${m.name}”?`)) return;
+  const m = curMc(); if (!m || !(await ask(`Usunąć makro „${m.name}”?`, { ok: 'Usuń', danger: true }))) return;
   await api('DELETE', '/api/macros/' + m.id); show.macros = show.macros.filter((x) => x.id !== m.id); mcId = null; renderMacros();
 };
 $('#mcSave').onclick = async () => {
@@ -1204,9 +1207,9 @@ $('#mcSave').onclick = async () => {
 };
 $('#mcRun').onclick = async () => { await $('#mcSave').onclick(); const m = curMc(); if (m) act(() => api('POST', onAnt('/api/macro/' + encodeURIComponent(m.id))), 'Makro'); };
 $('#mcStop').onclick = () => act(() => api('POST', onAnt('/api/macro/stop')), 'Makro');
-$('#mcFromAir').onclick = () => {
+$('#mcFromAir').onclick = async () => {
   if (!state.layers.length) return toast('Antena jest czysta – nie ma czego zapisać', true);
-  const n = prompt('Nazwa presetu (makra) z bieżącego stanu anteny', 'Preset ' + new Date().toLocaleTimeString('pl-PL', { timeZone: DEFAULT_TZ })); if (!n) return;
+  const n = await askText('Nazwa presetu (makra) z bieżącego stanu anteny', { title: 'Preset z anteny', value: 'Preset ' + new Date().toLocaleTimeString('pl-PL', { timeZone: DEFAULT_TZ }), ok: 'Zapisz' }); if (!n) return;
   newMacro(n, [{ delay: 0, cmd: 'CLEAR' }, ...state.layers.map((l) => ({ delay: 0, cmd: 'TAKE ' + l.page.number }))]);
 };
 setTab(tab);
@@ -1245,7 +1248,7 @@ async function openSys() {
   $('#errClear').onclick = async () => { await api('DELETE', '/api/errors'); openSys(); };
   $('#bkRestore').onclick = async () => {
     const n = $('#bkSel').value;
-    if (!n || !confirm(`Przywrócić show z kopii ${n}?\nBieżący stan zostanie zachowany jako najnowsza kopia.`)) return;
+    if (!n || !(await ask(`Przywrócić show z kopii ${n}?\nBieżący stan zostanie zachowany jako najnowsza kopia.`, { ok: 'Przywróć' }))) return;
     try { await api('POST', '/api/backups/restore/' + encodeURIComponent(n)); selId = null; dirtyPage = false; await loadShow(); toast('Przywrócono show'); $('#sysModal').classList.remove('open'); }
     catch (e) { toast(e.message, true); }
   };
@@ -1264,27 +1267,30 @@ async function loadShows() {
 $('#showSel').onchange = async () => {
   const id = $('#showSel').value, s = shows.shows.find((x) => x.id === id);
   const onAir = state.layers.length ? ' Wszystko zejdzie z anteny.' : '';
-  if (!confirm(`Przełączyć na show „${s?.name || id}”?${onAir}`)) { $('#showSel').value = shows.active; return; }
+  if (!(await ask(`Przełączyć na show „${s?.name || id}”?${onAir}`, { ok: 'Przełącz', danger: !!onAir }))) { $('#showSel').value = shows.active; return; }
   try { await api('POST', '/api/shows/switch/' + encodeURIComponent(id)); selId = null; draft = null; dirtyPage = false; await loadShow(); toast('Show: ' + (s?.name || id)); }
   catch (e) { toast(e.message, true); $('#showSel').value = shows.active; }
 };
 $('#bShowMenu').onclick = async () => {
-  const a = prompt('Show / paczka grafiki:\n1 – nowy pusty show\n2 – kopia bieżącego (te same szablony)\n3 – usuń show z listy', '2');
+  const a = await choose('Kopia bieżącego ma te same szablony.', [
+    { label: 'Usuń show z listy…', value: '3', danger: true },
+    { label: 'Nowy pusty', value: '1' },
+    { label: 'Kopia bieżącego', value: '2', main: true },
+  ], { title: 'Show / paczka grafiki' });
   if (!a) return;
   try {
-    if (a.trim() === '3') {
+    if (a === '3') {
       const other = shows.shows.filter((s) => s.id !== shows.active);
       if (!other.length) return toast('Na liście jest tylko aktywny show', true);
-      const n = prompt('Który usunąć? Podaj numer:\n' + other.map((s, i) => `${i + 1} – ${s.name}`).join('\n'));
-      const s = other[parseInt(n) - 1]; if (!s) return;
-      if (!confirm(`Usunąć show „${s.name}” z dysku?`)) return;
+      const s = await choose('Który show usunąć?', other.map((x) => ({ label: x.name, value: x })), { title: 'Usuń show' });
+      if (!s) return;
+      if (!(await ask(`Usunąć show „${s.name}” z dysku?`, { ok: 'Usuń', danger: true }))) return;
       await api('DELETE', '/api/shows/' + encodeURIComponent(s.id)); await loadShows(); toast('Usunięto: ' + s.name);
       return;
     }
-    if (a.trim() !== '1' && a.trim() !== '2') return;
-    const name = prompt('Nazwa nowego show (np. nazwa audycji):', a.trim() === '2' ? (show.name || 'Show') + ' – kopia' : '');
+    const name = await askText('Np. nazwa audycji', { title: a === '2' ? 'Kopia bieżącego show' : 'Nowy pusty show', value: a === '2' ? (show.name || 'Show') + ' – kopia' : '', ok: 'Utwórz' });
     if (!name) return;
-    await api('POST', '/api/shows', { name, copy: a.trim() === '2' });
+    await api('POST', '/api/shows', { name, copy: a === '2' });
     selId = null; draft = null; dirtyPage = false; await loadShow(); toast('Utworzono show: ' + name);
   } catch (e) { toast(e.message, true); }
 };
@@ -1303,7 +1309,7 @@ $('#bImpShow').onclick = () => {
     try {
       const s = JSON.parse(await f.text());
       if (!Array.isArray(s.scenes)) throw new Error('to nie jest plik show VizRS');
-      if (!confirm(`Zastąpić bieżący show plikiem „${f.name}”? (${s.scenes.length} scen, ${(s.pages || []).length} stron)`)) return;
+      if (!(await ask(`Zastąpić bieżący show plikiem „${f.name}”? (${s.scenes.length} scen, ${(s.pages || []).length} stron)`, { ok: 'Zastąp', danger: true }))) return;
       await api('PUT', '/api/show?force=1', s); selId = null; dirtyPage = false; await loadShow(); toast('Wczytano show');
     } catch (e) { toast('Import: ' + e.message, true); }
   };

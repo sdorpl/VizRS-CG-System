@@ -46,6 +46,8 @@ async function waitUp() {
     const page = async (url) => {
       const p = await ctx.newPage();
       p.on('pageerror', (e) => errs.push(url + ': ' + e.message));
+      // pytania zadaje okno aplikacji (dialogs.js), nie confirm()/prompt() przeglądarki
+      p.on('dialog', (d) => { if (d.type() === 'beforeunload') return d.accept(); errs.push(url + ': okienko przeglądarki: ' + d.message()); d.dismiss(); });
       await p.goto(B + url);
       return p;
     };
@@ -433,8 +435,9 @@ async function waitUp() {
       await pb.click('#pages .item'); await sleep(700);
       ok(await pb.evaluate(() => document.querySelector('#estatus').innerText.includes('Anna')), 'blokada: Jan widzi, że stronę edytuje Anna');
       ok(await pb.evaluate(() => document.querySelector('#pages').innerText.includes('Anna')), 'blokada: lista stron pokazuje 🔒 Anna');
-      pb.once('dialog', (d) => d.dismiss());
-      await pb.click('#eSave'); await sleep(300);
+      await pb.click('#eSave');
+      ok(await pb.locator('.dlg-text').innerText().then((t) => t.includes('Anna')), 'blokada: okno pytania (nie okienko przeglądarki) mówi, kto edytuje');
+      await pb.click('.dlg [data-dlg="0"]'); await sleep(300);
       ok((await api('/api/locks')).filter((l) => l.kind === 'pages').length === 1, 'blokada: Jan nie przejął blokady');
       await pa.goto(B + '/trio'); await sleep(900); // Anna wychodzi (pagehide → unlock)
       ok(!(await api('/api/locks')).some((l) => l.id === 'prules'), 'blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę');
@@ -638,26 +641,39 @@ async function waitUp() {
       const busyNum = back.number;
       const busyLayer = (await api(`/api/take/${busyNum}`)).layer;
       await sleep(500);
-      tl.once('dialog', (d) => d.dismiss());
       await tl.selectOption('#elayer', busyLayer);
+      await tl.click('.dlg [data-dlg="0"]');
       await sleep(500);
       ok((await api('/api/state')).layers.length === 2, 'warstwa: Anuluj przy zajętej warstwie niczego nie zdejmuje');
       ok(await tl.evaluate(() => document.querySelector('#elayer').value === 'front'), 'warstwa: po anulowaniu wybór wraca do bieżącej');
-      tl.once('dialog', (d) => d.accept());
       await tl.selectOption('#elayer', busyLayer);
+      await tl.waitForSelector('.dlg'); await tl.keyboard.press('Enter'); // Enter = główny przycisk („Zastąp”)
       await sleep(500);
       const st2 = await api('/api/state');
       ok(st2.layers.length === 1 && st2.layers[0].page.number === 1001 && st2.layers[0].layer === busyLayer, 'warstwa: OK zastępuje grafikę na warstwie docelowej', st2.layers);
       await tl.keyboard.press('F3'); await sleep(400);
       ok((await api('/api/state')).layers.length === 0, 'warstwa: F3 zdejmuje stronę z nowej warstwy');
-      tl.once('dialog', (d) => d.accept('z7_nowa'));
       await tl.selectOption('#elayer', '+nowa');
+      await tl.fill('.dlg-input', 'z7_nowa');
+      await tl.click('.dlg button.acc');
       await sleep(500);
       ok((await api('/api/show')).scenes.find((s) => s.id === (pgs.find((p) => p.number === 1001).scene)).layer === 'z7_nowa', 'warstwa: nowa nazwa z okienka trafia do szablonu');
       await tl.selectOption('#elayer', 'main');
       await sleep(400);
       await ctxL.close();
     }
+
+    // --- Trio: okno pytania (dialogs.js) – Esc anuluje, skróty strony nie działają pod oknem, Enter zatwierdza ---
+    await api('/api/take/1001'); await sleep(400);
+    const onAir = (await api('/api/state')).layers.length;
+    await trio.click('#bClear');
+    ok(await trio.locator('.dlg button.dlg-danger').innerText() === 'Zdejmij wszystko', 'okno pytania: przycisk nazywa czynność');
+    await trio.keyboard.press('F3'); await sleep(300);
+    ok((await api('/api/state')).layers.length === onAir && await trio.locator('.dlg').count() === 1, 'okno pytania: skrót strony (F3) nie działa pod otwartym oknem');
+    await trio.keyboard.press('Escape'); await sleep(300);
+    ok(await trio.locator('.dlg').count() === 0 && (await api('/api/state')).layers.length === onAir, 'okno pytania: Esc anuluje');
+    await trio.click('#bClear'); await trio.waitForSelector('.dlg'); await trio.keyboard.press('Enter'); await sleep(500);
+    ok((await api('/api/state')).layers.length === 0, 'okno pytania: Enter zatwierdza (antena czysta)');
 
     // --- Trio: okno Stan systemu ---
     await trio.click('#bSys');

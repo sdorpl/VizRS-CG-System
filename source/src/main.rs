@@ -60,6 +60,7 @@ const STATIC: &[Static] = &[
     Static { path: "/ticker-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-model.js") },
     Static { path: "/ticker-items.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-items.js") },
     Static { path: "/native.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/native.js") },
+    Static { path: "/dialogs.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/dialogs.js") },
     Static { path: "/color-picker.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/color-picker.js") },
     Static { path: "/ui.css", ctype: "text/css; charset=utf-8", body: include_str!("../web/ui.css") },
 ];

@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Trio – okna pytań aplikacji zamiast okienek przeglądarki:** 24 pytania (usuwanie, CLEAR ALL, zmiana i lista show, warstwa, konflikt zapisu, nazwy playlist, rundownów, makr, kanałów) zadaje nowy moduł `web/dialogs.js` zamiast `confirm()` / `prompt()`, które w oknie natywnym miały w tytule adres serwera. Przyciski nazywają czynność, czerwony oznacza zdjęcie z anteny lub usunięcie, Enter / Esc, skróty Trio wyłączone pod otwartym oknem; menu show to przyciski zamiast wpisywania numeru. Podwójny klik strony z niezapisanymi zmianami robi TAKE dopiero po wyborze „Porzuć zmiany” (wcześniej po Anuluj szła na antenę poprzednia strona).
+- **Okno natywne – mniej przeglądarki, więcej aplikacji:** okno pokazuje się z narysowaną stroną (bez białego błysku), ciemny motyw okna, czcionka systemu w interfejsie, bez przeciągania obrazków i „odbijania” strony; Windows: bez skrótów przeglądarki (Ctrl+F/P/R, Alt+←) i podpowiedzi w polach, ciemne kontrolki WebView2; macOS: menu aplikacji VizRS (Usługi, Ukryj, Zakończ), Edycja z systemowymi Kopiuj/Wklej (⌘C/⌘V w polach tekstowych) i menu Okno.
 - **Windows – instalator 2.0.20 nie uruchamiał okna Trio:** `vizrs-shell` nie wskazywał WebView2 katalogu danych, więc silnik zakładał go obok programu (`vizrs-shell.exe.WebView2`). Przy instalacji „dla wszystkich użytkowników” (`C:\Program Files\VizRS`) brak prawa zapisu kończył się błędem tworzenia WebView i okno się nie otwierało. Dane WebView2 trafiają teraz do `%LOCALAPPDATA%\VizRS\WebView2`.
 
 ## 2.0.20 (2026-11-09) – „Ampere A1 & Trio”

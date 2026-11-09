@@ -88,3 +88,21 @@ html.native .topbar .brand, html.native .topbar nav, html.native .topbar .navsep
 /* pasek stanu na dole okna */
 .statusbar { display: flex; align-items: center; gap: 12px; height: 24px; padding: 0 10px; background: #0b0c0e; border-top: 1px solid var(--line); font-size: 11px; color: var(--dim); flex: none; white-space: nowrap; overflow: hidden; }
 .statusbar .hint { overflow: hidden; text-overflow: ellipsis; }
+/* ---------- okna pytań (dialogs.js) zamiast confirm()/prompt() przeglądarki ---------- */
+.dlg-back { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 3000; display: flex; align-items: center; justify-content: center; }
+.dlg { width: min(440px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+.dlg-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.dlg-text { white-space: pre-line; line-height: 1.45; margin-bottom: 14px; overflow-wrap: anywhere; }
+.dlg-input { display: block; width: 100%; box-sizing: border-box; margin-bottom: 14px; padding: 5px 8px; }
+.dlg-btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.dlg-btns button { min-width: 84px; padding: 4px 12px; }
+.dlg-btns button:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.dlg-btns button.dlg-danger { background: var(--red); border-color: var(--red); color: #fff; }
+.dlg-btns button.dlg-danger:hover { background: #ff4b45; }
+
+/* ---------- zachowania przeglądarki, których aplikacja nie ma ---------- */
+/* obrazki i linki nie dają się wyciągnąć z okna; brak „gumowego” przewijania całej strony */
+img, a { -webkit-user-drag: none; }
+html, body { overscroll-behavior: none; }
+/* okno natywne: czcionka systemu (Segoe UI, SF Pro, Noto/Cantarell) zamiast Inter – tekst jak w innych programach */
+html.native, html.native body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }

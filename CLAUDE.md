@@ -111,6 +111,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/trio.html` | playout |
 | `source/web/mobile.html` | Trio na telefonie: osobna lekka strona, to samo API, bez `ScenePlayer` (monitor PGM to `/output` w ramce) |
 | `source/web/mobile-sw.js`, `mobile.webmanifest`, `mobile-icon.*`, `mobile-login.html` | aplikacja na telefon (PWA): service worker, manifest, ikony, ekran logowania |
+| `source/web/dialogs.js`, `native.js` | okna pytań aplikacji (`ask`, `askText`, `choose`) zamiast `confirm()`/`prompt()`; most strony z oknem natywnym |
 | `source/web/field-rules.js` | reguły pól (limity, wersaliki, typografia), wspólne dla Trio i telefonu |
 | `source/web/output.html` | wyjście OBS (`?layers`, `?bus=preview`, `?mode=fill|key`, `?bg`, `?checker`) |
 | `source/web/index.html`, `ui.css` | strona startowa, wspólne style UI |

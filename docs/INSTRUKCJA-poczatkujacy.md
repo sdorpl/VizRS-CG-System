@@ -159,6 +159,7 @@ Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Czas na
 | Ctrl+S | zapisz stronę |
 | Ctrl+Spacja | Word Replace (skrót → słowo) |
 | Shift+Esc | CLEAR ALL |
+| Enter / Esc w oknie pytania | wyróżniony przycisk / Anuluj (pod otwartym pytaniem skróty Trio nie działają) |
 
 **Artist**
 

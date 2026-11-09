@@ -27,13 +27,18 @@ use tao::dpi::{LogicalPosition, LogicalSize};
 use tao::event::{Event, StartCause, WindowEvent};
 use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy, EventLoopWindowTarget};
 use tao::monitor::MonitorHandle;
-use tao::window::{Fullscreen, Icon, Window, WindowBuilder, WindowId};
+use tao::window::{Fullscreen, Icon, Theme, Window, WindowBuilder, WindowId};
 use serde_json::Value;
 use wry::{NewWindowResponse, PageLoadEvent, WebView, WebViewBuilder};
 
 const ICON_PNG: &[u8] = include_bytes!("../../../deploy/vizrs-256.png");
 /// Po takim czasie bez odpowiedzi strony (zawieszona, serwer padł) kolejne zamknięcie nie pyta.
 const CLOSE_PATIENCE: Duration = Duration::from_secs(5);
+/// Okno czeka ukryte na pierwszą klatkę strony (bez białego błysku), ale nie dłużej niż tyle.
+const REVEAL_AFTER: Duration = Duration::from_millis(2500);
+/// Tło WebView przed narysowaniem strony – kolor `--bg` z `ui.css`.
+#[cfg(not(target_os = "linux"))]
+const BG: (u8, u8, u8, u8) = (0x12, 0x13, 0x16, 0xff);
 const RELEASES: &str = "https://github.com/sdorpl/VizRS-CG-System/releases";
 /// Artist jest osobnym programem (od 2026-11-07).
 const ARTIST_MOVED: &str = "Artist (projektowanie scen) to osobny program VizRS CG Artist (vizrs-cg-artist):
@@ -234,6 +239,8 @@ enum UserEvent {
     /// Nowe okno dla adresu z serwera (window.open, target=_blank).
     OpenUrl(String),
     PageLoaded(WindowId),
+    /// Pokaż okno, nawet jeśli strona jeszcze się nie załadowała (serwer nie odpowiada).
+    Reveal(WindowId),
     /// Wynik skryptu `--probe` (JSON).
     Probe(String),
     /// Komunikat okna połączenia (JSON).
@@ -334,7 +341,15 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
         fill_key: fill_key_item.as_ref().map(|m| m.id().clone()),
     };
     let sep = PredefinedMenuItem::separator;
-    let file = Submenu::with_items("Plik", true, &[&connect, &sep(), &trio, &output, &sep(), &close, &quit]).expect("menu Plik");
+    // macOS: pierwsze podmenu to menu aplikacji (O programie, Usługi, Ukryj, Zakończ); Edycja z pozycjami systemowymi jest
+    // konieczna, bo bez nich Cmd+C/V/X/A/Z nie działają w polach tekstowych WKWebView; menu Okno – zwyczaj systemu
+    let mac = cfg!(target_os = "macos");
+    let file = if mac {
+        Submenu::with_items("Plik", true, &[&connect, &sep(), &trio, &output, &sep(), &close])
+    } else {
+        Submenu::with_items("Plik", true, &[&connect, &sep(), &trio, &output, &sep(), &close, &quit])
+    }
+    .expect("menu Plik");
     let view = Submenu::with_items("Widok", true, &[&reload, &fullscreen, &sep(), &zoom_in, &zoom_out, &zoom_reset, &sep(), &devtools]).expect("menu Widok");
     let out = Submenu::new("Wyjście", true);
     for m in &screen_items {
@@ -344,8 +359,46 @@ fn build_menu(monitors: &[MonitorHandle]) -> (Menu, MenuIds) {
         out.append(&sep()).expect("menu Wyjście");
         out.append(m).expect("menu Wyjście");
     }
-    let help = Submenu::with_items("Pomoc", true, &[&docs, &sep(), &logs, &data_dir, &sep(), &updates, &about]).expect("menu Pomoc");
-    let menu = Menu::with_items(&[&file, &view, &out, &help]).expect("menu");
+    let menu = if mac {
+        let help = Submenu::with_items("Pomoc", true, &[&docs, &sep(), &logs, &data_dir, &sep(), &updates]).expect("menu Pomoc");
+        let app = Submenu::with_items(
+            "VizRS",
+            true,
+            &[
+                &about,
+                &sep(),
+                &PredefinedMenuItem::services(Some("Usługi")),
+                &sep(),
+                &PredefinedMenuItem::hide(Some("Ukryj VizRS")),
+                &PredefinedMenuItem::hide_others(Some("Ukryj pozostałe")),
+                &PredefinedMenuItem::show_all(Some("Pokaż wszystko")),
+                &sep(),
+                &quit,
+            ],
+        )
+        .expect("menu aplikacji");
+        let edit = Submenu::with_items(
+            "Edycja",
+            true,
+            &[
+                &PredefinedMenuItem::undo(Some("Cofnij")),
+                &PredefinedMenuItem::redo(Some("Ponów")),
+                &sep(),
+                &PredefinedMenuItem::cut(Some("Wytnij")),
+                &PredefinedMenuItem::copy(Some("Kopiuj")),
+                &PredefinedMenuItem::paste(Some("Wklej")),
+                &PredefinedMenuItem::select_all(Some("Zaznacz wszystko")),
+            ],
+        )
+        .expect("menu Edycja");
+        let window = Submenu::with_items("Okno", true, &[&PredefinedMenuItem::minimize(Some("Zminimalizuj")), &PredefinedMenuItem::maximize(Some("Powiększ okno"))]).expect("menu Okno");
+        #[cfg(target_os = "macos")]
+        window.set_as_windows_menu_for_nsapp();
+        Menu::with_items(&[&app, &file, &edit, &view, &out, &window, &help]).expect("menu")
+    } else {
+        let help = Submenu::with_items("Pomoc", true, &[&docs, &sep(), &logs, &data_dir, &sep(), &updates, &about]).expect("menu Pomoc");
+        Menu::with_items(&[&file, &view, &out, &help]).expect("menu")
+    };
     (menu, ids)
 }
 
@@ -386,6 +439,10 @@ impl App {
             .with_min_inner_size(LogicalSize::new(480.0, 270.0))
             // Trio to stanowisko pracy – bez zapisanego wyglądu od razu na cały ekran (wyjście: okno 960×540)
             .with_maximized(st.maximized.unwrap_or(kind == Kind::Trio))
+            // ciemny pasek tytułu i menu (Windows: DWM, macOS: wygląd ciemny, Linux: ciemny wariant motywu GTK)
+            .with_theme(Some(Theme::Dark))
+            // pokazuje się dopiero z narysowaną stroną – bez białego prostokąta przy starcie
+            .with_visible(false)
             .with_window_icon(icon());
         if let Some((x, y)) = st.pos {
             wb = wb.with_position(LogicalPosition::new(x, y));
@@ -395,6 +452,11 @@ impl App {
         }
         let window = wb.build(target).map_err(|e| format!("okno: {e}"))?;
         let id = window.id();
+        let p_reveal = proxy.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(REVEAL_AFTER);
+            p_reveal.send_event(UserEvent::Reveal(id)).ok();
+        });
 
         #[cfg(target_os = "windows")]
         {
@@ -437,7 +499,13 @@ impl App {
         } else {
             builder.with_url(url)
         };
+        // tło przed narysowaniem strony (Windows, macOS); WebKitGTK rysuje na nim własną stronę błędu czarnym tekstem
+        // bez tła, więc na Linuksie zostaje domyślne – start i tak jest bez błysku (okno czeka ukryte na stronę)
+        #[cfg(not(target_os = "linux"))]
+        let builder = builder.with_background_color(BG);
         let builder = builder
+            // podpowiedzi wcześniej wpisanych wartości w polach (WebView2) – to zachowanie przeglądarki, nie programu
+            .with_general_autofill_enabled(false)
             .with_devtools(true)
             // znacznik okna natywnego: strony chowają zakładki „Artist / Trio / Wyjście” (Trio i wyjście są w menu) i menu przeglądarki
             .with_initialization_script(concat!("window.__vizrsShell = { version: '", env!("CARGO_PKG_VERSION"), "' };"))
@@ -501,6 +569,13 @@ impl App {
                 }
             });
 
+        // Windows: bez skrótów przeglądarki (Ctrl+F, Ctrl+P, Ctrl+R, Alt+←) – F5 może być skrótem strony w Trio;
+        // ciemne kontrolki WebView2 (listy rozwijane, paski przewijania) niezależnie od motywu systemu
+        #[cfg(target_os = "windows")]
+        let builder = {
+            use wry::WebViewBuilderExtWindows;
+            builder.with_browser_accelerator_keys(false).with_theme(wry::Theme::Dark)
+        };
         #[cfg(any(target_os = "windows", target_os = "macos"))]
         let webview = builder.build(&window).map_err(|e| format!("WebView: {e}"))?;
         #[cfg(target_os = "linux")]
@@ -958,8 +1033,16 @@ fn main() {
                 }
             }
             Event::UserEvent(UserEvent::PageLoaded(id)) => {
+                if let Some(w) = app.wins.get(&id) {
+                    w.window.set_visible(true);
+                }
                 if let (Some((code, _)), Some(w)) = (&app.probe, app.wins.get(&id)) {
                     w.webview.evaluate_script(code).ok();
+                }
+            }
+            Event::UserEvent(UserEvent::Reveal(id)) => {
+                if let Some(w) = app.wins.get(&id) {
+                    w.window.set_visible(true);
                 }
             }
             Event::UserEvent(UserEvent::Probe(json)) => {
