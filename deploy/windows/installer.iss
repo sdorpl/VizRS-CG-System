@@ -42,7 +42,7 @@ Source: "README-Windows.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "start-trio.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "start-trio-zdalnie.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "start-serwer.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\examples\*.cgpack"; DestDir: "{app}\examples"; Flags: ignoreversion recursesubdirs createallsubdirs optional
+Source: "..\..\examples\*.cgpack"; DestDir: "{app}\examples"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 [Icons]
 Name: "{group}\VizRS Trio"; Filename: "{app}\vizrs-shell.exe"; Parameters: "--vizrs ""{app}\vizrs.exe"" --data ""{userappdata}\VizRS\vizrs-data"" trio"; WorkingDir: "{app}"; IconFilename: "{app}\vizrs.ico"; Comment: "Playout grafiki CG na zywo"
