@@ -1,0 +1,9 @@
+# Windows (MSVC): biblioteka C wkompilowana w program (statyczny CRT). Bez tego vizrs.exe, vizrs-app.exe i vizrs-shell.exe
+# wymagają VCRUNTIME140.dll z pakietu Microsoft Visual C++ Redistributable, którego czysty Windows 10 często nie ma
+# (zgłoszenie do wydania 2.0.20). Cargo szuka tego pliku w katalogach nadrzędnych, więc obejmuje też source/shell
+# i source/render. Zmienna RUSTFLAGS zastępuje te ustawienia – przy budowie na Windows jej nie ustawiaj.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

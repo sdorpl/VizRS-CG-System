@@ -198,6 +198,12 @@ jobs:
         shell: pwsh
         working-directory: .
         run: |
+          # bez VCRUNTIME140.dll (statyczny CRT, source/.cargo/config.toml): czysty Windows 10 nie ma Visual C++ Redistributable
+          foreach ($f in 'source/target/release/vizrs.exe', 'source/target/release/vizrs-app.exe', 'source/shell/target/release/vizrs-shell.exe') {
+            $t = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($f))
+            if ($t -match '(?i)vcruntime\d+\.dll|msvcp\d+\.dll') { throw "$f wymaga $($Matches[0]) (Visual C++ Redistributable)" }
+            "$f – bez bibliotek Visual C++"
+          }
           Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile deploy/windows/MicrosoftEdgeWebview2Setup.exe
           iscc /DAppVersion=0.0.0 deploy/windows/installer.iss
           $setup = Get-ChildItem dist/VizRS-Trio-*-setup.exe | Select-Object -First 1
