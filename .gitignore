@@ -1,3 +1,4 @@
 /vizrs-data/
 /deploy/.env
 dist/
+/deploy/windows/MicrosoftEdgeWebview2Setup.exe

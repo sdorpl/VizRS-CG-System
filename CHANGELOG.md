@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Instalator Windows:** skróty bez wpisanej ścieżki danych – każdy użytkownik pracuje na swoim `%LOCALAPPDATA%\VizRS` (wcześniej `{userappdata}` z chwili instalacji, czyli katalog konta, które instalowało); dane z instalatora 2.0.20 (`%APPDATA%\VizRS\vizrs-data`) zostają w użyciu, dopóki w nowym miejscu nie ma show. „VizRS Serwer” przez `serwer.bat` z tym samym wyborem. Brak WebView2 Runtime → instalator po cichu instaluje go z dołączonego instalatora Microsoftu (pobieranego przez akcję Release), a gdy się nie uda – komunikat.
+- **CI – okno natywne na prawdziwym Windows i macOS** (`shell-smoke`, `tests/e2e/native-smoke.js`): Windows buduje instalator, instaluje „dla wszystkich” do `Program Files`, uruchamia Trio jak skrót (bez `--data`), sprawdza połączenie z serwerem, most, okno pytania, położenie danych WebView2, skrót i deinstalację; macOS – okno z budowy.
 - **Okno natywne – menu pod prawym przyciskiem:** systemowe menu (Windows, macOS, GTK) na liście stron Trio (TAKE, ARM, CONTINUE / UPDATE / OUT, Duplikuj, Usuń) i na liście warstw anteny (CONTINUE, OUT, dock, Wdróż); komunikat `menu` mostu z limitami w `bridge.rs`.
 - **Okno natywne – stan w pasku zadań:** tytuł okna Trio z `NA ANTENIE (N)` i `⚠ BRAK POŁĄCZENIA`; przy utracie połączenia okno w tle miga w pasku zadań / podskakuje w Docku.
 - **Poprawka: okno dołączało do serwera, który właśnie się wyłączał** (`--idle-exit`, ponowne otwarcie okna kilka sekund po zamknięciu poprzedniego → „Connection refused”). Okno pyta teraz `/health?attach=1`, co zeruje odliczanie; zwykłe `/health` (monitoring) serwera nie podtrzymuje.

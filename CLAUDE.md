@@ -77,6 +77,7 @@ node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
 node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana przeglądarka)
 (cd shell && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # okno natywne
 node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell     # okno natywne w działaniu (otwiera okna)
+node tests/e2e/native-smoke.js target/release/vizrs shell/target/release/vizrs-shell   # test dymny okna (CI: Windows z instalatora, macOS)
 node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell       # zgodność WebView z Chromium (otwiera okno)
 (cd render && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # renderer natywny
 node tools/native-compare.js                      # zgodność renderera natywnego z Chromium (każda obsługiwana strona < 2%)

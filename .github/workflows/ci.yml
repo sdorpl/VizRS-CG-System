@@ -171,3 +171,54 @@ jobs:
       - run: npm install --no-save playwright && npx playwright install --with-deps chromium
       - run: xvfb-run -a node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell
       - run: PLAYWRIGHT_DIR=$PWD xvfb-run -a node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell
+
+  # okno natywne na prawdziwym Windows i macOS (Linux: shell-e2e). Windows idzie przez instalator w trybie „dla wszystkich”
+  # (C:\Program Files bez prawa zapisu) i skrót bez --data – tak, jak użytkownik; wydanie 2.0.20 nie otwierało tam Trio.
+  shell-smoke:
+    needs: shell
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - run: cargo build --release
+        working-directory: source/shell
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalator (Inno Setup, z instalatorem WebView2)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: .
+        run: |
+          Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile deploy/windows/MicrosoftEdgeWebview2Setup.exe
+          iscc /DAppVersion=0.0.0 deploy/windows/installer.iss
+          $setup = Get-ChildItem dist/VizRS-Trio-*-setup.exe | Select-Object -First 1
+          $p = Start-Process -Wait -PassThru $setup.FullName -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/ALLUSERS', '/LOG=install.log'
+          if ($p.ExitCode -ne 0) { Get-Content install.log -Tail 40; exit 1 }
+          $app = "$env:ProgramFiles\VizRS"
+          foreach ($f in 'vizrs.exe', 'vizrs-shell.exe', 'serwer.bat') { if (-not (Test-Path "$app\$f")) { throw "brak $app\$f" } }
+          $lnk = (New-Object -ComObject WScript.Shell).CreateShortcut("$env:ProgramData\Microsoft\Windows\Start Menu\Programs\VizRS\VizRS Trio.lnk")
+          "skrót: $($lnk.TargetPath) $($lnk.Arguments)"
+          if ($lnk.Arguments -ne 'trio') { throw "skrót VizRS Trio ma argumenty: $($lnk.Arguments)" }
+      - name: Okno z instalacji (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: node tests/e2e/native-smoke.js "$env:ProgramFiles\VizRS\vizrs.exe" "$env:ProgramFiles\VizRS\vizrs-shell.exe" --installed
+      - name: Deinstalacja (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -Wait -PassThru "$env:ProgramFiles\VizRS\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
+          Start-Sleep 3
+          if ($p.ExitCode -ne 0 -or (Test-Path "$env:ProgramFiles\VizRS\vizrs-shell.exe")) { throw 'deinstalacja nie usunęła programu' }
+      - name: Okno z budowy (macOS)
+        if: runner.os == 'macOS'
+        run: node tests/e2e/native-smoke.js target/release/vizrs shell/target/release/vizrs-shell

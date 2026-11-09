@@ -17,8 +17,15 @@ Wyjscie grafiki do OBS / vMix:
   http://localhost:8088/output
   Szerokosc: 1920, Wysokosc: 1080
 
+Instalator (VizRS-Trio-*-setup.exe):
+  Skroty w Menu Start: VizRS Trio, VizRS Trio (serwer zdalny), VizRS Serwer (serwer.bat).
+  Dane kazdego uzytkownika: %LOCALAPPDATA%\VizRS (show, grafiki, kopie, logi okna).
+  Dane z instalatora 2.0.20 (%APPDATA%\VizRS\vizrs-data) sa uzywane dalej, dopoki
+  w nowym miejscu nie ma show.
+
 Wymagania:
-  Windows 10 lub 11 (zawiera wymagany Microsoft Edge WebView2).
+  Windows 10 lub 11 z Microsoft Edge WebView2 Runtime (jest w aktualnych Windows;
+  gdy go brak, instalator doinstalowuje go sam).
 
 Projektowanie scen:
   Osobny program VizRS CG Artist (https://github.com/sdorpl/VizRS-CG-Artist).

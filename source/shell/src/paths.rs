@@ -24,11 +24,23 @@ pub fn default_data() -> PathBuf {
 
 fn user_data(xdg: Option<PathBuf>, home: Option<PathBuf>, local: Option<PathBuf>) -> Option<PathBuf> {
     if cfg!(windows) {
-        Some(local?.join("VizRS"))
+        windows_data(local, env("APPDATA"), |d| d.join("show.json").is_file())
     } else if cfg!(target_os = "macos") {
         Some(home?.join("Library/Application Support/VizRS/data"))
     } else {
         Some(xdg.or_else(|| home.map(|h| h.join(".local/share")))?.join("vizrs"))
+    }
+}
+
+/// Windows: `%LOCALAPPDATA%\VizRS`. Wyjątek: skróty instalatora 2.0.20 wskazywały `%APPDATA%\VizRS\vizrs-data` –
+/// jeśli tam jest show, a w nowym miejscu jeszcze nie, okno pracuje dalej na starych danych (nic nie przenosi).
+/// Ten sam wybór robi `serwer.bat` instalatora.
+fn windows_data(local: Option<PathBuf>, roaming: Option<PathBuf>, has_show: impl Fn(&Path) -> bool) -> Option<PathBuf> {
+    let new = local?.join("VizRS");
+    let old = roaming.map(|r| r.join("VizRS").join("vizrs-data"));
+    match old {
+        Some(old) if !has_show(&new) && has_show(&old) => Some(old),
+        _ => Some(new),
     }
 }
 
@@ -109,6 +121,18 @@ mod tests {
         assert_eq!(user_data(Some("/x".into()), Some("/h".into()), None), Some(PathBuf::from("/x/vizrs")));
         assert_eq!(user_data(None, Some("/h".into()), None), Some(PathBuf::from("/h/.local/share/vizrs")));
         assert_eq!(user_data(None, None, None), None);
+    }
+
+    #[test]
+    fn windows_data_keeps_installer_2_0_20_show() {
+        let (l, r) = (Some(PathBuf::from("L")), Some(PathBuf::from("R")));
+        let old = PathBuf::from("R").join("VizRS").join("vizrs-data");
+        let new = PathBuf::from("L").join("VizRS");
+        assert_eq!(windows_data(l.clone(), r.clone(), |_| false), Some(new.clone()));
+        assert_eq!(windows_data(l.clone(), r.clone(), |d| d == old), Some(old.clone()));
+        assert_eq!(windows_data(l.clone(), r.clone(), |_| true), Some(new.clone()), "nowe miejsce ma pierwszeństwo");
+        assert_eq!(windows_data(l, None, |_| true), Some(new));
+        assert_eq!(windows_data(None, r, |_| true), None);
     }
 
     #[test]

@@ -69,6 +69,8 @@ jobs:
         run: |
           $v = "${{ env.VERSION }}".TrimStart('v')
           if (-not $v) { $v = "2.0.2" }
+          # instalator Evergreen WebView2 Runtime (Microsoft) – instalator VizRS uruchamia go, gdy w systemie brak WebView2
+          Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile deploy/windows/MicrosoftEdgeWebview2Setup.exe
           iscc "/DAppVersion=$v" deploy/windows/installer.iss
           Get-ChildItem dist
       - uses: actions/upload-artifact@v4
