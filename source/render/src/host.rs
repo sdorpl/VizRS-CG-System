@@ -546,6 +546,7 @@ mod tests {
         }
         let mut partial = 0;
         let mut cache = crate::stream::RegionCache::default();
+        let (mut patching, mut seen) = (crate::stream::RegionCache::default(), Vec::new());
         for f in 0..40 {
             let c = clk(f64::from(f) * 120.0);
             for (h, pixes) in [(&mut a, &mut pa), (&mut b, &mut pb)] {
@@ -556,7 +557,12 @@ mod tests {
             partial += usize::from(a.last_damage.is_some());
             if let ([x], [y]) = (&pa[..], &pb[..]) {
                 // rekord z łatania (strumień) = rekord z całego obrazu
-                assert!(cache.record(x, 0, a.last_damage) == crate::stream::region_record(y, 0), "klatka {f}: inny rekord");
+                let full = crate::stream::region_record(y, 0);
+                assert!(cache.record(x, 0, a.last_damage, false) == full, "klatka {f}: inny rekord");
+                // odbiorca łat (VizRS CG Playout) dochodzi do tego samego rekordu
+                let synced = !seen.is_empty();
+                crate::stream::tests::apply(&mut seen, &patching.record(x, 0, a.last_damage, synced));
+                assert!(seen == full, "klatka {f}: inny obraz z łat");
             }
             for (x, y) in pa.iter().zip(&pb) {
                 let bad = x.data().iter().zip(y.data()).filter(|(p, q)| p != q).count();

@@ -3,6 +3,7 @@
 ## Niewydane
 
 - **Renderer natywny (`vizrs-render`) rysuje tylko obszar zmiany:** gdy na antenie zmienia się mały element, na przykład taśma pod dużą planszą, renderer rysuje od nowa tylko jego prostokąt (z marginesem rozmycia) zamiast całego kadru. Rekord klatki łata tylko zmienione wiersze, a od‑premnożenie alfy korzysta z tablicy. Na kanale 1080p50 z planszą i taśmą: nowy obraz w 26 ms zamiast 56 ms, 4,6% zamiast 12,9% klatek po czasie, więc VizRS CG Playout nie spada już do 25 kl./s. Protokół `stream` i piksele bez zmian (test klatka po klatce: rysowanie częściowe = pełne). DOKUMENTACJA §10.1.
+- **Łaty w protokole `stream` (rodzaj 6, flaga `p`):** odbiorca, który o nie poprosi (VizRS CG Playout z tego cyklu), dostaje przy niezmienionym prostokącie z grafiką tylko zmienione piksele, a nie cały prostokąt. Przewijany crawl pod planszą: 0,6 MB zamiast 4 MB na klatkę, 50 kl./s na kanale. Starszy odbiorca bez `p` dostaje cały prostokąt, jak dotąd.
 
 ## 2.0.20 (2026-11-09) – „Ampere A1 & Trio”
 
