@@ -12,7 +12,7 @@ use tiny_skia::{
 };
 
 use crate::blur;
-use crate::display::{mul, Color, DNode, Fill, Paint, Radius, TextBlock};
+use crate::display::{mul, Color, DNode, Fill, Paint, PxRect, Radius, Sig, TextBlock};
 use crate::res::Resources;
 
 /// Prostokąt w px urządzenia.
@@ -163,6 +163,71 @@ impl Raster {
         pix.fill(tiny_skia::Color::TRANSPARENT);
         for (node, stage) in scenes {
             self.node(pix, node, *stage, None, 1.0, res);
+        }
+        let frame = self.frame;
+        self.cache.retain(|_, c| frame - c.used <= KEEP_FRAMES);
+    }
+
+    /// Podpis drzewa (`parent` – przekształcenie sceny → px płótna) do szukania obszaru zmiany.
+    pub fn sig(&self, node: &DNode, parent: Transform, res: &Resources) -> Sig {
+        let mut h = DefaultHasher::new();
+        node.own_fingerprint(&mut h);
+        let own = h.finish();
+        let cm = mul(mul(parent, node.m), node.child_m);
+        let kids: Vec<Sig> = node.children.iter().map(|c| self.sig(c, cm, res)).collect();
+        let mut h = DefaultHasher::new();
+        h.write_u64(own);
+        for k in &kids {
+            h.write_u64(k.sub);
+        }
+        let b = self.bounds(node, parent, res);
+        // +2 px: wygładzanie krawędzi i zaokrąglenie położenia rastrów z pamięci
+        let area =
+            (!b.is_empty()).then(|| ((b.l.floor() as i32) - 2, (b.t.floor() as i32) - 2, (b.r.ceil() as i32) + 2, (b.b.ceil() as i32) + 2));
+        Sig { own, sub: h.finish(), area, kids }
+    }
+
+    /// Największy zasięg rozmycia w drzewie (px płótna): `filter: blur`, cienie pola i tekstu.
+    pub fn effect_reach(node: &DNode, parent: Transform) -> f32 {
+        let m = mul(parent, node.m);
+        let s = scale_of(&m);
+        let mut reach = blur::extent(node.blur * s);
+        for p in &node.paints {
+            let sigma = match p {
+                Paint::BoxShadow { sigma, dy, .. } => sigma + dy.abs() / 3.0,
+                Paint::Text { shadow: Some((dy, sigma, _)), .. } => sigma + dy.abs() / 3.0,
+                _ => 0.0,
+            };
+            reach = reach.max(blur::extent(sigma * s));
+        }
+        let cm = mul(m, node.child_m);
+        node.children.iter().fold(reach, |r, c| r.max(Raster::effect_reach(c, cm)))
+    }
+
+    /// Rysuje od nowa tylko prostokąt `rect` płótna `pix` (reszta zostaje z poprzedniej klatki).
+    /// Sceny rysują się na płótnie pomocniczym większym o `reach` z każdej strony – rozmycie przy
+    /// krawędzi prostokąta widzi wtedy te same piksele co przy pełnym rysowaniu – a do `pix` trafia
+    /// tylko `rect`. Przesunięcie o całe px nie zmienia rastrów z pamięci podręcznej (ćwiartka piksela).
+    pub fn draw_part(&mut self, pix: &mut Pixmap, scenes: &[(&DNode, Transform)], res: &Resources, rect: PxRect, reach: f32) {
+        let (pw, ph) = (pix.width() as i32, pix.height() as i32);
+        let (x0, y0, x1, y1) = (rect.0.max(0), rect.1.max(0), rect.2.min(pw), rect.3.min(ph));
+        if x1 <= x0 || y1 <= y0 {
+            return;
+        }
+        let pad = reach.ceil() as i32 + 1;
+        let (sx0, sy0, sx1, sy1) = ((x0 - pad).max(0), (y0 - pad).max(0), (x1 + pad).min(pw), (y1 + pad).min(ph));
+        let Some(mut sub) = Pixmap::new((sx1 - sx0) as u32, (sy1 - sy0) as u32) else { return };
+        self.frame += 1;
+        for (node, stage) in scenes {
+            self.node(&mut sub, node, stage.post_translate(-sx0 as f32, -sy0 as f32), None, 1.0, res);
+        }
+        let (dst_stride, sub_stride) = (pw as usize * 4, sub.width() as usize * 4);
+        let row_len = (x1 - x0) as usize * 4;
+        let dst = pix.data_mut();
+        for y in y0..y1 {
+            let from = (y - sy0) as usize * sub_stride + (x0 - sx0) as usize * 4;
+            let to = y as usize * dst_stride + x0 as usize * 4;
+            dst[to..to + row_len].copy_from_slice(&sub.data()[from..from + row_len]);
         }
         let frame = self.frame;
         self.cache.retain(|_, c| frame - c.used <= KEEP_FRAMES);
@@ -709,11 +774,24 @@ fn gamma_table(src: f32, contrast: f32, gamma: f32) -> [u8; 256] {
 
 /// Obraz z przemnożoną alfą → RGBA bez przemnożenia (jak PNG z Chromium).
 pub fn unpremultiply(data: &mut [u8]) {
+    // tablica 256 × 256 (alfa, kanał) zamiast trzech dzieleń na piksel: przy klatce kanału
+    // (do 1920 × 1080) to kilka ms mniej; wynik ten sam co (c · 255 + a/2) / a
+    static TABLE: std::sync::OnceLock<Box<[u8]>> = std::sync::OnceLock::new();
+    let table = TABLE.get_or_init(|| {
+        let mut t = vec![0u8; 256 * 256];
+        for a in 1..255u32 {
+            for c in 0..256u32 {
+                t[(a as usize) << 8 | c as usize] = ((c * 255 + a / 2) / a).min(255) as u8;
+            }
+        }
+        t.into_boxed_slice()
+    });
     for p in data.as_chunks_mut::<4>().0 {
-        let a = u32::from(p[3]);
+        let a = usize::from(p[3]);
         if a > 0 && a < 255 {
+            let row = &table[a << 8..(a << 8) + 256];
             for c in &mut p[..3] {
-                *c = ((u32::from(*c) * 255 + a / 2) / a).min(255) as u8;
+                *c = row[usize::from(*c)];
             }
         }
     }
