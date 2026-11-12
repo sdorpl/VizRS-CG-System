@@ -114,7 +114,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/dialogs.js`, `native.js` | okna pytań aplikacji (`ask`, `askText`, `choose`) zamiast `confirm()`/`prompt()`; most strony z oknem natywnym |
 | `source/web/field-rules.js` | reguły pól (limity, wersaliki, typografia) |
 | `source/web/output.html` | wyjście OBS (`?layers`, `?bus=preview`, `?mode=fill|key`, `?bg`, `?checker`) |
-| `source/web/index.html`, `ui.css` | strona startowa, wspólne style UI |
+| `source/web/index.html`, `ui.css` | strona startowa, wspólne style UI Trio/Artist |
+| `source/web/vizrs-ui.css` | wspólny rdzeń wyglądu rodziny VizRS (tokeny i kontrolki panelu VizRS Live); źródło kopii w VizRS Live (`scripts/sync-ui.sh`) i VizRS CG Artist (`tools/sync-cg.sh`), obie sprawdzane w CI (`--check`) – zmieniaj tylko tutaj |
 | `source/web/text-model.js`, `richtext.js` | reguły pól, typografia PL, Word Replace; znaczniki `{b}{i}{u}{c=}{sz=}` i `[[ ]]` |
 | `source/web/ticker-model.js`, `ticker-items.js`, `color-picker.js` | model wiadomości tickera; edytor listy wiadomości i wybór koloru (Trio i Artist) |
 | `source/web/qr.js` | generator kodów QR offline |
