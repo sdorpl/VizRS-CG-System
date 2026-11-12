@@ -3,6 +3,7 @@
 //! Opis działania i protokołu: docs/DOKUMENTACJA.md §10.1, plan: docs/plany/PLAN-native.md.
 
 pub mod blur;
+pub mod bounds;
 pub mod clock;
 pub mod display;
 pub mod font;

@@ -5,6 +5,8 @@
 //!                       [--size WxH] [--fonts katalog] [--assets katalog] [--wall-ms N] -o klatka.png
 //!   vizrs-render check  --show show.json [--fonts katalog] [--assets katalog]
 //!   vizrs-render bench  --show show.json --page N [--seconds 10] [--fps 25] [--size WxH] [--area x,y,w,h]
+//!   vizrs-render bounds --show show.json (--page N … | --all) [--url <adres /output>] [--size WxH] [--cell 16]
+//!                       [--fps 25] [--hold 4] [--half 1] [--fonts katalog] [--assets katalog]
 //!
 //! Opis: docs/DOKUMENTACJA.md §10.1.
 
@@ -20,7 +22,7 @@ use vizrs_render::res::Resources;
 use vizrs_render::scene::{check_scene, Clock};
 use vizrs_render::stream;
 
-const USAGE: &str = "użycie: vizrs-render stream|frame|check|bench … (docs/DOKUMENTACJA.md §10.1)";
+const USAGE: &str = "użycie: vizrs-render stream|frame|check|bench|bounds … (docs/DOKUMENTACJA.md §10.1)";
 
 struct Args {
     cmd: String,
@@ -312,6 +314,65 @@ fn bench(a: &Args) -> Result<(), String> {
     Ok(())
 }
 
+/// Granice stron (PLAN-strefy S6 w VizRS CG Playout): wiersz JSON na stronę – `id`, `number`, `size`, `cell`,
+/// `rects` (`[x, y, w, h]` w px `--size`, siatka `--cell`) i `issues` (czego renderer natywny nie umie: granice
+/// wtedy niepełne). Strona odtwarzana jak na antenie: wejście, stop pointy ze spoczynkiem `--hold` s, wyjście.
+fn bounds(a: &Args) -> Result<(), String> {
+    use vizrs_render::bounds::{page, Timing};
+    let show = read_show(a)?;
+    let size = size_of(a.get("size").unwrap_or("1920x1080"))?;
+    let cell: u32 = a.get("cell").and_then(|v| v.parse().ok()).filter(|c| (2..=256).contains(c)).unwrap_or(16);
+    let num = |k: &str, d: f64| a.get(k).and_then(|v| v.parse::<f64>().ok()).filter(|v| v.is_finite() && *v >= 0.0).unwrap_or(d);
+    let timing = Timing { fps: num("fps", 25.0).clamp(1.0, 100.0), hold: num("hold", 4.0).min(60.0), out_max: 10.0 };
+    // w połowie rozmiaru (komórka o połowę mniejsza): ok. 4× mniej rysowania, te same komórki w px wyjścia
+    let half = a.get("half") != Some("0") && cell.is_multiple_of(2) && size.0 >= 2 * cell && size.1 >= 2 * cell;
+    let (draw, draw_cell, scale) = if half { ((size.0 / 2, size.1 / 2), cell / 2, 2) } else { (size, cell, 1) };
+    let res = match a.get("url") {
+        Some(url) => stream::server_resources(url, &a.all("fonts").into_iter().map(PathBuf::from).collect::<Vec<_>>())?,
+        None => offline_resources(a),
+    };
+    let stage = a.get("url").and_then(|u| vizrs_render::net::OutputUrl::parse(u).ok()).map(|u| {
+        let dim = |k: &str, d: f64| u.param(k).and_then(|v| v.parse::<f64>().ok()).filter(|v| *v > 0.0).unwrap_or(d);
+        (dim("w", 1920.0), dim("h", 1080.0))
+    });
+    let list = scenes(&show);
+    let pages = show.get("pages").and_then(Value::as_array).cloned().unwrap_or_default();
+    let wanted = a.all("page");
+    if wanted.is_empty() && a.get("all").is_none() {
+        return Err("brak --page N albo --all 1".into());
+    }
+    let mut out = std::io::stdout().lock();
+    for p in &pages {
+        let number = p.get("number").map(str_of).unwrap_or_default();
+        if !wanted.is_empty() && !wanted.contains(&number) {
+            continue;
+        }
+        let id = p.get("id").map(str_of).unwrap_or_default();
+        let sid = p.get("scene").map(str_of).unwrap_or_default();
+        let mut line = serde_json::json!({"id": id, "number": number, "size": format!("{}x{}", size.0, size.1), "cell": cell});
+        match list.iter().find(|s| s.get("id").map(str_of) == Some(sid.clone()) || s.get("name").map(str_of) == Some(sid.clone())) {
+            None => line["error"] = Value::from(format!("brak sceny {sid}")),
+            Some(scene_v) => {
+                let values = p.get("values").and_then(Value::as_object).cloned().unwrap_or_default();
+                let mut host = new_host(a);
+                if let Some(st) = stage {
+                    host.stage = st;
+                }
+                match page(host, scene_v, &values, &layer_of(scene_v), vizrs_render::bounds::Cells::new(draw, draw_cell), timing, &res) {
+                    Ok(b) => {
+                        line["rects"] = serde_json::json!(b.cells.rects(size, scale));
+                        line["issues"] = serde_json::json!(b.issues);
+                    }
+                    Err(e) => line["error"] = Value::from(e),
+                }
+            }
+        }
+        use std::io::Write;
+        writeln!(out, "{line}").map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 fn main() {
     let args = match Args::parse() {
         Ok(a) => a,
@@ -339,6 +400,7 @@ fn main() {
         "frame" => frame(&args),
         "bench" => bench(&args),
         "check" => check(&args),
+        "bounds" => bounds(&args),
         "--version" | "-V" | "version" => {
             println!("vizrs-render {}", env!("CARGO_PKG_VERSION"));
             Ok(())

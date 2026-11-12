@@ -234,6 +234,20 @@ pub fn regions_record(areas: &[(Pixmap, (i32, i32))], flags: u8, size: (u32, u32
     rec
 }
 
+/// Zasoby jak na antenie bez strumienia (`bounds`): fonty z katalogów, systemu i serwera (`/fonts/fonts.css`),
+/// pliki `/assets` z serwera; pobieranie blokujące (pierwsza klatka już z obrazami).
+pub fn server_resources(url: &str, font_dirs: &[std::path::PathBuf]) -> Result<Arc<Resources>, String> {
+    let url = OutputUrl::parse(url)?;
+    let mut db = FontDb::new();
+    for d in font_dirs {
+        db.add_dir(d);
+    }
+    crate::add_system_fonts(&mut db);
+    server_fonts(&url, &mut db)?;
+    let fetch_url = url.clone();
+    Ok(Resources::new(db, Some(Arc::new(move |path: &str| fetch_url.get(path))), true))
+}
+
 /// Wbudowane fonty serwera (`/fonts/fonts.css`), wczytywane przy starcie.
 fn server_fonts(url: &OutputUrl, db: &mut FontDb) -> Result<usize, String> {
     let css = url.get("/fonts/fonts.css")?;
