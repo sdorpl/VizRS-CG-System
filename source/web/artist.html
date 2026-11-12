@@ -195,10 +195,9 @@
   <button id="bNew" title="Nowa scena">＋ Nowa</button>
   <button id="bDup" title="Duplikuj scenę">⧉</button>
   <button id="bDel" class="icon danger" title="Usuń scenę"><i class="ico del"></i></button>
-  <button id="bExp" title="Eksport sceny do pliku JSON">⇩ Eksport</button>
+  <button id="bExp" title="Eksport bieżącej sceny do paczki .cgpack (z grafikami, czcionkami i stronami)">⇩ Eksport</button>
   <button id="bPack" title="Paczka belek .cgpack: wybrane sceny + strony + grafiki + czcionki w jednym pliku">⇩ Paczka</button>
-  <button id="bImp" title="Import sceny (.json) albo paczki belek (.cgpack)">⇧ Import</button>
-    <button id="bImpBtb" title="Importuj element zewnętrzny (.json eksport v3 lub paczka elementu .cgpack) jako scenę + stronę">⇧ Element</button>
+  <button id="bImp" title="Import paczki .cgpack albo dawnej sceny .vizrs.json">⇧ Import</button>
   <span class="grow"></span>
   <button id="bUndo" title="Cofnij (Ctrl+Z)">↶</button>
   <button id="bRedo" title="Ponów (Ctrl+Y)">↷</button>
@@ -289,7 +288,6 @@
 <input type="file" id="fileIn" hidden>
 
 <script type="module">
-import * as BTB from '/btb-io.js';
 import * as PACK from '/cgpack.js';
 import * as MO from '/motion.js';
 import { PROPS, TYPES, FONTS, OFFLINE_FONTS, EASES, ScenePlayer, propAt, trackValue, walk, listFields, variantFields, uid, fitStage, parseColor, connectEvents } from '/renderer.js';
@@ -702,7 +700,7 @@ function markProps(n) {
   for (const b of $$('#props [data-seg]')) b.classList.toggle('on', propAt(n, b.dataset.seg, t, null) === b.dataset.v);
 }
 
-/** Ruch jak w BTB CG (node.motion): presety IN/OUT, efekt tekstu, pętla uwagi – bez kluczy, liczone przez renderer. */
+/** Ruch (node.motion): presety IN/OUT, efekt tekstu, pętla uwagi – bez kluczy, liczone przez renderer. */
 function motionForm(n) {
   const m = n.motion || {};
   const opt = (list, v, lab) => list.map((x) => `<option value="${x}" ${x === (v || 'none') ? 'selected' : ''}>${esc(lab ? lab(x) : x)}</option>`).join('');
@@ -1402,7 +1400,7 @@ const DEFAULTS = {
   clock: { w: 300, h: 80, size: 48, color: '#ffffff', font: 'Roboto Mono', align: 'center' },
   ticker: { w: 1920, h: 70, text: 'Pierwsza wiadomość\nDruga wiadomość', size: 32, color: '#ffffff' },
 };
-/** Presety tickerów (jak „Paski i tickery” w edytorze BTB): grupa z tłem i węzłem ticker z polem `news`. */
+/** Presety tickerów: grupa z tłem i węzłem ticker z polem `news`. */
 const TICKER_PRESETS = {
   full: { name: 'Ticker pełny ekran (crawl)', g: { x: 0, y: 1010, w: 1920, h: 70 }, nodes: [
     { type: 'rect', name: 'tlo', props: { x: 0, y: 0, w: 1920, h: 70, color: '#0b1a33' } },
@@ -1975,11 +1973,25 @@ $('#bDel').onclick = async () => {
     if (scenes.length) openScene(scenes[0]); else newScene('Nowa scena');
   } catch (e) { toast(e.message, true); }
 };
-$('#bExp').onclick = () => {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(scene, null, 2)], { type: 'application/json' }));
-  a.download = (scene.name || 'scena').replace(/[^\w.\-]+/g, '_') + '.vizrs.json'; a.click();
+$('#bExp').onclick = async () => {
+  // eksport bieżącej sceny (w wersji z edytora) jako paczka .cgpack – z grafikami, czcionkami i stronami tej sceny
+  try {
+    const show = await api('GET', '/api/show').catch(() => ({ pages: [] }));
+    await loadAssets();
+    await downloadPack([scene], show.pages || []);
+  } catch (e) { toast('Eksport: ' + e.message, true); }
 };
+/** Buduje paczkę i ją pobiera (eksport sceny i okno paczki). */
+async function downloadPack(sc, pages) {
+  const known = assets.map((a) => a.name);
+  const { blob, missing, assets: packed, merged } = await PACK.buildPack({ scenes: sc, pages, known, fetchAsset: fetchAssetBytes, generator: 'VizRS Artist' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (sc.length === 1 ? sc[0].name || 'scena' : 'belki').replace(/[^\w.\-]+/g, '_') + '.cgpack'; a.click();
+  toast(`Paczka: ${sc.length} scen, ${packed.length} plików (${(blob.size / 1024).toFixed(0)} KB)`);
+  const notes = [...missing.map((n) => `nie udało się odczytać ${n}`), ...merged.map(([n, t]) => `czcionka ${n} to ten sam plik co ${t} – w paczce raz, jako ${t}`)];
+  if (notes.length) showReport('Paczka utworzona – uwagi', notes);
+}
 $('#bImp').onclick = () => {
   const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
   fi.onchange = () => { if (fi.files[0]) importFile(fi.files[0]); };
@@ -1990,11 +2002,11 @@ async function importFile(f) {
     if (/\.cgpack$/i.test(f.name)) {
       const u8 = new Uint8Array(await f.arrayBuffer());
       const kind = await PACK.packKind(u8);
-      if (kind === 'btb') return importBtbFile(f);
       if (!kind) throw new Error('to nie jest paczka .cgpack');
-      return importPack(u8);
+      return importPack(await PACK.readPack(u8));
     }
-    const s = JSON.parse(await f.text()); if (!Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS'); if (await confirmLeave()) newScene(null, s);
+    const text = await f.text();
+    return importPack(PACK.legacyScenePack(text)); // dawny eksport sceny (.vizrs.json) – tylko odczyt
   } catch (e) { toast('Import: ' + e.message, true); }
 }
 // plik z menedżera plików albo ze skojarzenia: paczka i scena – import, obraz/wideo – nowy element, czcionka – do zasobów
@@ -2020,7 +2032,9 @@ const fetchAssetBytes = async (name) => {
 };
 async function uploadBytes(name, data) {
   const r = await fetch('/api/assets?name=' + encodeURIComponent(name), { method: 'POST', body: data });
-  if (!r.ok) throw new Error(`${name}: ${(await r.json().catch(() => ({}))).error || r.status}`);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`${name}: ${j.error || r.status}`);
+  return j.name || name; // serwer może poprawić nazwę (znaki spoza ASCII → _)
 }
 $('#bPack').onclick = async () => {
   let show;
@@ -2055,51 +2069,23 @@ $('#bPack').onclick = async () => {
     const sc = chosen(); if (!sc.length) return toast('Zaznacz co najmniej jedną scenę', true);
     e.target.disabled = true;
     try {
-      const { blob, missing, assets: packed } = await PACK.buildPack({
-        scenes: sc, pages: $('#pkPages', d).checked ? show.pages : [], known, fetchAsset: fetchAssetBytes, generator: 'VizRS Artist',
-      });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = (sc.length === 1 ? sc[0].name || 'scena' : 'belki').replace(/[^\w.\-]+/g, '_') + '.cgpack'; a.click();
+      await downloadPack(sc, $('#pkPages', d)?.checked ? show.pages : []);
       d.remove();
-      toast(`Paczka: ${sc.length} scen, ${packed.length} plików (${(blob.size / 1024).toFixed(0)} KB)`);
-      if (missing.length) showReport('Paczka utworzona – brakujące pliki', missing.map((n) => `nie udało się odczytać ${n}`));
     } catch (err) { toast('Paczka: ' + err.message, true); e.target.disabled = false; }
   });
 };
-async function importPack(u8) {
-  const pk = await PACK.readPack(u8);
+async function importPack(pk) {
   if (!(await confirmLeave())) return;
   await loadAssets();
-  const report = [];
-  const { map, uploaded, skipped } = await PACK.installAssets(pk.assets, { existing: assets.map((a) => a.name), fetchAsset: fetchAssetBytes, upload: uploadBytes });
-  for (const [a, b] of map) report.push(`plik ${a} istniał z inną treścią – zapisano jako ${b}`);
-  const scenesIn = PACK.renameAssets(pk.scenes, map), pagesIn = PACK.renameAssets(pk.pages, map);
-  const ids = new Map(); let last = null;
-  for (const s of scenesIn) {
-    const { id, rev, ...body } = s; // eslint-disable-line no-unused-vars
-    if (scenes.some((x) => x.name === body.name)) report.push(`scena „${body.name}” już istnieje – dodano jako kopię`);
-    try { const saved = await api('POST', '/api/scenes', body); scenes.push(saved); ids.set(id, saved.id); last = saved; }
-    catch (e) { report.push(`scena „${body.name}”: ${e.message}`); }
-  }
-  let pages = 0;
-  for (const p of pagesIn) {
-    const sid = ids.get(p.scene); if (!sid) continue;
-    const { id, rev, ...body } = p; // eslint-disable-line no-unused-vars
-    body.scene = sid;
-    try { await api('POST', '/api/pages', body); pages++; }
-    catch (e) {
-      if (/zajęty/.test(e.message)) { delete body.number; try { await api('POST', '/api/pages', body); pages++; report.push(`strona ${p.number} „${p.name || ''}”: numer zajęty – nadano nowy`); } catch (e2) { report.push(`strona ${p.number}: ${e2.message}`); } }
-      else report.push(`strona ${p.number}: ${e.message}`);
-    }
-  }
+  const withPages = true;
+  const r = await PACK.importPack(pk, { api, existing: assets.map((a) => a.name), fetchAsset: fetchAssetBytes, upload: uploadBytes, sceneNames: scenes.map((s) => s.name), withPages });
+  scenes.push(...r.scenes);
   await loadAssets();
-  if (last) openScene(last);
-  const fonts = uploaded.filter((n) => PACK.FONT_RE.test(n));
-  showReport(`Zaimportowano paczkę: ${ids.size} scen, ${pages} stron, ${uploaded.length} nowych plików${fonts.length ? ` (czcionki: ${fonts.join(', ')})` : ''}${skipped.length ? `, ${skipped.length} plików już było` : ''}`, report);
+  if (r.scenes.length) openScene(r.scenes[r.scenes.length - 1]);
+  showReport(PACK.importSummary(r, withPages), r.report);
 }
 
-// ------------------------------------------------------------ BTB CG: import elementów
+// ------------------------------------------------------------ raport
 function showReport(title, lines) {
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center';
@@ -2111,39 +2097,6 @@ function showReport(title, lines) {
   d.querySelector('#repOk').onclick = () => d.remove();
   d.addEventListener('mousedown', (e) => { if (e.target === d) d.remove(); });
 }
-$('#bImpBtb').onclick = () => {
-  const fi = $('#fileIn'); fi.accept = '.json,.cgpack,application/json,application/zip'; fi.value = '';
-  fi.onchange = () => { if (fi.files[0]) importBtbFile(fi.files[0]); };
-  fi.click();
-};
-async function importBtbFile(f) {
-  try {
-    if (!(await confirmLeave())) return;
-    const isZip = /\.cgpack$/i.test(f.name);
-    const { elements, files } = await BTB.readBtb(isZip ? new Uint8Array(await f.arrayBuffer()) : await f.text(), f.name);
-    const report = []; let made = 0, last = null;
-    for (const el of elements) {
-      const used = new Set();
-      const r = BTB.convertElement(el, {
-        knownFonts: [...FONTS, ...OFFLINE_FONTS],
-        assetName: (src) => { const k = Object.keys(files || {}).find((n) => n === src || n === src.replace(/^\//, '')); if (!k) return null; used.add(k); return k.split('/').pop(); },
-      });
-      for (const k of used) {
-        const rr = await fetch('/api/assets?name=' + encodeURIComponent(k.split('/').pop()), { method: 'POST', body: files[k] });
-        if (!rr.ok) r.warnings.push(`plik ${k}: ${(await rr.json().catch(() => ({}))).error || rr.status}`);
-      }
-      const saved = await api('POST', '/api/scenes', r.scene);
-      scenes.push(saved);
-      await api('POST', '/api/pages', { scene: saved.id, name: r.page.name, values: r.page.values }).catch((e) => r.warnings.push('strona nie utworzona: ' + e.message));
-      r.warnings.forEach((w) => report.push(`${r.scene.name}: ${w}`));
-      made++; last = saved;
-    }
-    await loadAssets();
-    if (last) openScene(last);
-    showReport(`Zaimportowano ${made} ${made === 1 ? 'element' : 'elementy'}`, report);
-  } catch (e) { toast('Import elementu: ' + e.message, true); }
-}
-
 // ------------------------------------------------------------ klawiatura
 addEventListener('keydown', (e) => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);

@@ -20,7 +20,7 @@
 | Trio jako natywna aplikacja | To samo co Artist (`vizrs trio`) + **tryb klienta**: `vizrs trio --connect https://cg.example.pl` — okno Trio sterujące serwerem na VPS. | mały (po Artist) |
 | Trio jako serwer bez GUI na VPS / w Dockerze | VizRS **już jest** serwerem bez GUI (UI to strony serwowane z binarki). Brakuje: konfiguracji przez zmienne środowiskowe, obrazu Docker (statyczna binarka musl, `FROM scratch`, ~3–5 MB), healthchecku bez curla, HTTPS przez reverse proxy (Caddy), osobnego tokenu tylko do wyjścia, utwardzenia na publiczny Internet. Webowe GUI zostaje. | mały–średni |
 
-**Nie rekomenduję** przepisywania Artist/Trio na natywny toolkit (egui jak btb-cgeditor) ani Electrona (jak BTB CG System) — uzasadnienie w §3.
+**Nie rekomenduję** przepisywania Artist/Trio na natywny toolkit (np. egui) ani Electrona — uzasadnienie w §3.
 
 ## 1. Stan dziś (z kodu)
 
@@ -35,12 +35,12 @@
 
 Wniosek: architektura „serwer + cienki klient webowy” to dokładnie to, czego potrzeba do VPS. Do „okna natywnego” brakuje tylko **opakowania**, nie przebudowy.
 
-## 2. Lekcje z BTB
+## 2. Lekcje z innych architektur
 
 | Projekt | Wybór | Co z tego wynikło | Wniosek dla VizRS |
 |---|---|---|---|
-| **BTB CG System** (`../BTB-CG-System-alpha`) | Electron; `main.js` robi `require('./server.js')` (Express + Socket.io + SQLite w procesie okna), `nodeIntegration: true`, `contextIsolation: false`; osobno Dockerfile `node:20-slim` z kompilacją sqlite3 | okno „natywne” to i tak strona z `localhost:3000`; paczka ~150–250 MB; pełny dostęp Node z poziomu strony (ryzyko przy każdym obcym HTML/SVG); obraz Docker ciężki i zależny od natywnych modułów | ten sam wzorzec (serwer + strona w oknie) da się uzyskać bez Electrona i bez Node |
-| **btb-cgeditor** (`../btb-cgeditor`) | natywny Rust + egui/eframe (wgpu), ~15 crate'ów | edytor rysuje własnym silnikiem, a wyjście to `output.html` w OBS → trzeba było budować i pilnować **parytetu dwóch silników** (`btb-motion` vs. `anim.rs`/`playback.rs` vs. JS) testami zgodności | VizRS ma zasadę „jeden renderer” właśnie po to, by tego uniknąć. Natywny edytor = drugi renderer = powrót problemu |
+| **Aplikacja Electron** | Electron; `main.js` robi `require('./server.js')` (Express + Socket.io + SQLite w procesie okna), `nodeIntegration: true`, `contextIsolation: false`; osobno Dockerfile `node:20-slim` z kompilacją sqlite3 | okno „natywne” to i tak strona z `localhost:3000`; paczka ~150–250 MB; pełny dostęp Node z poziomu strony (ryzyko przy każdym obcym HTML/SVG); obraz Docker ciężki i zależny od natywnych modułów | ten sam wzorzec (serwer + strona w oknie) da się uzyskać bez Electrona i bez Node |
+| **Natywny edytor w Ruście** | natywny Rust + egui/eframe (wgpu), ~15 crate'ów | edytor rysuje własnym silnikiem, a wyjście to `output.html` w OBS → trzeba było budować i pilnować **parytetu dwóch silników** testami zgodności | VizRS ma zasadę „jeden renderer” właśnie po to, by tego uniknąć. Natywny edytor = drugi renderer = powrót problemu |
 
 Najważniejszy argument techniczny: **antena to Chromium** (CEF w OBS; vMix też używa Chromium). Artist pokazuje WYSIWYG tylko wtedy, gdy renderuje tym samym silnikiem: pomiar tekstu, `squeeze`, łamanie „wypełniaj”, kerning fontów, filtry canvas. Dlatego okno Artist powinno być Chromium również na Linuksie.
 
@@ -51,8 +51,8 @@ Najważniejszy argument techniczny: **antena to Chromium** (CEF w OBS; vMix też
 | **A. Okno aplikacji Chromium** | binarka uruchamia `msedge`/`chrome`/`chromium` z `--app=http://127.0.0.1:PORT/artist --user-data-dir=<profil VizRS> --window-size=…`; brak pasków, własna ikona w pasku zadań, osobny proces | **żadne** (Edge jest w każdym Windows 10/11; na Linuksie Chrome/Chromium/Brave/Vivaldi — fallback: domyślna przeglądarka) | pełna (Chromium) | +0 | **rekomendowany na start** |
 | **B. Powłoka `wry` + `tao`** | osobny crate `vizrs-shell` w workspace: prawdziwe okno systemowe z WebView, menu, zasobnik, skróty globalne, wiele okien | ~40–80 crate'ów pośrednio; Linux wymaga WebKitGTK 4.1 | Windows: WebView2 = Chromium ✔; **Linux: WebKitGTK ≠ Chromium ✘** (inne metryki tekstu, inne wsparcie canvas/filters) | +3–8 MB | opcja na później, osobno od rdzenia |
 | C. Tauri | B + framework, IPC, auto-update, instalatory | dużo więcej niż B | jak B | +5–10 MB | nadmiar; przejmuje strukturę projektu |
-| D. Electron (jak BTB) | Chromium w paczce | npm, Node | pełna | +150–250 MB | sprzeczne z „zero zależności”, ciężkie |
-| E. Natywne UI (egui jak btb-cgeditor) | przepisanie Artist i Trio | ~15+ crate'ów, GPU | **drugi renderer** | +10–20 MB | odradzam: miesiące pracy, łamie zasadę „jeden renderer” |
+| D. Electron | Chromium w paczce | npm, Node | pełna | +150–250 MB | sprzeczne z „zero zależności”, ciężkie |
+| E. Natywne UI (egui) | przepisanie Artist i Trio | ~15+ crate'ów, GPU | **drugi renderer** | +10–20 MB | odradzam: miesiące pracy, łamie zasadę „jeden renderer” |
 
 Uwaga do B na Linuksie: dałoby się w powłoce na Linuksie i tak delegować do wariantu A (Chromium `--app`), a WebKitGTK używać tylko dla Trio (Trio nie projektuje, więc różnice metryk mniej bolą — podgląd PVW/PGM byłby jednak wtedy nie 1:1 z anteną).
 
@@ -242,6 +242,5 @@ Kolejność: **N0 → N1 → N2** (serwer na VPS gotowy produkcyjnie) **→ N3**
 
 - **Podział ról jak Viz:** na VPS Artist jest „narzędziem projektanta”, a Trio „operatora”. Trzeci poziom tokenu (Trio bez zapisu scen) to tani sposób na to, by realizator w nocnej zmianie nie zmienił przypadkiem szablonu belki.
 - **Wyjście bez OBS:** okno `vizrs output --fullscreen --screen 2` (Chromium `--app --kiosk` na wybranym monitorze) daje proste wyjście HDMI do miksera bez OBS — to samo „okno aplikacji” z N3, jedna flaga więcej. Klucz/wypełnienie (`?mode=fill|key`) już istnieje → dwa monitory = Fill + Key do ATEM.
-- **Import z BTB na serwerze:** paczki `.cgpack` / `.json` v3 wgrywane przez przeglądarkę działają już dziś przez HTTP — nic nie trzeba zmieniać pod VPS; warto tylko dodać limit rozmiaru paczki w N2.
-- **Nie powtarzać `nodeIntegration` z BTB:** w żadnym wariancie okno nie powinno dawać stronie dostępu do systemu plików poza API serwera — cała logika zostaje w Rust, a strona to klient jak każdy inny (to też ułatwia `--connect`).
+- **Nie powtarzać `nodeIntegration` (Electron):** w żadnym wariancie okno nie powinno dawać stronie dostępu do systemu plików poza API serwera — cała logika zostaje w Rust, a strona to klient jak każdy inny (to też ułatwia `--connect`).
 - **Companion zdalnie:** zamiast wystawiać TCP/OSC na VPS, opisać w `docs/COMPANION.md` konfigurację „Generic HTTP” z tokenem przez HTTPS — działa bez zmian w kodzie.

@@ -16,7 +16,7 @@ export function limitText(v, R, prev) {
 }
 
 const escHtml = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-/** Polska typografia (CGText.typo z BTB-CG): twarde spacje po spójnikach, cudzysłowy „”, wielokropek, półpauza. */
+/** Polska typografia (CGText.typo z text-model.js): twarde spacje po spójnikach, cudzysłowy „”, wielokropek, półpauza. */
 export function polish(text) {
   if (!window.CGText) return text;
   return text.split('\n').map((l) => (l ? CGText.plain(CGText.typo('<div>' + escHtml(l) + '</div>')) : l)).join('\n');

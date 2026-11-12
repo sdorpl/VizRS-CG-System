@@ -124,8 +124,9 @@
   <span id="errPill" class="pill on" style="display:none;cursor:pointer" title="Błędy scen na wyjściu – kliknij po szczegóły"></span>
   <span class="grow"></span>
   <button id="bSys" title="Stan systemu, błędy scen, kopie zapasowe, log">⚙ Stan</button>
-  <button id="bExpShow" title="Zapisz cały show do pliku">⇩ Eksport show</button>
-  <button id="bImpShow" title="Wczytaj show z pliku">⇧ Import show</button>
+  <button id="bImpPack" title="Dodaj belki z paczki .cgpack (sceny, strony, grafiki i czcionki) – bieżący show zostaje">⇧ Import paczki</button>
+  <button id="bExpShow" title="Kopia całego show (.show.json: strony, playlisty, rundowny, makra; bez grafik i czcionek). Belki przenoś paczką .cgpack z Artist">⇩ Kopia show</button>
+  <button id="bImpShow" title="Przywróć show z kopii .show.json – zastępuje bieżący show">⇧ Przywróć show</button>
   <button id="bClear" class="danger" title="Zdejmij wszystkie warstwy (Shift+Esc)">✖ CLEAR ALL</button>
 </div>
 
@@ -265,6 +266,7 @@ import { ScenePlayer, listFields, connectEvents, fitStage, parseColor, layerZ, F
 import { mountTickerEditor } from '/ticker-items.js';
 import { nativeBridge } from '/native.js';
 import { visLen, limitText, polish } from '/field-rules.js';
+import * as PACK from '/cgpack.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -1306,6 +1308,31 @@ $('#bImpShow').onclick = () => {
       if (!confirm(`Zastąpić bieżący show plikiem „${f.name}”? (${s.scenes.length} scen, ${(s.pages || []).length} stron)`)) return;
       await api('PUT', '/api/show?force=1', s); selId = null; dirtyPage = false; await loadShow(); toast('Wczytano show');
     } catch (e) { toast('Import: ' + e.message, true); }
+  };
+  fi.click();
+};
+
+// paczka belek .cgpack – te same zasady co w Artist (cgpack.importPack): pliki bez duplikatów i bez nadpisywania,
+// sceny jako nowe, strony z numerem albo nowym, gdy zajęty; bieżący show i antena zostają
+$('#bImpPack').onclick = () => {
+  const fi = $('#fileIn'); fi.value = ''; fi.accept = '.cgpack,application/zip';
+  fi.onchange = async () => {
+    const f = fi.files[0]; if (!f) return;
+    try {
+      const u8 = new Uint8Array(await f.arrayBuffer());
+      const kind = await PACK.packKind(u8);
+      if (!kind) throw new Error('to nie jest paczka .cgpack');
+      const pk = await PACK.readPack(u8);
+      const [list, show] = await Promise.all([api('GET', '/api/assets'), api('GET', '/api/show')]);
+      const r = await PACK.importPack(pk, {
+        api, existing: list.map((a) => a.name), sceneNames: show.scenes.map((s) => s.name), withPages: true,
+        fetchAsset: async (n) => { const x = await fetch('/assets/' + encodeURIComponent(n)); if (!x.ok) throw new Error(String(x.status)); return new Uint8Array(await x.arrayBuffer()); },
+        upload: async (n, d) => { const x = await fetch('/api/assets?name=' + encodeURIComponent(n), { method: 'POST', body: d }); const j = await x.json().catch(() => ({})); if (!x.ok) throw new Error(`${n}: ${j.error || x.status}`); return j.name || n; },
+      });
+      await loadShow();
+      toast(PACK.importSummary(r));
+      if (r.report.length) alert(PACK.importSummary(r) + '\n\n' + r.report.map((l) => '• ' + l).join('\n'));
+    } catch (e) { toast('Import paczki: ' + e.message, true); }
   };
   fi.click();
 };

@@ -4,9 +4,12 @@
 //   scenes.json    { scenes:[…], pages:[…] }       – sceny jak w show.json, strony wskazują `scene` = id sceny z paczki
 //   assets/<nazwa> – pliki z katalogu assets (obrazy, wideo, fonty) użyte przez sceny lub dołączone (`scene.packAssets`)
 //
-// Format własny VizRS (inny `_type` niż paczka elementu BTB `cg_element_pack`). Paczki BTB czyta `btb-io.js`.
-import { unzip } from '/btb-io.js';
 
+// Zasady przenoszenia (jedne dla VizRS CG Artist, /artist i Trio – DOKUMENTACJA §8.7):
+//   – elementy grafiki (belki, tickery, plansze) przenosi się tylko paczką `.cgpack`: eksport sceny i paczka belek
+//     zapisują `.cgpack` (sceny + strony + pliki); `.vizrs.json` (dawny eksport sceny, bez plików) jest tylko czytany;
+//   – import paczki: `importPack` – pliki wg `assetPlacer`, sceny zawsze jako nowe, strony z numerem albo nowym;
+//   – plik `.show.json` w Trio to kopia całego show (playlisty, rundowny, makra), nie sposób przenoszenia belek.
 export const PACK_TYPE = 'vizrs_pack';
 export const PACK_VERSION = 1;
 export const FONT_RE = /\.(ttf|otf|woff2?)$/i;
@@ -14,6 +17,52 @@ const ASSET_EXT = /\.(png|jpe?g|gif|webp|svg|mp4|webm|ttf|otf|woff2?)$/i;
 const SAFE = /^[^/\\\0]{1,200}$/;
 
 export const assetKind = (name) => (FONT_RE.test(name) ? 'font' : /\.(mp4|webm)$/i.test(name) ? 'video' : 'image');
+
+/**
+ * Nazwa pliku tak, jak zapisze ją serwer (`safe_name` w `source/src/main.rs` i w magazynie VizRS CG Artist):
+ * znaki spoza `[A-Za-z0-9._-]` → `_`, bez kropek na początku, najwyżej 120 znaków. Pusta → null.
+ */
+export function safeAssetName(name) {
+  const n = [...String(name ?? '')].map((c) => (/^[A-Za-z0-9._-]$/.test(c) ? c : '_')).join('').replace(/^\.+/, '');
+  return n && n.length <= 120 ? n : null;
+}
+
+// ---------------------------------------------------------------- odczyt ZIP
+/** Minimalny czytnik ZIP (stored + deflate przez DecompressionStream): najwyżej 200 plików, 200 MB na plik, 256 MB razem. */
+export async function unzip(buf) {
+  try { return await unzipRaw(buf); } catch (e) { if (e instanceof RangeError) throw new Error('uszkodzony plik ZIP'); throw e; }
+}
+async function unzipRaw(buf) {
+  const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('to nie jest plik ZIP (.cgpack)');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  if (count > 200) throw new Error('paczka: więcej niż 200 plików');
+  const files = {};
+  let total = 0;
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('uszkodzony katalog ZIP');
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), usize = dv.getUint32(p + 24, true);
+    const nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
+    p += 46 + nlen + elen + clen;
+    if (name.endsWith('/')) continue;
+    if (name.includes('..') || name.startsWith('/') || name.includes('\\')) throw new Error('paczka: niedozwolona ścieżka ' + name);
+    if (usize > 200 * 1024 * 1024 || (total += usize) > 256 * 1024 * 1024) throw new Error('paczka: za duża');
+    const lh = off, nl = dv.getUint16(lh + 26, true), el = dv.getUint16(lh + 28, true);
+    const raw = u8.subarray(lh + 30 + nl + el, lh + 30 + nl + el + csize);
+    if (method === 0) files[name] = raw.slice();
+    else if (method === 8) {
+      const ds = new DecompressionStream('deflate-raw');
+      const out = new Response(new Blob([raw]).stream().pipeThrough(ds));
+      files[name] = new Uint8Array(await out.arrayBuffer());
+    } else throw new Error('paczka: nieobsługiwana kompresja ' + method);
+  }
+  return files;
+}
 
 // ---------------------------------------------------------------- CRC-32 i zapis ZIP
 const CRC = (() => {
@@ -67,6 +116,10 @@ export async function zip(files) {
   return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
 }
 
+const sameBytes = (a, b) => !!a && !!b && a.length === b.length && a.every((x, i) => x === b[i]);
+const contentKey = (u8) => u8.length + ':' + crc32(u8);
+const extOf = (n) => n.slice(n.lastIndexOf('.') + 1).toLowerCase();
+
 // ---------------------------------------------------------------- zasoby sceny
 /**
  * Nazwy plików z assets, których używa scena: każdy tekst w scenie (src obrazu, font, klucze animacji, wartości pól)
@@ -87,46 +140,48 @@ export function sceneAssets(scene, known) {
 
 /**
  * Tworzy paczkę. `scenes` – sceny do spakowania, `pages` – strony tych scen (opcjonalnie),
- * `known` – lista nazw w assets, `fetchAsset(name)` → Uint8Array. Zwraca { blob, missing[], assets[] }.
+ * `known` – lista nazw w assets, `fetchAsset(name)` → Uint8Array. Zwraca { blob, missing[], assets[], merged[[nazwa, ta sama treść jak]] }.
+ * Czcionki o identycznej treści (i rozszerzeniu) trafiają do paczki raz, odnośniki w scenach wskazują jedną nazwę.
  */
 export async function buildPack({ scenes, pages = [], known, fetchAsset, generator = 'VizRS' }) {
   const enc = new TextEncoder();
   const names = new Set();
   for (const s of scenes) sceneAssets(s, known).forEach((n) => names.add(n));
   for (const p of pages) sceneAssets(p.values || {}, known).forEach((n) => names.add(n));
-  const files = {}, assets = [], missing = [];
+  const files = {}, assets = [], missing = [], same = new Map(), byKey = new Map();
   for (const name of [...names].sort()) {
     try {
       const data = await fetchAsset(name);
       if (!data || !data.length) throw new Error('pusty');
+      // ta sama czcionka pod dwiema nazwami (wgrana dwa razy) trafia do paczki raz – odnośniki wskazują pierwszą nazwę
+      if (FONT_RE.test(name)) {
+        const key = contentKey(data), twin = (byKey.get(key) || []).find((n) => extOf(n) === extOf(name) && sameBytes(files['assets/' + n], data));
+        if (twin) { same.set(name, twin); continue; }
+        byKey.set(key, [...(byKey.get(key) || []), name]);
+      }
       files['assets/' + name] = data;
       assets.push({ path: 'assets/' + name, name, kind: assetKind(name), bytes: data.length, crc32: crc32(data) });
     } catch { missing.push(name); }
   }
   const ids = new Set(scenes.map((s) => s.id));
   const strip = ({ rev, ...o }) => o; // eslint-disable-line no-unused-vars
-  const pk = { scenes: scenes.map(strip), pages: pages.filter((p) => ids.has(p.scene)).map(strip) };
+  const pk = renameAssets({ scenes: scenes.map(strip), pages: pages.filter((p) => ids.has(p.scene)).map(strip) }, same);
+  for (const s of pk.scenes) if (Array.isArray(s.packAssets)) s.packAssets = [...new Set(s.packAssets)];
   const manifest = {
     _type: PACK_TYPE, _packVersion: PACK_VERSION, generator, created: new Date().toISOString(),
     scenes: scenes.map((s) => ({ id: s.id, name: s.name || '' })), pages: pk.pages.length, assets,
   };
   files['manifest.json'] = enc.encode(JSON.stringify(manifest, null, 2));
   files['scenes.json'] = enc.encode(JSON.stringify(pk, null, 2));
-  return { blob: await zip(files), missing, assets };
+  return { blob: await zip(files), missing, assets, merged: [...same] };
 }
 
-/** Czy bajty to paczka VizRS (true), paczka BTB (`'btb'`) czy coś innego (false). */
+/** Czy bajty to paczka VizRS. */
 export async function packKind(u8) {
   if (!(u8[0] === 0x50 && u8[1] === 0x4b)) return false;
-  const files = await unzip(u8);
-  if (files['manifest.json']) {
-    try {
-      const m = JSON.parse(new TextDecoder().decode(files['manifest.json']));
-      if (m._type === PACK_TYPE) return true;
-      if (m._type === 'cg_element_pack') return 'btb';
-    } catch { /* niżej */ }
-  }
-  return files['element.json'] ? 'btb' : false;
+  const files = await unzip(u8).catch(() => ({}));
+  if (!files['manifest.json']) return false;
+  try { return JSON.parse(new TextDecoder().decode(files['manifest.json']))._type === PACK_TYPE; } catch { return false; }
 }
 
 /** Czyta i sprawdza paczkę VizRS → { manifest, scenes, pages, assets: Map<nazwa, Uint8Array> }. Rzuca Error z opisem. */
@@ -159,7 +214,6 @@ export async function readPack(u8) {
   return { manifest, scenes: body.scenes, pages: Array.isArray(body.pages) ? body.pages : [], assets };
 }
 
-const sameBytes = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 /**
  * Podmienia nazwy plików w obiekcie (sceny/strony) wg mapy stara → nowa. Dotyczy tekstów równych nazwie
@@ -180,24 +234,154 @@ export function renameAssets(obj, map) {
 }
 
 /**
- * Instaluje pliki z paczki w assets. Plik o tej samej nazwie i treści jest pomijany; o innej treści
- * dostaje nową nazwę (`nazwa_2.ext`), a odnośniki w scenach są przepisywane.
- * `existing` – lista nazw w assets, `fetchAsset(name)` → Uint8Array|null, `upload(name, data)` → Promise.
- * Zwraca { map: Map<stara, nowa>, uploaded[], skipped[] }.
+ * Reguły umieszczania pliku w assets – wspólne dla importu paczki i plików wgrywanych ręcznie
+ * (⤒ przy polu font, „Wgraj i dołącz”, przeciągnięcie pliku):
+ *  1. nazwa jak na serwerze (`safeAssetName`) – odnośnik w scenie zawsze wskazuje plik, który naprawdę powstał;
+ *  2. czcionka o treści identycznej z czcionką już wgraną (pod dowolną nazwą) nie jest wgrywana drugi raz –
+ *     używana jest istniejąca (renderer zna font po nazwie pliku, więc kopia byłaby drugą rodziną z tym samym krojem);
+ *  3. plik o tej samej nazwie i treści jest pomijany;
+ *  4. nic nie jest nadpisywane: ta sama nazwa (bez względu na wielkość liter – Windows i macOS ich nie rozróżniają)
+ *     z inną treścią → `nazwa_2.ext`, `nazwa_3.ext`…; gdy któraś z tych kopii ma już tę treść, używana jest ona.
+ * Te same reguły (w tej kolejności) stosuje wysyłka scen z VizRS CG Artist na serwer (`src/deploy.rs`, `Placer`).
+ * `existing` – nazwy w assets, `fetchAsset(name)` → Uint8Array|null, `upload(name, data)` → Promise (może zwrócić
+ * nazwę zapisaną przez serwer: tekst albo `{ name }`). Zwraca funkcję `place(name, data)` →
+ * { name, from, status: 'new'|'renamed'|'same'|'reused' } (`reused` – ta treść już była pod nazwą `name`).
  */
-export async function installAssets(assets, { existing, fetchAsset, upload }) {
-  const taken = new Set(existing), map = new Map(), uploaded = [], skipped = [];
-  for (const [name, data] of assets) {
-    let target = name;
-    if (taken.has(name)) {
-      const cur = await fetchAsset(name).catch(() => null);
-      if (cur && sameBytes(cur, data)) { skipped.push(name); continue; }
-      const dot = name.lastIndexOf('.');
-      for (let i = 2; taken.has(target); i++) target = `${name.slice(0, dot)}_${i}${name.slice(dot)}`;
-      map.set(name, target);
+export function assetPlacer({ existing, fetchAsset, upload }) {
+  const taken = new Map(); // nazwa małymi literami → nazwa
+  for (const n of existing) taken.set(n.toLowerCase(), n);
+  let fonts = null; // treść → nazwy czcionek (indeks budowany przy pierwszej czcionce)
+  const indexFont = (name, data) => { const k = contentKey(data); fonts.set(k, [...(fonts.get(k) || []), name]); };
+  const fontIndex = async () => {
+    if (fonts) return fonts;
+    fonts = new Map();
+    for (const n of taken.values()) {
+      if (!FONT_RE.test(n)) continue;
+      const d = await Promise.resolve().then(() => fetchAsset(n)).catch(() => null);
+      if (d?.length) indexFont(n, d);
     }
-    await upload(target, data);
-    taken.add(target); uploaded.push(target);
+    return fonts;
+  };
+  const read = (n) => Promise.resolve().then(() => fetchAsset(n)).catch(() => null);
+  return async function place(from, data) {
+    const want = safeAssetName(from);
+    if (!want || !ASSET_EXT.test(want)) throw new Error('niedozwolona nazwa pliku ' + from);
+    if (!data?.length) throw new Error(from + ': pusty plik');
+    if (FONT_RE.test(want)) {
+      const cands = (await fontIndex()).get(contentKey(data)) || [];
+      // najpierw ta sama nazwa i to samo rozszerzenie (WOFF2 i TTF tego kroju to różne pliki – nie łączymy ich)
+      const order = [...cands.filter((n) => n.toLowerCase() === want.toLowerCase()), ...cands.filter((n) => n.toLowerCase() !== want.toLowerCase())];
+      for (const n of order) {
+        if (extOf(n) !== extOf(want)) continue;
+        if (sameBytes(await read(n), data)) return { name: n, from, status: n.toLowerCase() === want.toLowerCase() ? 'same' : 'reused' };
+      }
+    }
+    const cur = taken.get(want.toLowerCase());
+    if (cur && !FONT_RE.test(want) && sameBytes(await read(cur), data)) return { name: cur, from, status: 'same' };
+    let target = want;
+    if (cur) {
+      const dot = want.lastIndexOf('.'), stem = want.slice(0, dot), ext = want.slice(dot);
+      for (let i = 2; ; i++) {
+        const cand = `${stem.slice(0, 120 - ext.length - String(i).length - 1)}_${i}${ext}`, had = taken.get(cand.toLowerCase());
+        if (!had) { target = cand; break; }
+        // wcześniejsza kopia `nazwa_N.ext` o tej samej treści (ponowny import, ponowna wysyłka) – bez kolejnej
+        if (!FONT_RE.test(want) && sameBytes(await read(had), data)) return { name: had, from, status: 'reused' };
+      }
+    }
+    const r = await upload(target, data);
+    const got = (typeof r === 'string' ? r : r?.name) || target;
+    taken.set(got.toLowerCase(), got);
+    if (fonts && FONT_RE.test(got)) indexFont(got, data);
+    return { name: got, from, status: got === from ? 'new' : 'renamed' };
+  };
+}
+
+/**
+ * Instaluje pliki z paczki w assets wg reguł `assetPlacer`; odnośniki w scenach przepisuje `renameAssets(…, map)`.
+ * Zwraca { map: Map<stara, nowa>, uploaded[], skipped[], reused[[stara, istniejąca]], renamed[[stara, nowa]] }.
+ */
+export async function installAssets(assets, opts) {
+  const place = assetPlacer(opts);
+  const map = new Map(), uploaded = [], skipped = [], reused = [], renamed = [];
+  for (const [name, data] of assets) {
+    const r = await place(name, data);
+    if (r.name !== name) map.set(name, r.name);
+    if (r.status === 'same') skipped.push(r.name);
+    else if (r.status === 'reused') reused.push([name, r.name]);
+    else { uploaded.push(r.name); if (r.status === 'renamed') renamed.push([name, r.name]); }
   }
-  return { map, uploaded, skipped };
+  return { map, uploaded, skipped, reused, renamed };
+}
+
+// ---------------------------------------------------------------- import (wspólny dla Artist i Trio)
+/** Nazwy plików wskazane w scenach (teksty wyglądające jak plik z assets), których nie ma w `existing`. */
+export function missingFiles(objs, existing) {
+  const have = new Set(existing.map((n) => n.toLowerCase())), out = new Set();
+  const visit = (v) => {
+    if (typeof v === 'string') { if (SAFE.test(v) && ASSET_EXT.test(v) && !v.includes(' ') && !have.has(v.toLowerCase())) out.add(v); }
+    else if (Array.isArray(v)) v.forEach(visit);
+    else if (v && typeof v === 'object') Object.values(v).forEach(visit);
+  };
+  visit(objs);
+  return [...out].sort();
+}
+
+/**
+ * Plik `.vizrs.json` (dawny eksport jednej sceny, bez plików) → paczka do `importPack`. Rzuca Error, gdy to nie scena.
+ */
+export function legacyScenePack(text) {
+  let s;
+  try { s = JSON.parse(text); } catch { throw new Error('plik nie jest poprawnym JSON'); }
+  if (!s || !Array.isArray(s.nodes)) throw new Error('to nie jest scena VizRS');
+  return { manifest: { _type: PACK_TYPE, legacy: true }, scenes: [s], pages: [], assets: new Map() };
+}
+
+/**
+ * Import paczki (wynik `readPack` albo `legacyScenePack`) na serwer albo do magazynu Artist:
+ *  – pliki wg reguł `assetPlacer`, odnośniki w scenach i stronach przepisane (`renameAssets`);
+ *  – sceny zawsze jako nowe (istniejące nie są nadpisywane; ta sama nazwa → raport „dodano jako kopię”);
+ *  – strony (`withPages`) wskazują nowe sceny; zajęty numer → nowy numer.
+ * `api(method, path, body)` → Promise (JSON, błąd z komunikatem serwera), `existing` – nazwy w assets,
+ * `fetchAsset`, `upload` – jak w `assetPlacer`, `sceneNames` – nazwy scen już istniejących.
+ * Zwraca { scenes: [zapisane], pages, report: [], uploaded, skipped, reused, renamed }.
+ */
+export async function importPack(pk, { api, existing, fetchAsset, upload, sceneNames = [], withPages = true }) {
+  const report = [];
+  const inst = await installAssets(pk.assets, { existing, fetchAsset, upload });
+  for (const [a, b] of inst.renamed) report.push(`plik ${a} zapisano jako ${b} (nazwa zajęta przez inny plik albo niedozwolone znaki)`);
+  for (const [a, b] of inst.reused) report.push(`${FONT_RE.test(a) ? 'czcionka' : 'plik'} ${a} jest już w zasobach jako ${b} – użyto istniejącej (bez kopii)`);
+  const scenesIn = renameAssets(pk.scenes, inst.map), pagesIn = renameAssets(pk.pages, inst.map);
+  if (pk.manifest?.legacy) {
+    report.push('starszy format .vizrs.json – bez grafik i czcionek; elementy przenoś paczką .cgpack (⇩ Eksport)');
+    for (const n of missingFiles(scenesIn, [...existing, ...inst.uploaded])) report.push(`brak pliku ${n} w zasobach – wgraj go albo zaimportuj paczkę .cgpack z tą sceną`);
+  }
+  const names = new Set(sceneNames), ids = new Map(), saved = [];
+  for (const s of scenesIn) {
+    const { id, rev, ...body } = s; // eslint-disable-line no-unused-vars
+    if (names.has(body.name)) report.push(`scena „${body.name}” już istnieje – dodano jako kopię`);
+    try { const sv = await api('POST', '/api/scenes', body); saved.push(sv); ids.set(id, sv.id); names.add(body.name); }
+    catch (e) { report.push(`scena „${body.name}”: ${e.message}`); }
+  }
+  let pages = 0;
+  if (!withPages && pagesIn.length) report.push(`${pagesIn.length} stron Trio pominięto – praca lokalna tworzy tylko sceny (strony zaimportuje Trio)`);
+  for (const p of withPages ? pagesIn : []) {
+    const sid = ids.get(p.scene); if (!sid) continue;
+    const { id, rev, ...body } = p; // eslint-disable-line no-unused-vars
+    body.scene = sid;
+    try { await api('POST', '/api/pages', body); pages++; }
+    catch (e) {
+      if (/zajęty/.test(e.message)) {
+        delete body.number;
+        try { await api('POST', '/api/pages', body); pages++; report.push(`strona ${p.number} „${p.name || ''}”: numer zajęty – nadano nowy`); }
+        catch (e2) { report.push(`strona ${p.number}: ${e2.message}`); }
+      } else report.push(`strona ${p.number}: ${e.message}`);
+    }
+  }
+  return { scenes: saved, pages, report, uploaded: inst.uploaded, skipped: inst.skipped, reused: inst.reused, renamed: inst.renamed };
+}
+
+/** Jedno zdanie podsumowania importu (raport Artist i Trio). */
+export function importSummary(r, withPages = true) {
+  const fonts = r.uploaded.filter((n) => FONT_RE.test(n)), had = r.skipped.length + r.reused.length;
+  return `Zaimportowano paczkę: ${r.scenes.length} scen${withPages ? `, ${r.pages} stron` : ''}, ${r.uploaded.length} nowych plików${fonts.length ? ` (czcionki: ${fonts.join(', ')})` : ''}${had ? `, ${had} plików już było` : ''}`;
 }

@@ -62,14 +62,14 @@ Panele Artist można poszerzać i zwężać, przeciągając cienkie rozdzielacze
 1. Otwórz **Artist** → **＋ Nowa**, podaj nazwę sceny.
 2. Kliknij puste tło kanwy – po prawej pojawią się **ustawienia sceny**. Ustaw **warstwę** (np. `main`) i **długość** (np. 1,5 s).
 3. **＋ Dodaj… → Prostokąt**. W **Właściwościach** ustaw X, Y, szerokość, wysokość i kolor tła belki (panel pokazuje najpierw podstawowe ustawienia – rzadsze odsłoni „＋ … rzadziej używanych” albo przycisk **Wszystko**; szukaj wpisując `/`; prawy klik na nazwie przywraca wartość domyślną) (możesz też przeciągać element na kanwie; strzałki przesuwają o 1 px, z Shift o 10 px; kółko myszy powiększa kanwę, środkowy przycisk przesuwa widok, Shift+1 dopasowuje całą scenę).
-4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze` (jak w BTB CG): długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej ustaw `maks. linii` = 2 i wybierz `squeeze-each` (operator łamie wiersze Enterem, każdy wiersz ściska się osobno, wysokość liter ta sama) albo `squeeze-lines` (wiersze dzielą się same; „łamanie wierszy” = `fill` wypełnia najpierw pierwszy wiersz, jak belki TVP), dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
+4. **＋ Dodaj… → Tekst**. Ustaw położenie, font, rozmiar, kolor. Nowy tekst ma dopasowanie `squeeze`: długi tekst zostanie ściśnięty, najwyżej do `min. ściśnięcie` (60%). Dla belki dwuwierszowej ustaw `maks. linii` = 2 i wybierz `squeeze-each` (operator łamie wiersze Enterem, każdy wiersz ściska się osobno, wysokość liter ta sama) albo `squeeze-lines` (wiersze dzielą się same; „łamanie wierszy” = `fill` wypełnia najpierw pierwszy wiersz, jak belki TVP), dla wąskiej plakietki o stałej szerokości – `squeeze-shrink` (po ściśnięciu zmniejsza font).
 5. Przy właściwości **tekst** kliknij **⛓** – powstaje pole kontrolne. W ustawieniach sceny (puste tło) nadaj mu etykietę, np. „Treść belki”.
 6. **Zapisz** (Ctrl+S), potem **＋ Utwórz stronę w Trio** w ustawieniach sceny.
 
 ### Własna czcionka i grafiki – paczka belek
 1. Zaznacz tekst, kliknij **⤒** przy polu **font** i wybierz plik czcionki (`.ttf`, `.otf`, `.woff`, `.woff2`) – tekst od razu jej używa, a czcionka pojedzie z paczką belki.
-2. Grafikę albo czcionkę, której scena nie wskazuje wprost, dołącz w ustawieniach sceny (puste tło): **Zasoby paczki** → **＋ Wgraj i dołącz**. Wgrana czcionka jest na liście fontów pod nazwą pliku (np. `MojFont.ttf`).
-3. **⇩ Paczka** → zaznacz sceny → **Pobierz .cgpack**. Na innym stanowisku: **⇧ Import** i wskaż plik – sceny, strony, grafiki i czcionki wgrają się razem.
+2. Grafikę albo czcionkę, której scena nie wskazuje wprost, dołącz w ustawieniach sceny (puste tło): **Zasoby paczki** → **＋ Wgraj i dołącz**. Wgrana czcionka jest na liście fontów pod nazwą pliku (np. `MojFont.ttf`). Tę samą czcionkę wystarczy wgrać raz – ponowne wgranie (także w paczce) używa już wgranej, a plik o zajętej nazwie i innej treści dostaje nazwę `MojFont_2.ttf`, niczego nie nadpisując.
+3. **⇩ Paczka** → zaznacz sceny → **Pobierz .cgpack** (jedną, bieżącą scenę zapisze też **⇩ Eksport**). Na innym stanowisku: **⇧ Import** w Artist albo **⇧ Import paczki** w Trio i wskaż plik – sceny, strony, grafiki i czcionki wgrają się razem. Belki przenoś zawsze paczką `.cgpack`; **⇩ Kopia show** w Trio to tylko kopia zapasowa całego show, bez grafik i czcionek.
 4. Komputer z OBS nie musi mieć czcionki – wyjście pobiera ją z serwera VizRS.
 
 ### Tło dopasowane do tekstu (autofollow)

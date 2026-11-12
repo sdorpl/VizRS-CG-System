@@ -2191,9 +2191,9 @@ mod tests {
         e.set_dock_on("2", "main", true).unwrap();
         assert_eq!(e.state_on("2").unwrap().arr("layers")[0].get("dockOff"), Some(&Json::Bool(true)));
         assert_eq!(load_channels(&d).iter().filter(|(c, _)| c == "2" || c == "3").count(), 2);
-        e.channel_add("2", Some("BTB\n Info")).unwrap();
-        assert_eq!(e.state().get("channelNames").unwrap().str("2"), Some("BTB Info"));
-        assert_eq!(load_labels(&d), [("2".to_string(), "BTB Info".to_string())]);
+        e.channel_add("2", Some("R7\n Info")).unwrap();
+        assert_eq!(e.state().get("channelNames").unwrap().str("2"), Some("R7 Info"));
+        assert_eq!(load_labels(&d), [("2".to_string(), "R7 Info".to_string())]);
         e.channel_delete("3").unwrap();
         assert!(!e.channel_names().contains(&"3".to_string()));
         assert!(e.channel_take("zła nazwa", "1001", None).is_err());

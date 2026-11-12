@@ -419,7 +419,7 @@ impl Player {
             }
             if let Some(m) = &node.motion {
                 if motion_used(m) {
-                    self.issue(i, "ruch na wzór BTB (motion)");
+                    self.issue(i, "ruch (motion)");
                 }
             }
             self.states[i].w = self.num(i, "w").max(0.0);
@@ -1408,7 +1408,7 @@ pub fn strip_markup(t: &str) -> String {
     crate::richtext::strip(t)
 }
 
-/// Czy ruch na wzór BTB (`node.motion`) coś robi.
+/// Czy ruch (`node.motion`) coś robi.
 pub fn motion_used(m: &Value) -> bool {
     let Some(o) = m.as_object() else { return false };
     o.iter().any(|(k, v)| match k.as_str() {
@@ -1436,7 +1436,7 @@ pub fn check_scene(scene: &Scene, fonts: &crate::font::FontDb) -> Vec<String> {
                 }
             };
             if n.motion.as_ref().is_some_and(motion_used) {
-                add("ruch na wzór BTB (motion)".into());
+                add("ruch (motion)".into());
             }
             let p = |k: &str| n.prop_at(k, 0.0, &Map::new());
             match n.kind.as_str() {

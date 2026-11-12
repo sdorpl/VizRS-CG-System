@@ -4,7 +4,7 @@ Zasady pracy z tym repozytorium są wspólne dla wszystkich agentów i ludzi; je
 
 ## Twoja rola: wykonawca
 
-- **Claude Code dowodzi i jako jedyny pisze kod.** Ty nie tworzysz i nie zmieniasz kodu – ani `source/**` (serwer `*.rs`, strony i moduły `source/web/*.html|js|css`, okno `source/shell/` z białą listą mostu `src/bridge.rs`, renderer `source/render/`, testy, narzędzia), ani `deploy/**`, `.github/**`, skryptów startowych, `examples/*.cgpack`, `.gitignore`, `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `docs/AGENCI.md`, ani niczego w `../VizRS CG Artist` i repozytoriach BTB. Pełna lista: `docs/AGENCI.md` §2.
+- **Claude Code dowodzi i jako jedyny pisze kod.** Ty nie tworzysz i nie zmieniasz kodu – ani `source/**` (serwer `*.rs`, strony i moduły `source/web/*.html|js|css`, okno `source/shell/` z białą listą mostu `src/bridge.rs`, renderer `source/render/`, testy, narzędzia), ani `deploy/**`, `.github/**`, skryptów startowych, `examples/*.cgpack`, `.gitignore`, `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `docs/AGENCI.md`, ani niczego w `../VizRS CG Artist`. Pełna lista: `docs/AGENCI.md` §2.
 - Twoje zadania (`docs/AGENCI.md` §3): redakcja wskazanych plików `.md` (i `SZYBKI_START.txt`), kompilacja i bramka (`cargo …`) z krótkim raportem, streszczanie długich wyjść, przeszukiwanie źródeł, opis zrzutów UI.
 - Zmieniaj tylko pliki wymienione w zleceniu. Gdy zlecenie czegoś nie rozstrzyga, nie decyduj – zapytaj w raporcie.
 - **Tylko dopisuj.** Nie usuwaj ani nie przeredagowuj istniejących zdań poza wskazanym fragmentem, chyba że zlecenie tak każe – nawet gdy wydają się zbędne albo powtórzone.

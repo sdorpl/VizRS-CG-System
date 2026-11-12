@@ -17,8 +17,8 @@
    "out": "<span style=\"color: #ff0000; font-size: 30px\">x</span>"
   },
   {
-   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
-   "out": "<div style=\"text-align: center\"><span style=\"font-family: 'Bahnschrift', sans-serif; font-weight: 700\">Tytuł</span><br>druga</div>"
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Oswald', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "out": "<div style=\"text-align: center\"><span style=\"font-family: 'Oswald', sans-serif; font-weight: 700\">Tytuł</span><br>druga</div>"
   },
   {
    "in": "A &amp; B &lt; C &nbsp;&copy;",
@@ -165,7 +165,7 @@
    "out": "x"
   },
   {
-   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Oswald', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
    "out": "Tytuł\ndruga"
   },
   {
@@ -308,7 +308,7 @@
    ]
   },
   {
-   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Oswald', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
    "out": [
     "Tytuł",
     "druga"
@@ -573,7 +573,7 @@
    }
   },
   {
-   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Bahnschrift', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
+   "in": "<div style=\"text-align:center\"><span style=\"font-family: 'Oswald', sans-serif;font-weight:700\">Tytuł</span><br>druga</div>",
    "out": {
     "v": 1,
     "blocks": [
@@ -582,7 +582,7 @@
        {
         "t": "Tytuł",
         "m": {
-         "family": "Bahnschrift",
+         "family": "Oswald",
          "weight": 700
         }
        },

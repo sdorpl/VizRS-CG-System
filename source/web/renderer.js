@@ -107,7 +107,7 @@ export const FONTS = ['Barlow Condensed', 'Barlow', 'Inter', 'Oswald', 'Bebas Ne
 export const EASES = ['inout', 'out', 'in', 'linear', 'back', 'hold'];
 
 export const LAYER_Z = { back: 1000, main: 2000, front: 3000 };
-// inne nazwy między main a front; `z<N>_nazwa` (N 0–99) – kolejność wg N jak numer warstwy w BTB CG
+// inne nazwy między main a front; `z<N>_nazwa` (N 0–99) – kolejność wg N (numer warstwy)
 export const layerZ = (n) => LAYER_Z[n] ?? 2500 + (+(/^z(\d{1,2})_/.exec(n) || [])[1] || 0);
 
 // ------------------------------------------------------------------ pomocnicze
@@ -520,7 +520,7 @@ export const squeezeFloor = (v) => Math.min(1, Math.max(0.3, +v || 0.6));
 
 /**
  * Dopasowanie tekstu do ramki (jak "Shrink"/"Squeeze" w Viz):
- *  squeeze        – jak w BTB CG: ściska tekst poziomo, najwyżej do `squeezeMin`; font się nie zmienia.
+ *  squeeze        – ściska tekst poziomo, najwyżej do `squeezeMin`; font się nie zmienia.
  *                   Gdy to za mało, tekst wystaje poza ramkę, a wynik ma `over` (ostrzeżenie dla operatora).
  *  squeeze-shrink – ściska do `squeezeMin`, a dopiero potem zmniejsza font
  *  shrink         – zmniejsza font, by zmieścić się w szerokości i w maxLines liniach
@@ -1250,7 +1250,7 @@ export class ScenePlayer {
       tk.cursor = pos;
       tk.pinK = null;
     }
-    // etykieta stała (jak wiper w trybie poziomym BTB)
+    // etykieta stała (wiper w trybie poziomym)
     css(tk.clip, 'left', labW + 'px');
     css(tk.lab, 'display', labW ? 'flex' : 'none');
     if (labW) {
@@ -1282,7 +1282,7 @@ export class ScenePlayer {
     tk.last = now;
     tk.d += p('speed') * dt;
     if (!tk.segs.length) tk.cursor = Math.max(tk.cursor, tk.d); // pusta taśma: start od prawej krawędzi
-    // crawlFrom=left: pierwsza wiadomość od lewej krawędzi, taśma od razu pełna (jak warstwa ticker w BTB CG)
+    // crawlFrom=left: pierwsza wiadomość od lewej krawędzi, taśma od razu pełna
     if (tk.fresh) { tk.fresh = false; if (p('crawlFrom') === 'left') tk.cursor = tk.d - vw; }
     crawlFill(tk, tk.d);
     while (tk.segs.length && tk.segs[0].pos + tk.segs[0].w < tk.d - vw) tk.segs.shift().el.remove();
@@ -1295,7 +1295,7 @@ export class ScenePlayer {
     tk.tape.style.transform = `translateX(${vw - tk.d}px)`;
   }
 
-  // ---- ruch na wzór BTB: efekty tekstu i pętle uwagi ----
+  // ---- ruch: efekty tekstu i pętle uwagi ----
 
   /**
    * Efekt tekstu (motion.textIn / textOut): tekst po dopasowaniu dzielony jest na jednostki (całość, słowa, znaki, linie),
@@ -1458,7 +1458,7 @@ export class ScenePlayer {
     return out;
   }
 
-  /** Stały efekt tła kształtu (motion.bg, jak `layer.effect` w BTB): gra od wejścia na wizję, także w trakcie IN/OUT. */
+  /** Stały efekt tła kształtu (motion.bg): gra od wejścia na wizję, także w trakcie IN/OUT. */
   bgFx(it, type, now, baseOp) {
     const s = (STEP ? MO.bgStateStep : MO.bgState)(type, (now - this.wallStart) / 1000, baseOp);
     this.need(STEP ? 40 : 0); // efekt tła gra cały czas
@@ -1505,7 +1505,7 @@ export class ScenePlayer {
     const fe = fontEpoch;
     const dt = this._lastApply ? Math.min(0.25, Math.max(0, (now - this._lastApply) / 1000)) : 10;
     this._lastApply = now;
-    // ruch na wzór BTB (node.motion): wyjście zaczyna się w ostatnim stop poincie; „po węźle” przesuwa wejście
+    // ruch (node.motion): wyjście zaczyna się w ostatnim stop poincie; „po węźle” przesuwa wejście
     const stops = this.stops, ls = stops.length ? stops[stops.length - 1] : null;
     const outStart = ls !== null && this.duration > ls + 1e-3 ? ls : Infinity;
     const shifts = this.items.some((i) => i.node.motion?.after) ? MO.sequenceShifts(this.scene.nodes) : null;
@@ -1626,7 +1626,7 @@ export class ScenePlayer {
             const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, lineBreak, fillSqueeze, hlBg, hlFg };
             const m = perLine ? fitLines(sp, text, fo) : fitText(sp, fo);
             it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;
-            // przepełnienie (jak `data-cg-overflow` / `cg-text-overflow` w BTB): Artist rysuje ramkę, wyjście zgłasza do /api/errors
+            // przepełnienie: Artist rysuje ramkę, wyjście zgłasza do /api/errors
             if (it.over) {
               el.dataset.over = '1';
               ScenePlayer.onOverflow?.({ scene: this.scene?.name || this.scene?.id || '?', node: n.name || n.id || '?', text: stripMarkup(text), sq: it.sq, min: squeezeFloor(sqMin) });
@@ -1784,7 +1784,7 @@ export class LayerHost {
       let dx = 0, dy = 0, dur = 0.6;
       if (!this.dockOff.has(name)) {
         for (const r of p.scene?.dock || []) {
-          // kilka celów „a|b”: przesunięcie raz, gdy na antenie jest którykolwiek (jak dokowanie do wielu rodziców w BTB)
+          // kilka celów „a|b”: przesunięcie raz, gdy na antenie jest którykolwiek
           const hit = String(r.target || '').split('|').some((t) => {
             const [kind, ...rest] = t.split(':'); const val = rest.join(':');
             return air.some((a) => a.layer !== name && (kind === 'layer' ? a.layer === val : kind === 'page' ? String(a.page) === val : kind === 'scene' ? a.scene === val : false));

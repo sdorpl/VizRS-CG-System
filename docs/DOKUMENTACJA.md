@@ -17,11 +17,10 @@
 9. [Trio – playout](#9-trio--playout)
 10. [Wyjście dla OBS i mikserów](#10-wyjście-dla-obs-i-mikserów)
 11. [Sterowanie zewnętrzne](#11-sterowanie-zewnętrzne)
-12. [Import z BTB CG](#12-import-z-btb-cg)
-13. [Uruchamianie, opcje, bezpieczeństwo](#13-uruchamianie-opcje-bezpieczeństwo)
-14. [Dane na dysku i kopie zapasowe](#14-dane-na-dysku-i-kopie-zapasowe)
-15. [Testy i narzędzia](#15-testy-i-narzędzia)
-16. [Znane ograniczenia](#16-znane-ograniczenia)
+12. [Uruchamianie, opcje, bezpieczeństwo](#12-uruchamianie-opcje-bezpieczeństwo)
+13. [Dane na dysku i kopie zapasowe](#13-dane-na-dysku-i-kopie-zapasowe)
+14. [Testy i narzędzia](#14-testy-i-narzędzia)
+15. [Znane ograniczenia](#15-znane-ograniczenia)
 
 ---
 
@@ -92,7 +91,7 @@ Zasady zgodności:
 - Wyjście po ponownym połączeniu dostaje `snapshot` i odtwarza stan anteny bez migotania: grafiki stają w swoich stop pointach.
 - Błąd w jednym węźle sceny nie psuje reszty: węzeł jest ukrywany, a wyjście zgłasza błąd do serwera (`/api/report`, znacznik „⚠ błędy scen” w Trio).
 
-Kolejność warstw na wyjściu: `back` < `main` < inne nazwy < `front`. Warstwy `z<N>_nazwa` (N 0–99, np. `z5_ticker`) układają się nad innymi nazwami wg N (większe wyżej) – jak numer warstwy w BTB CG; zawsze pod `front`.
+Kolejność warstw na wyjściu: `back` < `main` < inne nazwy < `front`. Warstwy `z<N>_nazwa` (N 0–99, np. `z5_ticker`) układają się nad innymi nazwami wg N (większe wyżej); zawsze pod `front`.
 
 ## 3. Model danych (show)
 
@@ -195,9 +194,9 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 - **Presety animacji** – biblioteka zestawów kluczy (czasy względne) wspólna dla stanowiska (`/api/animpresets`): zapis z węzła, wstawienie od bieżącego czasu, import/eksport pliku.
 - **Wyjście (OUT)** jest projektowane w scenie (klucze za ostatnim stop pointem). Dla gotowych zestawów `tools/out_choreo.py` generuje wyjścia całego show: teksty gasną z odjazdem, tła zmazują się maską zgodnie z wejściem.
 
-### 4.5 Ruch bez kluczy (presety jak w BTB CG)
+### 4.5 Ruch bez kluczy (presety)
 
-Obok kluczy węzeł może mieć **ruch opisany presetami** – tak jak zakładka „Ruch” w BTB CG Editor (`node.motion`, moduł `web/motion.js`, ta sama semantyka co `cgmotion.js` i btb-cgeditor `anim.rs`). Renderer liczy go z czasu sceny, więc działa jednakowo w Artist (przewijanie osi), w podglądzie Trio i na wyjściu OBS.
+Obok kluczy węzeł może mieć **ruch opisany presetami** (`node.motion`, moduł `web/motion.js`). Renderer liczy go z czasu sceny, więc działa jednakowo w Artist (przewijanie osi), w podglądzie Trio i na wyjściu OBS.
 
 | Sekcja | Pola | Czas |
 |---|---|---|
@@ -206,14 +205,14 @@ Obok kluczy węzeł może mieć **ruch opisany presetami** – tak jak zakładka
 | `textIn` / `textOut` – efekt tekstu | `type`, `dur`, `delay`, `stagger` (odstęp jednostek, puste = auto: znaki 0,04 s, słowa 0,09 s), `from` (start/end/center/edges) | jak wejście / wyjście |
 | `loop` – pętla uwagi | `type`, `dur` (okres), `amp` (siła), `color` | zegar ścienny, gdy grafika stoi (po wejściu, przed wyjściem) |
 | `after` | id węzła | wejście zaczyna się po wejściu wskazanego węzła (sekwencja) |
-| `origin` | `[x, y]` (0–1) | punkt odniesienia skali/obrotu ruchu, gdy preset go nie ustala (Artist: „punkt ruchu”); import BTB: `[0, 0]` dla ruchu całego elementu |
-| `bg` | `shimmer`, `pulse`, `glow`, `scanline` | stały efekt tła kształtu jak `effect` warstwy BTB (Artist: „efekt tła”) – gra od wejścia na wizję, także w trakcie IN/OUT |
+| `origin` | `[x, y]` (0–1) | punkt odniesienia skali/obrotu ruchu, gdy preset go nie ustala (Artist: „punkt ruchu”) |
+| `bg` | `shimmer`, `pulse`, `glow`, `scanline` | stały efekt tła kształtu (Artist: „efekt tła”) – gra od wejścia na wizję, także w trakcie IN/OUT |
 
 - **Presety IN/OUT (21):** wjazd, przenikanie, zoom, zoom z bliska, wyskok, przesłony pozioma i pionowa, przycięcie, rozmycie, odwrócenia X/Y (3D), obrót, skos, spadanie, glitch, wjazd z przeskokiem, rozsunięcie, maska ukośna, żaluzja, rosnący pasek, rozdzielenie RGB.
-- **Efekty tekstu (30 na wejściu, 26 na wyjściu):** wartości jak `cgmotion.js` na antenie BTB (maski `inset`, rozmycie 20 px całości i 14 px jednostek, przesunięcia 50/40 px): całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Wyjście ma te same grupy bez odsłonięcia, maszyny do pisania, szyfrowania i licznika; zamiast `clip-up` są `clip-down` i `hide`. Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
+- **Efekty tekstu (30 na wejściu, 26 na wyjściu):** (maski `inset`, rozmycie 20 px całości i 14 px jednostek, przesunięcia 50/40 px): całość (odsłonięcie, maszyna do pisania, maszyna z kursorem, z maski, przenikanie, rozmycie, skala, przesunięcia), **słowa / znaki / linie** (w górę, w dół, przenikanie, rozmycie, skala, z maski), szyfrowanie (scramble), licznik (pierwsza liczba w tekście liczy od 0 z zachowaniem formatu, np. „1 250,5”). Wyjście ma te same grupy bez odsłonięcia, maszyny do pisania, szyfrowania i licznika; zamiast `clip-up` są `clip-down` i `hide`. Tekst jest dzielony tylko na czas efektu – potem wraca dokładny układ (ściskanie, łamanie wierszy).
 - **Pętle uwagi (11):** pulsowanie, oddychanie, bicie serca, unoszenie, podskakiwanie, chwianie, drżenie, błyski, poświata, połysk, przesuwane podkreślenie. Wchodzą płynnie po wejściu i schodzą przed wyjściem; siła: pulsowanie/bicie serca – % skali, chwianie – stopnie, oddychanie – % krycia, unoszenie/podskakiwanie/drżenie – px.
-- **Krzywe (nazwy GSAP):** `power2.out` (domyślna), `power2.in`, `power2.inOut`, `power3.out`, `power4.out`, `expo.out`, `sine.inOut`, `linear`, `back.out`, `back.in`, `bounce.out`, `elastic.out` oraz aliasy BTB `spring`, `overshoot`, `broadcast`; przyjmowane są też `back.out(2)` i `cubic-bezier(…)`.
-- **Składanie z kluczami** (jak w BTB): przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą, maski dają część wspólną.
+- **Krzywe (nazwy GSAP):** `power2.out` (domyślna), `power2.in`, `power2.inOut`, `power3.out`, `power4.out`, `expo.out`, `sine.inOut`, `linear`, `back.out`, `back.in`, `bounce.out`, `elastic.out` oraz aliasy `spring`, `overshoot`, `broadcast`; przyjmowane są też `back.out(2)` i `cubic-bezier(…)`.
+- **Składanie z kluczami:** przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą, maski dają część wspólną.
 - Wyjście gra tylko, gdy scena ma stop point i czas po nim. Artist podpowiada **⟲ Dopasuj stop i długość** (stop po najdłuższym wejściu, długość = stop + najdłuższe wyjście).
 - Walidacja (`validate.rs`): typy z list, kierunki, czasy 0–60 s, krzywa tylko z liter, cyfr i `.(),-`, nieznane pola odrzucane.
 
@@ -264,7 +263,7 @@ Kolejność pól w Trio: najpierw warianty, potem w kolejności drzewa (albo wg 
 
 | Tryb | Działanie |
 |---|---|
-| `squeeze` | jak w BTB CG: ściska tekst poziomo, najwyżej do `squeezeMin` (domyślnie 60%); **font się nie zmienia**. Gdy to za mało, tekst wystaje poza ramkę, a Trio ostrzega. Domyślny tryb nowego tekstu w Artist |
+| `squeeze` | ściska tekst poziomo, najwyżej do `squeezeMin` (domyślnie 60%); **font się nie zmienia**. Gdy to za mało, tekst wystaje poza ramkę, a Trio ostrzega. Domyślny tryb nowego tekstu w Artist |
 | `squeeze-shrink` | ściska do `squeezeMin`, a dopiero potem zmniejsza font (dla wąskich, stałych pól: „NA ŻYWO”, etykiety) |
 | `squeeze-lines` | każdy wiersz osobno (z Enter albo automatyczny, wyrównany podział): ściskany do `squeezeMin`, poniżej zmniejsza się font tylko tego wiersza |
 | `squeeze-each` | wiersze wpisuje operator (Enter, do `maxLines`); **każdy wiersz ściskany osobno** do `squeezeMin`, font i wysokość wierszy bez zmian (belka dwuwierszowa jak w TV: różna szerokość liter, ta sama wysokość). Wiersz za długi nawet przy granicy jest dzielony, gdy zostało miejsce na kolejny; inaczej wystaje, a Trio ostrzega |
@@ -347,7 +346,7 @@ Za długa wiadomość w `roll`/`wipe`/`whip` jest dopasowywana wg `textFit` i `s
 
 | Obszar | Zawartość |
 |---|---|
-| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (JSON sceny), ⇩ Paczka (paczka belek `.cgpack`, §8.7), ⇧ Import (JSON sceny albo `.cgpack`), ⇧ Element (import elementu BTB CG), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W przeglądarce widoczne są zakładki i pasek górny; okno natywne `vizrs-shell` służy do pracy w Trio i podglądu wyjścia, a Artist do projektowania scen to VizRS CG Artist |
+| Pasek górny | wybór sceny (nazwa · warstwa), ＋ Nowa, ⧉ duplikuj, kosz – usuń, ⇩ Eksport (bieżąca scena jako paczka `.cgpack`), ⇩ Paczka (wybrane sceny w paczce `.cgpack`, §8.7), ⇧ Import (`.cgpack`, dawny `.vizrs.json`), ↶ ↷, ▢ Safe (obszary bezpieczne 5% / 10%), **Zapisz**. W przeglądarce widoczne są zakładki i pasek górny; okno natywne `vizrs-shell` służy do pracy w Trio i podglądu wyjścia, a Artist do projektowania scen to VizRS CG Artist |
 | Położenie sceny | przesuwa całą scenę naraz (`scene.x`, `scene.y`): pola „Położenie sceny” w ustawieniach sceny (⟲ zeruje), przeciągnięcie pustego miejsca kanwy albo strzałki (Shift = 10 px), gdy zaznaczona jest scena. Nie zmienia kluczy animacji ani `props` węzłów – animacje grają względem nowego położenia; to, co wychodzi poza kadr, jest przycinane. Działa na wyjściu, w podglądzie Trio i w rendererze natywnym; `dock` dodaje się do niego |
 | Drzewo sceny (lewo) | ＋ Dodaj… (typy węzłów i presety tickerów; przy zaznaczonej **grupie** nowy element trafia do niej, przy elemencie w grupie – obok niego, przy elemencie na najwyższym poziomie albo bez zaznaczenia – na najwyższy poziom), ↑ ↓ (kolejność), ⇤ wyjmij z grupy, ⇥ włóż do poprzedniej grupy, ⧉, ⤢ dopasuj wymiar grupy do zawartości, kosz; przeciąganie zmienia rodzica z zachowaniem położenia. 🔒/🔓 w wierszu blokuje element (`locked`, tak/nie) – zablokowanego, ani elementów wewnątrz zablokowanej grupy, nie da się chwycić na kanwie (klik trafia w element pod spodem), przesunąć strzałkami, przeciągnąć w drzewie ani usunąć; właściwości nadal edytuje się w panelu. Blokada działa tylko w Artist, nie wpływa na wyjście. **Wiersz sceny** (pierwszy, nadrzędny) pokazuje położenie całej sceny (X, Y), gdy różni się od 0. **Wymiar grupy** ustawia się sam, gdy grupa dostaje element (dodanie, ⇥, przeciągnięcie): szerokość i wysokość = zasięg zawartości, czyli największy element z jego przesunięciem w grupie |
 | Kanwa (środek) | podgląd sceny w czasie bieżącym; zaznaczanie i przeciąganie elementów; kliknięcie pustego miejsca = ustawienia sceny. **Zoom podglądu** (10–800%): kółko wokół kursora, −/＋, ⤢ dopasuj (Shift+1), 1:1 (Shift+2), ⌖ kadr na zaznaczony element (Shift+3); środkowy przycisk przesuwa widok. Zmiana rozmiaru panelu zachowuje zoom, zmiana sceny lub jej rozdzielczości wraca do dopasowania |
@@ -381,7 +380,7 @@ Zakładka **Ruch** zawiera grupę **Ruch – bez kluczy**: wejście, wyjście, t
 - Marker: **M** albo dwuklik na linijce; klik = skok, dwuklik = zmiana nazwy / usunięcie.
 - Zoom osi: suwak, Ctrl+kółko, ↔ dopasuj.
 
-### 8.4 Tryb sekwencji (prosty, jak „Ruch” w BTB CG Editor)
+### 8.4 Tryb sekwencji (prosty)
 
 Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu bez kluczy (§4.5). Wybór jest pamiętany na stanowisku.
 
@@ -391,7 +390,7 @@ Przycisk **≣ Sekwencja** na osi czasu przełącza widok kluczy na widok ruchu 
   - **⇶ Kaskada** – wejścia jedno po drugim co **krok** s (wyjścia w odwrotnej kolejności); elementy bez ruchu dostają przenikanie.
   - **↳ Po kolei** – każdy element wchodzi po zakończeniu wejścia poprzedniego (`motion.after`); przesunięcie liczy się samo, także gdy zmienisz czas poprzednika.
   - **⧉ Kopiuj ruch** – ruch zaznaczonego elementu na jego rodzeństwo (efekty tekstu tylko na tekstach).
-  - **◆ Na klucze** – presety wejścia/wyjścia zaznaczonego elementu zamienione na edytowalne klucze (jak „Presety na klucze” w BTB): typy liniowe z krzywą `power2.*`/`linear`/`back.out` dają dwa klucze, pozostałe – klucze co 1/30 s; odwrócenia 3D, przesłony, maska ukośna, żaluzja, rosnący pasek, RGB i glitch zostają presetami (raport). Pętle i efekty tekstu zostają. Węzeł z kluczami na tych samych właściwościach – odmowa.
+  - **◆ Na klucze** – presety wejścia/wyjścia zaznaczonego elementu zamienione na edytowalne klucze: typy liniowe z krzywą `power2.*`/`linear`/`back.out` dają dwa klucze, pozostałe – klucze co 1/30 s; odwrócenia 3D, przesłony, maska ukośna, żaluzja, rosnący pasek, RGB i glitch zostają presetami (raport). Pętle i efekty tekstu zostają. Węzeł z kluczami na tych samych właściwościach – odmowa.
   - **◇ Z kluczy** – odwrotność: klucze wejścia (do ostatniego stop pointu) i wyjścia (od niego) zaznaczonego elementu – położenie, krycie, skala, skos, rozmycie, przycięcie – dopasowane do presetu z kierunkiem, krzywą, czasem i opóźnieniem (przenikanie, zoom, wjazd, przycięcie, rozmycie, wyskok, spadanie…). Stan końcowy wejścia trafia do właściwości elementu, klucze tej fazy znikają; pozostałe klucze (np. obrót) zostają. Gdy żaden preset nie pasuje dokładnie (np. wjazd o 200 px zamiast spoza ekranu), Artist proponuje zamianę w przybliżeniu – inaczej faza zostaje kluczami (raport). Element z presetem wejścia/wyjścia – odmowa.
   - **✕ Usuń ruch** – usuwa ruch z zaznaczonego elementu (bez zaznaczenia – z całej grupy).
   - **⟲ Dopasuj** – stop point po najdłuższym wejściu, długość = stop + najdłuższe wyjście.
@@ -420,14 +419,27 @@ Zapis sceny nie zmienia grafiki na antenie: warstwa dostaje znacznik **⏳ nowa 
 
 Paczka przenosi belki między stanowiskami i serwerami jednym plikiem – razem z grafikami i czcionkami.
 
+**Zasady przenoszenia** (jedne dla VizRS CG Artist, `/artist` i Trio; kod: `web/cgpack.js`):
+- Elementy grafiki (belki, tickery, plansze) przenosi się **tylko paczką `.cgpack`**. Eksport jednej sceny (**⇩ Eksport**) i kilku (**⇩ Paczka**) zapisuje `.cgpack` – sceny, ich strony, grafiki i czcionki.
+- Dawny eksport sceny `.vizrs.json` (bez plików) jest tylko **czytany**: przechodzi przez ten sam import co paczka (scena zapisana jako nowa), a raport wymienia pliki, których brak w assets. Nowych plików `.vizrs.json` program nie zapisuje.
+- Import paczki jest jeden (`cgpack.importPack`) – w Artist (**⇧ Import**) i w Trio (**⇧ Import paczki**, §9): pliki wg reguł poniżej, sceny zawsze jako nowe (istniejące nie są nadpisywane), strony z numerem albo nowym, gdy numer jest zajęty; bieżący show i antena zostają.
+- Wysyłka scen z VizRS CG Artist na serwer stosuje te same reguły plików (`src/deploy.rs` w Artist).
+- `.show.json` w Trio (**⇩ Kopia show / ⇧ Przywróć show**) to kopia zapasowa całego show (strony, playlisty, rundowny, makra; bez plików), nie sposób przenoszenia belek.
+
 - **⇩ Paczka** otwiera listę scen (bieżąca zaznaczona), opcję „dołącz strony z Trio” i podsumowanie (ile scen, grafik, czcionek). **Pobierz .cgpack** zapisuje plik. Niezapisane zmiany bieżącej sceny trafiają do paczki w wersji z edytora.
 - Do paczki trafiają pliki z assets, których scena używa (obrazy i wideo w `src`, fonty w `font`, odnośniki `/assets/…` w tekstach, wartości stron) oraz **dołączone** ręcznie.
 - **Własna czcionka elementu:** **⤒** przy polu **font** (tekst, zegar, ticker) wgrywa plik TTF/OTF/WOFF/WOFF2 do assets i ustawia go w tym elemencie; scena używa go wprost, więc plik trafia do paczki bez dołączania.
 - **Zasoby paczki** w ustawieniach sceny: lista „Używane” (wykryte) i „Dołączone” (`scene.packAssets`, × odłącza). **＋ Wgraj i dołącz** wgrywa nowy plik (grafika, wideo, czcionka TTF/OTF/WOFF/WOFF2) do assets i dołącza go do sceny; lista „dołącz z assets…” dołącza plik już wgrany. Dołączaj pliki, których scena nie wskazuje wprost – np. czcionkę dla znaczników tekstu albo grafiki, które operator wybiera w Trio. „brak!” = pliku nie ma w assets.
-- **⇧ Import** przyjmuje `.cgpack`: pliki trafiają do assets (ten sam plik o tej samej treści jest pomijany, inna treść pod tą samą nazwą → `nazwa_2.ext` i przepisane odnośniki), sceny są dodawane jako nowe (istniejące nie są nadpisywane), strony dostają swój numer albo nowy, gdy numer jest zajęty. Raport pokazuje, co się zmieniło. Paczka elementu BTB CG wczytana przez ⇧ Import trafia do importu BTB (§12).
+- **Reguły plików** (import paczki, a w VizRS CG Artist także ⤒, „Wgraj i dołącz” i przeciągnięcie pliku; `cgpack.assetPlacer`):
+  1. nazwa jak na serwerze – znaki spoza `A–Z a–z 0–9 . _ -` → `_` (`Moja Czcionka.ttf` → `Moja_Czcionka.ttf`), odnośniki w scenie wskazują plik, który naprawdę powstał;
+  2. czcionka o treści identycznej z czcionką już wgraną (pod dowolną nazwą, z tym samym rozszerzeniem) nie jest wgrywana drugi raz – scena dostaje istniejącą (font z assets to rodzina o nazwie pliku, więc kopia byłaby drugim, osobno ładowanym krojem);
+  3. plik o tej samej nazwie i treści jest pomijany;
+  4. nic nie jest nadpisywane: ta sama nazwa (bez względu na wielkość liter – Windows i macOS ich nie rozróżniają) z inną treścią → `nazwa_2.ext`, `nazwa_3.ext`…; gdy któraś z tych kopii ma już tę treść (ponowny import, ponowna wysyłka), używana jest ona zamiast kolejnej.
+- **Eksport:** ta sama czcionka wgrana pod kilkoma nazwami trafia do paczki raz; odnośniki w scenach i `packAssets` paczki wskazują jedną nazwę (grafiki – bez zmian, każda nazwa osobno).
+- **⇧ Import** przyjmuje `.cgpack`: pliki trafiają do assets wg reguł wyżej (raport wymienia pliki zapisane pod nową nazwą i czcionki zastąpione istniejącymi), sceny są dodawane jako nowe (istniejące nie są nadpisywane), strony dostają swój numer albo nowy, gdy numer jest zajęty. Raport pokazuje, co się zmieniło.
 - Czcionki z paczki serwuje serwer (`/assets/<plik>`); wyjście `/output` ładuje je zawczasu (§4.8).
 
-Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista scen i plików z sumą CRC-32), `scenes.json` (`{ scenes, pages }` jak w show), `assets/<nazwa>`. Odczyt sprawdza ścieżki, typy plików, sumy i limity (200 plików, 256 MB). To format VizRS – nie jest eksportem do BTB CG.
+Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista scen i plików z sumą CRC-32), `scenes.json` (`{ scenes, pages }` jak w show), `assets/<nazwa>`. Odczyt sprawdza ścieżki, typy plików, sumy i limity (200 plików, 256 MB).
 
 ## 9. Trio – playout
 
@@ -438,7 +450,7 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 | Lewa | **Strony** (pole `nr` + Enter = wczytaj, szukaj, ⧉ Duplikuj, 🗑) i **Szablony** (＋ = nowa strona z wartościami domyślnymi) |
 | Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, **wybór warstwy**, ● ON AIR, 🔒, **⏱ kanał**); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
 | Prawa | monitor **PGM** (rzeczywiste wyjście, wybór tła monitora), **Na antenie – warstwy** (⏭ continue, ⏏ out, ⇅ dock, Wdróż teraz), zakładki **Playlista / Rundown / Makra** |
-| Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇩ Eksport show, ⇧ Import show, ✖ CLEAR ALL |
+| Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇧ Import paczki (`.cgpack` – dodaje sceny, strony i pliki, §8.7), ⇩ Kopia show, ⇧ Przywróć show (`.show.json`), ✖ CLEAR ALL |
 
 Lista **Antena** na górnym pasku wybiera antenę główną albo kanał playoutu (`+ nowy kanał…` dopisuje numer z ErsatzTV; adres `/trio?channel=2` otwiera go od razu). Na wybranej antenie działają TAKE, CONTINUE, OUT, CLEAR, lista „Na antenie”, monitor PGM, karuzela, rundown (każda antena ma własny kursor), makra i dock. Dane stron są wspólne, więc UPDATE dociera na każdą antenę z tą stroną, a Preview (ARM) jest jeden. Lista kanałów przeżywa restart; `− usuń kanał` zdejmuje jego grafikę.
 
@@ -494,7 +506,7 @@ F2 i F3 działają na warstwie, na której strona faktycznie gra, także gdy sza
 
 ### 9.6 Show na audycję
 
-Lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Import show zastępuje show aktywny – żeby wczytać plik jako osobną audycję, utwórz najpierw nowy show i dopiero potem importuj.
+Lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Przywróć show zastępuje show aktywny kopią `.show.json` – żeby wczytać kopię jako osobną audycję, utwórz najpierw nowy show i dopiero potem przywróć. Belki z innego stanowiska dodaje **⇧ Import paczki** (`.cgpack`) – bez zastępowania show.
 
 ### 9.7 ⚙ Stan systemu
 
@@ -506,7 +518,7 @@ Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudz
 
 ### 9.9 Trio na telefonie (`/mobile`)
 
-Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w poziomie. Korzysta z tego samego API co Trio, więc telefon i stanowisko widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego. Adres z tokenem: `http://<adres-serwera>:8088/mobile?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §13); token wyjścia nie otwiera tej strony (403).
+Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w poziomie. Korzysta z tego samego API co Trio, więc telefon i stanowisko widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego. Adres z tokenem: `http://<adres-serwera>:8088/mobile?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §12); token wyjścia nie otwiera tej strony (403).
 
 **Instalacja na telefonie (PWA):** strona ma manifest, ikonę i service workera, więc uruchamia się z ikony we własnym oknie, bez paska przeglądarki.
 
@@ -516,7 +528,7 @@ Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w pozi
 | iPhone | Safari → **Udostępnij** → **Do ekranu początkowego** | własne okno; start bez sieci i niewygaszanie tylko przez HTTPS |
 | Android, zwykłe HTTP | tylko skrót na ekranie | Chrome nie instaluje aplikacji bez HTTPS, skrót otwiera kartę przeglądarki |
 
-HTTPS musi mieć certyfikat zaufany przez telefon; certyfikat samopodpisany z ostrzeżeniem nie wystarczy. VizRS sam nie obsługuje TLS, więc potrzebne jest reverse proxy (§13, [RUNBOOK](RUNBOOK.md#vps-i-docker)).
+HTTPS musi mieć certyfikat zaufany przez telefon; certyfikat samopodpisany z ostrzeżeniem nie wystarczy. VizRS sam nie obsługuje TLS, więc potrzebne jest reverse proxy (§12, [RUNBOOK](RUNBOOK.md#vps-i-docker)).
 
 Bez tokenu w adresie `/mobile` pokazuje ekran logowania; po podaniu tokenu ciasteczko ważne jest rok, a token znika z adresu. `/mobile.webmanifest` i ikony są dostępne bez tokenu, bo przeglądarka pobiera je bez ciasteczka. Service worker przechowuje wyłącznie pliki interfejsu i zawsze najpierw pyta serwer, więc po aktualizacji telefon dostaje nową wersję. Bez sieci aplikacja startuje i pokazuje „brak połączenia”.
 
@@ -598,7 +610,7 @@ Czego jeszcze nie rysuje, zgłasza jako brak: playout przechodzi wtedy na Chromi
 | `group`, `rect`, `ellipse` (kolor, gradient, zaokrąglenie, ramka, cień), `image` PNG/JPEG, `qr` (te same moduły co `qr.js`) | obraz WebP/GIF/SVG, wideo |
 | `text`, `clock`: `textFit` (wszystkie tryby), `lineBreak`, `maxLines`, `padX`, `upper`, `spacing`, `lineHeight`, cień, `cycle`; tekst sformatowany (`[[wyróżnienie]]` z `hlColor`/`hlText`, `{b}`, `{i}`, `{u}`, `{c=}`, `{sz=}`); zegar `time`/`up`/`down`/`target`, strefy IANA | `{sz=}` nie powiększa wysokości wiersza (w przeglądarce większy fragment ją podnosi) |
 | `ticker` `crawl`, `roll`, `wipe`, `whip`: etykieta z `gleam`, plakietki kategorii i kolory, separatory (`text`, `dot`, `square`, `pipe`, `skew`), `crawlFrom`, `hold`, dopasowanie wiadomości, ciągłość po UPDATE | podgląd jednej wiadomości (`pin`, tylko Trio) |
-| klucze wszystkich animowanych właściwości, położenie sceny `x`/`y`, `opacity`, maski `clip*`, `blur`, `rotation`, `scale`, `skewX`, `blink` (też `fx=step`), `showIf`, `follow`, `dock`, warstwy i `?layers`/`?bus`/`?w`/`?h` | ruch na wzór BTB (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) |
+| klucze wszystkich animowanych właściwości, położenie sceny `x`/`y`, `opacity`, maski `clip*`, `blur`, `rotation`, `scale`, `skewX`, `blink` (też `fx=step`), `showIf`, `follow`, `dock`, warstwy i `?layers`/`?bus`/`?w`/`?h` | ruch (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) |
 | fonty wbudowane (§4.8) i z assets (`.ttf`, `.otf`, `.woff`, `.woff2`) | fonty z Google Fonts (spoza wbudowanych) |
 
 ```bash
@@ -615,7 +627,7 @@ vizrs-render stream --url 'http://vizrs:8088/output?token=…' --size 1920x1080 
 
 **Rysowanie tylko obszaru zmiany** (`stream` i `bench`; od 2026-11-11). Przy każdej klatce renderer liczy podpis drzewa rysowania (skrót węzła, skrót poddrzewa i obwiednię w px kanału razem z cieniami i rozmyciem) i porównuje go z poprzednim. Od nowa rysuje tylko prostokąt węzłów, które się zmieniły (stare i nowe położenie), na płótnie pomocniczym powiększonym o zasięg największego rozmycia w scenie. Dzięki temu rozmycie i cień przy krawędzi wychodzą tak samo jak przy pełnym rysowaniu. Do obrazu trafia tylko ten prostokąt. Całość rysuje się przy pierwszej klatce, przy zmianie liczby grafik, zasobów (fonty, obrazy), rozmiaru albo przekształcenia sceny, gdy obszar zmiany przekracza połowę obrazu oraz co 50. klatkę rysowaną częściowo (przy 50 kl./s – raz na sekundę; zabezpieczenie: gdyby obwiednia czegoś nie objęła, ślad zniknie najpóźniej po tylu klatkach). Rekord rodzaju 4 powstaje z zapamiętanego poprzedniego: zasięg alfy liczy się na nowo tylko w wierszach obszaru zmiany, a gdy prostokąt z grafiką się nie zmienił, w gotowym rekordzie podmienia się tylko ten obszar (bez skanu całego obrazu). Odbiorca z `p` dostaje przy tym sam zmieniony prostokąt (rodzaj 6): przewijany crawl pod planszą to ok. 0,6 MB na klatkę zamiast ok. 4 MB, odpowiedź renderera 6,9 ms zamiast 21 ms (mediana, ten sam host pod dużym obciążeniem), a VizRS CG Playout utrzymuje crawl w 50 kl./s (46–50 zmian paska na sekundę w nagraniu kanału). Piksele pozostają bez zmian: test `partial_redraw_matches_full_redraw` porównuje klatka po klatce rysowanie częściowe z pełnym (skala ¼ i ⅙, dwa obszary, rozmyta belka pod ruchomym elementem) – bajt w bajt, razem z rekordem. Pomiar (2026-11-11, Xeon E3-1270 v3, plansza z belką i taśmą na antenie, kanał 1080p50, w tle kodowanie kanału): nowy obraz z taśmą w 26 ms zamiast 56 ms (mediana), 4,6% zamiast 12,9% klatek po czasie, więc bezpiecznik płynności CG Playout (próg 10%) nie obniża już klatkażu do 25. Bez obciążenia: rysowanie zmiany 2,5 ms zamiast 14,5 ms.
 
-**Wierność:** `node tools/native-compare.js [show.json] [--out katalog] [--tickers] [--assets katalog]` porównuje każdą obsługiwaną stronę z Chromium (TAKE, zakończone wejście, zegary ukryte; tickery ukryte, z `--tickers` widoczne – obie strony 2,6 s po TAKE) i podaje odsetek pikseli różnych o więcej niż 24/255 oraz średni błąd: INFO24 i R7 poniżej 1% pikseli i 0,6/255 średnio. Plansze testowe `node tools/native-cases.js <katalog>` (pola, gradienty, cienie, przekształcenia, maski, wszystkie tryby dopasowania, fonty, znaczniki, obrazy, QR, autofollow) – 11 z 12 poniżej 2% (ściśnięty tekst wielowierszowy 3%: tylko wygładzanie krawędzi, bez przesunięć). Szerokości tekstu sprawdza `node tools/native-widths.js` (średnio 0,05 px różnicy, najwięcej 0,04%), moduły QR – test `render/tests/qr_vectors.rs`. Ruch: film `node tools/native-video.js --stats plik.csv` (§15) – błąd każdej klatki; w nagraniu `requestAnimationFrame` strony biegnie raz na klatkę, jak `beginFrame` na kanale. INFO24: średni błąd klatek (MSE) każdej strony poniżej 5; krótkie piki do ok. 30 zostają w ruchu (przesuw `roll`, wejścia) – linia bazowa przesuwanego tekstu wypada czasem na sąsiedni piksel.
+**Wierność:** `node tools/native-compare.js [show.json] [--out katalog] [--tickers] [--assets katalog]` porównuje każdą obsługiwaną stronę z Chromium (TAKE, zakończone wejście, zegary ukryte; tickery ukryte, z `--tickers` widoczne – obie strony 2,6 s po TAKE) i podaje odsetek pikseli różnych o więcej niż 24/255 oraz średni błąd: INFO24 i R7 poniżej 1% pikseli i 0,6/255 średnio. Plansze testowe `node tools/native-cases.js <katalog>` (pola, gradienty, cienie, przekształcenia, maski, wszystkie tryby dopasowania, fonty, znaczniki, obrazy, QR, autofollow) – 11 z 12 poniżej 2% (ściśnięty tekst wielowierszowy 3%: tylko wygładzanie krawędzi, bez przesunięć). Szerokości tekstu sprawdza `node tools/native-widths.js` (średnio 0,05 px różnicy, najwięcej 0,04%), moduły QR – test `render/tests/qr_vectors.rs`. Ruch: film `node tools/native-video.js --stats plik.csv` (§14) – błąd każdej klatki; w nagraniu `requestAnimationFrame` strony biegnie raz na klatkę, jak `beginFrame` na kanale. INFO24: średni błąd klatek (MSE) każdej strony poniżej 5; krótkie piki do ok. 30 zostają w ruchu (przesuw `roll`, wejścia) – linia bazowa przesuwanego tekstu wypada czasem na sąsiedni piksel.
 
 Reguły Blink i Skia, które renderer natywny odtwarza (zmiana którejkolwiek po stronie przeglądarki = test planszami):
 
@@ -649,20 +661,7 @@ Pełna lista komend, adresów i zdarzeń: [API.md](API.md); przyciski Stream Dec
 | webhook (`--webhook http://…`) | powiadomienia na zewnątrz: `onAir`, `offAir`, `error` | |
 | SSE `/events` | strumień zdarzeń stanu anteny | |
 
-## 12. Import z BTB CG
-
-VizRS **importuje** grafiki z BTB CG; eksportu w drugą stronę nie ma.
-
-- Artist → **⇧ Element**: element `.json` (eksport v3) albo `.cgpack` → scena + strona, z raportem konwersji (ostrzeżenia o tym, czego nie przeniesiono).
-- Przenoszone: układ, teksty z regułami, **ruch 1:1** (presety IN/OUT warstw i elementu z kierunkiem, czasem, opóźnieniem i krzywą, efekty tekstu, pętle uwagi, „po warstwie” przy wejściu → `node.motion`, §4.5; stop point po wejściu, długość = stop + wyjście), zegary (`HH:MM` → `HH:mm`), tickery (tryby `horizontal`→crawl, `vertical`→roll, `whip`, kategorie, kolory, etykieta, błysk), obrazy.
-- Ściskanie: warstwa z `squash` → `textFit: squeeze` z granicą `minSquash` (0 i brak granicy → bez granicy, w VizRS 0,3 – jak migracja BTB `upgrade-minsquash`); BADGE (BTB ściska wg długości, min. 50%) → ściskanie do wnętrza tła z granicą 0,5; tekst z auto-szerokością (`autoW`) → `squeeze` w szerokości `maxW` z granicą 0,5.
-- Warstwy tekstu bez pola (w BTB edytowane w WYSIWYG) dostają pola `tekst1`, `tekst2`… (etykiety „Tekst 1”, „Tekst 2”), a przy wyrównaniu do lewej szerokość do krawędzi tła.
-- Ruch całego elementu jak w BTB: punkt odniesienia w lewym górnym rogu (`motion.origin`), a przy skali layoutu ≠ 1 ruch w wewnętrznej grupie „ruch elementu” (przesunięcia skalowane jak `.cg-scene` w BTB). Efekty tła kształtów (`shimmer`, `pulse`, `glow`, `scanline`) → `motion.bg`. Efekt tekstu bez czasu/opóźnienia dostaje domyślne BTB (IN 1 s po 0,2 s, OUT 0,5 s).
-- Nieprzenoszone (ostrzeżenia): maski warstw, `layout.dock`, auto-szerokość `follow`, rozmiar `{sz=}` w px, „po warstwie” przy wyjściu (start równoczesny). Typ ruchu spoza listy → `fallback` z BTB albo przenikanie.
-- Zgodność sprawdza `tests/e2e/btb-visual.js` (stan po wejściu), z `--frames` także klatki 25/50/75% wejścia przy wspólnym zegarze obu stron.
-- Gotowe wzorce BTB: paczka `BTB.cgpack` ([opis](../examples/README.md)).
-
-## 13. Uruchamianie, opcje, bezpieczeństwo
+## 12. Uruchamianie, opcje, bezpieczeństwo
 
 ```bash
 ./start-linux.sh                       # Linux: gotowa binarka bin/linux-x86_64/vizrs
@@ -670,7 +669,7 @@ build-windows.bat → start-windows.bat  # Windows (wymaga Rust)
 ./build-macos-linux.sh                 # macOS / inne: bin/native/vizrs
 ```
 
-Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vizrs artist`, `vizrs trio`, `vizrs output` – okno aplikacji (§13.1); `vizrs --healthcheck` – sprawdza `/health` działającego serwera (kod wyjścia 0 = ok, 1 = błąd; dla Dockera i monitoringu).
+Komendy: `vizrs` albo `vizrs serve` – serwer bez GUI (UI w przeglądarce); `vizrs artist`, `vizrs trio`, `vizrs output` – okno aplikacji (§12.1); `vizrs --healthcheck` – sprawdza `/health` działającego serwera (kod wyjścia 0 = ok, 1 = błąd; dla Dockera i monitoringu).
 
 | Opcja | Zmienna | Domyślnie | Opis |
 |---|---|---|---|
@@ -706,7 +705,7 @@ Usługa systemowa: `deploy/` (systemd, launchd, Windows/NSSM).
 
 **Docker / VPS:** `docker build -t vizrs .` (statyczna binarka musl na pustym obrazie, ~3 MB, użytkownik 10001, healthcheck `vizrs --healthcheck`, dane w wolumenie `/data`, port komend TCP domyślnie wyłączony). Serwer z HTTPS: `deploy/docker-compose.yml` (VizRS + Caddy, Let's Encrypt), przykład nginx: `deploy/nginx-vizrs.conf`. Instrukcja krok po kroku: [RUNBOOK.md](RUNBOOK.md#vps-i-docker). Gotowy obraz z każdego wydania: `ghcr.io/sdorpl/vizrs:<wersja>` / `:latest` (amd64, arm64).
 
-### 13.1 Okna aplikacji (Trio, Output, zamrożony Artist)
+### 12.1 Okna aplikacji (Trio, Output, zamrożony Artist)
 
 Głównym narzędziem do projektowania scen jest osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist)** (`vizrs-cg-artist`, Tauri 2 dla systemów Linux, Windows i macOS; działa bez serwera i wysyła sceny na serwer).
 
@@ -733,14 +732,14 @@ Głównym narzędziem do projektowania scen jest osobny program **[VizRS CG Arti
 Wyszukiwanie przeglądarki: Linux – `chromium`, `chromium-browser`, `google-chrome(-stable)`, `microsoft-edge(-stable)`, `brave-browser`, `vivaldi` w `PATH`, potem Flatpak i Snap; Windows – Edge, Chrome, Brave, Chromium w `Program Files` i `%LOCALAPPDATA%` (Edge jest w każdym Windows 10/11); macOS – `/Applications` i `~/Applications`.
 
 **Skróty systemowe:**
-- Debian / Ubuntu 22.04+: `sudo apt install ./vizrs_<wersja>_amd64.deb` z wydania na GitHub (budowa: `deploy/deb/build.sh vizrs vizrs-shell wersja [wyjście]`). W menu: **VizRS Trio**, **VizRS Trio – serwer zdalny** (od razu okno „Połącz z serwerem”, §13.2); pakiet bez wpisu „VizRS Artist” i bez typów MIME (usunięto `deploy/vizrs-mime.xml` – skojarzenia `.cgpack`/`.vizrs.json` należą do paczki VizRS CG Artist). Dane okien w `~/.local/share/vizrs` (`VIZRS_DATA`). Pakiet zawiera usługę systemd `vizrs` (serwer bez GUI, dane `/var/lib/vizrs`, użytkownik `vizrs`) – domyślnie wyłączoną: `sudo systemctl edit vizrs` (token), `sudo systemctl enable --now vizrs`. Pakiet zbudowany lokalnie działa tylko na systemach z glibc co najmniej taką jak u budującego – wydanie budowane jest na Ubuntu 22.04.
+- Debian / Ubuntu 22.04+: `sudo apt install ./vizrs_<wersja>_amd64.deb` z wydania na GitHub (budowa: `deploy/deb/build.sh vizrs vizrs-shell wersja [wyjście]`). W menu: **VizRS Trio**, **VizRS Trio – serwer zdalny** (od razu okno „Połącz z serwerem”, §12.2); pakiet bez wpisu „VizRS Artist” i bez typów MIME (usunięto `deploy/vizrs-mime.xml` – skojarzenia `.cgpack`/`.vizrs.json` należą do paczki VizRS CG Artist). Dane okien w `~/.local/share/vizrs` (`VIZRS_DATA`). Pakiet zawiera usługę systemd `vizrs` (serwer bez GUI, dane `/var/lib/vizrs`, użytkownik `vizrs`) – domyślnie wyłączoną: `sudo systemctl edit vizrs` (token), `sudo systemctl enable --now vizrs`. Pakiet zbudowany lokalnie działa tylko na systemach z glibc co najmniej taką jak u budującego – wydanie budowane jest na Ubuntu 22.04.
 - Linux bez instalacji: `VizRS-Trio-…AppImage` z wydania na GitHub (budowa: `deploy/appimage/build.sh vizrs vizrs-shell wersja`; od 2.0.19 AppImage budowane są lokalnie i dołączane do wydania `gh release upload` razem z `SHA256SUMS-AppImage.txt` – akcja Release ich nie buduje; paczka AppImage dla Artist wydawana jest w repozytorium VizRS CG Artist). Okno natywne wymaga systemowego WebKitGTK 4.1 (`libwebkit2gtk-4.1-0`), bez niego otwiera się okno Chromium. Dane: `$VIZRS_DATA`, domyślnie `~/.local/share/vizrs` – drugie okno dołącza do serwera; binarka serwera kopiowana do `~/.cache/vizrs/<wersja>/` (serwer działa dłużej niż zamontowany obraz).
 - Linux: `deploy/install-desktop-linux.sh [vizrs] [katalog-danych]` – „VizRS Trio” w menu aplikacji (pliki `.desktop`, ikona `deploy/vizrs.svg`; skrót Artist tworzy instalator VizRS CG Artist).
 - Windows: instalator `VizRS-Trio-*-windows-x86_64-setup.exe` z wydania na GitHub (budowa przez Inno Setup na podstawie `deploy/windows/installer.iss`) – instaluje Trio w Menu Start (VizRS Trio, VizRS Trio – serwer zdalny, VizRS Serwer) z deinstalatorem. W archiwum `.zip` znajdują się skrypty uruchomieniowe (`start-trio.bat`, `start-trio-zdalnie.bat`, `start-serwer.bat`, `instaluj-skroty.bat`). Lokalne tworzenie skrótów: `build-windows.bat`, potem `powershell -ExecutionPolicy Bypass -File deploy\install-windows-shortcuts.ps1`.
 
 Trio pokazuje w pasku górnym wskaźnik **połączono / brak połączenia** z serwerem – przy pracy zdalnej (`--connect`) widać zerwanie łącza.
 
-### 13.2 Okno natywne (`vizrs-shell`)
+### 12.2 Okno natywne (`vizrs-shell`)
 
 `vizrs-shell` to okno **tylko Trio i wyjścia (podglądu)** z systemowym silnikiem stron: **WebKitGTK** (Linux), **WebView2** (Windows, to Chromium), **WKWebView** (macOS). Domyślnym rodzajem okna jest Trio. Projektowanie scen to osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist)** (`vizrs-cg-artist`), a `/artist` w serwerze pozostaje jako zamrożony zapas w przeglądarce.
 
@@ -779,12 +778,12 @@ Wywołanie `vizrs-shell artist` oraz podanie pliku (`.cgpack`, `.vizrs.json`) ko
 - **Wygląd:** strony wiedzą, że są w oknie natywnym (`window.__vizrsShell`) – chowają logo i zakładki Trio / Wyjście (są w menu Plik) i nie pokazują menu przeglądarki pod prawym przyciskiem.
 - **Odnośniki:** strony serwera (np. „Wyjście ↗”) otwierają się w nowym oknie powłoki, adresy spoza serwera w przeglądarce systemowej. Strona nie ma dostępu do systemu – przez most okna przechodzi wynik skryptu testowego `--probe`, wybór serwera wyłącznie z wbudowanego okna połączenia (strony serwera nie mogą przełączyć okien), a ze strony Trio serwera biała lista komunikatów (`shell/src/bridge.rs`: stan okna, decyzja o zamknięciu, kopia robocza pod nazwą ze skrótu). Most w `source/web/native.js` woła `window.__vizrsPost` (okno Tauri VizRS CG Artist), inaczej `window.ipc.postMessage` (wry).
 - **Pisownia:** na Linuksie polska (słownik hunspell `pl_PL` z systemu, pakiet `hunspell-pl`); na Windows i macOS według ustawień systemu.
-- **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24, R7 i BTB_PILNE – 82/82 pól tekstowych z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.
+- **Wierność:** WebKitGTK zmierzony z Chromium (OBS) na wszystkich stronach zestawów INFO24 i R7 – wszystkie pola tekstowe z identycznym ściśnięciem, szerokością i wysokością (`node tools/engines.js`). WebView2 to Chromium; WKWebView (macOS) – niezmierzony.
 - **Wymagania:** Linux – biblioteki `libwebkit2gtk-4.1` i GTK 3 (są w typowym pulpicie; do budowy pakiety `-dev`); Windows – WebView2 Runtime (w Windows 10/11); macOS 10.15+.
 - **Budowa:** `cd source/shell && cargo build --release` (osobny workspace z zależnościami – rdzeń `vizrs` dalej ich nie ma). Linux: `bin/linux-x86_64/vizrs-shell`; Windows: `build-windows.bat` buduje też `vizrs-shell.exe`.
 - **Skróty:** `deploy/install-desktop-linux.sh` i `deploy\install-windows-shortcuts.ps1` używają okna natywnego dla Trio, gdy `vizrs-shell` leży obok `vizrs` (wymuszenie okna Chromium: `--chromium` / `-Chromium`). Skróty dotyczą Trio i serwera (skojarzenia plików i Artist należą do VizRS CG Artist).
 
-## 14. Dane na dysku i kopie zapasowe
+## 13. Dane na dysku i kopie zapasowe
 
 | Ścieżka | Zawartość |
 |---|---|
@@ -800,13 +799,14 @@ Wywołanie `vizrs-shell artist` oraz podanie pliku (`.cgpack`, `.vizrs.json`) ko
 
 Gotowe oprawy (`.cgpack`) i sposób ich wczytania: [examples/README.md](../examples/README.md).
 
-## 15. Testy i narzędzia
+## 14. Testy i narzędzia
 
 ```bash
 cd source
 cargo clippy --all-targets -- -D warnings
 cargo test                                           # silnik, API, JSON, walidacja, kopie
-node tests/vectors/run.js && node tests/vectors/btb.js   # wspólne wektory z BTB, konwersja
+node tests/vectors/run.js                            # wektory modelu tekstu
+node tests/cgpack.mjs                                # reguły paczki .cgpack (pliki, import)
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
 node tests/e2e/mobile.js target/release/vizrs [katalog]   # E2E Trio na telefonie (emulacja dotyku; katalog = zrzuty)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
@@ -814,7 +814,6 @@ node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (ekspo
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja
 node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output, klatki lekkiego wyjścia ?fps/?fx=step)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe
-node tests/e2e/btb-visual.js target/release/vizrs <katalog> [--frames]  # porównanie z BTB CG (--frames: klatki wejścia)
 node tests/e2e/app.js target/release/vizrs          # okna aplikacji (udawana przeglądarka)
 node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell   # okno natywne w działaniu
 node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell     # zgodność WebView okna z Chromium (0 różnic)
@@ -824,13 +823,9 @@ node tools/native-compare.js                         # zgodność renderera naty
 
 | Narzędzie | Do czego |
 |---|---|
-| `tools/sync-btb.sh [--check]` | odświeżenie `text-model.js` i wektorów z BTB-CG, wykrycie rozjazdu |
-| `tools/build-btb-pack.mjs` | odbudowa `examples/archiwum/BTB_CG` ze wzorców BTB CG |
-| `tools/measure-btb-alpha.cjs`, `tools/build-btb-alpha.mjs` | grafiki gałęzi alpha BTB CG (szablony HTML/CSS/JS): pomiar DOM na wyjściu działającego serwera BTB → `examples/archiwum/BTB_ALPHA/zrodlo.json`, potem sceny i strony → `BTB_ALPHA/show.json` (paczka `BTB_ALPHA.cgpack`) |
-| `tools/build-btb-trio.mjs`, `tools/btb-measure-lib.mjs` | grafiki gałęzi TRIO BTB CG z powiązaniami: pomiar tym samym skryptem → `examples/archiwum/BTB_TRIO/zrodlo.json`, sceny, strony i `scene.dock` → `BTB_TRIO/show.json` (paczka `BTB_TRIO.cgpack`); wspólne funkcje pomiar → węzły w `btb-measure-lib.mjs` |
-| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` z `examples/archiwum/` |
+| `tools/build-packs.mjs [katalog]` | budowa paczek `examples/INFO24.cgpack`, `R7_NEWS.cgpack` z `examples/archiwum/` |
 | `tools/gallery.js [vizrs] [--out katalog]` | galeria wszystkich stron zestawów przykładowych (zrzut każdej strony po wejściu, arkusze, `index.html`); wynik poza repo, domyślnie `<tmp>/vizrs-galeria` |
-| `tools/video.js [vizrs] [--only R7,BTB] [--fps 25]` | film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080), nagrywany klatka po klatce w czasie wirtualnym; wymaga ffmpeg. Lista paczek: `tools/sets.js` |
+| `tools/video.js [vizrs] [--only INFO24,R7] [--fps 25]` | film ze wszystkimi paczkami (każda strona TAKE → CONTINUE → OUT, 1920×1080), nagrywany klatka po klatce w czasie wirtualnym; wymaga ffmpeg. Lista paczek: `tools/sets.js` |
 | `tools/native-cases.js <katalog>` | plansze testowe renderera natywnego (12 stron wariantów: pola, gradienty, cienie, przekształcenia, maski, dopasowanie tekstu, fonty, znaczniki, obrazy, QR, autofollow) – do `native-compare.js <katalog>/show.json --assets <katalog>/assets` |
 | `tools/native-widths.js [vizrs]` | szerokości tekstu Chromium i renderera natywnego (`render/examples/measure`) dla fontów wbudowanych, grubości, rozmiarów ułamkowych, odstępów i kursywy |
 | `tools/native-video.js [vizrs] [--only INFO24,R7] [--out plik.mp4] [--stats plik.csv]` | film porównawczy renderera natywnego (§10.1) z Chromium: każda strona TAKE → CONTINUE → OUT, oba renderery w tych samych chwilach (czas wirtualny), kadr 2×2 – Chromium, natywnie, różnica ×4, opis strony (czy cała natywnie, czas klatki); `--stats`: błąd (MSE) każdej klatki do CSV i podsumowanie stron (zrzuty PNG); wymaga ffmpeg |
@@ -842,6 +837,6 @@ Pełna bramka przed commitem: [../CLAUDE.md](../CLAUDE.md#testy-bramka-przed-com
 
 CI: `.github/workflows/ci.yml` (Linux, macOS, Windows).
 
-## 16. Znane ograniczenia
+## 15. Znane ograniczenia
 
 Aktualna lista, uszeregowana od niezawodności do funkcji: [LUKI.md](LUKI.md).

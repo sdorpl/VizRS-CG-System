@@ -24,7 +24,7 @@ Kodem jest wszystko, co wpływa na działanie albo budowanie, w tym:
 - `deploy/**` (paczki, usługa, skróty, proxy), `.github/**`, `start-*.sh`, `start-*.bat`, `build-windows.bat`, `bin/`, `.gitignore`,
 - przykłady i dane: `examples/*.cgpack`, `examples/**/*.json`, wektory testowe,
 - reguły pracy agentów: `CLAUDE.md`, `GEMINI.md`, ten plik,
-- cokolwiek w `../VizRS CG Artist`, `../BTB-CG-System-alpha`, `../btb-cgeditor` – to osobne repozytoria, tu tylko do czytania.
+- cokolwiek w `../VizRS CG Artist` – to osobne repozytorium, tu tylko do czytania.
 
 Gemini może te pliki **czytać**. Gdy zobaczy w nich błąd, opisuje go w raporcie (`plik:wiersz`, objaw, propozycja słowami) – nie wysyła łatki.
 
@@ -35,7 +35,7 @@ Gemini może te pliki **czytać**. Gdy zobaczy w nich błąd, opisuje go w rapor
 | Dokumentacja | `docs/DOKUMENTACJA.md`, `docs/INSTRUKCJA-poczatkujacy.md`, `docs/API.md`, `docs/RUNBOOK.md`, `docs/STATUS.md`, `docs/LUKI.md`, `docs/README.md`, `docs/plany/*.md`, `README.md`, `CHANGELOG.md`, `SZYBKI_START.txt`, `examples/README.md` – tylko pliki wskazane w zleceniu, zgodnie z „Gdzie co opisywać” w `CLAUDE.md` |
 | Kompilacja i bramka | z katalogu `source/`: `cargo build --release`, `cargo clippy --all-targets -- -D warnings`, `cargo test`; okno i renderer w `source/shell/`, `source/render/`; `cargo fmt` tylko z `--check` – uruchomić i streścić |
 | Długie wyjścia | streszczenie logów serwera i okna, wyników testów E2E (`source/tests/e2e/*.js`), `tools/engines.js`, `tools/native-compare.js` |
-| Wyszukiwanie | przegląd źródeł (także `../VizRS CG Artist`, BTB CG), grep po repo – raport z odnośnikami `plik:wiersz` |
+| Wyszukiwanie | przegląd źródeł (także `../VizRS CG Artist`), grep po repo – raport z odnośnikami `plik:wiersz` |
 | Kontrola tekstu | spójność dokumentacji z kodem (np. skróty i menu w `DOKUMENTACJA.md` a strony `source/web/`, opcje CLI a `config.rs` / `--help`, API w `docs/API.md` a trasy w `main.rs`), literówki, martwe odnośniki – zmiany tylko w `.md` z listy wyżej |
 | Zrzuty UI | opis zrzutów ekranu, które wykonał Claude (pliki PNG poza repo) |
 
@@ -57,7 +57,7 @@ Do kontekstu trafia tylko kod wyjścia, ogon albo odfiltrowane błędy – nigdy
 **Zlecaj Gemini**, gdy zadanie daje dużo tekstu przy małej liczbie decyzji i nie da się go zastąpić filtrem:
 
 - **proza dokumentacji** do gotowej zmiany kodu (Claude podaje fakty, Gemini pisze, Claude przegląda tylko diff) – oszczędza drogie tokeny wyjściowe Claude; `DOKUMENTACJA.md` i `INSTRUKCJA-poczatkujacy.md` są długie, więc zysk jest tu największy,
-- **przeszukiwanie dużych źródeł**, gdy Claude musiałby czytać dziesiątki plików (np. `source/web/artist.html`, `trio.html`, BTB CG) – raport ze ścisłym formatem,
+- **przeszukiwanie dużych źródeł**, gdy Claude musiałby czytać dziesiątki plików (np. `source/web/artist.html`, `trio.html`) – raport ze ścisłym formatem,
 - **długie logi bez struktury**, których nie da się sensownie przefiltrować (logi WebKitGTK, Chromium, serwera) – Claude zapisuje log do pliku, Gemini tylko czyta.
 
 **Rób sam**, gdy:

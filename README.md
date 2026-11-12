@@ -34,7 +34,7 @@ Paczki `.deb` i AppImage (`VizRS-Trio-…AppImage`), binarki oraz obraz Docker s
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
 W OBS: Źródła → **+** → **Przeglądarka**, URL `http://localhost:8088/output`, 1920 × 1080.
-Opcje (`--port`, `--bind`, `--token`, `--data`…, zmienne `VIZRS_*`): `vizrs --help` i [DOKUMENTACJA §13](docs/DOKUMENTACJA.md#13-uruchamianie-opcje-bezpieczeństwo).
+Opcje (`--port`, `--bind`, `--token`, `--data`…, zmienne `VIZRS_*`): `vizrs --help` i [DOKUMENTACJA §12](docs/DOKUMENTACJA.md#12-uruchamianie-opcje-bezpieczeństwo).
 Domyślnie serwer słucha tylko na `127.0.0.1`; w sieci wymaga tokenu.
 
 ## Dokumentacja
@@ -45,7 +45,7 @@ Domyślnie serwer słucha tylko na `127.0.0.1`; w sieci wymaga tokenu.
 | [Pełna dokumentacja](docs/DOKUMENTACJA.md) | wszyscy – model, Artist, Trio, wyjście, tekst, ticker, opcje, dane |
 | [API](docs/API.md) · [Companion](docs/COMPANION.md) | integratorzy, realizatorzy (HTTP, TCP, OSC, webhook, Stream Deck) |
 | [Runbook](docs/RUNBOOK.md) | dyżur techniczny – awarie, VPS/Docker, Render.com, lista kontrolna przed emisją |
-| [Paczki grafik](examples/README.md) | gotowe oprawy INFO24, R7 NEWS, BTB (`.cgpack`) |
+| [Paczki grafik](examples/README.md) | gotowe oprawy INFO24 i R7 NEWS (`.cgpack`) |
 | [Historia zmian](CHANGELOG.md) | wszyscy |
 | [Spis wszystkich dokumentów](docs/README.md) | w tym stan prac, znane braki, plany |
 
