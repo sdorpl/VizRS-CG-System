@@ -10,7 +10,7 @@
 #   webkit2gtk (tylko Linux, już zależność wry: pisownia polska w WebKitGTK).
 [package]
 name = "vizrs-shell"
-version = "26.11.1"
+version = "26.11.2"
 edition = "2021"
 description = "Natywne okno VizRS Artist / Trio"
 
