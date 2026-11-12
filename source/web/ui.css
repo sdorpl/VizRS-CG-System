@@ -1,80 +1,50 @@
-/* VizRS – wspólny styl interfejsów Artist / Trio */
-:root {
-  --bg: #121316;
-  --panel: #1a1c20;
-  --panel2: #22252b;
-  --line: #2e323a;
-  --text: #d9dde4;
-  --dim: #8a909c;
-  --acc: #f0a020;
-  --acc-d: #b97510;
-  --red: #e5322d;
-  --green: #2fb46a;
-  --blue: #3d8bfd;
-  --sel: #2b3c5a;
-  --mono: ui-monospace, "JetBrains Mono", "Roboto Mono", Consolas, monospace;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.35 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
-button, input, select, textarea { font: inherit; color: inherit; }
-button {
-  background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 4px 10px; cursor: pointer; white-space: nowrap;
-}
-button:hover { border-color: #4a505c; background: #2a2e35; }
-button:active { transform: translateY(1px); }
-button.acc { background: var(--acc); color: #1a1100; border-color: var(--acc); font-weight: 600; }
-button.acc:hover { background: #ffb53a; }
-button.danger:hover { border-color: var(--red); color: #ff8a86; }
-button.icon { padding: 2px 6px; min-width: 26px; }
-button:disabled { opacity: .45; cursor: default; }
-input, select, textarea {
-  background: #0e0f12; border: 1px solid var(--line); border-radius: 3px; padding: 3px 6px; outline: none; min-width: 0;
-}
-input:focus, select:focus, textarea:focus { border-color: var(--acc-d); }
-input[type=color] { padding: 0; width: 28px; height: 24px; border: none; background: none; cursor: pointer; }
-input[type=checkbox] { accent-color: var(--acc); }
-textarea { resize: vertical; }
-label { color: var(--dim); }
-h3 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
-.panel > header { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--line); background: #1d2024; min-height: 34px; }
-.panel > header h3 { flex: 1; }
+/* ui.css – style własne aplikacji Trio i Artist (VizRS CG System; kopia w VizRS CG Artist przez tools/sync-cg.sh).
+   Ładowany PO wspólnym rdzeniu vizrs-ui.css (tokeny, przyciski, pola, pigułki, tabele, okna – wygląd panelu VizRS Live);
+   tu tylko to, czego rdzeń nie ma albo co stanowisko robi inaczej. Kolory tylko przez zmienne z :root rdzenia.
+   Zamrożony /artist i strona startowa używają ui-frozen.css (dawny wygląd). */
+
+/* pola stanowiska mają naturalną szerokość (rdzeń: 100% jak w formularzach Live); szerokie pola ustawia strona */
+input, select, textarea { width: auto; }
+input[type=color] { padding: 0; width: 28px; height: 24px; border: none; background: none; cursor: pointer; box-shadow: none; }
+textarea { font-family: inherit; font-size: inherit; }
+h3 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--dim); }
+
+/* panele stanowiska (karty rdzenia) w kolumnach o stałej wysokości */
+.panel { min-height: 0; }
+.panel > header { gap: 6px; padding: 6px 10px; min-height: 38px; flex-wrap: nowrap; }
+.panel > header h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scroll { overflow: auto; min-height: 0; flex: 1; }
 .row { display: flex; align-items: center; gap: 6px; }
-.grow { flex: 1; }
-.dim { color: var(--dim); }
-.mono { font-family: var(--mono); }
-.topbar { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: #0b0c0e; border-bottom: 1px solid var(--line); }
-.brand { font-weight: 800; letter-spacing: .04em; }
-.brand b { color: var(--acc); }
-.topbar nav a { color: var(--dim); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
-.topbar nav a.on, .topbar nav a:hover { color: var(--text); background: var(--panel2); }
-.checker { background: repeating-conic-gradient(#26282d 0 25%, #1c1e22 0 50%) 0 0 / 20px 20px; }
-.pill { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); color: var(--dim); }
-.pill.on { background: var(--red); border-color: var(--red); color: #fff; }
-.pill.ok { background: #173d29; border-color: var(--green); color: #7fe0a8; }
-.list .item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #23262c; cursor: pointer; user-select: none; }
-.list .item:hover { background: #20242a; }
-.list .item.sel { background: var(--sel); }
-.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #2a2e35; border: 1px solid var(--line); padding: 8px 14px; border-radius: 6px; z-index: 1000; box-shadow: 0 6px 24px rgba(0,0,0,.5); transition: opacity .3s; }
-.toast.err { border-color: var(--red); color: #ffb3b0; }
-kbd { font-family: var(--mono); font-size: 11px; background: #0e0f12; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 3px; padding: 0 4px; color: var(--dim); }
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: #33373f; border-radius: 5px; border: 2px solid var(--panel); }
-::-webkit-scrollbar-track { background: transparent; }
+.checker { background: var(--checker) 0 0 / 20px 20px; }
+/* przyciski z ikoną w nagłówkach paneli: przezroczyste jak w Live, ale szerokie na tekst („OBS ⧉”, „＋”) */
+button.icon { width: auto; height: auto; min-width: 28px; min-height: 26px; padding: 2px 7px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+
+/* listy (strony, szablony, warstwy, playlisty, rundown) – jak wiersze tabel Live */
+.list .item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); cursor: pointer; user-select: none; transition: background var(--t); }
+.list .item:hover { background: var(--hover); }
+.list .item.sel { background: var(--sel); box-shadow: 3px 0 0 var(--acc) inset; }
+
+/* pasek górny: odnośniki do innych stron (w przeglądarce) */
+.topbar nav { display: flex; gap: 2px; }
+.topbar nav a { color: var(--text2); text-decoration: none; padding: 4px 10px; border-radius: var(--r-sm); transition: background var(--t), color var(--t); }
+.topbar nav a:hover { color: var(--text); background: var(--panel2); }
+.topbar nav a.on { color: #fff; background: var(--acc-soft); box-shadow: 0 -2px 0 var(--acc) inset; }
+.toast { transition: opacity .3s; }
+.toast.err { border-color: rgba(239, 68, 68, .6); color: var(--red-t); }
+.toast.err::before { background: var(--red); }
+kbd { font-family: var(--mono); font-size: 11px; background: var(--input); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: var(--r-xs); padding: 0 4px; color: var(--dim); }
 
 /* ---------- wygląd aplikacji desktopowej (Artist i Trio; w oknie natywnym html.native) ---------- */
 /* interfejs to nie dokument: bez zaznaczania tekstu i „rączki” nad przyciskami; tekst zaznacza się tylko w polach */
 html, body { -webkit-user-select: none; user-select: none; cursor: default; }
 input, textarea, [contenteditable], .selectable { -webkit-user-select: text; user-select: text; }
 button, .list .item, .topbar nav a, input[type=color], select { cursor: default; }
-button:active { transform: none; background: #343944; }
+button:active:not(:disabled) { transform: none; background: var(--panel3); }
 /* okno natywne: zakładki stron i logo są w menu i tytule okna */
 html.native .topbar .brand, html.native .topbar nav, html.native .topbar .navsep { display: none; }
 /* płaskie paski narzędzi: przycisk widać dopiero po najechaniu (jak w programach desktopowych) */
 .tb button:not(.acc):not(.on) { background: transparent; border-color: transparent; }
-.tb button:not(.acc):not(.on):hover { background: #2a2e35; border-color: #3a3f48; }
+.tb button:not(.acc):not(.on):hover { background: var(--panel2); border-color: var(--line); }
 .tb button.icon { min-width: 26px; padding: 2px 5px; }
 /* ikony monochromatyczne (kolor = kolor tekstu) zamiast emoji */
 .ico { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; background: currentColor; -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
@@ -86,33 +56,31 @@ html.native .topbar .brand, html.native .topbar nav, html.native .topbar .navsep
 .ico.gear { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5'%3E%3Ccircle cx='8' cy='8' r='2.3'/%3E%3Cpath d='M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4'/%3E%3C/svg%3E"); }
 .ico.lock { --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5'%3E%3Crect x='3' y='7' width='10' height='7' rx='1'/%3E%3Cpath d='M5.5 7V5a2.5 2.5 0 0 1 5 0v2'/%3E%3C/svg%3E"); }
 /* pasek stanu na dole okna */
-.statusbar { display: flex; align-items: center; gap: 12px; height: 24px; padding: 0 10px; background: #0b0c0e; border-top: 1px solid var(--line); font-size: 11px; color: var(--dim); flex: none; white-space: nowrap; overflow: hidden; }
+.statusbar { display: flex; align-items: center; gap: 12px; height: 24px; padding: 0 10px; background: var(--bg-deep); border-top: 1px solid var(--line); font-size: 11px; color: var(--dim); flex: none; white-space: nowrap; overflow: hidden; }
 .statusbar .hint { overflow: hidden; text-overflow: ellipsis; }
-/* ---------- okna pytań (dialogs.js) zamiast confirm()/prompt() przeglądarki ---------- */
-.dlg-back { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-.dlg { width: min(440px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
-.dlg-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-.dlg-text { white-space: pre-line; line-height: 1.45; margin-bottom: 14px; overflow-wrap: anywhere; }
-.dlg-input { display: block; width: 100%; box-sizing: border-box; margin-bottom: 14px; padding: 5px 8px; }
+
+/* ---------- okna pytań (dialogs.js) zamiast confirm()/prompt() przeglądarki – jak .overlay/.dialog Live ---------- */
+.dlg-back { position: fixed; inset: 0; background: rgba(4, 5, 8, .6); backdrop-filter: blur(4px); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; animation: fade 160ms var(--ease); }
+.dlg { width: min(440px, 100%); background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--r-lg); padding: 18px 20px; box-shadow: var(--shadow-lg); animation: pop 200ms var(--ease); }
+.dlg-title { font-size: 17px; font-weight: 650; margin-bottom: 10px; }
+.dlg-text { white-space: pre-line; line-height: 1.45; margin-bottom: 16px; overflow-wrap: anywhere; color: var(--text2); }
+.dlg-input { display: block; width: 100%; margin-bottom: 16px; padding: 6px 9px; }
 .dlg-btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-.dlg-btns button { min-width: 84px; padding: 4px 12px; }
-.dlg-btns button:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
-.dlg-btns button.dlg-danger { background: var(--red); border-color: var(--red); color: #fff; }
-.dlg-btns button.dlg-danger:hover { background: #ff4b45; }
+.dlg-btns button { min-width: 84px; padding: 5px 12px; }
+.dlg-btns button.dlg-danger { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
+.dlg-btns button.dlg-danger:hover { background: #f05a52; }
 
 /* ---------- zachowania przeglądarki, których aplikacja nie ma ---------- */
 /* obrazki i linki nie dają się wyciągnąć z okna; brak „gumowego” przewijania całej strony */
 img, a { -webkit-user-drag: none; }
 html, body { overscroll-behavior: none; }
-/* okno natywne: czcionka systemu (Segoe UI, SF Pro, Noto/Cantarell) zamiast Inter – tekst jak w innych programach */
-html.native, html.native body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
 /* okna pytań na telefonie: arkusz od dołu z dużymi przyciskami (ten sam warunek co układ telefonu w Trio) */
 @media (max-width: 760px), (pointer: coarse) and (max-height: 560px) {
-  .dlg-back { align-items: flex-end; }
+  .dlg-back { align-items: flex-end; padding: 0; }
   .dlg { width: 100%; border-radius: 16px 16px 0 0; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); max-height: 85dvh; overflow: auto; }
-  .dlg::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto 10px; border-radius: 2px; background: #4a505c; }
+  .dlg::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto 10px; border-radius: 2px; background: var(--line-strong); }
   .dlg-title, .dlg-text { text-align: center; }
   .dlg-input { font-size: 16px; padding: 10px; }
   .dlg-btns { flex-direction: column-reverse; gap: 8px; }
-  .dlg-btns button { width: 100%; min-height: 50px; font-size: 16px; font-weight: 600; border-radius: 10px; }
+  .dlg-btns button { width: 100%; min-height: 50px; font-size: 16px; font-weight: 600; border-radius: var(--r); }
 }

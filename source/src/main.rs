@@ -61,6 +61,7 @@ const STATIC: &[Static] = &[
     Static { path: "/dialogs.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/dialogs.js") },
     Static { path: "/color-picker.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/color-picker.js") },
     Static { path: "/ui.css", ctype: "text/css; charset=utf-8", body: include_str!("../web/ui.css") },
+    Static { path: "/ui-frozen.css", ctype: "text/css; charset=utf-8", body: include_str!("../web/ui-frozen.css") },
     Static { path: "/vizrs-ui.css", ctype: "text/css; charset=utf-8", body: include_str!("../web/vizrs-ui.css") },
 ];
 
