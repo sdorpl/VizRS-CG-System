@@ -95,6 +95,43 @@ async function waitUp() {
       return r;
     });
     ok(isolated.goodShown && isolated.badHidden, 'wyjątek w jednym węźle: wadliwy ukryty, reszta sceny gra');
+
+    // --- scena, która stoi, nie jest odrysowywana w każdej klatce (zegar – raz na sekundę, UPDATE budzi) ---
+    const idle = await out.evaluate(async () => {
+      const { ScenePlayer } = await import('/renderer.js');
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const div = document.createElement('div'); document.body.appendChild(div);
+      const mk = (nodes) => { const pl = new ScenePlayer(div, { name: 'Bezczynna', width: 1920, height: 1080, duration: 0.3, stops: [0.3], nodes }, { t: 'A' }); pl.n = 0; const ap = pl._apply.bind(pl); pl._apply = (...a) => { pl.n++; return ap(...a); }; pl.take(); return pl; };
+      const r = {};
+      const st = mk([{ id: 'r', type: 'rect', props: { x: 0, y: 0, w: 100, h: 100, color: '#123', shadow: 8 } }, { id: 'x', type: 'text', fields: { text: 't' }, props: { x: 0, y: 0, w: 400, h: 60, text: 'A' } }]);
+      await wait(800); st.n = 0; await wait(1000);
+      r.staticApplies = st.n;
+      st.update({ t: 'ZMIANA' }); await wait(50);
+      r.updated = div.querySelector('[data-id="x"]').textContent === 'ZMIANA';
+      st.destroy();
+      const ck = mk([{ id: 'c', type: 'clock', props: { x: 0, y: 0, w: 300, h: 60, mode: 'up', format: 'mm:ss' } }]);
+      await wait(400); ck.n = 0;
+      const seen = new Set();
+      for (let i = 0; i < 26; i++) { seen.add(div.querySelector('[data-id="c"]').textContent); await wait(100); }
+      r.clockApplies = ck.n; r.clockTexts = seen.size;
+      ck.destroy();
+      const tr = mk([{ id: 'k', type: 'ticker', props: { x: 0, y: 0, w: 800, h: 60, tickerMode: 'roll', hold: 1, text: 'PIERWSZA\nDRUGA' } }]);
+      await wait(300); tr.n = 0;
+      const msgs = new Set();
+      for (let i = 0; i < 25; i++) { const v = [...div.querySelectorAll('[data-id="k"] span')].find((e) => e.parentElement.style.visibility === 'visible'); msgs.add(v?.textContent); await wait(100); }
+      r.rollApplies = tr.n; r.rollMsgs = msgs.size;
+      tr.destroy();
+      const bl = mk([{ id: 'b', type: 'rect', props: { x: 0, y: 0, w: 50, h: 50, color: '#f00', blink: 1 } }]);
+      await wait(600); bl.n = 0; await wait(1000);
+      r.blinkApplies = bl.n;
+      bl.destroy(); div.remove();
+      return r;
+    });
+    ok(idle.staticApplies <= 2, 'scena stojąca nie jest odrysowywana w każdej klatce', idle);
+    ok(idle.updated, 'UPDATE budzi stojącą scenę', idle);
+    ok(idle.clockTexts >= 3 && idle.clockApplies <= 12, 'zegar odrysowuje się raz na sekundę i tyka dalej', idle);
+    ok(idle.rollMsgs >= 2 && idle.rollApplies < 120, 'ticker roll: rotacja gra dalej, między przejściami scena stoi', idle);
+    ok(idle.blinkApplies >= 20, 'miganie gra płynnie (odrysowanie w każdej klatce)', idle);
     await sleep(600);
     const errs0 = await api('/api/errors');
     ok(errs0.some((e) => e.message.includes('boom-e2e')), 'błąd węzła zgłoszony do /api/errors');
