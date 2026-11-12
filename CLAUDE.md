@@ -56,8 +56,7 @@ cd source && cargo build --release                 # budowa
 |---|---|
 | `http://localhost:8088/` | strona startowa |
 | `/artist` | Artist — projektowanie scen (zamrożony; właściwy edytor: VizRS CG Artist) |
-| `/trio` | Trio — playout |
-| `/mobile` | Trio na telefonie — sterowanie anteną z dotykowego ekranu |
+| `/trio` | Trio — playout; na telefonie i w wąskim oknie układ dotykowy (`/mobile` przekierowuje tutaj) |
 | `/output` | wyjście dla OBS (przezroczyste) |
 
 Do testów ręcznych uruchamiaj osobny serwer na kopii danych i innym porcie (`--port 8099 --tcp 0 --data <kopia>`), żeby nie ruszać `vizrs-data/` użytkownika.
@@ -71,7 +70,7 @@ cargo test
 cargo build --release
 node tests/vectors/run.js
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
-node tests/e2e/mobile.js target/release/vizrs     # Trio na telefonie
+node tests/e2e/mobile.js target/release/vizrs     # Trio w układzie telefonu
 node tests/e2e/artist.js target/release/vizrs     # Artist (zamrożony /artist)
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
 node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana przeglądarka)
@@ -110,11 +109,10 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/fonts.rs`, `fonts_data.rs` | wbudowane fonty offline (`/fonts/fonts.css`) |
 | `source/web/renderer.js` | `ScenePlayer`, `PROPS`, `TYPES`, krzywe, pola, autofollow, tekst, ticker, zegar |
 | `source/web/artist.html` | edytor scen (zamrożony – zapas w przeglądarce) |
-| `source/web/trio.html` | playout |
-| `source/web/mobile.html` | Trio na telefonie: osobna lekka strona, to samo API, bez `ScenePlayer` (monitor PGM to `/output` w ramce) |
-| `source/web/mobile-sw.js`, `mobile.webmanifest`, `mobile-icon.*`, `mobile-login.html` | aplikacja na telefon (PWA): service worker, manifest, ikony, ekran logowania |
+| `source/web/trio.html` | playout – jedna strona na stanowisko i telefon (układ dotykowy ≤ 760 px, jak panel VizRS Live) |
+| `source/web/trio-sw.js`, `trio.webmanifest`, `trio-icon.*`, `login.html` | Trio jako aplikacja na telefon (PWA): service worker, manifest, ikony, ekran logowania |
 | `source/web/dialogs.js`, `native.js` | okna pytań aplikacji (`ask`, `askText`, `choose`) zamiast `confirm()`/`prompt()`; most strony z oknem natywnym |
-| `source/web/field-rules.js` | reguły pól (limity, wersaliki, typografia), wspólne dla Trio i telefonu |
+| `source/web/field-rules.js` | reguły pól (limity, wersaliki, typografia) |
 | `source/web/output.html` | wyjście OBS (`?layers`, `?bus=preview`, `?mode=fill|key`, `?bg`, `?checker`) |
 | `source/web/index.html`, `ui.css` | strona startowa, wspólne style UI |
 | `source/web/text-model.js`, `richtext.js` | reguły pól, typografia PL, Word Replace; znaczniki `{b}{i}{u}{c=}{sz=}` i `[[ ]]` |

@@ -1,0 +1,17 @@
+{
+  "name": "VizRS Trio",
+  "short_name": "VizRS Trio",
+  "description": "Playout grafiki na antenie – na stanowisku i z telefonu",
+  "lang": "pl",
+  "id": "/trio",
+  "start_url": "/trio",
+  "scope": "/trio",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121316",
+  "theme_color": "#0b0c0e",
+  "icons": [
+    { "src": "/trio-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/trio-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

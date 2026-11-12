@@ -71,6 +71,7 @@ impl Response {
         let reason = match self.status {
             200 => "OK",
             204 => "No Content",
+            302 => "Found",
             400 => "Bad Request",
             401 => "Unauthorized",
             403 => "Forbidden",

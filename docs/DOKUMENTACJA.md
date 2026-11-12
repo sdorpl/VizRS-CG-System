@@ -524,42 +524,41 @@ Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudz
 
 **Pytania w Trio** (usunięcie, CLEAR ALL, zmiana show, nazwy playlist, rundownów, makr i warstw) zadaje okno aplikacji, nie okienko przeglądarki: przyciski nazywają czynność (np. **Zdejmij wszystko**, czerwony przy czynności nieodwracalnej lub zdejmującej z anteny), **Enter** wybiera wyróżniony przycisk, **Esc** albo kliknięcie obok – Anuluj. Gdy okno jest otwarte, skróty Trio (F1–F8, Ctrl+Enter) nie działają.
 
-### 9.9 Trio na telefonie (`/mobile`)
+### 9.9 Trio na telefonie i w wąskim oknie
 
-Osobna lekka strona do sterowania anteną z telefonu albo tabletu, także w poziomie. Korzysta z tego samego API co Trio, więc telefon i stanowisko widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego. Adres z tokenem: `http://<adres-serwera>:8088/mobile?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §12); token wyjścia nie otwiera tej strony (403).
+Trio to jedna strona, `/trio`, na stanowisku i na telefonie. Na wąskim ekranie (do 760 px szerokości) i na telefonie położonym poziomo sama przechodzi w układ dotykowy, tak jak panel VizRS Live. Ten sam układ dostaje zwężone okno na komputerze, a po poszerzeniu wraca układ trzech kolumn. Dawny adres `/mobile` przekierowuje na `/trio` (z `?token=` i `?channel=`), więc stare zakładki i skróty działają. Telefon i stanowisko korzystają z tego samego API i widzą tę samą antenę, a komendy z telefonu trafiają do logu audytowego.
 
-**Instalacja na telefonie (PWA):** strona ma manifest, ikonę i service workera, więc uruchamia się z ikony we własnym oknie, bez paska przeglądarki.
+Adres z tokenem: `http://<adres-serwera>:8088/trio?token=<token>`. Telefon sięga do serwera tylko wtedy, gdy nasłuchuje on w sieci (`--bind 0.0.0.0` z `--token`, §12); token wyjścia nie otwiera Trio (403). Bez tokenu `/trio` pokazuje ekran logowania. Po podaniu tokenu ciasteczko jest ważne rok, a token znika z adresu.
+
+**Układ telefonu:**
+
+| Część | Zawartość |
+|---|---|
+| nagłówek | **☰** (szuflada), nazwa show, stan połączenia; gdy coś jest na antenie, nagłówek i pasek systemowy telefonu są czerwone |
+| szuflada spod **☰** | antena (główna albo kanał), show i jego menu, **⚙ Stan**, import paczki, kopia show, **CLEAR ALL**, odświeżenie danych, instalacja aplikacji, wyjście w nowej karcie. Zamyka ją dotknięcie obok, **Esc** albo wykonana czynność |
+| **Strony** | lista z wyszukiwaniem i polem numeru, ● = na antenie, 🔒 = edytuje ktoś inny; szablony z **＋** (nowa strona). Przytrzymanie strony otwiera menu strony: Edytuj pola, ARM na Preview, Wyczyść Preview, Duplikuj, Usuń |
+| **Edycja** | podgląd strony w pierwszym stopie nad polami, numer, nazwa, **Zapisz**, **↺**, warstwa szablonu, **⏱ kanał**, wszystkie pola strony jak na stanowisku (także formatowanie, czcionki, ticker) |
+| **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tym widoku), warstwy z ⇅, ⏭ i ⏏, **Wdróż** przy nowej wersji szablonu, **CLEAR ALL** z potwierdzeniem |
+| **Kolejka** | playlista (karuzela), rundown (⏵ ustawia następną pozycję, **NEXT ▶** bierze ją na antenę) i makra – jak na stanowisku |
+| pasek na dole | wybrana strona ze stanem (● ON AIR, ✎ zmiany; dotknięcie otwiera Edycję) oraz **TAKE**, **CONTINUE**, **OUT**, **UPDATE**. Poziomo przyciski stoją w prawej kolumnie |
+
+Widoki zmienia pasek zakładek albo przesunięcie palcem w bok. Pytania i menu są arkuszami od dołu ekranu z dużymi przyciskami; zamyka je **Anuluj** albo dotknięcie tła. Przy zakładce Antena widać liczbę warstw na antenie. Komendy potwierdza krótka wibracja, a błąd podwójna (tylko Android, iPhone nie udostępnia wibracji stronom).
+
+- **Ochrona anteny:** dotknięcie strony niczego nie wysyła, także podwójne. Kolejna komenda czeka na odpowiedź serwera i krótką przerwę, więc podwójne dotknięcie TAKE nie gra grafiki dwa razy. CONTINUE i OUT są aktywne, gdy wybrana strona gra na wybranej antenie. Na stanowisku przyciski i skróty F1–F8 działają jak dotąd.
+- **Klawiatura ekranowa:** gdy pole ma kursor, pasek zakładek się chowa, a wraca z opóźnieniem, żeby TAKE nie uciekł spod palca.
+- **Antena:** po usunięciu wybranego kanału Trio wraca na antenę główną i o tym informuje (także na stanowisku).
+- **Sieć:** komenda bez odpowiedzi przez 6 s zgłasza błąd i nie jest ponawiana. Po takim błędzie sprawdź antenę, bo komenda mogła dojść. Zanik połączenia widać na pasku; po powrocie sieci albo telefonu z uśpienia strona sama się łączy i odświeża dane.
+- **Wygaszanie ekranu:** telefon prosi o niewygaszanie, ale przeglądarki pozwalają na to tylko przez HTTPS; po zwykłym HTTP wydłuż czas wygaszania w telefonie.
+
+**Instalacja aplikacji (PWA):** Trio ma manifest (`/trio.webmanifest`), ikonę i service workera (`/trio-sw.js`), więc uruchamia się z ikony we własnym oknie, bez paska przeglądarki.
 
 | Telefon | Jak zainstalować | Co działa |
 |---|---|---|
-| Android, HTTPS | Chrome → menu → **Zainstaluj aplikację** | własne okno, start bez sieci, niewygaszanie ekranu |
+| Android, HTTPS | Chrome → menu → **Zainstaluj aplikację** (albo **☰ → Zainstaluj aplikację**) | własne okno, start bez sieci, niewygaszanie ekranu |
 | iPhone | Safari → **Udostępnij** → **Do ekranu początkowego** | własne okno; start bez sieci i niewygaszanie tylko przez HTTPS |
 | Android, zwykłe HTTP | tylko skrót na ekranie | Chrome nie instaluje aplikacji bez HTTPS, skrót otwiera kartę przeglądarki |
 
-HTTPS musi mieć certyfikat zaufany przez telefon; certyfikat samopodpisany z ostrzeżeniem nie wystarczy. VizRS sam nie obsługuje TLS, więc potrzebne jest reverse proxy (§12, [RUNBOOK](RUNBOOK.md#vps-i-docker)).
-
-Bez tokenu w adresie `/mobile` pokazuje ekran logowania; po podaniu tokenu ciasteczko ważne jest rok, a token znika z adresu. `/mobile.webmanifest` i ikony są dostępne bez tokenu, bo przeglądarka pobiera je bez ciasteczka. Service worker przechowuje wyłącznie pliki interfejsu i zawsze najpierw pyta serwer, więc po aktualizacji telefon dostaje nową wersję. Bez sieci aplikacja startuje i pokazuje „brak połączenia”.
-
-Na dole ekranu stale są wybrana strona oraz **TAKE**, **CONTINUE**, **OUT** i **UPDATE**. Działają jak w Trio (§9.2): TAKE i UPDATE wysyłają wartości z edycji, także niezapisane, a CONTINUE i OUT są aktywne, gdy strona gra na wybranej antenie.
-
-| Zakładka | Zawartość |
-|---|---|
-| **Strony** | lista z wyszukiwaniem po numerze i nazwie, ● = na antenie, 🔒 = edytuje ktoś inny; przytrzymanie otwiera menu strony (Edytuj pola, ARM, Wyczyść Preview) |
-| **Edycja** | podgląd strony w pierwszym stopie, pola, **⋯** (menu strony), **↺** (przywróć zapisane), **Zapisz** |
-| **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tej zakładce), warstwy z ⏭, ⏏ i **Wdróż**, gdy czeka nowa wersja szablonu, **CLEAR ALL** z potwierdzeniem |
-| **Kolejka** | rundown: dotknięcie pozycji ustawia kursor, **NEXT ▶** bierze ją na antenę; karuzela: ▶ / ■; makra: ▶ uruchamia, **■ Przerwij makro** |
-
-Zakładki zmienia pasek na dole albo przesunięcie palcem w bok. Pytania i menu to arkusze wysuwane od dołu; zamyka je **Anuluj**, dotknięcie tła albo przycisk Wstecz w Androidzie. Gdy coś jest na antenie, nagłówek i pasek systemowy telefonu są czerwone, a przy zakładce Antena widać liczbę warstw. Komendy potwierdza krótka wibracja, a błąd podwójna (tylko Android, iPhone nie udostępnia wibracji stronom). **⋯** w nagłówku: odświeżenie danych, instalacja, pełne Trio.
-
-- **Ochrona anteny:** dotknięcie strony lub pozycji rundownu niczego nie wysyła. Kolejna komenda czeka na odpowiedź serwera i krótką przerwę, więc podwójne dotknięcie TAKE nie gra grafiki dwa razy.
-- **Pola:** tekst, liczby, przełączniki, listy, warianty, kolor, obraz (lista grafik, **⤒** wgrywa zdjęcie z telefonu) i wiadomości tickera (wiersz: kategoria i treść, **＋ Wiadomość**, kolor wiadomości zostaje). Reguły pól działają jak w Trio. Czcionkę zmienia się w Trio; strona podaje, ile takich pól pominięto, a ich wartości zostają bez zmian.
-- **⏱ kanał** pod polami strony: czas strony na kanale dla VizRS CG Playout – te same ustawienia co w Trio (§9, „Czas na kanale”): wejście domyślne / po starcie / przed końcem (puste = 60 s), zejście w sekundach przed końcem, koniec audycji (EPG) albo pozycji. Zapisuje się ze stroną (**Zapisz**) jako `playout`.
-- **Blokada edycji** (§9.8) zakłada się przy pierwszej zmianie pola, nie przy wybraniu strony. Nazwa operatora to `vizrs.who`, domyślnie `Telefon NN`.
-- **Antena:** lista pojawia się, gdy są kanały playoutu; `?channel=<kanał>` i wybór są wspólne z Trio w tej samej przeglądarce. Po usunięciu wybranego kanału strona wraca na antenę główną i o tym informuje.
-- **Sieć:** komenda bez odpowiedzi przez 6 s zgłasza błąd i nie jest ponawiana. Po takim błędzie sprawdź antenę, bo komenda mogła dojść. Zanik połączenia widać na pasku; po powrocie sieci albo telefonu z uśpienia strona sama się łączy i odświeża dane.
-- **Wygaszanie ekranu:** strona prosi o niewygaszanie, ale przeglądarki pozwalają na to tylko przez HTTPS; po zwykłym HTTP wydłuż czas wygaszania w telefonie.
-
-Na telefonie nie ma tworzenia i usuwania stron, przełączania show, formatowania tekstu, grania animacji w podglądzie ani edycji playlist, rundownu i makr.
+HTTPS musi mieć certyfikat zaufany przez telefon; certyfikat samopodpisany z ostrzeżeniem nie wystarczy. VizRS sam nie obsługuje TLS, więc potrzebne jest reverse proxy (§12, [RUNBOOK](RUNBOOK.md#vps-i-docker)). Manifest i ikony są dostępne bez tokenu, bo przeglądarka pobiera je bez ciasteczka. Service worker przechowuje wyłącznie pliki interfejsu i zawsze najpierw pyta serwer, więc po aktualizacji telefon dostaje nową wersję; bez sieci Trio startuje i pokazuje „brak połączenia”. W oknie natywnym (`vizrs-shell`) service workera nie ma. Aplikację zainstaloną dawniej z `/mobile` warto zainstalować od nowa (stara ikona dalej działa przez przekierowanie).
 
 ## 10. Wyjście dla OBS i mikserów
 
@@ -821,7 +820,7 @@ cargo test                                           # silnik, API, JSON, walida
 node tests/vectors/run.js                            # wektory modelu tekstu
 node tests/cgpack.mjs                                # reguły paczki .cgpack (pliki, import)
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
-node tests/e2e/mobile.js target/release/vizrs [katalog]   # E2E Trio na telefonie (emulacja dotyku; katalog = zrzuty)
+node tests/e2e/mobile.js target/release/vizrs [katalog]   # E2E Trio w układzie telefonu (emulacja dotyku; katalog = zrzuty)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
 node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja

@@ -137,10 +137,10 @@ Zapis tekstowy wiadomości: `PILNE|Treść`, z kolorem kategorii `SPORT#1f8a4c|T
 ### Sterowanie z telefonu
 
 1. Uruchom serwer w sieci: `vizrs --bind 0.0.0.0 --token <hasło>`.
-2. Na telefonie w tej samej sieci otwórz `http://<adres-komputera>:8088/mobile?token=<hasło>`.
+2. Na telefonie w tej samej sieci otwórz `http://<adres-komputera>:8088/trio?token=<hasło>` – to samo Trio, na telefonie samo przechodzi w układ dotykowy.
 3. Dotknij stronę na liście, a potem **TAKE** na dole ekranu. Tekst zmienisz w zakładce **Edycja**.
 
-Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Czas na kanale (**⏱ kanał**) ustawisz w **Edycji** pod polami strony, tak jak w Trio. Przytrzymanie strony otwiera menu z ARM, a zakładki zmienisz także przesunięciem palcem. Żeby mieć ikonę na ekranie: na iPhonie Safari → **Udostępnij** → **Do ekranu początkowego**; na Androidzie **⋯** → **Zainstaluj aplikację** (wymaga HTTPS). Opis: [DOKUMENTACJA §9.9](DOKUMENTACJA.md#99-trio-na-telefonie-mobile).
+Dotknięcie strony tylko ją wybiera, na antenę idzie dopiero **TAKE**. Czas na kanale (**⏱ kanał**) ustawisz w **Edycji** pod polami strony, tak jak w Trio. Przytrzymanie strony otwiera menu z ARM, a zakładki zmienisz także przesunięciem palcem. Show, kanał, ⚙ Stan i CLEAR ALL są w szufladzie pod **☰**. Żeby mieć ikonę na ekranie: na iPhonie Safari → **Udostępnij** → **Do ekranu początkowego**; na Androidzie **☰** → **Zainstaluj aplikację** (wymaga HTTPS). Opis: [DOKUMENTACJA §9.9](DOKUMENTACJA.md#99-trio-na-telefonie-i-w-wąskim-oknie).
 
 ## 9. Ściąga skrótów
 

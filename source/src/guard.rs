@@ -98,7 +98,7 @@ pub fn check(req: &Request, tokens: &Tokens) -> Verdict {
         }
     }
     // instalacja aplikacji i ekran logowania pobierają je bez ciasteczka; nie ma w nich danych
-    if req.method == "GET" && matches!(req.path.as_str(), "/mobile.webmanifest" | "/mobile-icon.svg" | "/mobile-icon.png") {
+    if req.method == "GET" && matches!(req.path.as_str(), "/trio.webmanifest" | "/trio-icon.svg" | "/trio-icon.png") {
         return Verdict::Allow;
     }
     // 2. token: najsilniejsza rola spośród nagłówka, ciasteczka i ?token=
@@ -241,8 +241,7 @@ mod tests {
         let t = op("sekret-1");
         assert_eq!(code(check(&req("/api/state", &[], &[]), &t)), 401);
         assert_eq!(code(check(&req("/trio", &[], &[]), &t)), 401);
-        assert_eq!(code(check(&req("/mobile", &[], &[]), &t)), 401);
-        for p in ["/mobile.webmanifest", "/mobile-icon.svg", "/mobile-icon.png"] {
+        for p in ["/trio.webmanifest", "/trio-icon.svg", "/trio-icon.png"] {
             assert_eq!(code(check(&req(p, &[], &[]), &t)), 200, "{p}");
         }
         assert_eq!(code(check(&req("/api/state", &[("authorization", "Bearer sekret-1")], &[]), &t)), 200);
@@ -267,7 +266,7 @@ mod tests {
         rep.method = "POST".into();
         assert_eq!(code(check(&rep, &t)), 200);
         // sterowanie i edycja – nie
-        for p in ["/trio", "/mobile", "/artist", "/api/take/1001", "/api/clear", "/api/show", "/api/state", "/api/audit"] {
+        for p in ["/trio", "/artist", "/api/take/1001", "/api/clear", "/api/show", "/api/state", "/api/audit"] {
             assert_eq!(code(check(&req(p, &ck, &[]), &t)), 403, "{p}");
         }
         let mut put = req("/api/show", &[("x-token", "out-1")], &[]);

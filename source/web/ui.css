@@ -106,3 +106,13 @@ img, a { -webkit-user-drag: none; }
 html, body { overscroll-behavior: none; }
 /* okno natywne: czcionka systemu (Segoe UI, SF Pro, Noto/Cantarell) zamiast Inter – tekst jak w innych programach */
 html.native, html.native body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+/* okna pytań na telefonie: arkusz od dołu z dużymi przyciskami (ten sam warunek co układ telefonu w Trio) */
+@media (max-width: 760px), (pointer: coarse) and (max-height: 560px) {
+  .dlg-back { align-items: flex-end; }
+  .dlg { width: 100%; border-radius: 16px 16px 0 0; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); max-height: 85dvh; overflow: auto; }
+  .dlg::before { content: ""; display: block; width: 40px; height: 4px; margin: 0 auto 10px; border-radius: 2px; background: #4a505c; }
+  .dlg-title, .dlg-text { text-align: center; }
+  .dlg-input { font-size: 16px; padding: 10px; }
+  .dlg-btns { flex-direction: column-reverse; gap: 8px; }
+  .dlg-btns button { width: 100%; min-height: 50px; font-size: 16px; font-weight: 600; border-radius: 10px; }
+}

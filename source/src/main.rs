@@ -44,10 +44,9 @@ const STATIC: &[Static] = &[
     Static { path: "/", ctype: "text/html; charset=utf-8", body: include_str!("../web/index.html") },
     Static { path: "/artist", ctype: "text/html; charset=utf-8", body: include_str!("../web/artist.html") },
     Static { path: "/trio", ctype: "text/html; charset=utf-8", body: include_str!("../web/trio.html") },
-    Static { path: "/mobile", ctype: "text/html; charset=utf-8", body: include_str!("../web/mobile.html") },
-    Static { path: "/mobile.webmanifest", ctype: "application/manifest+json; charset=utf-8", body: include_str!("../web/mobile.webmanifest") },
-    Static { path: "/mobile-sw.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/mobile-sw.js") },
-    Static { path: "/mobile-icon.svg", ctype: "image/svg+xml", body: include_str!("../web/mobile-icon.svg") },
+    Static { path: "/trio.webmanifest", ctype: "application/manifest+json; charset=utf-8", body: include_str!("../web/trio.webmanifest") },
+    Static { path: "/trio-sw.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/trio-sw.js") },
+    Static { path: "/trio-icon.svg", ctype: "image/svg+xml", body: include_str!("../web/trio-icon.svg") },
     Static { path: "/output", ctype: "text/html; charset=utf-8", body: include_str!("../web/output.html") },
     Static { path: "/renderer.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/renderer.js") },
     Static { path: "/richtext.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/richtext.js") },
@@ -65,9 +64,9 @@ const STATIC: &[Static] = &[
 ];
 
 /// Ikona dla ekranu początkowego iOS, który nie przyjmuje SVG.
-const MOBILE_ICON_PNG: &[u8] = include_bytes!("../web/mobile-icon.png");
-/// Ekran logowania `/mobile`: aplikacja z ikony nie ma jak dostać `?token=`.
-const MOBILE_LOGIN: &str = include_str!("../web/mobile-login.html");
+const TRIO_ICON_PNG: &[u8] = include_bytes!("../web/trio-icon.png");
+/// Ekran logowania `/trio`: aplikacja z ikony telefonu nie ma jak dostać `?token=`.
+const LOGIN: &str = include_str!("../web/login.html");
 
 const DEMO_SHOW: &str = include_str!("../web/demo_show.json");
 
@@ -379,7 +378,6 @@ fn start(mut cfg: Config) -> Running {
     println!("│ VizRS {:<51}│", env!("CARGO_PKG_VERSION"));
     println!("│  Artist (projektowanie):  http://localhost:{:<14}│", format!("{}/artist", cfg.port));
     println!("│  Trio   (playout):        http://localhost:{:<14}│", format!("{}/trio", cfg.port));
-    println!("│  Trio na telefonie:       http://localhost:{:<14}│", format!("{}/mobile", cfg.port));
     println!("│  Wyjście OBS (1920x1080): http://localhost:{:<14}│", format!("{}/output", cfg.port));
     if cfg.osc_port != 0 {
         println!("│  OSC (UDP):               port {:<26}│", cfg.osc_port);
@@ -457,18 +455,24 @@ fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
             req.peer = ip;
         }
     }
+    // dawne Trio na telefonie to dziś to samo Trio: stare skróty i zakładki prowadzą dalej, z tokenem i kanałem z adresu
+    if req.method == "GET" && req.path == "/mobile" {
+        let q = if req.raw_query.is_empty() { String::new() } else { format!("?{}", req.raw_query) };
+        Response::new(302, "text/plain; charset=utf-8", "").header("Location", &format!("/trio{q}")).write_to(&mut stream).ok();
+        return;
+    }
     let cookie = match guard::check(&req, &cfg.tokens()) {
         guard::Verdict::Allow => None,
         guard::Verdict::AllowSetCookie(t) => Some(guard::cookie_header(&t)),
         guard::Verdict::Deny(code, msg) => {
-            let login = code == 401 && req.method == "GET" && req.path == "/mobile";
+            let login = code == 401 && req.method == "GET" && req.path == "/trio";
             // wejście na ekran logowania bez tokenu to nie próba zgadywania
             if code == 401 && !(login && req.q("token").is_none()) {
                 engine.audit.log(&format!("http:{}", req.peer), &format!("odmowa: zły token – {} {}", req.method, req.path), Some(401));
                 // kolejne nieudane próby z tego adresu odpowiadają coraz wolniej
                 std::thread::sleep(guard::note_failure(&req.peer));
             }
-            let resp = if login { Response::new(401, "text/html; charset=utf-8", MOBILE_LOGIN) } else { Response::err(code, msg) };
+            let resp = if login { Response::new(401, "text/html; charset=utf-8", LOGIN) } else { Response::err(code, msg) };
             resp.write_to(&mut stream).ok();
             return;
         }
@@ -628,8 +632,8 @@ fn route(req: &Request, engine: &Arc<Engine>, cfg: &Config) -> Response {
 
     // ---------- pliki statyczne ----------
     if m == "GET" {
-        if req.path == "/mobile-icon.png" {
-            return Response::new(200, "image/png", MOBILE_ICON_PNG).header("Cache-Control", "max-age=86400");
+        if req.path == "/trio-icon.png" {
+            return Response::new(200, "image/png", TRIO_ICON_PNG).header("Cache-Control", "max-age=86400");
         }
         let p = req.path.trim_end_matches(".html");
         let p = if p.is_empty() { "/" } else { p };

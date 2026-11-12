@@ -235,6 +235,15 @@ export function mountTickerEditor(host, o = {}) {
       paintDots(); emit(); return;
     }
   });
+  // `change` przychodzi przy wyjściu z pola, zanim fokus trafi do następnego: przerysowanie od razu zabrałoby
+  // operatorowi pole, do którego właśnie przechodzi (na telefonie dotknięcie by przepadło) – więc po zmianie fokusu i z jego zachowaniem
+  const renderKeepFocus = () => setTimeout(() => {
+    const a = document.activeElement, mine = a && root.contains(a);
+    const cls = mine ? [...a.classList].find((c) => c.startsWith('tkx-')) : null, i = a?.dataset?.i, pos = mine ? a.selectionStart : null;
+    render();
+    const el = cls && i != null ? root.querySelector(`.${cls}[data-i="${i}"]`) : null;
+    if (el) { el.focus(); if (pos != null) try { el.setSelectionRange(pos, pos); } catch { /* pole bez kursora */ } }
+  });
   root.addEventListener('change', (e) => {
     const el = e.target;
     if (el.classList.contains('tkx-cname')) {
@@ -242,11 +251,11 @@ export function mountTickerEditor(host, o = {}) {
       const from = el.dataset.cat.toUpperCase(), c = catParse(el.value), list = items.filter((x) => x.cat.toUpperCase() === from);
       for (const x of list) x.cat = c.cat;
       settleCat(list, c.color, el.dataset.cat);
-      regroup(); emit(); render(); return;
+      regroup(); emit(); renderKeepFocus(); return;
     }
     if (el.classList.contains('tkx-cat') && view === 'list') {
       settleCat([items[+el.dataset.i]], catParse(el.value).color, el.dataset.was);
-      emit(); render();
+      emit(); renderKeepFocus();
     }
   });
   root.addEventListener('keydown', (e) => {

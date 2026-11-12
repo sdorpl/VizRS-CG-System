@@ -2,6 +2,9 @@
 
 ## Niewydane
 
+- **Trio i Trio na telefonie to jedna strona `/trio`:** na wąskim ekranie (do 760 px, także zwężone okno na komputerze) i na telefonie położonym poziomo Trio samo przechodzi w układ dotykowy, wzorowany na panelu VizRS Live – widoki Strony / Edycja / Antena / Kolejka przesuwane palcem, pasek TAKE / CONTINUE / OUT / UPDATE na dole, narzędzia stanowiska (show, kanał, ⚙ Stan, kopie, CLEAR ALL) w szufladzie spod ☰, pytania jako arkusze od dołu. Telefon ma teraz pełne Trio: tworzenie i usuwanie stron, formatowanie, czcionki, edycję playlist, rundownu i makr. Rozwiązania dawnego `/mobile` zostały: blokada podwójnego dotknięcia, wibracja, monitor PGM tylko na widoku Antena (15 kl./s), podgląd tylko na Edycji, klawiatura ekranowa chowa zakładki, niewygaszanie ekranu, ponowne łączenie po uśpieniu, instalacja (PWA) i start bez sieci. `/mobile` przekierowuje na `/trio`, bez tokenu `/trio` pokazuje ekran logowania. Pliki aplikacji: `/trio.webmanifest`, `/trio-sw.js`, `/trio-icon.svg|png` (zamiast `/mobile*`) – aplikację zainstaloną z `/mobile` warto zainstalować od nowa. Także na stanowisku: komenda bez odpowiedzi przez 6 s zgłasza błąd, a usunięty wybrany kanał przełącza na antenę główną. DOKUMENTACJA §9.9.
+- **Ticker – kategoria i treść:** po wpisaniu kategorii wiadomości przejście do pola treści (Tab, kliknięcie, dotknięcie) nie gubi już fokusu – edytor przerysowuje się po zmianie fokusu i zostawia kursor w wybranym polu.
+
 ## 26.11.2 (2026-11-13)
 
 - **Zaokrąglenie osobno dla rogów i boków** (`rect`, `qr`, `image`): nowe właściwości `radiusTL`/`radiusTR`/`radiusBR`/`radiusBL` (każdy róg) i `radiusT`/`radiusR`/`radiusB`/`radiusL` (każdy bok – oba rogi przy boku; dwa boki przy rogu dają róg eliptyczny). Wartość `-1` (domyślna) = jak `radius`, więc dawne sceny rysują się bez zmian. Renderer natywny rysuje je tak samo (rogi eliptyczne, zmniejszanie jak w CSS, ramka, cień). DOKUMENTACJA §4.3.

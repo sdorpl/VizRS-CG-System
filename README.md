@@ -30,7 +30,6 @@ Paczki `.deb` i AppImage (`VizRS-Trio-…AppImage`), binarki oraz obraz Docker s
 | http://localhost:8088/ | strona startowa, podłączenie OBS, skrót API |
 | http://localhost:8088/artist | **Artist** – zamrożony zapas w przeglądarce (główny edytor: [VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases)) |
 | http://localhost:8088/trio | **Trio** – playout |
-| http://localhost:8088/mobile | **Trio na telefonie** – sterowanie anteną z ekranu dotykowego |
 | http://localhost:8088/output | **wyjście dla OBS** (przezroczyste) |
 
 W OBS: Źródła → **+** → **Przeglądarka**, URL `http://localhost:8088/output`, 1920 × 1080.
