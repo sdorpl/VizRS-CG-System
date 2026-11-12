@@ -45,7 +45,7 @@ const PROBE = `(async () => {
   }
   await fetch('/api/clear', { method: 'POST' });
   const json = JSON.stringify(out);
-  if (window.ipc) window.ipc.postMessage('probe:' + json); else window.__probe = json;
+  if (window.ipc) (window.__vizrsPost || ((m) => window.ipc.postMessage(m)))('probe:' + json); else window.__probe = json;
 })();`;
 
 (async () => {

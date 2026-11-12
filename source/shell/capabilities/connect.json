@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "connect",
+  "description": "Okno „Połącz z serwerem” (strona okna ui/connect.html): most okna połączenia (komenda ipc). Strony Trio serwera dostają uprawnienie w działaniu – tylko dla adresu bieżącego serwera (main.rs: allow_server).",
+  "windows": ["connect"],
+  "permissions": ["allow-ipc"]
+}

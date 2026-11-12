@@ -25,7 +25,7 @@ fs.writeFileSync(PROBE, `(async () => {
   for (let i = 0; i < 50 && document.querySelector('#conn')?.textContent !== 'połączono'; i++) await sleep(100);
   await sleep(500);
   const r = { title: document.title, conn: document.querySelector('#conn')?.textContent, scenes: document.querySelectorAll('#sceneSel option').length, pages: document.querySelectorAll('#pages .item').length };
-  window.ipc.postMessage('probe:' + JSON.stringify(r));
+  (window.__vizrsPost || ((m) => window.ipc.postMessage(m)))('probe:' + JSON.stringify(r));
 })();`);
 const health = () => new Promise((res) => {
   http.get(`http://127.0.0.1:${PORT}/health`, (r) => { let b = ''; r.on('data', (c) => (b += c)); r.on('end', () => res(JSON.parse(b))); }).on('error', () => res(null));
@@ -54,7 +54,7 @@ const probe = (kind) => {
       window.__vizrsCmd('close'); await sleep(50);
       r.modal = !!document.querySelector('#nativeClose');
       document.querySelector('[data-nc="stay"]')?.click();
-      window.ipc.postMessage('probe:' + JSON.stringify(r));
+      (window.__vizrsPost || ((m) => window.ipc.postMessage(m)))('probe:' + JSON.stringify(r));
     })();`);
     const natOut = path.join(tmp, 'native.json');
     spawnSync(SHELL, ['trio', '--data', data, '--port', String(PORT), '--vizrs', BIN, '--probe', P2, '--probe-out', natOut], { encoding: 'utf8', timeout: 60000 });
@@ -69,8 +69,9 @@ const probe = (kind) => {
     const second = spawnSync(SHELL, ['output', '--data', data, '--port', String(PORT), '--vizrs', BIN], { env: siEnv, timeout: 5000 });
     ok(second.status === 0 && first.exitCode === null, 'drugie uruchomienie kończy się od razu, pierwsze działa', second.status);
     first.kill();
-    // serwer poprzedniego okna kończy się po --idle-exit; krok 1 dołączyłby do niego i stracił go przy starcie WebKitGTK
-    for (let i = 0; i < 60 && await health(); i++) await sleep(500);
+    // serwer poprzedniego okna kończy się po --idle-exit; krok 1 dołączyłby do niego i stracił go przy starcie WebKitGTK.
+    // Zabite okno (SIGTERM, nie zamknięcie) zostawia proces sieciowy WebKitGTK, który trzyma /events jeszcze 15–20 s.
+    for (let i = 0; i < 120 && await health(); i++) await sleep(500);
     ok(!(await health()), 'serwer po zamknięciu okna kończy pracę przed kolejnym krokiem');
 
     // 1. Trio: powłoka uruchamia serwer, okno łączy się z nim
@@ -117,9 +118,9 @@ const probe = (kind) => {
     return;
   }
   // strona serwera nie może przełączyć okien na inny adres
-  window.ipc.postMessage(JSON.stringify({ action: 'connect', url: 'http://127.0.0.1:1' }));
+  (window.__vizrsPost || ((m) => window.ipc.postMessage(m)))(JSON.stringify({ action: 'connect', url: 'http://127.0.0.1:1' }));
   for (let i = 0; i < 100 && (document.querySelector('#conn')?.textContent !== 'połączono' || !document.querySelector('#pages .item')); i++) await sleep(100);
-  window.ipc.postMessage('probe:' + JSON.stringify({ href: location.href, title: document.title, conn: document.querySelector('#conn')?.textContent, pages: document.querySelectorAll('#pages .item').length }));
+  (window.__vizrsPost || ((m) => window.ipc.postMessage(m)))('probe:' + JSON.stringify({ href: location.href, title: document.title, conn: document.querySelector('#conn')?.textContent, pages: document.querySelectorAll('#pages .item').length }));
 })();`);
       const out = path.join(tmp, 'connect.json');
       spawnSync(SHELL, ['connect', '--data', path.join(tmp, 'local'), '--port', String(PORT + 2), '--vizrs', BIN, '--probe', CPROBE, '--probe-out', out], { encoding: 'utf8', timeout: 60000, env: { ...process.env, VIZRS_CONFIG: cfg } });

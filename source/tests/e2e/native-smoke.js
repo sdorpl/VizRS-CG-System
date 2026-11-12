@@ -40,7 +40,7 @@ fs.writeFileSync(PROBE, `(async () => {
     r.obsUrl = document.querySelector('.dlg-input')?.value || null;
     dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   } catch (e) { r.error = String(e); }
-  window.ipc.postMessage('probe:' + JSON.stringify(r));
+  (window.__vizrsPost || ((m) => window.ipc.postMessage(m)))('probe:' + JSON.stringify(r));
 })();`);
 
 const health = (port) => new Promise((res) => {

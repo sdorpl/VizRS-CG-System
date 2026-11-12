@@ -4,6 +4,13 @@ const shell = window.__vizrsShell;
 // __vizrsPost: okno Tauri (tam `window.ipc` należy do Tauri i nie da się go podmienić); inaczej `window.ipc` (GTK, wry)
 const post = (o) => { try { const m = 'app:' + JSON.stringify(o); if (window.__vizrsPost) window.__vizrsPost(m); else window.ipc.postMessage(m); } catch { /* okno zamykane */ } };
 
+// okno natywne: bez skrótów przeglądarki (szukaj, drukuj, wczytaj ponownie, narzędzia) – WebView2 obsłużyłby je sam;
+// skróty strony (F1–F8, Ctrl+S, Ctrl+Enter) działają dalej, Odśwież i narzędzia są w menu Widok
+if (shell) addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (['F3', 'F7', 'F12'].includes(e.key) || ((e.ctrlKey || e.metaKey) && !e.altKey && k.length === 1 && 'fghjpr'.includes(k))) e.preventDefault();
+}, true);
+
 // pytanie przy zamykaniu okna: strona zna stan, więc i zapis należy do niej
 function askClose(what, save, discard) {
   if (document.querySelector('#nativeClose')) return;

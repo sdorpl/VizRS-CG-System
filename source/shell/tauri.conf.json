@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "VizRS Trio",
+  "mainBinaryName": "vizrs-shell",
+  "version": "26.11.1",
+  "identifier": "pl.vizrs.Trio",
+  "build": {
+    "frontendDist": "ui"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Video",
+    "shortDescription": "VizRS Trio – playout grafiki na żywo",
+    "longDescription": "Okno VizRS Trio i wyjścia (podglądu) grafiki telewizyjnej na żywo. Uruchamia serwer vizrs (dołączony do paczki) albo łączy się z serwerem zdalnym.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    },
+    "copyright": "VizRS",
+    "publisher": "VizRS",
+    "homepage": "https://github.com/sdorpl/VizRS-CG-System"
+  }
+}

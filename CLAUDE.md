@@ -19,7 +19,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 ## Niepodważalne zasady
 
 - **Zero zależności w rdzeniu.** `source/Cargo.toml` (serwer `vizrs`) nie ma sekcji zależności — własny HTTP/1.1, SSE, JSON, OSC. Nie dodawaj tam crate'ów. Front-end to czysty JS (moduły ES), bez bundlera i bez bibliotek z CDN (wyjście musi działać offline).
-- **Wyjątek: okno natywne `source/shell/`** (`vizrs-shell`, decyzja użytkownika 2026-10-20) — osobny workspace z własnym `Cargo.lock`; dozwolone tylko crate'y wymienione w nagłówku `source/shell/Cargo.toml` (tao, wry, muda, rfd, png, serde_json, webkit2gtk). Powłoka nie wkompilowuje serwera, tylko uruchamia `vizrs serve --idle-exit` albo dołącza do działającego; nie dawaj stronie dostępu do systemu przez IPC (biała lista komunikatów). Zmiana renderera → `node tools/engines.js` (Chromium vs WebView okna, musi być 0 różnic).
+- **Wyjątek: okno natywne `source/shell/`** (`vizrs-shell`, Tauri 2 od 2026-11-12 – decyzja użytkownika, plan [PLAN-wyglad-live-i-tauri.md](docs/plany/PLAN-wyglad-live-i-tauri.md) T1) — osobny workspace z własnym `Cargo.lock`; dozwolone tylko crate'y wymienione w nagłówku `source/shell/Cargo.toml` (tauri, tauri-plugin-dialog, tauri-plugin-single-instance, serde_json, webkit2gtk; tauri-build) – te same co VizRS CG Artist. Okno nie wkompilowuje serwera, tylko uruchamia `vizrs serve --idle-exit` albo dołącza do działającego; nie dawaj stronie dostępu do systemu: komenda `ipc` z białą listą (`bridge.rs`), uprawnienie tylko dla adresu bieżącego serwera (`allow_server`). Zmiana renderera → `node tools/engines.js` (Chromium vs WebView okna, musi być 0 różnic).
 - **UI jest wbudowane w binarkę** (`include_str!` w `source/src/main.rs`, tablica `STATIC`). Wniosek:
   - zmiana w `source/web/*` nie działa w uruchomionym programie, dopóki nie przebudujesz binarki albo nie uruchomisz z `--web source/web`;
   - nowy plik w `web/` trzeba dopisać do `STATIC`;
@@ -98,7 +98,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
 | `source/src/bin/vizrs-app.rs` | uruchamianie okien bez konsoli (Windows) |
 | `source/render/` | `vizrs-render` – renderer natywny dla playoutu kanału (tiny-skia, rustybuzz): `stream` (klatki przez stdin/stdout), `frame`, `check`, `bench`, `bounds` (granice stron dla stref VizRS CG Playout); osobny workspace z zależnościami (DOKUMENTACJA §10.1) |
-| `source/shell/` | `vizrs-shell` – okno natywne Trio i wyjścia (tao + wry: WebKitGTK / WebView2 / WKWebView), menu, „Zapisz jako”, pisownia pl; bez Artist (`artist` odsyła do VizRS CG Artist); osobny workspace z zależnościami |
+| `source/shell/` | `vizrs-shell` – okno natywne Trio i wyjścia na Tauri 2 (WebKitGTK / WebView2 / WKWebView): menu, „Zapisz jako”, pytanie przy zamknięciu, okno połączenia (`ui/connect.html`), jedna instancja, pisownia pl; `tauri.conf.json` + `tauri.bundle.json` (paczki z serwerem `vizrs` obok okna); bez Artist (`artist` odsyła do VizRS CG Artist); osobny workspace z zależnościami |
 | `source/src/engine.rs` | show, warstwy on-air, TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, dock, karuzela, rundown, makra, blokady, SSE |
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |
 | `source/src/ticker.rs` | zapis wiadomości tickera (`KAT|treść`), komendy `TICKER` |
