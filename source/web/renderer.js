@@ -36,6 +36,15 @@ export const PROPS = {
   color2: { t: 'color', d: '', g: 'Wygląd', anim: 1, label: 'kolor 2 (gradient)' },
   gradAngle: { t: 'num', d: 90, g: 'Wygląd', anim: 1, label: 'kąt gradientu' },
   radius: { t: 'num', d: 0, g: 'Wygląd', anim: 1, min: 0, label: 'zaokrąglenie' },
+  // nadpisania zaokrąglenia: wartość ujemna (domyślnie -1) = „jak zaokrąglenie” (radius); kolejność: róg → boki → radius
+  radiusTL: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. rogu lewy górny' },
+  radiusTR: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. rogu prawy górny' },
+  radiusBR: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. rogu prawy dolny' },
+  radiusBL: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. rogu lewy dolny' },
+  radiusL: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. boku lewego' },
+  radiusR: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. boku prawego' },
+  radiusT: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. boku górnego' },
+  radiusB: { t: 'num', d: -1, g: 'Wygląd', anim: 1, min: -1, auto: -1, label: 'zaokr. boku dolnego' },
   borderColor: { t: 'color', d: '#ffffff', g: 'Wygląd', anim: 1, label: 'kolor ramki' },
   borderWidth: { t: 'num', d: 0, g: 'Wygląd', anim: 1, min: 0, label: 'ramka px' },
   shadow: { t: 'num', d: 0, g: 'Wygląd', anim: 1, min: 0, label: 'cień' },
@@ -90,15 +99,16 @@ export const PROPS = {
 
 const COMMON = ['x', 'y', 'w', 'h', 'anchorX', 'anchorY', 'rotation', 'scale', 'opacity', 'clipL', 'clipR', 'clipT', 'clipB', 'blur', 'skewX', 'blink'];
 const FOLLOW = ['follow', 'followAxis', 'followPad', 'followMin'];
+const RADIUS = ['radius', 'radiusTL', 'radiusTR', 'radiusBR', 'radiusBL', 'radiusL', 'radiusR', 'radiusT', 'radiusB'];
 const TEXT_STYLE = ['font', 'size', 'weight', 'italic', 'upper', 'spacing', 'lineHeight', 'align', 'valign', 'textFit', 'maxLines', 'squeezeMin', 'lineBreak', 'fillSqueeze', 'padX', 'color', 'shadow'];
 
 export const TYPES = {
   group: { label: 'Grupa', icon: '▣', props: [...COMMON, ...FOLLOW], children: true },
-  rect: { label: 'Prostokąt', icon: '■', props: [...COMMON, ...FOLLOW, 'color', 'color2', 'gradAngle', 'radius', 'borderColor', 'borderWidth', 'shadow'], children: true },
+  rect: { label: 'Prostokąt', icon: '■', props: [...COMMON, ...FOLLOW, 'color', 'color2', 'gradAngle', ...RADIUS, 'borderColor', 'borderWidth', 'shadow'], children: true },
   ellipse: { label: 'Elipsa', icon: '●', props: [...COMMON, ...FOLLOW, 'color', 'color2', 'gradAngle', 'borderColor', 'borderWidth', 'shadow'] },
   text: { label: 'Tekst', icon: 'T', props: [...COMMON, 'text', 'cycle', ...TEXT_STYLE, 'hlColor', 'hlText'] },
-  qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', 'radius', 'shadow'] },
-  image: { label: 'Obraz/wideo', icon: '▨', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', 'radius', 'shadow', 'loop'] },
+  qr: { label: 'Kod QR', icon: '▦', props: [...COMMON, 'text', 'color', 'qrBg', ...RADIUS, 'shadow'] },
+  image: { label: 'Obraz/wideo', icon: '▨', props: [...COMMON, ...FOLLOW, 'src', 'fitMode', ...RADIUS, 'shadow', 'loop'] },
   clock: { label: 'Zegar', icon: '◷', props: [...COMMON, 'mode', 'format', 'seconds', 'target', 'tz', ...TEXT_STYLE] },
   ticker: { label: 'Ticker', icon: '⇠', props: [...COMMON, 'text', 'tickerMode', 'hold', 'speed', 'crawlFrom', 'sep', 'sepStyle', 'sepColor', 'label', 'catColors', 'catW', 'catBg', 'catFg', 'labelSize', 'labelWeight', 'gleam', 'textFit', 'squeezeMin', 'font', 'size', 'weight', 'italic', 'upper', 'spacing', 'color', 'shadow'] },
 };
@@ -214,6 +224,35 @@ export function propAt(node, prop, t, values) {
     return def.d;
   }
   return v;
+}
+
+/**
+ * Promienie rogów [poziomy, pionowy] w kolejności ↖ ↗ ↘ ↙ (jak `border-radius`) albo null, gdy wszystkie równe `radius`.
+ * Róg (`radiusTL`…) ma pierwszeństwo; bez niego decydują boki: oba boki rogu → róg eliptyczny (poziomo bok górny/dolny,
+ * pionowo lewy/prawy), jeden bok → jego wartość; bez nadpisań – `radius`. Wartość ujemna = brak nadpisania.
+ * Tę samą regułę ma renderer natywny (`source/render`, `scene.rs` – `radius_of`).
+ */
+export function cornerRadii(p) {
+  const r = Math.max(0, +p('radius') || 0);
+  const o = (k) => { const v = +p(k); return v >= 0 ? v : null; };
+  const s = { T: o('radiusT'), R: o('radiusR'), B: o('radiusB'), L: o('radiusL') };
+  let any = s.T !== null || s.R !== null || s.B !== null || s.L !== null;
+  const out = [['TL', 'T', 'L'], ['TR', 'T', 'R'], ['BR', 'B', 'R'], ['BL', 'B', 'L']].map(([c, sy, sx]) => {
+    const v = o('radius' + c);
+    if (v !== null) { any = true; return [v, v]; }
+    const a = s[sy], b = s[sx];
+    if (a !== null && b !== null) return [a, b];
+    const one = a ?? b;
+    return one !== null ? [one, one] : [r, r];
+  });
+  return any ? out : null;
+}
+/** Wartość CSS `border-radius` węzła (p = odczyt właściwości). */
+export function radiusCss(p) {
+  const c = cornerRadii(p);
+  if (!c) return Math.max(0, +p('radius') || 0) + 'px';
+  const h = c.map((x) => x[0] + 'px').join(' '), v = c.map((x) => x[1] + 'px').join(' ');
+  return h === v ? h : h + ' / ' + v;
 }
 
 /** Czy węzeł jest widoczny w danym wariancie (showIf: {field, value}). */
@@ -1531,7 +1570,7 @@ export class ScenePlayer {
         case 'ellipse': {
           const c = p('color'), c2 = p('color2');
           css(el, 'background', c2 ? `linear-gradient(${p('gradAngle')}deg, ${c}, ${c2})` : c);
-          css(el, 'borderRadius', n.type === 'ellipse' ? '50%' : p('radius') + 'px');
+          css(el, 'borderRadius', n.type === 'ellipse' ? '50%' : radiusCss(p));
           const bw = p('borderWidth');
           css(el, 'border', bw > 0 ? `${bw}px solid ${p('borderColor')}` : 'none');
           const sh = p('shadow');
@@ -1557,7 +1596,7 @@ export class ScenePlayer {
             } else it.media = null;
           }
           if (it.media) css(it.media, 'objectFit', p('fitMode'));
-          css(el, 'borderRadius', p('radius') + 'px');
+          css(el, 'borderRadius', radiusCss(p));
           const sh = p('shadow');
           it.bsh = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
           break;
@@ -1638,7 +1677,7 @@ export class ScenePlayer {
         case 'qr': {
           const key = [p('text'), p('color'), p('qrBg')].join('|');
           if (it.cache.key !== key) { it.cache.key = key; cssWrites++; el.innerHTML = qrSvg(String(p('text') ?? ''), p('color'), p('qrBg')); }
-          css(el, 'borderRadius', p('radius') + 'px');
+          css(el, 'borderRadius', radiusCss(p));
           const sh = p('shadow');
           it.bsh = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
           break;

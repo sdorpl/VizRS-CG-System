@@ -35,6 +35,8 @@ pub fn prop_def(prop: &str) -> (Kind, Value) {
         "color2" => c(""),
         "gradAngle" => n(90.0),
         "radius" | "borderWidth" | "shadow" => n(0.0),
+        // nadpisania zaokrąglenia (rogi, boki): ujemne = jak `radius`
+        "radiusTL" | "radiusTR" | "radiusBR" | "radiusBL" | "radiusL" | "radiusR" | "radiusT" | "radiusB" => n(-1.0),
         "borderColor" => c("#ffffff"),
         "text" => s("Tekst"),
         "font" => s("Inter"),

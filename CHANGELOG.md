@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Zaokrąglenie osobno dla rogów i boków** (`rect`, `qr`, `image`): nowe właściwości `radiusTL`/`radiusTR`/`radiusBR`/`radiusBL` (każdy róg) i `radiusT`/`radiusR`/`radiusB`/`radiusL` (każdy bok – oba rogi przy boku; dwa boki przy rogu dają róg eliptyczny). Wartość `-1` (domyślna) = jak `radius`, więc dawne sceny rysują się bez zmian. Renderer natywny rysuje je tak samo (rogi eliptyczne, zmniejszanie jak w CSS, ramka, cień). DOKUMENTACJA §4.3.
+
 ## 26.11.1 (2026-11-12)
 
 Pierwsze wydanie w numeracji rok.miesiąc.rewizja (`26.11.1` = listopad 2026, wydanie 1). Gałąź `main` = dawna `main` (2.1.1) scalona z `next-v`; poprzednia `main` zachowana jako `main-oldstable`.

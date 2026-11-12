@@ -71,11 +71,51 @@ fn sk_color(c: Color, alpha: f32) -> tiny_skia::Color {
         .unwrap_or(tiny_skia::Color::TRANSPARENT)
 }
 
+/// Promienie rogów po zmniejszeniu jak w CSS (Backgrounds 3, §5.5): róg z zerowym promieniem jest prosty,
+/// a gdy suma promieni przy boku przekracza bok, wszystkie maleją tym samym współczynnikiem.
+pub fn fit_corners(w: f32, h: f32, c: &[[f32; 2]; 4]) -> [[f32; 2]; 4] {
+    let mut c = c.map(|[a, b]| if a > 0.0 && b > 0.0 { [a, b] } else { [0.0, 0.0] });
+    let [tl, tr, br, bl] = c;
+    let mut f: f32 = 1.0;
+    for (side, sum) in [(w, tl[0] + tr[0]), (w, bl[0] + br[0]), (h, tl[1] + bl[1]), (h, tr[1] + br[1])] {
+        if sum > 0.0 {
+            f = f.min(side.max(0.0) / sum);
+        }
+    }
+    if f < 1.0 {
+        for r in c.iter_mut() {
+            r[0] *= f;
+            r[1] *= f;
+        }
+    }
+    c
+}
+
 /// Prostokąt z zaokrągleniem (jak `border-radius`, promień ograniczony do połowy boku) albo elipsa.
 pub fn shape(x: f32, y: f32, w: f32, h: f32, radius: &Radius) -> Option<Path> {
     let rect = Rect::from_xywh(x, y, w.max(0.0), h.max(0.0))?;
     match radius {
         Radius::Ellipse => PathBuilder::from_oval(rect),
+        Radius::Corners(c) => {
+            let [tl, tr, br, bl] = fit_corners(w, h, c);
+            if [tl, tr, br, bl].iter().all(|r| r[0] <= 0.01 || r[1] <= 0.01) {
+                return Some(PathBuilder::from_rect(rect));
+            }
+            const K: f32 = 0.552_284_8;
+            let (l, t, rr, b) = (x, y, x + w, y + h);
+            let mut p = PathBuilder::new();
+            p.move_to(l + tl[0], t);
+            p.line_to(rr - tr[0], t);
+            p.cubic_to(rr - tr[0] + K * tr[0], t, rr, t + tr[1] - K * tr[1], rr, t + tr[1]);
+            p.line_to(rr, b - br[1]);
+            p.cubic_to(rr, b - br[1] + K * br[1], rr - br[0] + K * br[0], b, rr - br[0], b);
+            p.line_to(l + bl[0], b);
+            p.cubic_to(l + bl[0] - K * bl[0], b, l, b - bl[1] + K * bl[1], l, b - bl[1]);
+            p.line_to(l, t + tl[1]);
+            p.cubic_to(l, t + tl[1] - K * tl[1], l + tl[0] - K * tl[0], t, l + tl[0], t);
+            p.close();
+            p.finish()
+        }
         Radius::Px(r) => {
             let r = r.min(w / 2.0).min(h / 2.0).max(0.0);
             if r <= 0.01 {
@@ -398,6 +438,8 @@ impl Raster {
                 let inner_r = match radius {
                     Radius::Px(r) => Radius::Px((r.min(node.w / 2.0).min(node.h / 2.0) - bw).max(0.0)),
                     Radius::Ellipse => Radius::Ellipse,
+                    // wewnętrzna krawędź ramki: promień zewnętrzny (po zmniejszeniu) minus grubość ramki
+                    Radius::Corners(c) => Radius::Corners(fit_corners(node.w, node.h, c).map(|r| r.map(|v| (v - bw).max(0.0)))),
                 };
                 let mut pb = PathBuilder::new();
                 if let Some(o) = shape(0.0, 0.0, node.w, node.h, radius) {
@@ -435,7 +477,7 @@ impl Raster {
                 let path = if fit == "contain" && (dw < w - 0.5 || dh < h - 0.5) {
                     Rect::from_xywh(dx.max(0.0), dy.max(0.0), dw.min(w), dh.min(h)).map(PathBuilder::from_rect)
                 } else {
-                    shape(0.0, 0.0, w, h, &Radius::Px(*radius))
+                    shape(0.0, 0.0, w, h, radius)
                 };
                 let scale = scale_of(&m) * sx.min(sy);
                 let quality = if !(0.999..=1.001).contains(&scale) { FilterQuality::Bicubic } else { FilterQuality::Bilinear };
@@ -483,10 +525,7 @@ impl Raster {
                     for v in [node.w, node.h, *sigma, *dy] {
                         v.to_bits().hash(&mut h);
                     }
-                    match radius {
-                        Radius::Px(r) => r.to_bits().hash(&mut h),
-                        Radius::Ellipse => 1u8.hash(&mut h),
-                    }
+                    crate::display::hash_radius(radius, &mut h);
                     for c in color {
                         c.to_bits().hash(&mut h);
                     }
@@ -800,6 +839,19 @@ pub fn unpremultiply(data: &mut [u8]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn corners_shrink_like_css() {
+        // suma promieni przy górnym boku 400 > 200 → wszystkie × 0,5; róg z zerem jest prosty
+        let c = fit_corners(200.0, 100.0, &[[300.0, 40.0], [100.0, 40.0], [10.0, 0.0], [0.0, 0.0]]);
+        assert_eq!(c, [[150.0, 20.0], [50.0, 20.0], [0.0, 0.0], [0.0, 0.0]]);
+        // bez przekroczenia – bez zmian; równe rogi = ten sam kształt co Radius::Px
+        let c = fit_corners(200.0, 100.0, &[[20.0, 20.0]; 4]);
+        assert_eq!(c, [[20.0, 20.0]; 4]);
+        let a = shape(0.0, 0.0, 200.0, 100.0, &Radius::Corners([[20.0, 20.0]; 4])).unwrap().bounds();
+        let b = shape(0.0, 0.0, 200.0, 100.0, &Radius::Px(20.0)).unwrap().bounds();
+        assert_eq!(a, b);
+    }
 
     #[test]
     fn rounded_shape_fills_inside() {

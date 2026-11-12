@@ -15,6 +15,8 @@ pub type Color = [f32; 4]; // RGBA 0–1 (bez przemnożenia)
 pub enum Radius {
     Px(f32),
     Ellipse,
+    /// Rogi osobno, jak `border-radius: h1 h2 h3 h4 / v1 v2 v3 v4`: [poziomy, pionowy] dla ↖ ↗ ↘ ↙.
+    Corners([[f32; 2]; 4]),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -45,7 +47,7 @@ pub enum Paint {
     /// `border: w solid color` (wewnątrz pola, `box-sizing: border-box`).
     Border { radius: Radius, width: f32, color: Color },
     /// Obraz z assets dopasowany `object-fit`, przycięty do pola z zaokrągleniem.
-    Image { src: String, fit: String, radius: f32 },
+    Image { src: String, fit: String, radius: Radius },
     /// Kod QR (`qrSvg`): kwadrat wpisany w pole i wyśrodkowany, margines 2 moduły, krawędzie bez wygładzania.
     Qr { text: Arc<str>, cells: Option<Arc<Vec<Vec<bool>>>>, dark: Color, light: Color },
     /// Tekst: blok, kolor, cień (dy, σ, kolor) i położenie elementu tekstu (`span`) w polu.
@@ -156,10 +158,16 @@ fn hash_tf(t: &Transform, h: &mut impl Hasher) {
     hash_f(&[t.sx, t.kx, t.ky, t.sy, t.tx, t.ty], h);
 }
 
-fn hash_radius(r: &Radius, h: &mut impl Hasher) {
+pub(crate) fn hash_radius(r: &Radius, h: &mut impl Hasher) {
     match r {
         Radius::Px(x) => hash_f(&[*x], h),
         Radius::Ellipse => (-7i32).hash(h),
+        Radius::Corners(c) => {
+            (-8i32).hash(h);
+            for x in c {
+                hash_f(x, h);
+            }
+        }
     }
 }
 
@@ -206,7 +214,7 @@ impl Paint {
                 5u8.hash(h);
                 src.hash(h);
                 fit.hash(h);
-                hash_f(&[*radius], h);
+                hash_radius(radius, h);
             }
             Paint::Qr { text, dark, light, .. } => {
                 7u8.hash(h);

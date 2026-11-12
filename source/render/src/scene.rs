@@ -607,9 +607,37 @@ impl Player {
         self.tree = Some(root);
     }
 
+    /// Zaokrąglenie rogów jak `cornerRadii` w `renderer.js`: róg (`radiusTL`…) → boki (oba = róg eliptyczny,
+    /// poziomo bok górny/dolny, pionowo lewy/prawy; jeden = jego wartość) → `radius`. Ujemne = brak nadpisania.
+    fn radius_of(&self, i: usize) -> Radius {
+        let r = self.num(i, "radius").max(0.0);
+        let o = |k: &str| Some(self.num(i, k)).filter(|v| *v >= 0.0);
+        let (t, rt, b, l) = (o("radiusT"), o("radiusR"), o("radiusB"), o("radiusL"));
+        let mut any = t.is_some() || rt.is_some() || b.is_some() || l.is_some();
+        let mut c = [[r, r]; 4];
+        for (k, (name, sy, sx)) in
+            [("radiusTL", t, l), ("radiusTR", t, rt), ("radiusBR", b, rt), ("radiusBL", b, l)].into_iter().enumerate()
+        {
+            c[k] = match (o(name), sy, sx) {
+                (Some(v), _, _) => {
+                    any = true;
+                    [v, v]
+                }
+                (None, Some(a), Some(bb)) => [a, bb],
+                (None, Some(v), None) | (None, None, Some(v)) => [v, v],
+                (None, None, None) => [r, r],
+            };
+        }
+        if any {
+            Radius::Corners(c)
+        } else {
+            Radius::Px(r)
+        }
+    }
+
     fn box_content(&mut self, i: usize, node: &Node) {
         let ellipse = node.kind == "ellipse";
-        let radius = if ellipse { Radius::Ellipse } else { Radius::Px(self.num(i, "radius").max(0.0)) };
+        let radius = if ellipse { Radius::Ellipse } else { self.radius_of(i) };
         let sh = self.num(i, "shadow");
         let mut paints = Vec::new();
         if sh > 0.0 {
@@ -640,7 +668,7 @@ impl Player {
     fn qr_content(&mut self, i: usize) {
         let text = self.txt(i, "text");
         let (dark, light) = (color(&self.txt(i, "color")).unwrap_or([0.0, 0.0, 0.0, 1.0]), color(&self.txt(i, "qrBg")).unwrap_or([1.0; 4]));
-        let r = self.num(i, "radius").max(0.0);
+        let r = self.radius_of(i);
         let sh = self.num(i, "shadow");
         if self.states[i].key != text || self.states[i].qr.is_none() {
             self.states[i].key = text.clone();
@@ -652,7 +680,7 @@ impl Player {
         }
         let mut paints = Vec::new();
         if sh > 0.0 {
-            paints.push(Paint::BoxShadow { radius: Radius::Px(r), sigma: sh / 2.0, dy: sh / 3.0, color: [0.0, 0.0, 0.0, 0.5] });
+            paints.push(Paint::BoxShadow { radius: r, sigma: sh / 2.0, dy: sh / 3.0, color: [0.0, 0.0, 0.0, 0.5] });
         }
         paints.push(Paint::Qr { text: t, cells, dark, light });
         self.states[i].content = paints;
@@ -660,11 +688,11 @@ impl Player {
 
     fn image_content(&mut self, i: usize) {
         let src = self.txt(i, "src");
-        let r = self.num(i, "radius").max(0.0);
+        let r = self.radius_of(i);
         let sh = self.num(i, "shadow");
         let mut paints = Vec::new();
         if sh > 0.0 {
-            paints.push(Paint::BoxShadow { radius: Radius::Px(r), sigma: sh / 2.0, dy: sh / 3.0, color: [0.0, 0.0, 0.0, 0.5] });
+            paints.push(Paint::BoxShadow { radius: r.clone(), sigma: sh / 2.0, dy: sh / 3.0, color: [0.0, 0.0, 0.0, 0.5] });
         }
         if !src.is_empty() {
             let remote = src.starts_with("http:") || src.starts_with("https:") || src.starts_with("data:") || src.starts_with('/');

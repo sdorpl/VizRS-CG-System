@@ -170,6 +170,12 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 
 **Wygląd:** `color`, `color2` + `gradAngle` (gradient), `radius`, `borderColor`, `borderWidth`, `shadow`.
 
+**Zaokrąglenie** (`rect`, `qr`, `image`): `radius` zaokrągla wszystkie rogi. Nadpisania (wartość ujemna, domyślnie `-1` = „jak `radius`”, wszystkie animowalne):
+- rogi `radiusTL`, `radiusTR`, `radiusBR`, `radiusBL` (↖ ↗ ↘ ↙) – róg okrągły o tym promieniu; mają pierwszeństwo,
+- boki `radiusT`, `radiusR`, `radiusB`, `radiusL` – oba rogi przy boku (`radiusT: 20` = zaokrąglona tylko góra, „zakładka”). Gdy róg ma ustawione oba boki, jest eliptyczny: poziomo wartość boku górnego/dolnego, pionowo lewego/prawego (`radiusT: 80, radiusL: 20` → lewy górny róg 80×20).
+
+Rogi większe niż bok maleją razem jak w CSS (`border-radius`). Renderer natywny (§10.1) stosuje tę samą regułę (`cornerRadii` w `renderer.js`, `radius_of` w `render/src/scene.rs`). Animacja z `-1` przechodzi przez „jak `radius`” – do animacji ustaw na kluczach jawne wartości.
+
 **Tekst** (`text`, `clock`; częściowo `ticker`): `font`, `size`, `weight` (300–900), `italic`, `upper`, `spacing`, `lineHeight`, `align`, `valign`, `textFit`, `maxLines`, `squeezeMin`, `lineBreak`, `fillSqueeze`, `padX`, `hlColor`/`hlText` (kolory `[[wyróżnienia]]`), `cycle` (rotacja wierszy co N s z przenikaniem).
 
 **Kod QR:** `text` (adres), `color`, `qrBg` (tło kodu), `radius`, `shadow`.
