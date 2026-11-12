@@ -17,6 +17,7 @@
 //! Flagi: bit 0 – wszystko na antenie natywnie, bit 1 – połączenie z VizRS działa.
 //! Zmiana listy braków trafia na stderr (`vizrs-render: …`).
 
+use std::borrow::Cow;
 use std::io::{BufRead, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver};
@@ -41,6 +42,9 @@ pub const EMPTY: u8 = 2;
 pub const SKIPPED: u8 = 3;
 pub const REGION: u8 = 4;
 pub const REGIONS: u8 = 5;
+/// Łata poprzedniego obrazu (tylko na życzenie odbiorcy, flaga `p`): liczba prostokątów (u32 LE),
+/// każdy jak w `REGION` (x, y, szerokość, wysokość, RGBA) – piksele do podmiany, reszta bez zmian.
+pub const PATCH: u8 = 6;
 pub const FLAG_COMPLETE: u8 = 1;
 pub const FLAG_CONNECTED: u8 = 2;
 
@@ -67,7 +71,8 @@ pub fn header(kind: u8, flags: u8, w: u32, h: u32) -> [u8; 16] {
 fn alpha_box(pix: &Pixmap) -> Option<(usize, usize, usize, usize)> {
     let (w, h) = (pix.width() as usize, pix.height() as usize);
     let data = pix.data();
-    let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].as_chunks::<4>().0.iter().any(|p| p[3] != 0);
+    // wiersz po 16 px naraz (kompilator wektoryzuje sumę bitową alf), więc puste wiersze kosztują mało
+    let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].chunks(64).any(|b| b.chunks_exact(4).fold(0, |m, p| m | p[3]) != 0);
     let top = (0..h).find(|&y| row_used(y))?;
     let bottom = (top..h).rev().find(|&y| row_used(y)).unwrap_or(top) + 1;
     let (mut left, mut right) = (w, 0);
@@ -103,6 +108,116 @@ pub fn region_record(pix: &Pixmap, flags: u8) -> Vec<u8> {
     let mut rec = header(REGION, flags, w, h).to_vec();
     push_box(&mut rec, pix, found, (0, 0));
     rec
+}
+
+/// Zasięg alfy wiersza: pierwszy i za ostatnim px z niezerową alfą (`None` – wiersz pusty).
+fn row_span(row: &[u8]) -> Option<(usize, usize)> {
+    if !row.chunks(64).any(|b| b.chunks_exact(4).fold(0, |m, p| m | p[3]) != 0) {
+        return None;
+    }
+    let px = row.as_chunks::<4>().0;
+    let left = px.iter().position(|p| p[3] != 0)?;
+    let right = px.iter().rposition(|p| p[3] != 0)? + 1;
+    Some((left, right))
+}
+
+/// Ostatni rekord `REGION` z zasięgiem alfy każdego wiersza: po rysowaniu częściowym przelicza
+/// tylko wiersze obszaru zmiany, a gdy prostokąt alfy się nie zmienił – łata w gotowym rekordzie
+/// tylko ten obszar (bez skanu całego obrazu i bez przepisywania całego prostokąta).
+#[derive(Default)]
+pub struct RegionCache {
+    size: (u32, u32),
+    rows: Vec<Option<(usize, usize)>>,
+    found: Option<(usize, usize, usize, usize)>,
+    rec: Vec<u8>,
+}
+
+impl RegionCache {
+    fn found(&self) -> Option<(usize, usize, usize, usize)> {
+        let top = self.rows.iter().position(Option::is_some)?;
+        let bottom = self.rows.iter().rposition(Option::is_some)? + 1;
+        let left = self.rows[top..bottom].iter().flatten().map(|s| s.0).min()?;
+        let right = self.rows[top..bottom].iter().flatten().map(|s| s.1).max()?;
+        Some((left, top, right - left, bottom - top))
+    }
+
+    /// Rekord obrazu `pix`; `damage` – jedyny zmieniony prostokąt od poprzedniego wywołania (px `pix`),
+    /// `None` – obraz mógł zmienić się wszędzie. Wynik ten sam co `region_record`.
+    /// `patch` – odbiorca przyjmuje łaty (`PATCH`) i ma poprzedni rekord: przy niezmienionym prostokącie
+    /// alfy wynik to sama łata (zmienione piksele), inaczej cały rekord `REGION`.
+    pub fn record(&mut self, pix: &Pixmap, flags: u8, damage: Option<(i32, i32, i32, i32)>, patch: bool) -> Cow<'_, [u8]> {
+        let (w, h) = (pix.width() as usize, pix.height() as usize);
+        let row = |y: usize| &pix.data()[y * w * 4..(y + 1) * w * 4];
+        let damage = damage.filter(|_| self.size == (pix.width(), pix.height()) && !self.rec.is_empty()).map(|d| {
+            (
+                d.0.clamp(0, w as i32) as usize,
+                d.1.clamp(0, h as i32) as usize,
+                d.2.clamp(0, w as i32) as usize,
+                d.3.clamp(0, h as i32) as usize,
+            )
+        });
+        let Some((x0, y0, x1, y1)) = damage else {
+            self.size = (pix.width(), pix.height());
+            self.rows = (0..h).map(|y| row_span(row(y))).collect();
+            self.found = self.found();
+            self.rec = match self.found {
+                Some(found) => {
+                    let mut rec = header(REGION, flags, pix.width(), pix.height()).to_vec();
+                    push_box(&mut rec, pix, found, (0, 0));
+                    rec
+                }
+                None => header(EMPTY, flags, pix.width(), pix.height()).to_vec(),
+            };
+            return Cow::Borrowed(&self.rec);
+        };
+        for y in y0..y1 {
+            self.rows[y] = row_span(row(y));
+        }
+        let found = self.found();
+        if found != self.found || found.is_none() {
+            // inny prostokąt alfy (albo pusty obraz): rekord od nowa, wiersze już policzone
+            self.found = found;
+            self.rec = match found {
+                Some(f) => {
+                    let mut rec = header(REGION, flags, pix.width(), pix.height()).to_vec();
+                    push_box(&mut rec, pix, f, (0, 0));
+                    rec
+                }
+                None => header(EMPTY, flags, pix.width(), pix.height()).to_vec(),
+            };
+            return Cow::Borrowed(&self.rec);
+        }
+        let (bx, by, bw, bh) = found.unwrap_or_default();
+        self.rec[5] = flags;
+        let (cx0, cx1) = (x0.max(bx), x1.min(bx + bw));
+        let (ry0, ry1) = (y0.max(by), y1.min(by + bh));
+        let rows = if cx1 > cx0 { ry0..ry1 } else { 0..0 };
+        for y in rows.clone() {
+            // nagłówek (16 B) + położenie prostokąta (16 B), potem wiersze prostokąta
+            let at = 32 + ((y - by) * bw + (cx0 - bx)) * 4;
+            let part = &mut self.rec[at..at + (cx1 - cx0) * 4];
+            part.copy_from_slice(&row(y)[cx0 * 4..cx1 * 4]);
+            unpremultiply(part);
+        }
+        if !patch {
+            return Cow::Borrowed(&self.rec);
+        }
+        // łata: zmieniony prostokąt (px płótna) z pikselami z gotowego rekordu; pusta – zmiana poza grafiką
+        let mut out = header(PATCH, flags, pix.width(), pix.height()).to_vec();
+        if rows.is_empty() {
+            out.extend_from_slice(&0u32.to_le_bytes());
+            return Cow::Owned(out);
+        }
+        out.extend_from_slice(&1u32.to_le_bytes());
+        for v in [cx0, ry0, cx1 - cx0, ry1 - ry0] {
+            out.extend_from_slice(&(v as u32).to_le_bytes());
+        }
+        for y in rows {
+            let at = 32 + ((y - by) * bw + (cx0 - bx)) * 4;
+            out.extend_from_slice(&self.rec[at..at + (cx1 - cx0) * 4]);
+        }
+        Cow::Owned(out)
+    }
 }
 
 /// Kilka obszarów jako rekord `REGIONS` (px kanału `size`); wszystkie puste – `EMPTY`.
@@ -210,6 +325,9 @@ pub fn run(opts: Options) -> Result<(), String> {
     let stdin = std::io::stdin();
     let mut issues: Vec<String> = Vec::new();
     let mut was_empty = false;
+    // odbiorca ma ostatni wysłany obraz (`REGION` albo `PATCH`) – podstawę następnej łaty
+    let mut synced = false;
+    let mut region_cache = RegionCache::default();
     let mut last_clk: Option<Clock> = None;
     let mut line = String::new();
     loop {
@@ -228,6 +346,8 @@ pub fn run(opts: Options) -> Result<(), String> {
         let want = parts.next().unwrap_or("");
         let only_complete = want.contains('c');
         let force = want.contains('f');
+        // odbiorca przyjmuje łaty (`PATCH`); wysyłamy je tylko, gdy ma nasz poprzedni obraz
+        let patches = want.contains('p');
         let clk = Clock { now, wall };
         // zdarzenie przyszło między klatkami: strona obsługuje je od razu, z czasem poprzedniej klatki
         // (`performance.now()` przed następną) – stąd początek rotacji tickera i zegara `up`/`down`
@@ -253,33 +373,121 @@ pub fn run(opts: Options) -> Result<(), String> {
         if connected.load(Ordering::Relaxed) {
             flags |= FLAG_CONNECTED;
         }
-        let rec = if only_complete && !issues.is_empty() {
+        let rec: Cow<[u8]> = if only_complete && !issues.is_empty() {
             was_empty = false;
-            header(SKIPPED, flags, aw, ah).to_vec()
+            synced = false;
+            header(SKIPPED, flags, aw, ah).to_vec().into()
         } else if !host.on_air() {
             // nic na antenie: pusty obraz raz, potem „bez zmian”
             let kind = if was_empty && !force { UNCHANGED } else { EMPTY };
             was_empty = true;
-            header(kind, flags, aw, ah).to_vec()
+            synced = false;
+            header(kind, flags, aw, ah).to_vec().into()
         } else if host.draw_areas(&mut pixes.iter_mut().map(|(p, at)| (p, *at)).collect::<Vec<_>>(), opts.size, &res) || was_empty || force
         {
             // po pustym obraz trzeba wysłać, nawet gdy lista się nie zmieniła (`pixes` mają ostatni obraz)
+            let patch = patches && synced && !force && !was_empty;
             was_empty = false;
             if pixes.len() == 1 {
-                region_record(&pixes[0].0, flags)
+                // płótno zmienia się tylko tutaj, więc obszar ostatniego rysowania częściowego (albo żaden,
+                // gdy nic nie narysowano) to jedyna zmiana od poprzedniego rekordu
+                let (pix, at) = &pixes[0];
+                let damage = host.last_damage.map(|d| (d.0 - at.0, d.1 - at.1, d.2 - at.0, d.3 - at.1));
+                let rec = region_cache.record(pix, flags, damage, patch);
+                // odbiorca ma teraz nasz obraz, chyba że dostał „pusto”
+                synced = rec[4] != EMPTY;
+                rec
             } else {
-                regions_record(&pixes, flags, opts.size)
+                synced = false;
+                regions_record(&pixes, flags, opts.size).into()
             }
         } else {
-            header(UNCHANGED, flags, aw, ah).to_vec()
+            header(UNCHANGED, flags, aw, ah).to_vec().into()
         };
         out.write_all(&rec).and_then(|_| out.flush()).map_err(|e| e.to_string())?;
     }
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
+
+    /// Odbiorca łat: nakłada `PATCH` na swój ostatni rekord `REGION` (albo bierze nowy rekord).
+    pub fn apply(base: &mut Vec<u8>, rec: &[u8]) {
+        if rec[4] != PATCH {
+            *base = rec.to_vec();
+            return;
+        }
+        let u = |b: &[u8], i: usize| u32::from_le_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]) as usize;
+        let (bx, by, bw) = (u(base, 16), u(base, 20), u(base, 24));
+        let mut at = 20;
+        for _ in 0..u(rec, 16) {
+            let (x, y, w, h) = (u(rec, at), u(rec, at + 4), u(rec, at + 8), u(rec, at + 12));
+            at += 16;
+            for r in 0..h {
+                let to = 32 + ((y + r - by) * bw + (x - bx)) * 4;
+                base[to..to + w * 4].copy_from_slice(&rec[at..at + w * 4]);
+                at += w * 4;
+            }
+        }
+        base[5] = rec[5];
+    }
+
+    #[test]
+    fn patches_rebuild_the_record() {
+        let mut pix = Pixmap::new(40, 30).unwrap();
+        let px =
+            |pix: &mut Pixmap, x: usize, y: usize, v: [u8; 4]| pix.data_mut()[(y * 40 + x) * 4..(y * 40 + x) * 4 + 4].copy_from_slice(&v);
+        for y in 5..20 {
+            for x in 5..30 {
+                px(&mut pix, x, y, [100, 50, 0, 200]);
+            }
+        }
+        let mut cache = RegionCache::default();
+        let mut seen = cache.record(&pix, 1, None, true).to_vec();
+        assert_eq!(seen[4], REGION);
+        px(&mut pix, 12, 9, [64, 0, 0, 128]);
+        let rec = cache.record(&pix, 3, Some((12, 9, 13, 10)), true).to_vec();
+        assert_eq!((rec[4], rec.len()), (PATCH, 16 + 4 + 16 + 4));
+        apply(&mut seen, &rec);
+        assert_eq!(seen, region_record(&pix, 3));
+        // zmiana poza grafiką – pusta łata; inny prostokąt alfy – cały rekord
+        assert_eq!(cache.record(&pix, 3, Some((0, 0, 2, 2)), true)[16..20], [0, 0, 0, 0]);
+        px(&mut pix, 35, 25, [9, 9, 9, 255]);
+        let rec = cache.record(&pix, 1, Some((35, 25, 36, 26)), true).to_vec();
+        assert_eq!(rec[4], REGION);
+        apply(&mut seen, &rec);
+        assert_eq!(seen, region_record(&pix, 1));
+    }
+
+    #[test]
+    fn region_cache_patches_like_a_full_record() {
+        let fill = |pix: &mut Pixmap, (x0, y0, x1, y1): (usize, usize, usize, usize), v: [u8; 4]| {
+            let w = pix.width() as usize;
+            for y in y0..y1 {
+                for x in x0..x1 {
+                    pix.data_mut()[(y * w + x) * 4..(y * w + x) * 4 + 4].copy_from_slice(&v);
+                }
+            }
+        };
+        let mut pix = Pixmap::new(40, 30).unwrap();
+        let mut cache = RegionCache::default();
+        fill(&mut pix, (5, 5, 30, 20), [100, 50, 0, 200]);
+        assert_eq!(cache.record(&pix, 1, None, false), &region_record(&pix, 1)[..]);
+        // zmiana wewnątrz prostokąta alfy, półprzezroczysta – łata
+        fill(&mut pix, (10, 8, 14, 12), [64, 0, 0, 128]);
+        assert_eq!(cache.record(&pix, 3, Some((10, 8, 14, 12)), false), &region_record(&pix, 3)[..]);
+        // obraz rośnie poza prostokąt i maleje
+        fill(&mut pix, (30, 25, 38, 29), [9, 9, 9, 255]);
+        assert_eq!(cache.record(&pix, 1, Some((28, 22, 40, 30)), false), &region_record(&pix, 1)[..]);
+        fill(&mut pix, (5, 5, 30, 20), [0, 0, 0, 0]);
+        assert_eq!(cache.record(&pix, 1, Some((0, 0, 30, 20)), false), &region_record(&pix, 1)[..]);
+        // pusty obraz i powrót
+        fill(&mut pix, (30, 25, 38, 29), [0, 0, 0, 0]);
+        assert_eq!(cache.record(&pix, 0, Some((30, 25, 38, 29)), false)[4], EMPTY);
+        fill(&mut pix, (1, 1, 3, 3), [5, 5, 5, 255]);
+        assert_eq!(cache.record(&pix, 0, Some((0, 0, 4, 4)), false), &region_record(&pix, 0)[..]);
+    }
 
     #[test]
     fn region_is_the_alpha_box() {

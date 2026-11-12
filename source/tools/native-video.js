@@ -25,7 +25,7 @@ const ASSETS = path.join(ROOT, 'examples/archiwum/assets');
 const [W, H] = [1920, 1080];
 const BGC = [0x2b, 0x34, 0x42]; // jednolite tło obu stron (różnica nie zależy od tła)
 const BGCSS = '#2b3442';
-const TITLES = { INFO24: 'INFO24 – oprawa demo', R7: 'R7 NEWS', 'BTB-PILNE': 'Belka BTB „PILNE”' };
+const TITLES = { INFO24: 'INFO24 – oprawa demo', R7: 'R7 NEWS' };
 
 const hasType = (nodes, types) => (nodes || []).some((n) => types.includes(n.type) || hasType(n.children, types));
 const holdFor = (sc) => (hasType(sc.nodes, ['ticker']) ? 9 : JSON.stringify(sc.nodes).includes('"cycle":') ? 7 : 3.5);

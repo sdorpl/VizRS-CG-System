@@ -1,6 +1,6 @@
 # LUKI – znane braki (uszeregowane: niezawodność → wierność → funkcje)
 
-Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki dopisuj od razu, z kolejnym wolnym numerem (numery nie są używane ponownie – #9 dotyczył eksportu do BTB, który usunięto; wyjątek z przeszłości: #17 w CHANGELOG przy 2.0.1 to zamknięta luka o przepełnieniu tekstu, nie obecna pozycja).
+Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki dopisuj od razu, z kolejnym wolnym numerem (numery nie są używane ponownie; wyjątek z przeszłości: #17 w CHANGELOG przy 2.0.1 to zamknięta luka o przepełnieniu tekstu, nie obecna pozycja).
 
 ## G1 – niezawodność i bezpieczeństwo
 | # | Luka | Uwagi |
@@ -15,10 +15,8 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | # | Luka | Uwagi |
 |---|---|---|
 | 6 | `OUT` zdejmuje warstwę w silniku od razu; animację OUT gra tylko klient | kolejny TAKE w czasie OUT może ją ściąć |
-| 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | BTB ma osie i krawędzie (`layout.dock`) |
-| 8 | Konwerter BTB: maski warstw, `layout.dock`, auto-szerokość `follow`, „po warstwie” przy wyjściu → ostrzeżenia, nie przenoszone | ruch, efekty tekstu, pętle i efekty tła przenoszone 1:1; zgodność klatek wejścia z BTB sprawdza `btb-visual.js --frames` |
+| 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | brak osi i krawędzi celu |
 | 10 | Pisownia: natywna przeglądarki (lang=pl); brak własnego słownika (sjp.pl/Hunspell) | w CEF (OBS dock) zależy od przeglądarki |
-| 11 | Znaczniki tekstu: rozmiar `{sz=}` w % (BTB używa px) – przy imporcie z BTB pomijany | |
 
 ## G3 – funkcje
 | # | Luka | Uwagi |
@@ -26,7 +24,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 12 | Rundown bez harmonogramu czasowego/automatu (zamierzone: tylko ręczne NEXT) | opcja „AUTO” z widocznym stanem i STOP |
 | 13 | Brak dedykowanego modułu Companion (jest generyczny HTTP/OSC + zmienne) | |
 | 14 | Parenting przez drzewo (zmiana rodzica); brak „pick whip” jak w AE | |
-| 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | propozycje G, H, K z btb-cgeditor |
+| 15 | Kształty wektorowe, tryby mieszania, ekspresje (wiggle) – poza zakresem | |
 | 16 | Ticker: brak źródła zewnętrznego (URL z JSON/RSS i odświeżanie) | plany/PLAN-ticker.md T5.2 (opcja); dziś: `TICKER …` / `/api/ticker` z zewnętrznego skryptu |
 | 17 | Okna aplikacji: lista zapisanych połączeń i ekran wyboru – jest w oknie natywnym (Plik → Połącz z serwerem), brak w oknie Chromium (`vizrs trio`, tam `--connect URL`); brak globalnych skrótów, menu systemowego i zasobnika | plany/PLAN-natywne-i-serwer.md N3/N4; skróty sprzętowe – Companion przez HTTP/OSC |
 | 18 | Okna aplikacji `vizrs trio` (Chromium/Edge) na Windows/macOS sprawdzone tylko kompilacją; `vizrs-shell` – test dymny w CI (`shell-smoke`: Windows z instalatora w `Program Files`, macOS), bez pełnego `shell.js` i bez ręcznego sprawdzenia menu i pytań | uruchomić `vizrs trio` i skróty z `install-windows-shortcuts.ps1` na Windows; macOS – WKWebView niezmierzony `tools/engines.js` |

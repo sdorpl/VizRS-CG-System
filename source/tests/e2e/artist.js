@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
@@ -126,25 +126,6 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     sc = await saved();
     ok(sc.fieldMeta.tytul && sc.fieldMeta.tytul.maxChars === 15 && sc.fieldMeta.tytul.upper === true && sc.fieldMeta.tytul.help === 'wpisz krótko', 'reguły pola zapisane w fieldMeta', sc.fieldMeta);
     ok(Array.isArray(sc.dock) && sc.dock[0].target === 'page:3001', 'powiązanie dock zapisane w scenie', sc.dock);
-    // import BTB CG
-    const FXD = path.join(__dirname, '../fixtures/btb');
-    const importBtb = async (file) => {
-      await pg.keyboard.press('Escape');
-      const [fc] = await Promise.all([pg.waitForEvent('filechooser'), pg.click('#bImpBtb')]);
-      await fc.setFiles(path.join(FXD, file)); await sleep(1500);
-    };
-    const nBefore = (await api('/api/show')).scenes.length;
-    await importBtb('na_zywo_lewa.json');
-    ok(await pg.locator('#rep').count() === 1, 'import BTB: okno raportu konwersji');
-    await pg.click('#repOk');
-    let sh = await api('/api/show');
-    const imported = sh.scenes.find((x) => x.name === 'NA ŻYWO lewa' || /ŻYWO/i.test(x.name));
-    ok(sh.scenes.length === nBefore + 1 && !!imported, 'import BTB (.json): scena zapisana na serwerze (walidacja przeszła)', sh.scenes.map((x) => x.name));
-    ok(imported && imported.nodes[0].type === 'group' && sh.pages.some((p) => p.scene === imported.id && p.values.title === 'na żywo'), 'import BTB: strona z wartością pola title');
-    await importBtb('belka_pilne.cgpack');
-    await pg.click('#repOk').catch(() => {});
-    sh = await api('/api/show');
-    ok(sh.scenes.length === nBefore + 2, 'import BTB (.cgpack): ZIP rozpakowany, scena dodana', sh.scenes.length);
 
     // presety tickerów i panel węzła ticker (tylko właściwości bieżącego trybu, edytor wiadomości próbnych)
     await pg.goto(B + '/artist?scene=at'); await sleep(1000);
@@ -165,11 +146,11 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     await pg.click('#tree .item[data-id="t1"]'); await sleep(200);
     // własna czcionka: ⤒ przy polu font wgrywa plik i ustawia go w elemencie
     const [fc] = await Promise.all([pg.waitForEvent('filechooser'), pg.click('[data-upload="font"]')]);
-    await fc.setFiles(path.join(__dirname, '../../../examples/archiwum/BTB_CG/assets/Bahnschrift.ttf')); await sleep(600);
-    ok(await pg.inputValue('input[data-p="font"]') === 'Bahnschrift.ttf', 'Font: wgrany plik ustawiony w elemencie');
-    ok(await pg.evaluate(() => [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Bahnschrift.ttf' && f.status === 'loaded')), 'Font: czcionka wczytana w podglądzie');
+    await fc.setFiles(path.join(__dirname, '../../web/fonts/oswald/oswald-latin-700-normal.woff2')); await sleep(600);
+    ok(await pg.inputValue('input[data-p="font"]') === 'oswald-latin-700-normal.woff2', 'Font: wgrany plik ustawiony w elemencie');
+    ok(await pg.evaluate(() => [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'oswald-latin-700-normal.woff2' && f.status === 'loaded')), 'Font: czcionka wczytana w podglądzie');
     await pg.click('#tree .item[data-id=""]'); await sleep(300);
-    ok((await pg.textContent('#props')).includes('Bahnschrift.ttf'), 'Font: czcionka w zasobach paczki sceny');
+    ok((await pg.textContent('#props')).includes('oswald-latin-700-normal.woff2'), 'Font: czcionka w zasobach paczki sceny');
     await pg.click('#tree .item[data-id="t1"]'); await sleep(200);
     await pg.fill('input[data-p="font"]', 'Inter'); await sleep(200);
     await pg.selectOption('[data-p="textFit"]', 'squeeze'); await sleep(200);

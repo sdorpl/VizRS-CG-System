@@ -28,7 +28,7 @@ fn text_ok(v: &Json, what: &str, max: usize) -> R {
 const TEXT_FIT: [&str; 6] = ["squeeze", "squeeze-shrink", "squeeze-lines", "squeeze-each", "shrink", "none"];
 /// Automatyczne łamanie wierszy w `squeeze-lines`/`squeeze-each` (`props.lineBreak`).
 const LINE_BREAK: [&str; 2] = ["balance", "fill"];
-// ruch na wzór BTB CG (web/motion.js: ANIM_TYPES, TEXT_IN, TEXT_OUT, LOOP_TYPES, DIRECTIONS, STAGGER_FROM)
+// ruch (web/motion.js: ANIM_TYPES, TEXT_IN, TEXT_OUT, LOOP_TYPES, DIRECTIONS, STAGGER_FROM)
 const ANIM_TYPES: &[&str] = &[
     "none", "slide", "fade", "zoom", "zoom-in", "pop", "wipe", "wipe-y", "clip", "blur", "flip", "flip-x", "rotate", "skew", "drop", "glitch",
     "slide-overshoot", "split-reveal", "mask-diag", "shutter", "bar-grow", "rgb-split",

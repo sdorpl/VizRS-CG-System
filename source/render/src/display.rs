@@ -88,6 +88,14 @@ impl DNode {
     }
 
     pub fn fingerprint(&self, h: &mut impl Hasher) {
+        self.own_fingerprint(h);
+        for c in &self.children {
+            c.fingerprint(h);
+        }
+    }
+
+    /// Skrót samego węzła (bez treści dzieci, z ich liczbą): położenie, pole, efekty, malowanie.
+    pub fn own_fingerprint(&self, h: &mut impl Hasher) {
         hash_tf(&self.m, h);
         hash_f(&[self.w, self.h, self.opacity, self.blur, self.overflow.unwrap_or(-1.0)], h);
         if let Some(c) = self.clip {
@@ -99,9 +107,42 @@ impl DNode {
             p.fingerprint(h);
         }
         self.children.len().hash(h);
-        for c in &self.children {
-            c.fingerprint(h);
+    }
+}
+
+/// Prostokąt w całkowitych px płótna: lewo, góra, prawo, dół (prawo i dół – poza prostokątem).
+pub type PxRect = (i32, i32, i32, i32);
+
+/// Suma dwóch prostokątów (`None` – pusty).
+pub fn px_union(a: Option<PxRect>, b: Option<PxRect>) -> Option<PxRect> {
+    match (a, b) {
+        (Some(a), Some(b)) => Some((a.0.min(b.0), a.1.min(b.1), a.2.max(b.2), a.3.max(b.3))),
+        (a, None) => a,
+        (None, b) => b,
+    }
+}
+
+/// Podpis drzewa rysowania do szukania obszaru zmiany między klatkami: skrót węzła, skrót poddrzewa
+/// i obwiednia poddrzewa w px płótna (z cieniami i rozmyciem), dla każdego dziecka osobno.
+#[derive(Debug)]
+pub struct Sig {
+    pub own: u64,
+    pub sub: u64,
+    pub area: Option<PxRect>,
+    pub kids: Vec<Sig>,
+}
+
+impl Sig {
+    /// Obszar płótna, w którym `self` (nowa klatka) różni się od `old`: obwiednie węzłów, które
+    /// się zmieniły (stara i nowa), a w węzłach bez zmiany – tylko w zmienionych dzieciach.
+    pub fn damage(&self, old: &Sig) -> Option<PxRect> {
+        if self.sub == old.sub {
+            return None;
         }
+        if self.own != old.own || self.kids.len() != old.kids.len() {
+            return px_union(self.area, old.area);
+        }
+        self.kids.iter().zip(&old.kids).fold(None, |d, (a, b)| px_union(d, a.damage(b)))
     }
 }
 

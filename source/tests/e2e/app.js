@@ -10,7 +10,7 @@ const os = require('os');
 const path = require('path');
 
 function playwrightPath() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require.resolve('playwright', { paths: [d] }); } catch (e) { /* dalej */ } }
   return require.resolve('playwright');
 }

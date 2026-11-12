@@ -18,7 +18,6 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 
 ## Niepodważalne zasady
 
-- **Tylko BTB → VizRS.** BTB CG (`../BTB-CG-System-alpha`, `../btb-cgeditor`) to baza pomysłów i źródło grafik do importu. Eksportu z VizRS do BTB nie ma i nie przywracamy go.
 - **Zero zależności w rdzeniu.** `source/Cargo.toml` (serwer `vizrs`) nie ma sekcji zależności — własny HTTP/1.1, SSE, JSON, OSC. Nie dodawaj tam crate'ów. Front-end to czysty JS (moduły ES), bez bundlera i bez bibliotek z CDN (wyjście musi działać offline).
 - **Wyjątek: okno natywne `source/shell/`** (`vizrs-shell`, decyzja użytkownika 2026-10-20) — osobny workspace z własnym `Cargo.lock`; dozwolone tylko crate'y wymienione w nagłówku `source/shell/Cargo.toml` (tao, wry, muda, rfd, png, serde_json, webkit2gtk). Powłoka nie wkompilowuje serwera, tylko uruchamia `vizrs serve --idle-exit` albo dołącza do działającego; nie dawaj stronie dostępu do systemu przez IPC (biała lista komunikatów). Zmiana renderera → `node tools/engines.js` (Chromium vs WebView okna, musi być 0 różnic).
 - **UI jest wbudowane w binarkę** (`include_str!` w `source/src/main.rs`, tablica `STATIC`). Wniosek:
@@ -29,8 +28,9 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 - **Wyjątek: renderer natywny `source/render/`** (`vizrs-render`, gałąź `render-native`, plan [PLAN-native.md](docs/plany/PLAN-native.md)) — drugi wykonawca tej samej semantyki tylko dla playoutu kanału bez GPU; osobny workspace z własnym `Cargo.lock`, dozwolone crate'y z nagłówka `source/render/Cargo.toml` (tiny-skia, rustybuzz, wuff, serde_json, png, jpeg-decoder). Czego nie umie, zgłasza (`check`, flaga klatki) zamiast zgadywać. Zmiana w `renderer.js` (rysowanie, tekst, krzywe, ticker) → ta sama w `source/render/` + `node tools/native-compare.js`.
 - **Dane z zewnątrz są wrogie.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
 - **Nie wywalaj serwera:** błędy przez `Result`, blokady odporne na zatrucie (`lk()`), wolny klient SSE jest odłączany. Antena ma działać dalej, nawet gdy zapis na dysk się nie uda.
-- **Wspólny model tekstu z BTB:** `web/text-model.js` to kopia modułu BTB-CG; zgodność pilnują wektory `source/tests/vectors/*.json` i `source/tools/sync-btb.sh --check`. Nie zmieniaj go tylko po jednej stronie.
+- **Model tekstu:** `web/text-model.js` (sanityzacja, RichText, typografia PL, reguły pól, Word Replace); zachowanie pilnują wektory `source/tests/vectors/*.json` (`node tests/vectors/run.js`) – zmiana zachowania = zmiana wektorów w tym samym commicie.
 - **Gdzie co opisywać:** README tylko wprowadza i odsyła; opis działania tylko w `docs/DOKUMENTACJA.md` (nie powielaj go w README ani w planach); wdrożenie i awarie – `docs/RUNBOOK.md`; paczki – `examples/README.md`; nowy plan – `docs/plany/` + wiersz w `docs/plany/README.md`.
+- **Numer wersji: rok.miesiąc.rewizja** (`26.11.1` = listopad 2026, pierwsze wydanie w miesiącu; kolejne `26.11.2`, w grudniu od `26.12.1`), bez zer wiodących (semver: Cargo, paczki, obrazy). Znacznik `v<wersja>` = `version` w `source/Cargo.toml` i `source/shell/Cargo.toml` (renderer natywny `source/render/` ma własną wersję protokołu). Wydania idą z gałęzi `main`; `main-oldstable` to stan sprzed 26.11.1.
 - **Dokumentacja razem z kodem:** commit zmieniający zachowanie (UI, skróty, format show, API, opcje CLI) aktualizuje w tym samym commicie `docs/DOKUMENTACJA.md`, a gdy dotyczy codziennej pracy — także `docs/INSTRUKCJA-poczatkujacy.md`; API → `docs/API.md`; zmiany wydania → `CHANGELOG.md` (sekcja „Niewydane”); zamknięta luka → wiersz z `docs/LUKI.md`.
 
 ## Współpraca z Gemini
@@ -38,7 +38,7 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
 Szczegóły: [docs/AGENCI.md](docs/AGENCI.md); ten sam podział obowiązuje w całym pakiecie VizRS. W skrócie:
 
 - **Claude dowodzi i jako jedyny pisze kod** (także `source/web/`, `source/shell/src/bridge.rs` z białą listą, `validate.rs`, `deploy/`, `.github/`, pliki zasad).
-- **Gemini wykonuje lekkie zadania:** redaguje wskazane pliki `.md`, uruchamia kompilację i bramkę, streszcza długie wyjścia, przeszukuje źródła (także `../VizRS CG Artist`, BTB CG). Nie commituje.
+- **Gemini wykonuje lekkie zadania:** redaguje wskazane pliki `.md`, uruchamia kompilację i bramkę, streszcza długie wyjścia, przeszukuje źródła (także `../VizRS CG Artist`). Nie commituje.
 - **Kontekst Gemini:** `AGENTS.md` to dowiązanie do tego pliku – `agy` sam wczytuje `AGENTS.md` i `GEMINI.md`, także w `-p` (pomiar agy 1.5.3, 2026-11-08: plik 19 KB w całości); importów `@plik` nie rozwija. Zasady zmieniaj tylko tutaj, `GEMINI.md` opisuje wyłącznie rolę wykonawcy i niczego stąd nie powiela.
 - **Wywołanie:** `~/.gemini/bin/agy` (poza `PATH`), przełączniki – AGENCI §5. Wygodniej przez wrapper wtyczki antigravity: `PATH="$HOME/.gemini/bin:$PATH" agy-delegate [--tier flash|flash-lo] [--digest] [--mode plan] --dir . "<zlecenie>"`. Wrapper sam stawia `-p` na końcu i odcina stdin. Zamiast kodu 0 zwraca kod błędu: 10 – limit, 11 – logowanie, 12 – przekroczony czas, 14 – brak modelu, 15 – odmowa uprawnień, 3 – pusta odpowiedź. Na stderr wypisuje wiersz `AGY_USAGE` z tokenami i modelem. Tylko subskrypcja Google (bez kluczy API). `--yolo` / `--dangerously-skip-permissions` – nigdy: daje zgodę na cały komputer, a `--sandbox` jej nie ogranicza.
 - **Próg opłacalności:** każde zlecenie ma koszt stały (zlecenie, czekanie, przegląd). Małe, jednorazowe i wymagające decyzji zadania rób sam – ich zlecanie to zmierzona strata. Zlecaj duże porcje tekstu przy niewielu decyzjach: prozę dokumentacji (też w kilku repozytoriach naraz, AGENCI §5), przeszukanie dużych źródeł, nieustrukturyzowane logi. Jedno duże zlecenie zamiast wielu małych. Bierz streszczenie (`--digest`), nie surowe wyjście; plików, które przerobił Gemini, nie czytaj ponownie – przeglądaj diff. Logi (bramka, kompilacja, testy) czytaj sam przez plik i filtr (`tail`, `grep`) – AGENCI §4.
@@ -69,7 +69,7 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test
 cargo build --release
-node tests/vectors/run.js && node tests/vectors/btb.js
+node tests/vectors/run.js
 node tests/e2e/run.js target/release/vizrs        # Trio/Output (Playwright, PLAYWRIGHT_DIR=…)
 node tests/e2e/mobile.js target/release/vizrs     # Trio na telefonie
 node tests/e2e/artist.js target/release/vizrs     # Artist (zamrożony /artist)
@@ -81,11 +81,12 @@ node tests/e2e/native-smoke.js target/release/vizrs shell/target/release/vizrs-s
 node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell       # zgodność WebView z Chromium (otwiera okno)
 (cd render && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # renderer natywny
 node tools/native-compare.js                      # zgodność renderera natywnego z Chromium (każda obsługiwana strona < 2%)
-node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch jak w BTB
+node tests/cgpack.mjs                             # reguły zasobów paczki (nazwy, czcionki bez duplikatów)
+node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch (node.motion)
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
 ```
 
-Playwright nie jest zależnością repo: `PLAYWRIGHT_DIR` wskazuje katalog z `node_modules/playwright` (domyślnie szukany w `../BTB-CG-System-alpha`).
+Playwright nie jest zależnością repo: `PLAYWRIGHT_DIR` wskazuje katalog z `node_modules/playwright` (bez niej – zwykłe `require('playwright')`).
 Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzymaj poza repo).
 
 ## Struktura
@@ -119,13 +120,12 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/text-model.js`, `richtext.js` | reguły pól, typografia PL, Word Replace; znaczniki `{b}{i}{u}{c=}{sz=}` i `[[ ]]` |
 | `source/web/ticker-model.js`, `ticker-items.js`, `color-picker.js` | model wiadomości tickera; edytor listy wiadomości i wybór koloru (Trio i Artist) |
 | `source/web/qr.js` | generator kodów QR offline |
-| `source/web/btb-io.js` | import elementów BTB CG (`.json` v3, `.cgpack`) |
-| `source/web/motion.js` | ruch jak w BTB CG (`node.motion`): krzywe GSAP, presety IN/OUT, efekty tekstu, pętle uwagi, sekwencja `after` – czyste funkcje, rysuje `renderer.js` |
+| `source/web/motion.js` | ruch (`node.motion`): krzywe GSAP, presety IN/OUT, efekty tekstu, pętle uwagi, sekwencja `after` – czyste funkcje, rysuje `renderer.js` |
 | `source/web/cgpack.js` | paczka belek VizRS `.cgpack` (sceny + strony + grafiki + czcionki): zapis ZIP, odczyt, instalacja plików |
 | `source/web/demo_show.json` | show startowy (INFO24) |
-| `source/tests/` | `vectors/` (wspólne z BTB), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe), `fixtures/btb/` (elementy BTB do testów importu) |
-| `source/tools/` | narzędzia pakietów, galerii, filmów i zgodności (`sync-btb.sh`, `build-packs.mjs`, `gallery.js`, `engines.js`, `video.js`…); pełna lista: DOKUMENTACJA §15 |
-| `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack`, `BTB.cgpack`, `BTB_INFO24.cgpack`, `BTB_ALPHA.cgpack`, `BTB_TRIO.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json`, `BTB_CG/`, `BTB_ALPHA/`, `BTB_TRIO/`, `assets/` (używane przez testy) |
+| `source/tests/` | `vectors/` (model tekstu), `cgpack.mjs` (reguły paczki), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
+| `source/tools/` | narzędzia pakietów, galerii, filmów i zgodności (`build-packs.mjs`, `gallery.js`, `engines.js`, `video.js`…); pełna lista: DOKUMENTACJA §14 |
+| `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json` i `assets/` (używane przez testy) |
 | `deploy/`, `render.yaml` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
 | `docs/` | dokumentacja (spis: `docs/README.md`); `docs/plany/` – plany i raport (dokumenty projektowe, nie opis bieżącego działania) |
 | `Dockerfile` | obraz `scratch` ze statyczną binarką musl; wieloarchitekturowy (amd64, arm64 z optymalizacją pod Ampere A1 Neoverse-N1: `-C target-cpu=neoverse-n1 -C opt-level=3` przez `rust-lld` bez emulacji QEMU) |
@@ -140,7 +140,7 @@ i `showIf` (wariant). Szczegóły: [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) 
 
 ## Commity
 
-- Jedna spójna zmiana = jeden commit, po polsku, opisowo (styl historii: „Tickery na wzór BTB CG: …”). Tylko zielone stany.
+- Jedna spójna zmiana = jeden commit, po polsku, opisowo (styl historii: „Tickery: …”). Tylko zielone stany.
 - Pliki dodawaj jawnie (`git add ścieżka`), nie `git add -A`. Nie commituj `source/target/`, zrzutów i plików tymczasowych.
 - Binarkę `bin/linux-x86_64/vizrs` aktualizuj w commicie, który zmienia UI lub serwer (inaczej `start-linux.sh` uruchamia starą wersję); `bin/linux-x86_64/vizrs-shell` – w commicie zmieniającym `source/shell/`.
 - Commit i push tylko na prośbę użytkownika.

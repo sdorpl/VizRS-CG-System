@@ -1,4 +1,4 @@
-// VizRS – ruch na wzór BTB CG (presety IN/OUT, efekty tekstu, pętle uwagi)
+// VizRS – ruch (presety IN/OUT, efekty tekstu, pętle uwagi)
 //
 // Model węzła (opcjonalny, obok kluczy `anim`):
 //   node.motion = {
@@ -9,13 +9,13 @@
 //     loop:    { type, dur, amp, color },                 // pętla uwagi – gra na wizji, gdy grafika stoi (zegar ścienny)
 //     after:   'id węzła',                                // sekwencja: wejście zaczyna się po wejściu wskazanego węzła
 //     origin:  [x, y],                                    // punkt odniesienia skali/obrotu (ułamki pola), gdy preset go nie ustala
-//     bg:      'shimmer' | 'pulse' | 'glow' | 'scanline'  // stały efekt tła kształtu (gra cały czas, jak w BTB)
+//     bg:      'shimmer' | 'pulse' | 'glow' | 'scanline'  // stały efekt tła kształtu (gra cały czas)
 //   }
-// Semantyka jak w BTB CG (`cgmotion.js`, btb-cgeditor `src/anim.rs`): źródła ruchu składają się z kluczami –
+// Semantyka: źródła ruchu składają się z kluczami –
 // przesunięcie, obrót, pochylenie i rozmycie się sumują, skala i krycie mnożą.
 // Moduł bez DOM – liczy stan; rysuje `renderer.js`.
 
-// ---------------------------------------------------------------- krzywe (nazwy GSAP jak w CGMotion.normalizeEase)
+// ---------------------------------------------------------------- krzywe (nazwy GSAP)
 const PI = Math.PI;
 const backOut = (x, s) => { const t = x - 1; return t * t * ((s + 1) * t + s) + 1; };
 const backIn = (x, s) => x * x * ((s + 1) * x - s);
@@ -47,7 +47,7 @@ const ALIAS = {
   spring: 'back.out(1.4)', 'spring-soft': 'back.out(0.8)', 'spring-hard': 'back.out(2.2)', overshoot: 'back.out(1.7)', broadcast: 'power3.out',
   'back-in': 'back.in', 'back-out': 'back.out', 'bounce-out': 'bounce.out', 'elastic-out': 'elastic.out',
 };
-/** Krzywa o nazwie GSAP (`power2.out`, `back.out(1.7)`, `bounce.out`, `cubic-bezier(…)`, aliasy BTB) → wartość dla x ∈ [0, 1]. */
+/** Krzywa o nazwie GSAP (`power2.out`, `back.out(1.7)`, `bounce.out`, `cubic-bezier(…)`, aliasy) → wartość dla x ∈ [0, 1]. */
 export function ease(name, x) {
   x = Math.min(1, Math.max(0, +x || 0));
   name = String(name ?? '');
@@ -85,7 +85,7 @@ export function ease(name, x) {
   }
 }
 
-// ---------------------------------------------------------------- katalogi (nazwy jak w BTB CG; etykiety dla Artist)
+// ---------------------------------------------------------------- katalogi (nazwy presetów; etykiety dla Artist)
 export const ANIM_TYPES = ['none', 'slide', 'fade', 'zoom', 'zoom-in', 'pop', 'wipe', 'wipe-y', 'clip', 'blur', 'flip', 'flip-x', 'rotate', 'skew', 'drop', 'glitch', 'slide-overshoot', 'split-reveal', 'mask-diag', 'shutter', 'bar-grow', 'rgb-split'];
 export const ANIM_LABELS = {
   none: 'brak (od razu)', slide: 'wjazd', fade: 'przenikanie', zoom: 'zoom', 'zoom-in': 'zoom z bliska', pop: 'wyskok', wipe: 'przesłona pozioma',
@@ -178,7 +178,7 @@ export function stateIn(type, dir, easeName, p) {
 export function stateOut(type, dir, easeName, p) {
   const t = identity(), m = ease(easeName, p);
   switch (type) {
-    case 'none': case '': case undefined: t.opacity = 0; break; // jak cgmotion: od razu znika (po opóźnieniu)
+    case 'none': case '': case undefined: t.opacity = 0; break; // od razu znika (po opóźnieniu)
     case 'fade': t.opacity = 1 - m; break;
     case 'zoom': t.opacity = 1 - m; t.sx = t.sy = 1 - 0.2 * m; break;
     case 'zoom-in': t.opacity = 1 - m; t.sx = t.sy = 1 + 0.15 * m; break;
@@ -240,7 +240,7 @@ export function textUnits(text, split) {
   if (split === 'lines') return Math.max(1, s.split('\n').filter((l) => l.trim()).length);
   return 1;
 }
-/** Czas rozłożenia jednostek (odstęp × (n−1)); bez tekstu – górna granica 1,2 s jak w cgmotion. */
+/** Czas rozłożenia jednostek (odstęp × (n−1)); bez tekstu – górna granica 1,2 s. */
 export function textSpread(spec, text) {
   const split = splitOf(spec.type);
   if (split === 'whole') return 0;
@@ -300,7 +300,7 @@ function staggerOrder(from, i, n) {
   if (from === 'edges') return Math.max(0, last / 2 - Math.abs(i - last / 2));
   return i;
 }
-/** Neutralny stan jednostki tekstu: `clip` = przycięcie [góra, prawo, dół, lewo] w ułamkach (jak `clip-path: inset()` w cgmotion). */
+/** Neutralny stan jednostki tekstu: `clip` = przycięcie [góra, prawo, dół, lewo] w ułamkach (jak `clip-path: inset()`). */
 export const unitIdentity = () => ({ opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null, hidden: false });
 
 function unitProgress(spec, i, n, t) {
@@ -311,13 +311,13 @@ function unitProgress(spec, i, n, t) {
   const dur = specDur(spec);
   return dur <= 0 ? (local >= 0 ? 1 : 0) : clamp01(local / dur);
 }
-/** Efekty „treściowe” (szyfrowanie, maszyna z kursorem): znak i jest gotowy, gdy i < ⌊postęp × n⌋ całego tekstu (jak w cgmotion). */
+/** Efekty „treściowe” (szyfrowanie, maszyna z kursorem): znak i jest gotowy, gdy i < ⌊postęp × n⌋ całego tekstu. */
 function contentDone(spec, i, n, t) {
   const dur = specDur(spec);
   const p = ease(spec.ease || 'power2.out', dur <= 0 ? (t >= 0 ? 1 : 0) : clamp01(t / dur));
   return i < Math.floor(p * n) || p >= 1;
 }
-/** Stan jednostki i z n przy efekcie IN; t = s od startu efektu (po opóźnieniu może być ujemne). Wartości jak `applyTextEffect` w cgmotion. */
+/** Stan jednostki i z n przy efekcie IN; t = s od startu efektu (po opóźnieniu może być ujemne). */
 export function textInFx(spec, i, n, t) {
   const fx = unitIdentity(), type = spec.type;
   const p = unitProgress(spec, i, n, t), m = ease(spec.ease || 'power2.out', p);
@@ -346,7 +346,7 @@ export function textInFx(spec, i, n, t) {
   }
   return fx;
 }
-/** Stan jednostki przy efekcie OUT; t = s od startu efektu. Wartości jak `applyTextOutEffect` w cgmotion. */
+/** Stan jednostki przy efekcie OUT; t = s od startu efektu. */
 export function textOutFx(spec, i, n, t) {
   const fx = unitIdentity(), type = spec.type;
   const p = unitProgress(spec, i, n, t), m = ease(spec.ease || 'power2.in', p);
@@ -373,7 +373,7 @@ export function textOutFx(spec, i, n, t) {
   return fx;
 }
 
-/** Licznik: pierwsza liczba w tekście liczy od 0 do wartości z zachowaniem formatu (jak `_counterIn` w cgmotion). */
+/** Licznik: pierwsza liczba w tekście liczy od 0 do wartości z zachowaniem formatu. */
 export function counterText(full, k) {
   const m = /-?\d[\d\s.,]*\d|-?\d/.exec(full);
   if (!m) return full;
@@ -395,10 +395,10 @@ const SCRAMBLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*@$';
 /** Znak zastępczy szyfrowania – deterministyczny w czasie (ten sam kadr = ten sam znak). */
 export const scrambleChar = (i, t) => SCRAMBLE[Math.abs(Math.floor(Math.sin((i + 1) * 12.9898 + Math.floor(t * 20) * 78.233) * 43758.5453)) % SCRAMBLE.length];
 
-// ---------------------------------------------------------------- pętle uwagi (CGMotion.ATTENTION_PRESETS)
+// ---------------------------------------------------------------- pętle uwagi
 const yoyo = (t, d) => { const ph = (t / d) % 2; const lin = ph <= 1 ? ph : 2 - ph; return 0.5 - 0.5 * Math.cos(PI * lin); };
 /**
- * Stan pętli w chwili t (s zegara ściennego od wejścia na wizję). `amp` – siła jak „amplituda” w inspektorze BTB
+ * Stan pętli w chwili t (s zegara ściennego od wejścia na wizję). `amp` – siła („amplituda”)
  * (pulse/heartbeat: % skali, wobble: stopnie, breathe: % krycia); puste = domyślna.
  * Zwraca { tx, ty, sx, sy, rot, opacity, glow (0..1), shine (pozycja 0..1 lub -1), underline [od, do] lub null }.
  */
@@ -493,7 +493,7 @@ export function textFxActive(m, t, outStart, shift = 0) {
   return false;
 }
 
-// ---------------------------------------------------------------- presety → klucze (jak „Presety na klucze” w BTB CG Editor)
+// ---------------------------------------------------------------- presety → klucze
 /** Krzywa GSAP → krzywa kluczy VizRS (EASES w renderer.js), gdy przebieg jest identyczny; inaczej null (próbkowanie). */
 const KEY_EASE = { 'power2.out': 'out', 'cubic.out': 'out', 'ease-out': 'out', '': 'out', 'power2.in': 'in', 'cubic.in': 'in', 'ease-in': 'in', 'power2.inOut': 'inout', 'cubic.inOut': 'inout', 'ease-in-out': 'inout', linear: 'linear', none: 'linear', 'back.out': 'back', 'back-out': 'back' };
 /** Typy, w których każda wartość zależy liniowo od krzywej głównej – wystarczą dwa klucze z tą samą krzywą. */
@@ -504,7 +504,7 @@ const UNKEYABLE = new Set(['wipe', 'wipe-y', 'flip', 'flip-x', 'rotate', 'mask-d
 /**
  * Zamienia presety wejścia/wyjścia węzła na klucze. `rest` – wartości spoczynkowe właściwości (x, y, opacity, scale, rotation, skewX,
  * blur, clipL…), `outStart` – ostatni stop, `shift` – przesunięcie sekwencji. Zwraca { anim: {prop: [klucze]}, done: ['in','out'], skipped: [opisy] }.
- * Pętle i efekty tekstu zostają presetami (jak w BTB).
+ * Pętle i efekty tekstu zostają presetami.
  */
 export function motionToKeys(m, { rest, outStart, shift = 0 }) {
   const anim = {}, done = [], skipped = [];
@@ -646,14 +646,14 @@ export function keysToMotion(anim, { props = {}, sample, outStart = Infinity, sh
   return out;
 }
 
-// ---------------------------------------------------------------- stałe efekty tła kształtu (BTB `layer.effect`: shimmer, pulse, glow, scanline)
+// ---------------------------------------------------------------- stałe efekty tła kształtu (shimmer, pulse, glow, scanline)
 export const BG_TYPES = ['none', 'shimmer', 'pulse', 'glow', 'scanline'];
 export const BG_LABELS = { none: 'brak', shimmer: 'połysk tła (ciągły)', pulse: 'pulsowanie krycia', glow: 'świecenie (cień w kolorze)', scanline: 'linie skanowania' };
 const CSS_EASE_FN = 'cubic-bezier(0.25,0.1,0.25,1)', CSS_EASE_IO = 'cubic-bezier(0.42,0,0.58,1)';
 /** Klatka kluczowa CSS 0% → 50% → 100% z krzywą ease-in-out (jak `animation: … ease-in-out infinite`). */
 const yoyoCss = (t, d) => { const ph = (t % d) / d; return ph < 0.5 ? ease(CSS_EASE_IO, ph * 2) : 1 - ease(CSS_EASE_IO, (ph - 0.5) * 2); };
 /**
- * Stan efektu tła w chwili t (s od wejścia na wizję; gra cały czas, także w trakcie IN/OUT – jak animacja CSS w BTB).
+ * Stan efektu tła w chwili t (s od wejścia na wizję; gra cały czas, także w trakcie IN/OUT – jak animacja CSS).
  * Zwraca { opacity (mnożnik), glow (px rozmycia cienia lub 0), shimmer (pozycja lewej krawędzi w % lub null), scan (przesunięcie px lub null) }.
  */
 export function bgState(type, t, baseOpacity = 1) {

@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 
 function loadPlaywright() {
-  const dirs = [process.env.PLAYWRIGHT_DIR, path.join(os.homedir(), 'Nextcloud/GitHub/BTB-CG-System-alpha')].filter(Boolean);
+  const dirs = [process.env.PLAYWRIGHT_DIR].filter(Boolean);
   for (const d of dirs) { try { return require(require.resolve('playwright', { paths: [d] })); } catch (e) { /* dalej */ } }
   return require('playwright');
 }
@@ -67,7 +67,8 @@ async function server() {
     const zipTxt = fs.readFileSync(file).toString('latin1');
     ok(['manifest.json', 'scenes.json', 'assets/logo.png', 'assets/MojaCzcionka.woff2', 'assets/dodatek.png'].every((n) => zipTxt.includes(n)) && !zipTxt.includes('nieuzywany.png'), 'Paczka zawiera sceny, grafiki i czcionkę (bez nieużywanych plików)');
 
-    // import na czystym serwerze
+    // import na serwerze, który ma już tę czcionkę pod inną nazwą – bez kopii, scena wskazuje istniejący plik
+    await fetch(Z.B + '/api/assets?name=Juz_wgrana.woff2', { method: 'POST', body: font });
     await pg.goto(Z.B + '/artist'); await sleep(800);
     await pg.click('#bImp');
     await pg.setInputFiles('#fileIn', file);
@@ -78,7 +79,9 @@ async function server() {
     const page = show.pages.find((p) => p.number === 4321);
     ok(!!page && page.scene === sc?.id && page.values.tytul === 'Ala ma kota', 'Import: strona z wartościami wskazuje nową scenę', page);
     const names = (await Z.api('/api/assets')).map((a) => a.name);
-    ok(['logo.png', 'MojaCzcionka.woff2', 'dodatek.png'].every((n) => names.includes(n)), 'Import: pliki w assets', names);
+    ok(['logo.png', 'dodatek.png'].every((n) => names.includes(n)) && !names.includes('MojaCzcionka.woff2'), 'Import: pliki w assets, czcionka bez kopii', names);
+    ok(sc?.nodes[1].props.font === 'Juz_wgrana.woff2', 'Import: font sceny wskazuje czcionkę już wgraną', sc?.nodes[1].props.font);
+    ok((await pg.textContent('#rep')).includes('użyto istniejącej'), 'Raport importu mówi o użytej istniejącej czcionce', await pg.textContent('#rep'));
 
     // ponowny import: te same pliki pomijane, scena jako kopia, numer strony zajęty → nowy
     await pg.click('#repOk').catch(() => {});
@@ -92,10 +95,42 @@ async function server() {
     const names2 = (await Z.api('/api/assets')).map((a) => a.name);
     ok(names2.includes('logo_2.png') && copies[1].nodes[0].props.src === 'logo_2.png', 'Konflikt nazwy pliku: nowa nazwa i przepisany odnośnik', [names2, copies[1]?.nodes[0].props.src]);
 
+    // ⇩ Eksport sceny = paczka .cgpack z plikami (nie .vizrs.json)
+    await pg.goto(A.B + '/artist?scene=pk'); await sleep(800);
+    const [dl2] = await Promise.all([pg.waitForEvent('download'), pg.click('#bExp')]);
+    const file2 = path.join(A.data, 'eksport.cgpack');
+    await dl2.saveAs(file2);
+    const z2 = fs.readFileSync(file2).toString('latin1');
+    ok(/\.cgpack$/.test(dl2.suggestedFilename()) && z2.includes('assets/MojaCzcionka.woff2') && z2.includes('scenes.json'), 'Eksport sceny zapisuje paczkę .cgpack z czcionką', dl2.suggestedFilename());
+
+    // Trio: import paczki dodaje sceny i strony wg tych samych reguł (czcionka bez kopii)
+    const tr = await ctx.newPage();
+    tr.on('pageerror', (e) => errs.push('trio: ' + e.message));
+    tr.on('dialog', (d) => d.accept());
+    await tr.goto(Z.B + '/trio'); await sleep(1000);
+    await tr.click('#bImpPack');
+    await tr.setInputFiles('#fileIn', file2);
+    await sleep(1500);
+    const show3 = await Z.api('/api/show');
+    const names3 = (await Z.api('/api/assets')).map((a) => a.name);
+    const sc3 = show3.scenes.filter((x) => x.name === 'Belka paczka');
+    ok(sc3.length === 3 && show3.pages.length === 3 && sc3[2].nodes[1].props.font === 'Juz_wgrana.woff2' && !names3.includes('MojaCzcionka.woff2'), 'Trio: import paczki – scena, strona, czcionka bez kopii', [sc3.length, show3.pages.length, names3]);
+    await tr.close();
+
+    // dawny eksport sceny .vizrs.json: tylko odczyt, przez ten sam import (scena zapisana, raport o formacie)
+    const legacy = path.join(A.data, 'stara.vizrs.json');
+    fs.writeFileSync(legacy, JSON.stringify({ name: 'Stara scena', layer: 'main', width: 1920, height: 1080, duration: 1, stops: [], nodes: [{ id: 'x', type: 'image', name: 'img', props: { x: 0, y: 0, w: 10, h: 10, src: 'nie_ma.png' } }] }));
+    await pg.goto(Z.B + '/artist'); await sleep(800);
+    await pg.click('#bImp');
+    await pg.setInputFiles('#fileIn', legacy);
+    await sleep(1200);
+    const rep = await pg.textContent('#rep').catch(() => '');
+    ok((await Z.api('/api/show')).scenes.some((x) => x.name === 'Stara scena') && rep.includes('starszy format') && rep.includes('nie_ma.png'), 'Import .vizrs.json: scena zapisana, raport o starszym formacie i braku pliku', rep);
+
     // /output: czcionka z paczki ładowana z serwera
     const out = await ctx.newPage();
     await out.goto(Z.B + '/output'); await sleep(1500);
-    const loaded = await out.evaluate(() => [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'MojaCzcionka.woff2' && f.status === 'loaded'));
+    const loaded = await out.evaluate(() => [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Juz_wgrana.woff2' && f.status === 'loaded'));
     ok(loaded, '/output ładuje czcionkę z assets z serwera (bez TAKE)');
     ok(errs.length === 0, 'Bez błędów JS', errs);
   } catch (e) {

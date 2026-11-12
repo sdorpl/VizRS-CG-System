@@ -3,7 +3,7 @@
 //   {b}…{/b}          pogrubienie        {i}…{/i}  kursywa        {u}…{/u}  podkreślenie
 //   {c=#e30613}…{/c}  kolor              {sz=120}…{/sz}  rozmiar w % (30–300)
 // Znaczniki można zagnieżdżać; niedomknięte zamykają się na końcu. Rozróżnianie wielkości liter wyłączone
-// (WERSALIKI pola nie psują znaczników). Konwersja do/z RichText v1 z BTB-CG: toRich / fromRich (potrzebują CGText).
+// (WERSALIKI pola nie psują znaczników).
 
 const TOKEN = /\[\[|\]\]|\{(\/?)(b|i|u|c|sz)(?:=([^}]*))?\}/gi;
 const COLOR_OK = /^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i;
@@ -64,22 +64,3 @@ export function carryLines(lines) {
     return out;
   });
 }
-
-// ---------------------------------------------------------------- import z RichText v1 (BTB-CG, text-model.js)
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-/** HTML BTB-CG → znacznik VizRS (po sanityzacji przez `CGText.toRich`). */
-export function fromBtbHtml(html, CGText = globalThis.CGText) {
-  const rich = CGText.toRich(html);
-  return rich.blocks.map((b) => b.runs.map((r) => {
-    if (r.br) return '\n';
-    let s = r.t, m = r.m || {};
-    if (m.bg) s = `[[${s}]]`;
-    if (m.weight >= 600) s = `{b}${s}{/b}`;
-    if (m.italic) s = `{i}${s}{/i}`;
-    if (m.underline) s = `{u}${s}{/u}`;
-    if (m.color) s = `{c=${m.color}}${s}{/c}`;
-    return s;
-  }).join('')).join('\n');
-}
-export { esc as _esc };

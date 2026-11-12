@@ -6,7 +6,7 @@ Stan: **propozycja, kod nieruszony** (2026-11-01, gałąź `artist-next`). Dotyc
 
 Korzyści, których spodziewamy się po GTK 4:
 
-1. skalowanie ułamkowe – GTK 3 zna tylko skale całkowite (DOKUMENTACJA §13.2),
+1. skalowanie ułamkowe – GTK 3 zna tylko skale całkowite (DOKUMENTACJA §12.2),
 2. nowsza gałąź grafiki i Wayland (GSK, Vulkan/GL, DMA-BUF),
 3. odejście od GTK 3 i WebKitGTK 4.1 zanim znikną z dystrybucji; GTK 4 daje też dostęp do nowych funkcji WebKitGTK.
 
@@ -115,7 +115,7 @@ Bramka: testy `shell` i `tools/engines.js` bez zmian, ręczny przegląd menu. Be
 1. Wydanie z GTK 4 domyślnie, GTK 3 jako `--features gtk3` (jedna wersja).
 2. Pakiety: `.deb` `Depends: libwebkitgtk-6.0-4, libgtk-4-1`; AppRun sprawdza WebKitGTK 6.0, bez niego okno Chromium; `release.yml`.
 3. Usunięcie backendu GTK 3, `webkit2gtk`, cechy `gtk3`.
-4. Dokumentacja: `CLAUDE.md` (biała lista), DOKUMENTACJA §13.2 i wymagania, RUNBOOK, CHANGELOG, LUKI, STATUS, nagłówek `Cargo.toml`; binarka `bin/linux-x86_64/vizrs-shell` razem z commitem.
+4. Dokumentacja: `CLAUDE.md` (biała lista), DOKUMENTACJA §12.2 i wymagania, RUNBOOK, CHANGELOG, LUKI, STATUS, nagłówek `Cargo.toml`; binarka `bin/linux-x86_64/vizrs-shell` razem z commitem.
 
 ## Ryzyka
 

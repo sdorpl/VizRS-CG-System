@@ -7,6 +7,7 @@ use std::hash::{DefaultHasher, Hasher};
 use serde_json::{Map, Value};
 use tiny_skia::{Pixmap, Transform};
 
+use crate::display::{px_union, PxRect, Sig};
 use crate::model::{layer_z, num_of, str_of, Scene};
 use crate::raster::Raster;
 use crate::res::Resources;
@@ -35,7 +36,28 @@ pub struct Host {
     last_tick: Option<f64>,
     pub raster: Raster,
     last_print: Option<u64>,
+    /// Rysowanie tylko obszaru zmiany (domyślnie tak; `false` – zawsze cały obraz).
+    pub partial: bool,
+    /// Obszar (px kanału) ostatniego obrazu rysowanego częściowo; `None` – rysowany w całości.
+    /// Poza nim płótna mają piksele poprzedniego obrazu.
+    pub last_damage: Option<PxRect>,
+    drawn: Option<Drawn>,
 }
+
+/// Co narysowano ostatnio – podstawa rysowania częściowego następnej klatki.
+struct Drawn {
+    /// Skrót tego, co zmienia cały obraz: zasoby (fonty, obrazy), rozmiary płócien, przekształcenia sceny.
+    setup: u64,
+    sigs: Vec<Sig>,
+    /// Klatki narysowane częściowo od ostatniego pełnego rysowania.
+    partial_run: u32,
+}
+
+/// Po tylu klatkach rysowanych częściowo jedna jest rysowana w całości (przy 50 kl./s – co sekundę):
+/// zabezpieczenie na wypadek obwiedni, która czegoś nie objęła – ślad zniknie najpóźniej po tylu klatkach.
+const FULL_EVERY: u32 = 50;
+/// Obszar zmiany większy niż ta część obrazu – rysowanie całości (taniej niż płótno pomocnicze).
+const PARTIAL_MAX_SHARE: f64 = 0.5;
 
 fn values_of(v: Option<&Value>) -> Map<String, Value> {
     v.and_then(Value::as_object).cloned().unwrap_or_default()
@@ -54,6 +76,9 @@ impl Host {
             last_tick: None,
             raster: Raster::new(),
             last_print: None,
+            partial: true,
+            last_damage: None,
+            drawn: None,
         }
     }
 
@@ -407,6 +432,7 @@ impl Host {
             h.write_u32(pix.width());
             h.write_u32(pix.height());
         }
+        let setup = h.finish();
         let trees: Vec<_> = order.iter().flat_map(|o| &self.layers[o.2].players).filter_map(|p| p.tree.as_ref()).collect();
         for t in &trees {
             t.fingerprint(&mut h);
@@ -415,11 +441,34 @@ impl Host {
         if self.last_print == Some(print) {
             return false;
         }
+        // obszar zmiany w px kanału (obszar (0, 0)); na płótnie obszaru – przesunięty o jego położenie
+        let channel = self.stage_transform(size, (0, 0));
+        let sigs: Vec<Sig> = trees.iter().map(|t| self.raster.sig(t, channel, res)).collect();
+        let damage = match &self.drawn {
+            Some(d) if self.partial && d.setup == setup && d.sigs.len() == sigs.len() && d.partial_run < FULL_EVERY => {
+                sigs.iter().zip(&d.sigs).fold(None, |acc, (a, b)| px_union(acc, a.damage(b)))
+            }
+            _ => None,
+        };
+        let damage = damage.filter(|r| {
+            let share = f64::from((r.2 - r.0).max(0)) * f64::from((r.3 - r.1).max(0)) / (f64::from(size.0) * f64::from(size.1));
+            share <= PARTIAL_MAX_SHARE
+        });
+        let reach = damage.map_or(0.0, |_| trees.iter().fold(0.0f32, |r, t| r.max(Raster::effect_reach(t, channel))));
         for (pix, area) in areas.iter_mut() {
             let stage = self.stage_transform(size, *area);
             let scenes: Vec<_> = trees.iter().map(|t| (*t, stage)).collect();
-            self.raster.draw(pix, &scenes, res);
+            match damage {
+                Some(r) => self.raster.draw_part(pix, &scenes, res, (r.0 - area.0, r.1 - area.1, r.2 - area.0, r.3 - area.1), reach),
+                None => self.raster.draw(pix, &scenes, res),
+            }
         }
+        let partial_run = match (&self.drawn, damage) {
+            (Some(d), Some(_)) => d.partial_run + 1,
+            _ => 0,
+        };
+        self.last_damage = damage;
+        self.drawn = Some(Drawn { setup, sigs, partial_run });
         self.last_print = Some(print);
         true
     }
@@ -468,6 +517,86 @@ mod tests {
         let mut h = Host::new(Some(vec!["front".into()]), "program");
         h.handle(&json!({"t":"take","layer":"main","scene":{"nodes":[]}}), clk(0.0));
         assert!(h.layers.is_empty());
+    }
+
+    /// Duża stała plansza z cieniem, stała rozmyta belka pod ruchomym prostokątem, mały ruchomy prostokąt z rozmyciem i cieniem, ruchoma grupa
+    /// oraz koło pojawiające się w połowie – jak plansza z animowaną belką.
+    fn moving_scene() -> Value {
+        json!({"duration":4,"stops":[3],"nodes":[
+            {"id":"board","type":"rect","props":{"x":200,"y":150,"w":1500,"h":500,"color":"#203040","shadow":20}},
+            {"id":"bar","type":"rect","props":{"x":0,"y":880,"w":1920,"h":100,"color":"#4060a0","blur":8}},
+            {"id":"dot","type":"rect","props":{"y":900,"w":120,"h":60,"color":"#e02020","blur":6,"shadow":10},
+             "anim":{"x":[{"t":0,"v":0},{"t":3,"v":1700}]}},
+            {"id":"g","type":"group","props":{"x":0,"y":700},"anim":{"y":[{"t":0,"v":700},{"t":3,"v":760}]},"children":[
+                {"id":"in","type":"rect","props":{"x":300,"w":200,"h":40,"color":"#30c030"}}]},
+            {"id":"late","type":"ellipse","props":{"x":1600,"y":40,"w":200,"h":200,"color":"#ffffff"},
+             "anim":{"opacity":[{"t":0,"v":0},{"t":1.5,"v":0},{"t":2.5,"v":1}]}}
+        ]})
+    }
+
+    /// Rysowanie częściowe daje te same piksele co rysowanie całego obrazu, klatka po klatce.
+    fn partial_matches_full(size: (u32, u32), areas: &[(i32, i32, u32, u32)]) {
+        let res = Resources::new(crate::font::FontDb::new(), None, true);
+        let (mut a, mut b) = (Host::new(None, "program"), Host::new(None, "program"));
+        b.partial = false;
+        let mut pa: Vec<Pixmap> = areas.iter().map(|r| Pixmap::new(r.2, r.3).unwrap()).collect();
+        let mut pb: Vec<Pixmap> = areas.iter().map(|r| Pixmap::new(r.2, r.3).unwrap()).collect();
+        for h in [&mut a, &mut b] {
+            h.handle(&json!({"t":"take","layer":"main","scene":moving_scene()}), clk(0.0));
+        }
+        let mut partial = 0;
+        let mut cache = crate::stream::RegionCache::default();
+        let (mut patching, mut seen) = (crate::stream::RegionCache::default(), Vec::new());
+        for f in 0..40 {
+            let c = clk(f64::from(f) * 120.0);
+            for (h, pixes) in [(&mut a, &mut pa), (&mut b, &mut pb)] {
+                h.tick(c, &res);
+                let mut list: Vec<_> = pixes.iter_mut().zip(areas).map(|(p, r)| (p, (r.0, r.1))).collect();
+                h.draw_areas(&mut list, size, &res);
+            }
+            partial += usize::from(a.last_damage.is_some());
+            if let ([x], [y]) = (&pa[..], &pb[..]) {
+                // rekord z łatania (strumień) = rekord z całego obrazu
+                let full = crate::stream::region_record(y, 0);
+                assert!(cache.record(x, 0, a.last_damage, false) == full, "klatka {f}: inny rekord");
+                // odbiorca łat (VizRS CG Playout) dochodzi do tego samego rekordu
+                let synced = !seen.is_empty();
+                crate::stream::tests::apply(&mut seen, &patching.record(x, 0, a.last_damage, synced));
+                assert!(seen == full, "klatka {f}: inny obraz z łat");
+            }
+            for (x, y) in pa.iter().zip(&pb) {
+                let bad = x.data().iter().zip(y.data()).filter(|(p, q)| p != q).count();
+                assert_eq!(bad, 0, "klatka {f}: {bad} różnych bajtów");
+            }
+        }
+        // ruch małych węzłów rysuje się częściowo; całość – przy wejściu i co FULL_EVERY klatek
+        assert!(partial > 25, "rysowanie częściowe w {partial} klatkach");
+    }
+
+    #[test]
+    fn partial_redraw_matches_full_redraw() {
+        // płótna mniejsze niż kanał (szybki test w trybie debug): skala ¼ i ⅙ (ułamkowe położenia), dwa obszary
+        partial_matches_full((480, 270), &[(0, 0, 480, 270)]);
+        partial_matches_full((320, 180), &[(0, 0, 320, 180)]);
+        partial_matches_full((480, 270), &[(0, 220, 480, 50), (375, 0, 105, 75)]);
+    }
+
+    #[test]
+    fn damage_is_the_changed_node_only() {
+        let res = Resources::new(crate::font::FontDb::new(), None, true);
+        let mut h = Host::new(None, "program");
+        h.handle(&json!({"t":"take","layer":"main","scene":moving_scene()}), clk(0.0));
+        let mut pix = Pixmap::new(1920, 1080).unwrap();
+        h.tick(clk(400.0), &res);
+        h.draw(&mut pix, (1920, 1080), (0, 0), &res);
+        h.tick(clk(440.0), &res);
+        let channel = h.stage_transform((1920, 1080), (0, 0));
+        let tree = h.layers[0].players[0].tree.as_ref().unwrap();
+        let new = h.raster.sig(tree, channel, &res);
+        let d = new.damage(&h.drawn.as_ref().unwrap().sigs[0]).unwrap();
+        // ruchomy prostokąt i grupa (y ok. 700–990 z cieniem i rozmyciem), bez planszy (y 150–650)
+        assert!(d.1 > 650 && d.3 < 1010, "obszar zmiany {d:?}");
+        assert!(h.draw(&mut pix, (1920, 1080), (0, 0), &res) && h.last_damage.is_some());
     }
 
     #[test]

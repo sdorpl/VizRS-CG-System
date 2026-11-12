@@ -20,7 +20,7 @@ Panel `#props` (`renderProps()` w `source/web/artist.html`) to jedna długa list
 ## Rozwiązania
 
 Kolejność = stosunek zysku do pracy. Każdy etap samodzielny; żaden nie zmienia formatu show, renderera ani `validate.rs`
-(to wyłącznie warstwa UI Artist), więc nie dotyczy zgodności z `source/render/` ani BTB.
+(to wyłącznie warstwa UI Artist), więc nie dotyczy zgodności z `source/render/`.
 
 ### P1. Zwijane sekcje z pamięcią stanu
 - Nagłówek `.pgroup` staje się przyciskiem ▸/▾; stan zwinięcia per grupa w `localStorage` (`vizrs.propsFold`), wspólny dla wszystkich węzłów.

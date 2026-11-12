@@ -1,14 +1,11 @@
-/* Kopia text-model.js z BTB-CG-System-alpha (commit f40f334, gałąź v0.2.x): wspólny model tekstu (sanityzacja HTML, RichText v1, typografia PL,
- * reguły pola, zamiana słów, tokeny pisowni). NIE EDYTUJ RĘCZNIE – odświeżaj: tools/sync-btb.sh. Zgodność pilnują wspólne wektory tests/vectors/*.json. */
 /**
- * text-model.js — wspólny model tekstu (M3.2): sanityzacja HTML, tekst/linie, RichText v1 ↔ HTML.
- *
- * Jedna implementacja logiki w dwóch językach: ten plik (Node + przeglądarka, bez DOM — własny tokenizer) i `src/text.rs`
- * w BTB CG Editor. Zgodność pilnują wspólne wektory `test-fixtures/text/*.json` (Node: `test-text-model.js`, Rust: `cargo test`).
+ * text-model.js — model tekstu VizRS: sanityzacja HTML, tekst/linie, RichText v1 ↔ HTML, typografia PL, reguły pola,
+ * zamiana słów, tokeny pisowni. Moduł bez DOM (własny tokenizer) – działa w przeglądarce i w Node.
+ * Zachowanie pilnują wektory `tests/vectors/*.json` (`node tests/vectors/run.js`).
  *
  * RichText v1:  { v: 1, blocks: [ { align?: 'left'|'center'|'right', lh?: 0.5…3 (interlinia bloku, mnożnik), runs: [ { t: 'tekst', m?: marks } | { br: true } ] } ] }
  * marks:        { weight?: 100–900, italic?, underline?, strike?, color?, bg?, family?, size? (px), tracking? (em), transform?, squash? (0–1), padding? (CSS, np. '0 8px'), radius? (CSS, np. '6px') }
- * RichText 1.1 (M7 T2, formatowanie znaków jak w Viz): marks dodatkowo { opacity? (0–1), dx?/dy? (em, −2…2), scale? (0,25–4), rotate? (stopnie, −360…360) };
+ * RichText 1.1 (formatowanie znaków jak w Viz): marks dodatkowo { opacity? (0–1), dx?/dy? (em, −2…2), scale? (0,25–4), rotate? (stopnie, −360…360) };
  *               dokument z którymkolwiek z nich ma `v: 1.1`, bez nich `v: 1` (czytniki v1 dostają to samo co dotąd).
  *               HTML: `opacity: …` oraz `transform: translate(dx, dy) scale(s) rotate(r) scaleX(squash)` + `display: inline-block`.
  *
@@ -203,13 +200,13 @@
         if (m.squash === null) delete m.squash;
         return m;
     }
-    /** Liczba przycięta do [lo, hi] i zaokrąglona do 1/scale (NaN → lo). Lustro: `clamp_n` w text.rs. */
+    /** Liczba przycięta do [lo, hi] i zaokrąglona do 1/scale (NaN → lo). */
     function clampN(v, lo, hi, scale) { if (!isFinite(v)) v = lo; return Math.round(Math.min(hi, Math.max(lo, v)) * scale) / scale; }
-    // znaczniki w kolejności alfabetycznej kluczy — porównanie i zapis nie zależą od kolejności (parytet z text.rs)
+    // znaczniki w kolejności alfabetycznej kluczy — porównanie i zapis nie zależą od kolejności
     const canon = (m) => Object.fromEntries(Object.keys(m).sort().map((k) => [k, m[k]]));
     const sameMarks = (a, b) => JSON.stringify(canon(a || {})) === JSON.stringify(canon(b || {}));
 
-    /** Interlinia bloku z `style` (tylko liczba bez jednostki, 0,5–3; zaokrąglenie do 0,01) albo null. Lustro: btb-cgeditor `text::block_lh`. */
+    /** Interlinia bloku z `style` (tylko liczba bez jednostki, 0,5–3; zaokrąglenie do 0,01) albo null. */
     function blockLh(style) {
         const m = /(?:^|;)\s*line-height:\s*(\d+(?:\.\d+)?)\s*(?=;|$)/i.exec(style || '');
         if (!m) return null;
@@ -348,7 +345,7 @@
     /**
      * Reguły pola przy zapisie (`ocgInputs[].text`): `upperCase` (wersaliki w treści), zakresy `size` (px), `letterSpacing` (em), `lineHeight`
      * (mnożnik bloku) — wartości spoza zakresu są przycinane. Bez reguł HTML wraca bez zmian; z regułami — kanoniczny (toRich → toHtml).
-     * Lustro: `text::field_rules` w btb-cgeditor, wektory `test-fixtures/text/field-rules.json`.
+     * Wektory: `tests/vectors/field-rules.json`.
      */
     function fieldRules(html, rules) {
         const r = rules || {};
@@ -428,7 +425,7 @@
     /**
      * Słowa tekstu do sprawdzania pisowni: [{ word, form, start, end }] (indeksy w znakach Unicode, `end` wyłącznie). Słowo = litery (z łącznikiem lub apostrofem
      * między literami); pomijane: jednoliterowe, przyległe do cyfry, skrót wersalikami do 4 liter (TVP, PAP). `form` = co sprawdzać: wersaliki dłuższe niż
-     * 4 litery (nagłówki) sprawdzamy małymi literami. Lustro: `text::spell_tokens` w btb-cgeditor, wektory `test-fixtures/text/spell-tokens.json`.
+     * 4 litery (nagłówki) sprawdzamy małymi literami. Wektory: `tests/vectors/spell-tokens.json`.
      */
     function spellTokens(text) {
         const cs = Array.from(String(text == null ? '' : text));

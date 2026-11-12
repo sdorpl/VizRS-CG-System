@@ -107,7 +107,7 @@ export const FONTS = ['Barlow Condensed', 'Barlow', 'Inter', 'Oswald', 'Bebas Ne
 export const EASES = ['inout', 'out', 'in', 'linear', 'back', 'hold'];
 
 export const LAYER_Z = { back: 1000, main: 2000, front: 3000 };
-// inne nazwy między main a front; `z<N>_nazwa` (N 0–99) – kolejność wg N jak numer warstwy w BTB CG
+// inne nazwy między main a front; `z<N>_nazwa` (N 0–99) – kolejność wg N (numer warstwy)
 export const layerZ = (n) => LAYER_Z[n] ?? 2500 + (+(/^z(\d{1,2})_/.exec(n) || [])[1] || 0);
 
 // ------------------------------------------------------------------ pomocnicze
@@ -261,15 +261,17 @@ export function ensureFont(name, assetBase = '') {
 function loadAssetFont(name, assetBase, tries) {
   const ff = new FontFace(name, `url("${assetBase}/assets/${encodeURIComponent(name)}")`, { display: 'block' });
   document.fonts.add(ff);
-  ff.load().then(() => { fontEpoch++; }, () => {
+  ff.load().then(fontsChanged, () => {
     document.fonts.delete(ff);
-    fontEpoch++;
+    fontsChanged();
     setTimeout(() => loadAssetFont(name, assetBase, tries + 1), Math.min(30000, 2000 * 2 ** tries));
   });
 }
 let fontEpoch = 0;
+/** Nowy font: teksty mierzą się od nowa (także w scenach, które stoją i nie są odrysowywane w każdej klatce). */
+function fontsChanged() { fontEpoch++; wake(); }
 if (typeof document !== 'undefined' && document.fonts) {
-  document.fonts.addEventListener?.('loadingdone', () => { fontEpoch++; });
+  document.fonts.addEventListener?.('loadingdone', fontsChanged);
 }
 /**
  * Tekst zmierzony przed wczytaniem swojej odmiany fontu (np. Barlow Condensed 700 przy pierwszym TAKE) ma szerokość
@@ -284,7 +286,22 @@ function watchFont(spec) {
   const now = Date.now();
   if (now - (fontTries.get(spec) || -1e9) < 5000) return;
   fontTries.set(spec, now);
-  fs.load(spec).then(() => { fontEpoch++; }, () => { /* brak fontu – zostaje zastępczy */ });
+  fs.load(spec).then(fontsChanged, () => { /* brak fontu – zostaje zastępczy */ });
+}
+
+// ------------------------------------------------------------------ zapis stylów tylko przy zmianie
+// Odtwarzacz liczy stan każdego węzła w każdej klatce. Przypisanie tej samej wartości do `el.style` nie zmienia obrazu,
+// ale kosztuje: przejście JS → silnik i parsowanie CSS (gradienty, cienie, transformacje) – przy kilkudziesięciu węzłach
+// to większość czasu klatki. `css()` pamięta ostatnio zapisaną wartość i dotyka stylu tylko przy zmianie, a licznik
+// `cssWrites` mówi odtwarzaczowi, czy klatka cokolwiek zmieniła (scena bez zmian może zasnąć – ScenePlayer.tick).
+// Właściwości zapisywane przez `css()` nie mogą być zapisywane na tym samym elemencie bezpośrednio (pamięć by się rozjechała).
+let cssWrites = 0;
+function css(el, k, v) {
+  const c = el._vzCss || (el._vzCss = {});
+  if (c[k] === v) return;
+  c[k] = v;
+  el.style[k] = v;
+  cssWrites++;
 }
 
 // ------------------------------------------------------------------ format zegara
@@ -503,7 +520,7 @@ export const squeezeFloor = (v) => Math.min(1, Math.max(0.3, +v || 0.6));
 
 /**
  * Dopasowanie tekstu do ramki (jak "Shrink"/"Squeeze" w Viz):
- *  squeeze        – jak w BTB CG: ściska tekst poziomo, najwyżej do `squeezeMin`; font się nie zmienia.
+ *  squeeze        – ściska tekst poziomo, najwyżej do `squeezeMin`; font się nie zmienia.
  *                   Gdy to za mało, tekst wystaje poza ramkę, a wynik ma `over` (ostrzeżenie dla operatora).
  *  squeeze-shrink – ściska do `squeezeMin`, a dopiero potem zmniejsza font
  *  shrink         – zmniejsza font, by zmieścić się w szerokości i w maxLines liniach
@@ -571,12 +588,14 @@ function gleamEl(parent) {
   parent.appendChild(g);
   return g;
 }
+/** Ustawia błysk na chwilę `now`; zwraca, za ile ms obraz błysku się zmieni (0 – w każdej klatce, Infinity – nigdy). */
 function gleamAt(g, period, now) {
-  if (!(period > 0)) { g.style.display = 'none'; return; }
-  const dur = Math.min(1.6, period * 0.6), u = ((now / 1000) % period) / dur;
-  if (u >= 1) { g.style.display = 'none'; return; }
-  g.style.display = 'block';
-  g.style.left = (-60 + u * 170) + '%';
+  if (!(period > 0)) { css(g, 'display', 'none'); return Infinity; }
+  const ph = (now / 1000) % period, dur = Math.min(1.6, period * 0.6), u = ph / dur;
+  if (u >= 1) { css(g, 'display', 'none'); return (period - ph) * 1000; }
+  css(g, 'display', 'block');
+  css(g, 'left', (-60 + u * 170) + '%');
+  return 0;
 }
 /** Rozmiar tekstu etykiety/kategorii tickera: `labelSize` w px albo 80% rozmiaru treści. */
 const labFont = (p) => (p('labelSize') > 0 ? p('labelSize') + 'px' : '.8em');
@@ -621,6 +640,7 @@ const easeIO = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2
 
 // ------------------------------------------------------------------ globalna pętla animacji
 // Pętla działa tylko, gdy są sceny; bez nich zasypia i budzi ją pierwszy nowy ScenePlayer.
+// Scena, która stoi (po animacji, bez ruchu ciągłego), sama nie jest odrysowywana w każdej klatce – ScenePlayer.tick.
 const players = new Set();
 let last = 0, nextAt = 0, running = false, FPS = 0, STEP = false;
 function loop(now) {
@@ -789,6 +809,9 @@ export class ScenePlayer {
     this.opts = opts;
     this.t = 0;
     this.target = 0;
+    this._need = Infinity;
+    this.sleepUntil = 0; // scena stoi: odrysowanie dopiero o tej chwili (performance.now) – tick
+    this.asleep = false;
     this.playing = false;
     this.mode = 'idle';
     this.speed = 1;
@@ -798,6 +821,8 @@ export class ScenePlayer {
     this.el.className = 'vz-scene';
     Object.assign(this.el.style, {
       position: 'absolute', left: '0', top: '0', overflow: 'hidden',
+      // izolacja: układ i malowanie sceny nie wychodzą poza jej kadr (pomiar tekstu nie przelicza reszty strony – Trio)
+      contain: 'strict',
       width: (scene.width || 1920) + 'px', height: (scene.height || 1080) + 'px',
       pointerEvents: opts.editor ? 'auto' : 'none',
     });
@@ -807,6 +832,21 @@ export class ScenePlayer {
     players.add(this);
     wake();
   }
+
+  /** Odtwarzanie (Artist i Trio ustawiają je także wprost) – start budzi scenę. */
+  get playing() { return this._playing; }
+  set playing(v) { this._playing = v; if (v) this.awake(); }
+  /** Scena ma być odrysowana w najbliższej klatce (zmiana z zewnątrz: wartości, scena, czas, podgląd wiadomości). */
+  awake() {
+    this.sleepUntil = 0;
+    if (this.asleep) {
+      this.asleep = false;
+      // po przerwie krok czasu jak dla jednej klatki – płynne dochodzenie autofollow zamiast skoku
+      if (this._lastApply) this._lastApply = performance.now() - 1000 / 60;
+    }
+  }
+  /** Źródło ruchu w odrysowywanej klatce: następna zmiana obrazu za `ms` (0 – w każdej klatce). */
+  need(ms) { if (ms < this._need) this._need = ms; }
 
   get stops() { return [...(this.scene.stops || [])].sort((a, b) => a - b); }
   get duration() { return +this.scene.duration || 0; }
@@ -829,7 +869,8 @@ export class ScenePlayer {
           Object.assign(it.span.style, { display: 'block', flex: 'none' });
           el.appendChild(it.span);
         } else if (n.type === 'ticker') {
-          el.style.overflow = 'hidden';
+          // pole tickera ma stały rozmiar i ucina treść: doklejanie odcinków taśmy przelicza układ tylko w nim
+          Object.assign(el.style, { overflow: 'hidden', contain: 'strict' });
           it.strip = document.createElement('div');
           Object.assign(it.strip.style, { position: 'absolute', left: '0', top: '0', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'pre', willChange: 'transform' });
           el.appendChild(it.strip);
@@ -886,10 +927,11 @@ export class ScenePlayer {
     this.t = s.length ? s[Math.min(i, s.length - 1)] : this.duration;
     this.playing = false;
     this.mode = 'hold';
+    this.awake();
     this.apply(this.t);
     return this;
   }
-  seek(t) { this.t = t; this.playing = false; this.apply(t); }
+  seek(t) { this.t = t; this.playing = false; this.awake(); this.apply(t); }
   playTo(target, from) {
     if (from !== undefined) this.t = from;
     this.target = target; this.playing = true; this.mode = 'play';
@@ -897,6 +939,7 @@ export class ScenePlayer {
   update(values) {
     this.values = { ...values };
     for (const it of this.items) it.cache = {};
+    this.awake();
     this.apply(this.t);
   }
   /** Powiązanie (dock): płynne przesunięcie całej sceny o (dx, dy) px w czasie `dur` s. */
@@ -911,7 +954,7 @@ export class ScenePlayer {
     const x = +this.scene.x || 0, y = +this.scene.y || 0;
     this.root.style.transform = x || y ? `translate(${x}px, ${y}px)` : '';
   }
-  setScene(scene) { this.scene = scene; this.el.style.width = (scene.width || 1920) + 'px'; this.el.style.height = (scene.height || 1080) + 'px'; this.build(); this.apply(this.t); }
+  setScene(scene) { this.scene = scene; this.el.style.width = (scene.width || 1920) + 'px'; this.el.style.height = (scene.height || 1080) + 'px'; this.build(); this.awake(); this.apply(this.t); }
   destroy() {
     if (this.dead) return;
     this.dead = true;
@@ -929,8 +972,19 @@ export class ScenePlayer {
         this.opts.onStop?.(this);
         if (this.mode === 'out') { this.apply(this.t, now); this.destroy(); return; }
       }
+    } else if (!this.opts.editor && now < this.sleepUntil && this._fe === fontEpoch) {
+      return; // scena stoi – obraz bez zmian, nie liczymy go od nowa
     }
+    if (this.asleep) this.awake();
+    // Klatka, która niczego nie zmieniła, usypia scenę do najbliższej zmiany zgłoszonej przez źródła ruchu (`need`):
+    // zegar – następna sekunda, rotacja wierszy / ticker roll i wipe – następne przejście, miganie, pętle, crawl – każda klatka.
+    // Kanwa Artist (editor) nie zasypia: edytor zmienia scenę w miejscu.
+    const w0 = cssWrites;
+    this._need = Infinity;
     this.apply(this.t, now);
+    this._fe = fontEpoch;
+    if (this._playing || this.opts.editor || cssWrites !== w0 || this._need <= 0) this.sleepUntil = 0;
+    else { this.sleepUntil = now + this._need; this.asleep = true; }
   }
 
   // ---- ticker ----
@@ -946,6 +1000,7 @@ export class ScenePlayer {
   /** Podgląd jednej wiadomości (najechanie na wiersz listy); fid = pole albo id węzła, idx = null wyłącza. */
   tickerPin(fid, idx) {
     for (const it of this.items) if (it.node.type === 'ticker' && (it.node.fields?.text === fid || it.node.id === fid)) it.pin = idx;
+    this.awake();
     this.apply(this.t);
   }
 
@@ -1012,12 +1067,24 @@ export class ScenePlayer {
       it.wiper = wiper;
     }
     const [A, B] = it.slots;
-    const vis = (sl, on) => { sl.cat.style.visibility = sl.box.style.visibility = on ? 'visible' : 'hidden'; };
+    // stan klatki zbierany w `want` i zapisywany na końcu przez css(): między przejściami nic się nie zmienia,
+    // więc pasek nie przelicza stylów w każdej klatce (dawniej zerowanie i ponowne ustawienie co klatkę)
+    const want = new Map();
+    const set = (e, k, v) => { let o = want.get(e); if (!o) want.set(e, (o = {})); o[k] = v; };
+    const get = (e, k) => want.get(e)?.[k];
+    const vis = (sl, on) => { set(sl.cat, 'visibility', on ? 'visible' : 'hidden'); set(sl.box, 'visibility', on ? 'visible' : 'hidden'); };
     for (const sl of it.slots) {
-      for (const e of [sl.cat, sl.box]) { e.style.transform = ''; e.style.clipPath = ''; e.style.opacity = ''; }
+      for (const e of [sl.cat, sl.box]) { set(e, 'transform', ''); set(e, 'clipPath', ''); set(e, 'opacity', ''); }
       vis(sl, false);
     }
-    it.wiper.style.display = 'none';
+    set(it.wiper, 'display', 'none');
+    try { this._slots(it, p, now, items, A, B, set, get, vis, label, colors, catBg, catW, up, w, h, mode, n); } finally {
+      for (const [e, o] of want) for (const k in o) css(e, k, o[k]);
+    }
+  }
+
+  /** Ciąg dalszy tickerSlots: stan rotacji i przejścia (style przez `set`, zapis zbiorczy w tickerSlots). */
+  _slots(it, p, now, items, A, B, set, get, vis, label, colors, catBg, catW, up, w, h, mode, n) {
     const lab = (x) => (x ? labelOf(x, label) : '');
     const labKey = (x) => lab(x) + '#' + (x ? catColorOf(x, colors, catBg, label) : '');
     const fillLabel = (sl, x) => {
@@ -1025,6 +1092,7 @@ export class ScenePlayer {
       if (sl.lk === k) return;
       sl.lk = k;
       const l = lab(x);
+      cssWrites++;
       sl.catT.textContent = up ? l.toUpperCase() : l;
       sl.cat.style.background = l ? catColorOf(x, colors, catBg, label) : 'transparent';
     };
@@ -1033,6 +1101,7 @@ export class ScenePlayer {
       const k = x ? x.text : '';
       if (sl.k === k) return;
       sl.k = k;
+      cssWrites++;
       sl.tx.textContent = up ? k.toUpperCase() : k;
       sl.tx.style.transform = ''; sl.tx.style.fontSize = '';
       const avail = Math.max(1, w - catW - 36), sw = sl.tx.scrollWidth;
@@ -1046,7 +1115,7 @@ export class ScenePlayer {
       }
     };
     const gp = p('gleam');
-    const gleams = () => { for (const sl of it.slots) gleamAt(sl.gl, sl.cat.style.visibility === 'visible' ? gp : 0, now); };
+    const gleams = () => { for (const sl of it.slots) this.need(gleamAt(sl.gl, get(sl.cat, 'visibility') === 'visible' ? gp : 0, now)); };
 
     // podgląd jednej wiadomości (Trio)
     if (it.pin != null && n) {
@@ -1080,46 +1149,50 @@ export class ScenePlayer {
     if (mode === 'roll') {
       const T = Math.min(0.55, hold * 0.3);
       if (ph > hold - T) {
+        this.need(0);
         const u = easeIO((ph - (hold - T)) / T);
         vis(B, true);
-        A.box.style.transform = `translateY(${-u * h}px)`;
-        B.box.style.transform = `translateY(${(1 - u) * h}px)`;
+        set(A.box, 'transform', `translateY(${-u * h}px)`);
+        set(B.box, 'transform', `translateY(${(1 - u) * h}px)`);
         if (labKey(cur) !== labKey(next)) {
-          A.cat.style.transform = `translateY(${-u * h}px)`;
-          B.cat.style.transform = `translateY(${(1 - u) * h}px)`;
-        } else B.cat.style.visibility = 'hidden';
-      }
+          set(A.cat, 'transform', `translateY(${-u * h}px)`);
+          set(B.cat, 'transform', `translateY(${(1 - u) * h}px)`);
+        } else set(B.cat, 'visibility', 'hidden');
+      } else this.need((hold - T - ph) * 1000);
     } else if (mode === 'whip') {
       // wiadomość wchodzi i wychodzi przenikaniem; potem etykieta przejeżdża w prawo przez pasek,
       // w połowie drogi zmienia się na kategorię następnej wiadomości i wraca na miejsce
       const Tin = Math.min(0.25, hold * 0.1), Tout = Math.min(0.35, hold * 0.1);
       const Tw = catW ? Math.min(1.5, hold * 0.35) : 0;
       const outAt = hold - Tw - Tout;
-      A.box.style.opacity = ph < Tin ? ph / Tin : ph < outAt ? 1 : Math.max(0, 1 - (ph - outAt) / Tout);
+      set(A.box, 'opacity', ph < Tin ? ph / Tin : ph < outAt ? 1 : Math.max(0, 1 - (ph - outAt) / Tout));
+      this.need(ph < Tin || ph >= outAt ? 0 : (outAt - ph) * 1000);
       if (Tw && ph >= hold - Tw) {
         const u = (ph - (hold - Tw)) / Tw, travel = Math.max(0, w - catW);
         const x = u < 0.65 ? easeIO(u / 0.65) * travel : (1 - easeIO((u - 0.65) / 0.35)) * travel;
         const sl = u < 0.325 ? A : B;
-        if (sl === B) { A.cat.style.visibility = 'hidden'; B.cat.style.visibility = 'visible'; }
-        sl.cat.style.transform = `translateX(${x}px)`;
+        if (sl === B) { set(A.cat, 'visibility', 'hidden'); set(B.cat, 'visibility', 'visible'); }
+        set(sl.cat, 'transform', `translateX(${x}px)`);
       }
     } else {
       // wipe: odsłonięcie w lewo->prawo, na końcu zmazanie; krawędź maski prowadzi "wycieraczka"
       const T = Math.min(0.45, hold * 0.25);
       const bw = w - catW;
-      it.wiper.style.background = catColorOf(cur, colors, catBg, label);
-      const wipeEdge = (u) => { it.wiper.style.display = 'block'; it.wiper.style.left = (catW + u * bw - 3) + 'px'; };
+      set(it.wiper, 'background', catColorOf(cur, colors, catBg, label));
+      const wipeEdge = (u) => { set(it.wiper, 'display', 'block'); set(it.wiper, 'left', (catW + u * bw - 3) + 'px'); };
       if (ph < T && tk.prev) {
+        this.need(0);
         const u = easeIO(ph / T);
-        A.box.style.clipPath = `inset(0 ${(1 - u) * 100}% 0 0)`;
-        if (labKey(cur) !== labKey(tk.prev)) A.cat.style.clipPath = `inset(${(1 - u) * 100}% 0 0 0)`;
+        set(A.box, 'clipPath', `inset(0 ${(1 - u) * 100}% 0 0)`);
+        if (labKey(cur) !== labKey(tk.prev)) set(A.cat, 'clipPath', `inset(${(1 - u) * 100}% 0 0 0)`);
         if (u < 0.999) wipeEdge(u);
       } else if (ph > hold - T) {
+        this.need(0);
         const u = easeIO((ph - (hold - T)) / T);
-        A.box.style.clipPath = `inset(0 0 0 ${u * 100}%)`;
-        if (labKey(cur) !== labKey(next)) A.cat.style.clipPath = `inset(0 0 ${u * 100}% 0)`;
+        set(A.box, 'clipPath', `inset(0 0 0 ${u * 100}%)`);
+        if (labKey(cur) !== labKey(next)) set(A.cat, 'clipPath', `inset(0 0 ${u * 100}% 0)`);
         if (u > 0.001) wipeEdge(u);
-      }
+      } else this.need((hold - T - ph) * 1000);
     }
     gleams();
   }
@@ -1135,11 +1208,9 @@ export class ScenePlayer {
     const labW = label ? Math.max(0, p('catW')) : 0;
     ensureFont(font, this.opts.assetBase);
     const S = it.strip.style;
-    S.color = p('color');
-    const sh = p('shadow');
-    S.textShadow = sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '';
     let tk = it.tk;
     if (!tk || tk.mode !== 'crawl') {
+      it.strip._vzCss = null; // tryb slotów zapisywał styl paska wprost
       it.strip.innerHTML = '';
       it.slots = null; it.cache.key = null;
       Object.assign(S, { position: 'absolute', inset: '0', left: '0', top: '0', width: '100%', height: '100%', display: 'block', transform: '', whiteSpace: 'pre' });
@@ -1160,6 +1231,9 @@ export class ScenePlayer {
       tk = it.tk = { mode: 'crawl', clip, tape, pinEl, lab, labT, gl, segs: [], d: 0, cursor: 0, nextIdx: 0, items, styleKey: null, last: null, pinK: null, fresh: true,
         uid: ++tapeSeq, shift: 0, vw: 0, segOf: null };
     }
+    css(it.strip, 'color', p('color'));
+    const sh = p('shadow');
+    css(it.strip, 'textShadow', sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '');
     const styleKey = [up, p('sep'), p('sepStyle'), p('sepColor'), catBg, p('catFg'), p('catColors'), it.tkColors, font, p('size'), p('weight'), p('italic'), p('spacing'), fe].join('|');
     const segOf = (x) => tickerSegment(x, { up, sep: p('sep'), sepStyle: p('sepStyle'), sepColor: p('sepColor'), colors, catBg, catFg: p('catFg') });
     if (tk.styleKey !== styleKey) {
@@ -1176,13 +1250,15 @@ export class ScenePlayer {
       tk.cursor = pos;
       tk.pinK = null;
     }
-    // etykieta stała (jak wiper w trybie poziomym BTB)
-    tk.clip.style.left = labW + 'px';
-    tk.lab.style.display = labW ? 'flex' : 'none';
+    // etykieta stała (wiper w trybie poziomym)
+    css(tk.clip, 'left', labW + 'px');
+    css(tk.lab, 'display', labW ? 'flex' : 'none');
     if (labW) {
-      Object.assign(tk.lab.style, { width: labW + 'px', background: catColorOf({ cat: label }, colors, catBg), color: p('catFg'), fontSize: labFont(p), fontWeight: p('labelWeight') || '' });
-      tk.labT.textContent = up ? label.toUpperCase() : label;
-      gleamAt(tk.gl, p('gleam'), now);
+      css(tk.lab, 'width', labW + 'px'); css(tk.lab, 'background', catColorOf({ cat: label }, colors, catBg)); css(tk.lab, 'color', p('catFg'));
+      css(tk.lab, 'fontSize', labFont(p)); css(tk.lab, 'fontWeight', p('labelWeight') || '');
+      const lt = up ? label.toUpperCase() : label;
+      if (tk.labT.textContent !== lt) tk.labT.textContent = lt;
+      this.need(gleamAt(tk.gl, p('gleam'), now));
     }
     const vw = Math.max(1, w - labW);
     tk.vw = vw; tk.segOf = segOf;
@@ -1190,11 +1266,12 @@ export class ScenePlayer {
     if (it.pin != null && n) {
       const x = items[Math.max(0, Math.min(n - 1, it.pin))];
       const k = styleKey + '|' + JSON.stringify(x);
-      if (tk.pinK !== k) { tk.pinK = k; tk.pinEl.innerHTML = ''; const el = segOf(x); el.style.left = '18px'; tk.pinEl.appendChild(el); }
-      tk.pinEl.style.display = 'block'; tk.tape.style.visibility = 'hidden';
+      if (tk.pinK !== k) { tk.pinK = k; cssWrites++; tk.pinEl.innerHTML = ''; const el = segOf(x); el.style.left = '18px'; tk.pinEl.appendChild(el); }
+      css(tk.pinEl, 'display', 'block'); tk.tape.style.visibility = 'hidden';
       return;
     }
-    tk.pinEl.style.display = 'none'; tk.tape.style.visibility = 'visible';
+    this.need(0); // taśma przesuwa się w każdej klatce
+    css(tk.pinEl, 'display', 'none'); tk.tape.style.visibility = 'visible';
     // zmiana listy: dalej od wiadomości po ostatnio doklejonej
     if (tk.items !== items) {
       const lastSeg = tk.segs[tk.segs.length - 1];
@@ -1205,7 +1282,7 @@ export class ScenePlayer {
     tk.last = now;
     tk.d += p('speed') * dt;
     if (!tk.segs.length) tk.cursor = Math.max(tk.cursor, tk.d); // pusta taśma: start od prawej krawędzi
-    // crawlFrom=left: pierwsza wiadomość od lewej krawędzi, taśma od razu pełna (jak warstwa ticker w BTB CG)
+    // crawlFrom=left: pierwsza wiadomość od lewej krawędzi, taśma od razu pełna
     if (tk.fresh) { tk.fresh = false; if (p('crawlFrom') === 'left') tk.cursor = tk.d - vw; }
     crawlFill(tk, tk.d);
     while (tk.segs.length && tk.segs[0].pos + tk.segs[0].w < tk.d - vw) tk.segs.shift().el.remove();
@@ -1218,7 +1295,7 @@ export class ScenePlayer {
     tk.tape.style.transform = `translateX(${vw - tk.d}px)`;
   }
 
-  // ---- ruch na wzór BTB: efekty tekstu i pętle uwagi ----
+  // ---- ruch: efekty tekstu i pętle uwagi ----
 
   /**
    * Efekt tekstu (motion.textIn / textOut): tekst po dopasowaniu dzielony jest na jednostki (całość, słowa, znaki, linie),
@@ -1227,6 +1304,7 @@ export class ScenePlayer {
   textFx(it, m, t, outStart, shift) {
     if (!MO.textFxActive(m, t, outStart, shift)) {
       if (it.fx) {
+        cssWrites++;
         it.fx = null; it.cache.key = null; // następny kadr złoży tekst od nowa
         Object.assign(it.span.style, { opacity: '', clipPath: '', filter: '', visibility: '', boxShadow: '' });
       }
@@ -1238,11 +1316,11 @@ export class ScenePlayer {
     const split = MO.splitOf(spec.type);
     if (it.fx && it.fx.key === it.cache.key && it.fx.split !== split) {
       // inny podział (np. znaki przy IN, słowa przy OUT): najpierw zwykły układ tekstu, podział w następnym kadrze
-      it.fx = null; it.cache.key = null;
+      it.fx = null; it.cache.key = null; cssWrites++;
       Object.assign(it.span.style, { opacity: '', clipPath: '', filter: '', visibility: '', boxShadow: '' });
       return;
     }
-    if (!it.fx || it.fx.key !== it.cache.key) this.splitText(it, split);
+    if (!it.fx || it.fx.key !== it.cache.key) { this.splitText(it, split); cssWrites++; }
     const U = it.fx.units, N = U.length;
     let lastVis = -1;
     for (let i = 0; i < N; i++) {
@@ -1254,6 +1332,7 @@ export class ScenePlayer {
       if (fx.scale !== 1) tf += `scale(${fx.scale}) `;
       const clip = fx.clip ? `inset(${fx.clip.map((v) => +(v * 100).toFixed(3) + '%').join(' ')})` : '';
       const css = [fx.opacity, tf, clip, fx.blur, fx.hidden].join('|');
+      if (u.css !== css) cssWrites++;
       for (const e of u.els) {
         if (u.css !== css) {
           e.style.opacity = fx.opacity < 1 ? Math.max(0, fx.opacity) : '';
@@ -1346,6 +1425,7 @@ export class ScenePlayer {
     it.loopW = (it.loopW ?? 0) + ((hold ? 1 : 0) - (it.loopW ?? 0)) * (dt >= 1 ? 1 : k);
     if (STEP && Math.abs(it.loopW - (hold ? 1 : 0)) < 0.01) it.loopW = hold ? 1 : 0;   // bez nieskończonego dochodzenia do celu
     const w = it.loopW;
+    if (hold || w > 0.001) this.need(STEP ? 40 : 0); // pętla gra (schodkami – kilka zmian na okres)
     const s = (STEP ? MO.loopStateStep : MO.loopState)(m.loop, it.loopT0 == null ? 0 : (now - it.loopT0) / 1000);
     const out = { tx: s.tx * w, ty: s.ty * w, rot: s.rot * w, sx: 1 + (s.sx - 1) * w, sy: 1 + (s.sy - 1) * w, opacity: 1 - (1 - s.opacity) * w, glow: s.glow * w,
       color: m.loop.color || (m.loop.type === 'underline-sweep' ? 'rgba(255,255,255,0.9)' : m.loop.type === 'shine' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.6)'),
@@ -1365,22 +1445,23 @@ export class ScenePlayer {
         o = it.loopEl = { type, wrap, bar };
       }
       if (o.wrap.parentNode !== it.el) it.el.appendChild(o.wrap);
-      o.bar.style.background = type === 'shine' ? `linear-gradient(90deg,transparent,${out.color},transparent)` : out.color;
+      css(o.bar, 'background', type === 'shine' ? `linear-gradient(90deg,transparent,${out.color},transparent)` : out.color);
       const on = w > 0.5;
       if (type === 'shine') {
-        o.wrap.style.display = on && s.shine >= 0 ? 'block' : 'none';
-        o.bar.style.transform = `translateX(${-150 + 600 * Math.max(0, s.shine)}%) skewX(-20deg)`;
+        css(o.wrap, 'display', on && s.shine >= 0 ? 'block' : 'none');
+        css(o.bar, 'transform', `translateX(${-150 + 600 * Math.max(0, s.shine)}%) skewX(-20deg)`);
       } else {
-        o.wrap.style.display = on && s.underline ? 'block' : 'none';
-        if (s.underline) { o.bar.style.left = s.underline[0] * 100 + '%'; o.bar.style.width = (s.underline[1] - s.underline[0]) * 100 + '%'; }
+        css(o.wrap, 'display', on && s.underline ? 'block' : 'none');
+        if (s.underline) { css(o.bar, 'left', s.underline[0] * 100 + '%'); css(o.bar, 'width', (s.underline[1] - s.underline[0]) * 100 + '%'); }
       }
     } else if (it.loopEl) { it.loopEl.wrap.remove(); it.loopEl = null; }
     return out;
   }
 
-  /** Stały efekt tła kształtu (motion.bg, jak `layer.effect` w BTB): gra od wejścia na wizję, także w trakcie IN/OUT. */
+  /** Stały efekt tła kształtu (motion.bg): gra od wejścia na wizję, także w trakcie IN/OUT. */
   bgFx(it, type, now, baseOp) {
     const s = (STEP ? MO.bgStateStep : MO.bgState)(type, (now - this.wallStart) / 1000, baseOp);
+    this.need(STEP ? 40 : 0); // efekt tła gra cały czas
     if (s.shimmer != null || s.scan != null) {
       let o = it.bgEl;
       if (!o || o.type !== type) {
@@ -1395,8 +1476,8 @@ export class ScenePlayer {
         o = it.bgEl = { type, wrap, bar };
       }
       if (o.wrap.parentNode !== it.el) it.el.insertBefore(o.wrap, it.el.firstChild);
-      if (s.shimmer != null) o.bar.style.left = s.shimmer + '%';
-      else o.bar.style.backgroundPosition = `0 ${s.scan}px`;
+      if (s.shimmer != null) css(o.bar, 'left', s.shimmer + '%');
+      else css(o.bar, 'backgroundPosition', `0 ${s.scan}px`);
     } else if (it.bgEl) { it.bgEl.wrap.remove(); it.bgEl = null; }
     return s;
   }
@@ -1424,7 +1505,7 @@ export class ScenePlayer {
     const fe = fontEpoch;
     const dt = this._lastApply ? Math.min(0.25, Math.max(0, (now - this._lastApply) / 1000)) : 10;
     this._lastApply = now;
-    // ruch na wzór BTB (node.motion): wyjście zaczyna się w ostatnim stop poincie; „po węźle” przesuwa wejście
+    // ruch (node.motion): wyjście zaczyna się w ostatnim stop poincie; „po węźle” przesuwa wejście
     const stops = this.stops, ls = stops.length ? stops[stops.length - 1] : null;
     const outStart = ls !== null && this.duration > ls + 1e-3 ? ls : Infinity;
     const shifts = this.items.some((i) => i.node.motion?.after) ? MO.sequenceShifts(this.scene.nodes) : null;
@@ -1433,33 +1514,35 @@ export class ScenePlayer {
     for (const it of this.items) {
       this._cur = it;
       if (it.broken) continue;
-      const n = it.node, el = it.el, st = el.style;
+      const n = it.node, el = it.el;
       const p = (k) => propAt(n, k, t, V);
       it.p = p;
       it.vis = !n.hidden && showIfOk(n, this.scene, V);
-      if (!it.vis) { st.display = 'none'; continue; }
-      st.display = (n.type === 'text' || n.type === 'clock') ? 'flex' : 'block';
+      if (!it.vis) { css(el, 'display', 'none'); continue; }
+      css(el, 'display', (n.type === 'text' || n.type === 'clock') ? 'flex' : 'block');
       it.w = Math.max(0, p('w'));
       it.h = Math.max(0, p('h'));
       it.fol = TYPES[n.type]?.props.includes('follow') ? String(p('follow') || '').trim() : '';
-      if (!it.fol) { st.width = it.w + 'px'; st.height = it.h + 'px'; }
+      if (!it.fol) { css(el, 'width', it.w + 'px'); css(el, 'height', it.h + 'px'); }
+      it.bsh = ''; // cień pola (box-shadow) – zapisywany w przebiegu 2, razem z poświatą motion.bg
 
       switch (n.type) {
         case 'rect':
         case 'ellipse': {
           const c = p('color'), c2 = p('color2');
-          st.background = c2 ? `linear-gradient(${p('gradAngle')}deg, ${c}, ${c2})` : c;
-          st.borderRadius = n.type === 'ellipse' ? '50%' : p('radius') + 'px';
+          css(el, 'background', c2 ? `linear-gradient(${p('gradAngle')}deg, ${c}, ${c2})` : c);
+          css(el, 'borderRadius', n.type === 'ellipse' ? '50%' : p('radius') + 'px');
           const bw = p('borderWidth');
-          st.border = bw > 0 ? `${bw}px solid ${p('borderColor')}` : 'none';
+          css(el, 'border', bw > 0 ? `${bw}px solid ${p('borderColor')}` : 'none');
           const sh = p('shadow');
-          st.boxShadow = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
+          it.bsh = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
           break;
         }
         case 'image': {
           const src = p('src');
           if (it.cache.src !== src) {
             it.cache.src = src;
+            cssWrites++;
             el.innerHTML = '';
             if (src) {
               const url = /^(https?:|data:|\/)/.test(src) ? src : (this.opts.assetBase || '') + '/assets/' + encodeURIComponent(src);
@@ -1473,10 +1556,10 @@ export class ScenePlayer {
               it.media = m;
             } else it.media = null;
           }
-          if (it.media) it.media.style.objectFit = p('fitMode');
-          st.borderRadius = p('radius') + 'px';
+          if (it.media) css(it.media, 'objectFit', p('fitMode'));
+          css(el, 'borderRadius', p('radius') + 'px');
           const sh = p('shadow');
-          st.boxShadow = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
+          it.bsh = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
           break;
         }
         case 'text':
@@ -1488,8 +1571,17 @@ export class ScenePlayer {
             let secs = 0;
             if (mode === 'up') secs = el_s;
             else if (mode === 'down') secs = p('seconds') - el_s;
-            else if (mode === 'target') { const tg = zoneTime(p('target'), p('tz')); secs = isNaN(tg) ? 0 : (tg - Date.now()) / 1000; }
-            text = fmtClock(p('format') || 'HH:mm:ss', mode, secs, p('tz'));
+            else if (mode === 'target') {
+              if (it.cache.tgK !== p('target') + '|' + p('tz')) { it.cache.tgK = p('target') + '|' + p('tz'); it.cache.tg = zoneTime(p('target'), p('tz')); }
+              secs = isNaN(it.cache.tg) ? 0 : (it.cache.tg - Date.now()) / 1000;
+            }
+            const fmt = p('format') || 'HH:mm:ss';
+            text = fmtClock(fmt, mode, secs, p('tz'));
+            // następna zmiana napisu: pełna sekunda (dziesiąta przy `S` w liczniku); licznik w dół na zerze stoi
+            const g = mode !== 'time' && /S/.test(fmt.replace(/'[^']*'/g, '')) ? 0.1 : 1;
+            if (mode === 'time') this.need(1001 - Date.now() % 1000);
+            else if (mode === 'up') this.need((g - (secs % g)) * 1000 + 1);
+            else if (secs > 0) this.need((secs % g) * 1000 + 1);
           } else text = String(p('text') ?? '');
           it.cyOp = 1;
           const cyc = n.type === 'text' ? p('cycle') : 0;
@@ -1500,6 +1592,7 @@ export class ScenePlayer {
             text = lines[Math.floor(el_s / cyc) % lines.length] || '';
             const ph = el_s % cyc, F = Math.min(0.35, cyc / 4);
             it.cyOp = Math.max(0, Math.min(1, ph / F, (cyc - ph) / F));
+            this.need(ph < F || ph > cyc - F ? 0 : (cyc - F - ph) * 1000); // przenikanie – każda klatka, między nim obraz stoi
           }
           if (p('upper')) text = text.toUpperCase();
           const font = p('font');
@@ -1511,15 +1604,16 @@ export class ScenePlayer {
           const sqMin = p('squeezeMin'), lineBreak = p('lineBreak'), fillSqueeze = p('fillSqueeze');
           const key = [text, font, size, p('weight'), p('italic'), p('spacing'), fitMode, maxLines, sqMin, lineBreak, fillSqueeze, w, padX, lh, align, hlBg, hlFg, fe].join('|');
           const sp = it.span, ss = sp.style;
-          st.justifyContent = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start';
-          st.alignItems = valign === 'top' ? 'flex-start' : valign === 'bottom' ? 'flex-end' : 'center';
-          st.textAlign = align;
-          st.paddingLeft = st.paddingRight = padX + 'px';
-          ss.color = p('color');
+          css(el, 'justifyContent', align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start');
+          css(el, 'alignItems', valign === 'top' ? 'flex-start' : valign === 'bottom' ? 'flex-end' : 'center');
+          css(el, 'textAlign', align);
+          css(el, 'paddingLeft', padX + 'px'); css(el, 'paddingRight', padX + 'px');
+          css(sp, 'color', p('color'));
           const sh = p('shadow');
-          ss.textShadow = sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '';
+          css(sp, 'textShadow', sh > 0 ? `0 ${Math.max(1, sh / 4)}px ${sh}px rgba(0,0,0,.65)` : '');
           if (it.cache.key !== key) {
             it.cache.key = key;
+            cssWrites++;
             const perLine = fitMode === 'squeeze-lines' || fitMode === 'squeeze-each';
             if (!perLine) setRich(sp, text, hlBg, hlFg);
             ss.fontFamily = `"${font}", "Barlow Condensed", Inter, Arial, sans-serif`;
@@ -1532,7 +1626,7 @@ export class ScenePlayer {
             const fo = { avail: w - 2 * padX, size, maxLines, mode: fitMode, align, lineHeight: lh, minSqueeze: sqMin, lineBreak, fillSqueeze, hlBg, hlFg };
             const m = perLine ? fitLines(sp, text, fo) : fitText(sp, fo);
             it.mw = m.w; it.mh = m.h; it.sq = m.sq || null; it.over = !!m.over;
-            // przepełnienie (jak `data-cg-overflow` / `cg-text-overflow` w BTB): Artist rysuje ramkę, wyjście zgłasza do /api/errors
+            // przepełnienie: Artist rysuje ramkę, wyjście zgłasza do /api/errors
             if (it.over) {
               el.dataset.over = '1';
               ScenePlayer.onOverflow?.({ scene: this.scene?.name || this.scene?.id || '?', node: n.name || n.id || '?', text: stripMarkup(text), sq: it.sq, min: squeezeFloor(sqMin) });
@@ -1543,10 +1637,10 @@ export class ScenePlayer {
         }
         case 'qr': {
           const key = [p('text'), p('color'), p('qrBg')].join('|');
-          if (it.cache.key !== key) { it.cache.key = key; el.innerHTML = qrSvg(String(p('text') ?? ''), p('color'), p('qrBg')); }
-          st.borderRadius = p('radius') + 'px';
+          if (it.cache.key !== key) { it.cache.key = key; cssWrites++; el.innerHTML = qrSvg(String(p('text') ?? ''), p('color'), p('qrBg')); }
+          css(el, 'borderRadius', p('radius') + 'px');
           const sh = p('shadow');
-          st.boxShadow = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
+          it.bsh = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';
           break;
         }
         case 'ticker': {
@@ -1563,7 +1657,7 @@ export class ScenePlayer {
     for (const it of this.items) {
       this._cur = it;
       if (it.broken || !it.vis) continue;
-      const p = it.p, st = it.el.style;
+      const p = it.p, el = it.el;
       let w = it.w, h = it.h;
       if (it.fol) {
         let mw = 0, mh = 0, found = false;
@@ -1584,11 +1678,11 @@ export class ScenePlayer {
           if (Math.abs(h - it.fh) < 0.4) it.fh = h;
         }
         w = it.fw; h = it.fh;
-        st.width = w + 'px'; st.height = h + 'px';
+        css(el, 'width', w + 'px'); css(el, 'height', h + 'px');
       }
       const ax = p('anchorX'), ay = p('anchorY');
-      st.left = p('x') - (ax === 'right' ? w : ax === 'center' ? w / 2 : 0) + 'px';
-      st.top = p('y') - (ay === 'bottom' ? h : ay === 'middle' ? h / 2 : 0) + 'px';
+      css(el, 'left', p('x') - (ax === 'right' ? w : ax === 'center' ? w / 2 : 0) + 'px');
+      css(el, 'top', p('y') - (ay === 'bottom' ? h : ay === 'middle' ? h / 2 : 0) + 'px');
       const m = it.node.motion;
       const shift = shifts?.get(it.node.id) || 0;
       const mo = m ? MO.motionAt(m, t, outStart, shift) : null;
@@ -1599,9 +1693,11 @@ export class ScenePlayer {
       if (bl > 0) {
         const c = Math.cos((now / 1000) * 2 * Math.PI / bl);
         op *= STEP ? (c >= 0 ? 1 : 0.15) : 0.15 + 0.85 * (0.5 + 0.5 * c);
+        // schodki: zmiana przy znaku cosinusa (¼ i ¾ okresu); płynnie – każda klatka
+        if (STEP) { const ph = ((now / 1000) % bl) / bl; this.need(((ph < 0.25 ? 0.25 : ph < 0.75 ? 0.75 : 1.25) - ph) * bl * 1000); } else this.need(0);
       }
-      st.opacity = op;
-      st.visibility = op <= 0.001 ? 'hidden' : 'visible';
+      css(el, 'opacity', op);
+      css(el, 'visibility', op <= 0.001 ? 'hidden' : 'visible');
       const rot = p('rotation') + (mo ? mo.rot : 0) + (lp ? lp.rot : 0);
       const sc = p('scale'), sk = p('skewX') + (mo ? mo.skew : 0);
       const sx = sc * (mo ? mo.sx : 1) * (lp ? lp.sx : 1), sy = sc * (mo ? mo.sy : 1) * (lp ? lp.sy : 1);
@@ -1609,23 +1705,23 @@ export class ScenePlayer {
       let tf = tx || ty ? `translate(${tx}px, ${ty}px) ` : '';
       if (mo && (mo.flipX || mo.flipY)) tf += `perspective(1200px) rotateX(${mo.flipX}deg) rotateY(${mo.flipY}deg) `;
       if (rot || sx !== 1 || sy !== 1 || sk) tf += `rotate(${rot}deg) scale(${sx}, ${sy}) skewX(${sk}deg)`;
-      st.transform = tf.trim();
+      css(el, 'transform', tf.trim());
       const org = mo?.origin || (Array.isArray(m?.origin) ? m.origin : null);
-      st.transformOrigin = org ? `${org[0] * 100}% ${org[1] * 100}%` : '50% 50%';
-      if (bg?.glow) st.boxShadow = [st.boxShadow, `0 0 ${bg.glow.toFixed(2)}px ${p('color')}`].filter(Boolean).join(', ');
+      css(el, 'transformOrigin', org ? `${org[0] * 100}% ${org[1] * 100}%` : '50% 50%');
+      css(el, 'boxShadow', bg?.glow ? [it.bsh, `0 0 ${bg.glow.toFixed(2)}px ${p('color')}`].filter(Boolean).join(', ') : it.bsh);
       let cl = p('clipL'), cr = p('clipR'), ct = p('clipT'), cb = p('clipB');
       if (mo?.clip) { cl = Math.max(cl, mo.clip[0] * 100); ct = Math.max(ct, mo.clip[1] * 100); cr = Math.max(cr, 100 - mo.clip[2] * 100); cb = Math.max(cb, 100 - mo.clip[3] * 100); }
       if (mo && mo.diag >= 0) {
         // maska ukośna (mask-diag): krawędź pochylona o 25% szerokości przesuwa się przez pole
         const S = 25, e = mo.diag * (100 + S), L = cl, R = 100 - cr, T = ct, B = 100 - cb;
         const c = (x) => Math.min(R, Math.max(L, x));
-        st.clipPath = mo.diagR
+        css(el, 'clipPath', mo.diagR
           ? `polygon(${c(100 - e)}% ${T}%, ${R}% ${T}%, ${R}% ${B}%, ${c(100 - e + S)}% ${B}%)`
-          : `polygon(${L}% ${T}%, ${c(e)}% ${T}%, ${c(e - S)}% ${B}%, ${L}% ${B}%)`;
-      } else st.clipPath = (cl || cr || ct || cb) ? `inset(${ct}% ${cr}% ${cb}% ${cl}%)` : '';
+          : `polygon(${L}% ${T}%, ${c(e)}% ${T}%, ${c(e - S)}% ${B}%, ${L}% ${B}%)`);
+      } else css(el, 'clipPath', (cl || cr || ct || cb) ? `inset(${ct}% ${cr}% ${cb}% ${cl}%)` : '');
       // żaluzja (shutter): 8 listew odsłanianych od góry każdej listwy
       const shut = mo && mo.shutter < 0.999 ? `repeating-linear-gradient(180deg, #000 0 ${Math.max(0, mo.shutter) * 12.5}%, transparent ${Math.max(0, mo.shutter) * 12.5}% 12.5%)` : '';
-      if (it.maskV !== shut) { it.maskV = shut; st.maskImage = shut; st.webkitMaskImage = shut; }
+      if (it.maskV !== shut) { it.maskV = shut; el.style.maskImage = shut; el.style.webkitMaskImage = shut; cssWrites++; }
       if (!lp && it.loopEl) { it.loopEl.wrap.remove(); it.loopEl = null; it.loopW = 0; }
       if (!bg && it.bgEl) { it.bgEl.wrap.remove(); it.bgEl = null; }
       const blr = p('blur') + (mo ? mo.blur : 0);
@@ -1633,7 +1729,7 @@ export class ScenePlayer {
       const rgb = mo ? Math.abs(mo.rgb) : 0;
       if (rgb > 0.01) flt += ` drop-shadow(${(8 * rgb).toFixed(2)}px 0 0 rgba(255,0,60,.75)) drop-shadow(${(-8 * rgb).toFixed(2)}px 0 0 rgba(0,220,255,.75))`;
       if (lp && lp.glow > 0.01) flt += ` drop-shadow(0 0 ${(8 * lp.glow * (lp.amp ?? 1)).toFixed(2)}px ${lp.color})`;
-      st.filter = flt.trim();
+      css(el, 'filter', flt.trim());
     }
   }
 }
@@ -1688,7 +1784,7 @@ export class LayerHost {
       let dx = 0, dy = 0, dur = 0.6;
       if (!this.dockOff.has(name)) {
         for (const r of p.scene?.dock || []) {
-          // kilka celów „a|b”: przesunięcie raz, gdy na antenie jest którykolwiek (jak dokowanie do wielu rodziców w BTB)
+          // kilka celów „a|b”: przesunięcie raz, gdy na antenie jest którykolwiek
           const hit = String(r.target || '').split('|').some((t) => {
             const [kind, ...rest] = t.split(':'); const val = rest.join(':');
             return air.some((a) => a.layer !== name && (kind === 'layer' ? a.layer === val : kind === 'page' ? String(a.page) === val : kind === 'scene' ? a.scene === val : false));
