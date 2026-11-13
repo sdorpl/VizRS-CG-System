@@ -169,7 +169,8 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-save playwright && npx playwright install --with-deps chromium
-      - run: xvfb-run -a node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell
+      # pojedyncza instancja Tauri (tauri-plugin-single-instance) na Linuksie działa przez D-Bus sesji – w CI trzeba go uruchomić
+      - run: dbus-run-session -- xvfb-run -a node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell
       - run: PLAYWRIGHT_DIR=$PWD xvfb-run -a node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell
 
   # okno natywne na prawdziwym Windows i macOS (Linux: shell-e2e). Windows idzie przez instalator w trybie „dla wszystkich”

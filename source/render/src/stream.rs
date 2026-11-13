@@ -72,7 +72,8 @@ fn alpha_box(pix: &Pixmap) -> Option<(usize, usize, usize, usize)> {
     let (w, h) = (pix.width() as usize, pix.height() as usize);
     let data = pix.data();
     // wiersz po 16 px naraz (kompilator wektoryzuje sumę bitową alf), więc puste wiersze kosztują mało
-    let row_used = |y: usize| data[y * w * 4..(y + 1) * w * 4].chunks(64).any(|b| b.chunks_exact(4).fold(0, |m, p| m | p[3]) != 0);
+    let row_used =
+        |y: usize| data[y * w * 4..(y + 1) * w * 4].chunks(64).any(|b| b.as_chunks::<4>().0.iter().fold(0, |m, p| m | p[3]) != 0);
     let top = (0..h).find(|&y| row_used(y))?;
     let bottom = (top..h).rev().find(|&y| row_used(y)).unwrap_or(top) + 1;
     let (mut left, mut right) = (w, 0);
@@ -112,7 +113,7 @@ pub fn region_record(pix: &Pixmap, flags: u8) -> Vec<u8> {
 
 /// Zasięg alfy wiersza: pierwszy i za ostatnim px z niezerową alfą (`None` – wiersz pusty).
 fn row_span(row: &[u8]) -> Option<(usize, usize)> {
-    if !row.chunks(64).any(|b| b.chunks_exact(4).fold(0, |m, p| m | p[3]) != 0) {
+    if !row.chunks(64).any(|b| b.as_chunks::<4>().0.iter().fold(0, |m, p| m | p[3]) != 0) {
         return None;
     }
     let px = row.as_chunks::<4>().0;
@@ -170,8 +171,8 @@ impl RegionCache {
             };
             return Cow::Borrowed(&self.rec);
         };
-        for y in y0..y1 {
-            self.rows[y] = row_span(row(y));
+        for (y, span) in self.rows.iter_mut().enumerate().take(y1).skip(y0) {
+            *span = row_span(row(y));
         }
         let found = self.found();
         if found != self.found || found.is_none() {
