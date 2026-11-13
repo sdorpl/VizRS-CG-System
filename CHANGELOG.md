@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Powiązania (dock) – wejście przy celu na antenie:** grafika z regułą dock, która wchodzi, gdy cel już jest na antenie (np. „Wydanie specjalne” przy wizytówce), stoi od razu na przesuniętym miejscu, jak w BTB CG. Dotąd w scenach z tekstem albo ruchem dojeżdżała z położenia bazowego (`renderer.js`), a w rendererze natywnym zawsze; to samo przy odświeżeniu wyjścia w rendererze natywnym. Test e2e i test `vizrs-render`. DOKUMENTACJA §4.7, plan [PLAN-ruch-belek.md](docs/plany/PLAN-ruch-belek.md) A0.
+
 ## 26.11.3 (2026-11-13)
 
 - **Renderer natywny: miniatury stron** (`vizrs-render thumb`): strona po wejściu, przycięta do miejsca, w którym rysuje, zmniejszona do zadanej szerokości (PNG z przezroczystością) – dla miniatur elementów graficznych w panelu VizRS Live (przez VizRS CG Playout).

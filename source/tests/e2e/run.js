@@ -422,6 +422,11 @@ async function waitUp() {
     sh4.scenes.push(rectScene('dkA', 'DockA', 'main', { dock: [{ target: 'layer:back', dx: 0, dy: -100, dur: 0.3 }, { target: 'page:9302', dx: 50, dy: 0, dur: 0.3 }] }));
     sh4.scenes.push(rectScene('dkB', 'DockB', 'back'));
     sh4.scenes.push(rectScene('dkC', 'DockC', 'front'));
+    // tekst i ruch: pomiar tekstu zatwierdza style nowego elementu – bez poprawki przesunięcie dojeżdżało z położenia bazowego
+    sh4.scenes.push(rectScene('dkE', 'DockE', 'z1_e', { duration: 0.8, stops: [0.4], dock: [{ target: 'layer:back', dx: 0, dy: -60, dur: 0.6 }],
+      nodes: [{ id: 'dkEn', type: 'rect', name: 'plakietka', props: { x: 100, y: 700, w: 300, h: 50, color: '#d0102b' }, motion: { in: { type: 'zoom', dur: 0.3 } },
+        children: [{ id: 'dkEt', type: 'text', name: 'napis', props: { x: 10, y: 0, w: 280, h: 50, text: 'Wydanie specjalne', size: 28, color: '#ffffff' } }] }] }));
+    sh4.pages.push({ id: 'pdkE', number: 9305, scene: 'dkE', values: {} });
     sh4.pages.push({ id: 'pdkA', number: 9301, scene: 'dkA', values: {} }, { id: 'pdkB', number: 9302, scene: 'dkB', values: {} }, { id: 'pdkC', number: 9303, scene: 'dkC', values: {} });
     await fetch(B + '/api/show?force=1', { method: 'PUT', headers: { 'X-Token': TOKEN }, body: JSON.stringify(sh4) });
     const dockTf = () => out.evaluate(() => { const e = document.querySelector('.vz-layer[data-layer="main"] .vz-scene'); return e ? new DOMMatrix(getComputedStyle(e).transform).f + ',' + new DOMMatrix(getComputedStyle(e).transform).e : 'brak'; });
@@ -440,6 +445,15 @@ async function waitUp() {
     const out2 = await page('/output?checker=1'); await sleep(1200);
     ok(await out2.evaluate(() => { const e = document.querySelector('.vz-layer[data-layer="main"] .vz-scene'); return new DOMMatrix(getComputedStyle(e).transform).f === -100; }), 'dock: nowe wyjście (snapshot) ma przesunięcie od razu');
     await out2.close();
+    // grafika z regułą wchodząca, gdy cel już jest na antenie – od razu na miejscu (jak w BTB CG), bez dojazdu
+    const tfE = () => out.evaluate(() => { const e = document.querySelector('.vz-layer[data-layer="z1_e"] .vz-scene'); return e ? new DOMMatrix(getComputedStyle(e).transform).f : null; });
+    await api('/api/take/9305'); await sleep(120);
+    ok((await tfE()) === -60, 'dock: grafika wchodząca przy celu na antenie stoi od razu na miejscu', await tfE());
+    await api('/api/out/back'); await sleep(250);
+    const midE = await tfE();
+    ok(midE > -60 && midE < 0, 'dock: zejście celu – powrót płynny (przejście)', midE);
+    await api('/api/take/9302'); await sleep(900);
+    await api('/api/out/z1_e'); await sleep(500);
     await api('/api/out/back'); await sleep(900);
     ok((await dockTf()) === '0,0', 'dock: po zdjęciu grafiki scena wraca na miejsce', await dockTf());
     await api('/api/clear');

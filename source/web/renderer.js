@@ -981,11 +981,18 @@ export class ScenePlayer {
     this.awake();
     this.apply(this.t);
   }
-  /** Powiązanie (dock): płynne przesunięcie całej sceny o (dx, dy) px w czasie `dur` s. */
+  /**
+   * Powiązanie (dock): płynne przesunięcie całej sceny o (dx, dy) px w czasie `dur` s.
+   * Pierwsze ustawienie po powstaniu odtwarzacza (TAKE, odświeżenie wyjścia) – od razu na miejscu, bez przejścia:
+   * grafika wchodząca, gdy cel już jest na antenie, nie dojeżdża z położenia bazowego (jak w BTB CG).
+   */
   setDock(dx, dy, dur) {
-    const st = this.el.style;
-    st.transition = dur > 0 ? `transform ${dur}s cubic-bezier(.4,0,.2,1)` : 'none';
+    const st = this.el.style, first = !this.dockSet;
+    this.dockSet = true;
+    st.transition = dur > 0 && !first ? `transform ${dur}s cubic-bezier(.4,0,.2,1)` : 'none';
     st.transform = dx || dy ? `translate(${dx}px, ${dy}px)` : '';
+    // położenie początkowe zatwierdzone w stylu, zanim kolejna zmiana włączy przejście
+    if (first) void this.el.offsetWidth;
   }
   /** Położenie całej sceny względem kadru (px). */
   placeRoot() {

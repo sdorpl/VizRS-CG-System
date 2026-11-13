@@ -230,6 +230,7 @@ Pole wyboru na poziomie sceny (`fieldMeta.<pole> = {type: "select", options: [..
 
 `scene.dock = [{ target, dx, dy, dur }]` – scena przesuwa się o (`dx`, `dy`) w czasie `dur` s, gdy na antenie jest wskazana grafika:
 `layer:<warstwa>`, `page:<numer>` albo `scene:<nazwa>`; kilka celów rozdzielonych `|` (np. `page:15001|page:15002`) – przesunięcie raz, gdy na antenie jest którykolwiek. Przykład: belka unosi się o 90 px, gdy na warstwie `back` jest ticker.
+Przesunięcie zmienia się płynnie w czasie `dur`, gdy cel wchodzi albo schodzi. Grafika z regułą, która wchodzi, gdy cel już jest na antenie (także po odświeżeniu wyjścia), stoi od razu na przesuniętym miejscu – bez dojazdu z położenia bazowego (tak samo `renderer.js` i renderer natywny).
 Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warstwa>/off`). Stan jest odtwarzany po odświeżeniu wyjścia.
 
 ### 4.8 Fonty

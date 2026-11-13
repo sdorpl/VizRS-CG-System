@@ -512,6 +512,27 @@ mod tests {
         assert!((h.current("main").map(|p| p.t).unwrap() - 0.04).abs() < 1e-9);
     }
 
+    /// Grafika z regułą dock wchodząca, gdy cel już jest na antenie, stoi od razu na miejscu;
+    /// zejście celu przesuwa ją płynnie (jak `setDock` w `renderer.js`).
+    #[test]
+    fn dock_first_placement_is_instant() {
+        let mut h = Host::new(None, "program");
+        let lt = json!({"name":"LT","duration":1,"stops":[0.5],"nodes":[]});
+        let ws = json!({"name":"WS","duration":1,"stops":[0.5],"dock":[{"target":"scene:LT","dy":-130,"dur":0.6}],"nodes":[]});
+        h.handle(&json!({"t":"take","layer":"main","scene":lt}), clk(0.0));
+        h.handle(&json!({"t":"take","layer":"z2_ws","scene":ws}), clk(1000.0));
+        let at = |h: &mut Host, now: f64| h.current("z2_ws").map(|p| p.dock_at(now)).unwrap_or_default();
+        assert_eq!(at(&mut h, 1000.0), (0.0, -130.0), "od razu na miejscu, bez dojazdu");
+        h.handle(&json!({"t":"out","layer":"main"}), clk(2000.0));
+        let mid = at(&mut h, 2300.0).1;
+        assert!(mid > -130.0 && mid < 0.0, "powrót płynny: {mid}");
+        assert_eq!(at(&mut h, 2600.0), (0.0, 0.0));
+        // nowe wyjście przy celu na antenie (snapshot) – też od razu na miejscu
+        let mut h2 = Host::new(None, "program");
+        h2.handle(&json!({"t":"snapshot","layers":[{"layer":"main","scene":lt,"stop":0},{"layer":"z2_ws","scene":ws,"stop":0}]}), clk(0.0));
+        assert_eq!(at(&mut h2, 0.0), (0.0, -130.0));
+    }
+
     #[test]
     fn filter_skips_other_layers() {
         let mut h = Host::new(Some(vec!["front".into()]), "program");

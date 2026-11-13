@@ -111,6 +111,8 @@ pub struct Player {
     by_name: HashMap<String, usize>,
     last_apply: Option<f64>,
     dock: Dock,
+    /// Przesunięcie dock już ustawione: pierwsze (po TAKE, snapshot) bez przejścia.
+    dock_set: bool,
     /// Czego nie da się narysować natywnie (scena, węzeł, powód) – liczone przy każdej klatce.
     pub issues: Vec<String>,
     /// Coś zmienia się z czasem także bez ruchu sceny (zegar, crawl, miganie…).
@@ -212,6 +214,7 @@ impl Player {
             by_name: HashMap::new(),
             last_apply: None,
             dock: Dock::default(),
+            dock_set: false,
             issues: Vec::new(),
             live: false,
             tree: None,
@@ -298,6 +301,12 @@ impl Player {
     }
 
     pub fn set_dock(&mut self, dx: f64, dy: f64, dur: f64, now: f64) {
+        // pierwsze ustawienie: od razu na miejscu (grafika wchodząca przy celu na antenie nie dojeżdża) – jak `renderer.js`
+        if !self.dock_set {
+            self.dock_set = true;
+            self.dock = Dock { from: (dx, dy), to: (dx, dy), start: now, dur: 0.0 };
+            return;
+        }
         if (dx, dy) == self.dock.to {
             return;
         }
@@ -305,7 +314,8 @@ impl Player {
         self.dock = Dock { from: if dur > 0.0 { cur } else { (dx, dy) }, to: (dx, dy), start: now, dur: dur.max(0.0) };
     }
 
-    fn dock_at(&self, now: f64) -> (f64, f64) {
+    /// Przesunięcie dock w chwili `now` (ms zegara klatek).
+    pub(crate) fn dock_at(&self, now: f64) -> (f64, f64) {
         let d = self.dock;
         if d.dur <= 0.0 {
             return d.to;
