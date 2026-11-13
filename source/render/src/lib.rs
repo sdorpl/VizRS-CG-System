@@ -18,6 +18,7 @@ pub mod richtext;
 pub mod scene;
 pub mod stream;
 pub mod text;
+pub mod thumb;
 pub mod ticker;
 
 use std::path::Path;

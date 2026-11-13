@@ -97,7 +97,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/app.rs` | okna aplikacji: wyszukiwanie Chromium/Edge, argumenty `--app`, profil, `--connect` |
 | `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
 | `source/src/bin/vizrs-app.rs` | uruchamianie okien bez konsoli (Windows) |
-| `source/render/` | `vizrs-render` – renderer natywny dla playoutu kanału (tiny-skia, rustybuzz): `stream` (klatki przez stdin/stdout), `frame`, `check`, `bench`, `bounds` (granice stron dla stref VizRS CG Playout); osobny workspace z zależnościami (DOKUMENTACJA §10.1) |
+| `source/render/` | `vizrs-render` – renderer natywny dla playoutu kanału (tiny-skia, rustybuzz): `stream` (klatki przez stdin/stdout), `frame`, `check`, `bench`, `bounds` (granice stron dla stref VizRS CG Playout), `thumb` (miniatury stron dla panelu VizRS Live); osobny workspace z zależnościami (DOKUMENTACJA §10.1) |
 | `source/shell/` | `vizrs-shell` – okno natywne Trio i wyjścia na Tauri 2 (WebKitGTK / WebView2 / WKWebView): menu, „Zapisz jako”, pytanie przy zamknięciu, okno połączenia (`ui/connect.html`), jedna instancja, pisownia pl; `tauri.conf.json` + `tauri.bundle.json` (paczki z serwerem `vizrs` obok okna); bez Artist (`artist` odsyła do VizRS CG Artist); osobny workspace z zależnościami |
 | `source/src/engine.rs` | show, warstwy on-air, TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, dock, karuzela, rundown, makra, blokady, SSE |
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |

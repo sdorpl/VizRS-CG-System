@@ -5,6 +5,8 @@
 //!                       [--size WxH] [--fonts katalog] [--assets katalog] [--wall-ms N] -o klatka.png
 //!   vizrs-render check  --show show.json [--fonts katalog] [--assets katalog]
 //!   vizrs-render bench  --show show.json --page N [--seconds 10] [--fps 25] [--size WxH] [--area x,y,w,h]
+//!   vizrs-render thumb  --show show.json (--page N … | --all 1) --dir katalog [--url <adres /output>]
+//!                       [--width 320] [--pad 24] [--fonts katalog] [--assets katalog]
 //!   vizrs-render bounds --show show.json (--page N … | --all) [--url <adres /output>] [--size WxH] [--cell 16]
 //!                       [--fps 25] [--hold 4] [--half 1] [--fonts katalog] [--assets katalog]
 //!
@@ -373,6 +375,72 @@ fn bounds(a: &Args) -> Result<(), String> {
     Ok(())
 }
 
+/// Miniatury stron: `<katalog>/<numer>.png` (kadr tam, gdzie strona rysuje, zmniejszony do `--width`);
+/// na wyjściu wiersz JSON na stronę: `{"number","file","crop":[x,y,w,h],"issues":[…]}`, pusta strona –
+/// `"empty":true` (bez pliku), błąd – `"error"`.
+fn thumb(a: &Args) -> Result<(), String> {
+    use vizrs_render::thumb;
+    let show = read_show(a)?;
+    let dir = PathBuf::from(a.get("dir").ok_or("brak --dir katalog")?);
+    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let width: u32 = a.get("width").and_then(|v| v.parse().ok()).filter(|w| (16..=1920).contains(w)).unwrap_or(320);
+    let pad: u32 = a.get("pad").and_then(|v| v.parse().ok()).filter(|p| *p <= 400).unwrap_or(24);
+    let res = match a.get("url") {
+        Some(url) => stream::server_resources(url, &a.all("fonts").into_iter().map(PathBuf::from).collect::<Vec<_>>())?,
+        None => offline_resources(a),
+    };
+    let size = (1920, 1080);
+    let list = scenes(&show);
+    let pages = show.get("pages").and_then(Value::as_array).cloned().unwrap_or_default();
+    let wanted = a.all("page");
+    if wanted.is_empty() && a.get("all").is_none() {
+        return Err("brak --page N albo --all 1".into());
+    }
+    let mut out = std::io::stdout().lock();
+    for p in &pages {
+        let number = p.get("number").map(str_of).unwrap_or_default();
+        // numer to nazwa pliku – tylko cyfry (jak numery stron w VizRS)
+        if number.is_empty() || !number.bytes().all(|b| b.is_ascii_digit()) || (!wanted.is_empty() && !wanted.contains(&number)) {
+            continue;
+        }
+        let sid = p.get("scene").map(str_of).unwrap_or_default();
+        let mut line = serde_json::json!({"number": number});
+        match list.iter().find(|s| s.get("id").map(str_of) == Some(sid.clone()) || s.get("name").map(str_of) == Some(sid.clone())) {
+            None => line["error"] = Value::from(format!("brak sceny {sid}")),
+            Some(scene_v) => {
+                let values = p.get("values").and_then(Value::as_object).cloned().unwrap_or_default();
+                match thumb::render(new_host(a), scene_v, &values, &layer_of(scene_v), size, 25.0, &res) {
+                    Err(e) => line["error"] = Value::from(e),
+                    Ok((pix, issues)) => {
+                        line["issues"] = serde_json::json!(issues);
+                        match thumb::drawn(pix.data(), size.0, size.1) {
+                            None => line["empty"] = Value::Bool(true),
+                            Some(r) => {
+                                let crop = thumb::frame(r, pad, size);
+                                let (mut data, w, h) = thumb::scale(pix.data(), size.0, crop, width);
+                                vizrs_render::raster::unpremultiply(&mut data);
+                                let file = dir.join(format!("{number}.png"));
+                                let f = std::fs::File::create(&file).map_err(|e| format!("{}: {e}", file.display()))?;
+                                let mut enc = png::Encoder::new(std::io::BufWriter::new(f), w, h);
+                                enc.set_color(png::ColorType::Rgba);
+                                enc.set_depth(png::BitDepth::Eight);
+                                enc.write_header()
+                                    .and_then(|mut wr| wr.write_image_data(&data))
+                                    .map_err(|e| format!("{}: {e}", file.display()))?;
+                                line["file"] = Value::from(file.to_string_lossy().into_owned());
+                                line["crop"] = serde_json::json!([crop.0, crop.1, crop.2, crop.3]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        use std::io::Write;
+        writeln!(out, "{line}").map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 fn main() {
     let args = match Args::parse() {
         Ok(a) => a,
@@ -401,6 +469,7 @@ fn main() {
         "bench" => bench(&args),
         "check" => check(&args),
         "bounds" => bounds(&args),
+        "thumb" => thumb(&args),
         "--version" | "-V" | "version" => {
             println!("vizrs-render {}", env!("CARGO_PKG_VERSION"));
             Ok(())
