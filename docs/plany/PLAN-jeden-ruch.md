@@ -55,6 +55,8 @@ Ujednolicenie jest w edytorze: oba mechanizmy widać i edytuje się w jednym mie
 - **Auto-szerokość tła względem tekstu**: sprawdzić, czy daje się wyrazić istniejącym `follow`/`followAxis`/`followPad`/`followMin`; brakujące tryby dopisać jako nowe wartości `followAxis`.
 
 ### J6. Dock względem celu (#7, zmiana formatu)
+> Przeniesione i rozpisane w [PLAN-ruch-belek.md](PLAN-ruch-belek.md) (D0–D6) – tam obowiązujący projekt.
+
 - `scene.dock[]` dostaje opcjonalne `edge` (`top|bottom|left|right`) i `gap`: przesunięcie liczone z rzeczywistego prostokąta celu
   (silnik zna on-air warstwy; wysokość celu z `ScenePlayer` – raport przez wyjście jak dziś przy autofollow). `dx/dy` zostają jako tryb prosty.
 
