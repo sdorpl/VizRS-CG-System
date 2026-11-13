@@ -11,7 +11,7 @@
 #   webkit2gtk (tylko Linux, już zależność Tauri: pisownia polska, akceleracja GPU stron); tauri-build przy budowie.
 [package]
 name = "vizrs-shell"
-version = "26.11.3"
+version = "26.11.4"
 edition = "2021"
 description = "Natywne okno VizRS Trio (Tauri 2)"
 repository = "https://github.com/sdorpl/VizRS-CG-System"
