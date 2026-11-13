@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Okno Trio / wyjścia (`vizrs-shell`) – akceleracja sprzętowa na Linuksie z kartą NVIDIA** (sterownik własnościowy): okno wymusza renderer DMA-BUF WebKitGTK (`WEBKIT_FORCE_DMABUF_RENDERER=1`, `__NV_DISABLE_EXPLICIT_SYNC=1`) – dotąd WebKitGTK sam wyłączał akcelerację i strony rysowały się na CPU (animacja 37 → 60 kl./s w oknie połączenia, pełne okno – kilkanaście razy szybciej). `--gpu` / `VIZRS_GPU` przyjmują też `x11` (XWayland) i `system` (bez zmian); zmienne `WEBKIT_*` użytkownika mają pierwszeństwo. Moduł `source/shell/src/gpu.rs` – ten sam w VizRS CG Artist i VizRS Live. DOKUMENTACJA §12.2.
+
 ## 26.11.4 (2026-11-13)
 
 - **Powiązania (dock) – wejście przy celu na antenie:** grafika z regułą dock, która wchodzi, gdy cel już jest na antenie (np. „Wydanie specjalne” przy wizytówce), stoi od razu na przesuniętym miejscu, jak w BTB CG. Dotąd w scenach z tekstem albo ruchem dojeżdżała z położenia bazowego (`renderer.js`), a w rendererze natywnym zawsze; to samo przy odświeżeniu wyjścia w rendererze natywnym. Test e2e i test `vizrs-render`. DOKUMENTACJA §4.7, plan [PLAN-ruch-belek.md](docs/plany/PLAN-ruch-belek.md) A0.
