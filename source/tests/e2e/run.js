@@ -459,6 +459,11 @@ async function waitUp() {
     // --- v2.0: blokady edycji (dwóch operatorów) ---
     {
       await trio.goto('about:blank'); await sleep(400); // główna strona Trio zwalnia swoje blokady (pagehide)
+      // beacon zwalniający przy wcześniejszym trio.reload() potrafi przegrać z przeładowaniem – blokada zostaje
+      // wtedy do wygaśnięcia (45 s); test dwóch operatorów zaczyna od czystego stanu
+      for (const l of (await api('/api/locks')).filter((x) => x.kind === 'pages')) {
+        await api(`/api/unlock/pages/${encodeURIComponent(l.id)}?who=${encodeURIComponent(l.who)}`, { method: 'POST' });
+      }
       const ctxA = await browser.newContext({ viewport: { width: 1600, height: 950 } });
       const ctxB = await browser.newContext({ viewport: { width: 1600, height: 950 } });
       await ctxA.addInitScript(() => localStorage.setItem('vizrs.who', 'Anna'));
@@ -475,7 +480,8 @@ async function waitUp() {
       await pb.click('#eSave');
       ok(await pb.locator('.dlg-text').innerText().then((t) => t.includes('Anna')), 'blokada: okno pytania (nie okienko przeglądarki) mówi, kto edytuje');
       await pb.click('.dlg [data-dlg="0"]'); await sleep(300);
-      ok((await api('/api/locks')).filter((l) => l.kind === 'pages').length === 1, 'blokada: Jan nie przejął blokady');
+      const locksAfter = (await api('/api/locks')).filter((l) => l.kind === 'pages');
+      ok(locksAfter.length === 1 && locksAfter[0].who === 'Anna', 'blokada: Jan nie przejął blokady', locksAfter);
       await pa.goto(B + '/trio'); await sleep(900); // Anna wychodzi (pagehide → unlock)
       ok(!(await api('/api/locks')).some((l) => l.id === 'prules'), 'blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę');
       await ctxA.close(); await ctxB.close();
