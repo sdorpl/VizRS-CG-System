@@ -178,7 +178,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
   } finally {
     if (browser) await browser.close();
     srv.kill();
-    fs.rmSync(data, { recursive: true, force: true });
+    fs.rmSync(data, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); // serwer może jeszcze dopisywać (ENOTEMPTY w CI)
     console.log(failures ? `\n${failures} FAIL` : '\nOK');
     process.exit(failures ? 1 : 0);
   }
