@@ -6,9 +6,12 @@
 //
 
 // Zasady przenoszenia (jedne dla VizRS CG Artist, /artist i Trio – DOKUMENTACJA §8.7):
-//   – elementy grafiki (belki, tickery, plansze) przenosi się tylko paczką `.cgpack`: eksport sceny i paczka belek
-//     zapisują `.cgpack` (sceny + strony + pliki); `.vizrs.json` (dawny eksport sceny, bez plików) jest tylko czytany;
-//   – import paczki: `importPack` – pliki wg `assetPlacer`, sceny zawsze jako nowe, strony z numerem albo nowym;
+//   – elementy grafiki (belki, tickery, plansze) i strony przenosi się tylko paczką `.cgpack`: eksport sceny, paczka belek
+//     (Artist) i eksport stron (Trio) zapisują `.cgpack` (sceny + strony + pliki); `.vizrs.json` (dawny eksport sceny) jest tylko czytany;
+//   – tożsamość sceny i strony to `id` – ten sam w paczce, w imporcie i w wysyłce z VizRS CG Artist (`src/deploy.rs`);
+//   – import: najpierw plan (`planImport`/`planPages`, nic nie zapisuje), potem `importPack` wg czynności z planu;
+//     scena w innej wersji albo o zajętej nazwie – czynność wybiera użytkownik (zaktualizuj / kopia „… (2)” / pomiń);
+//     pliki wg `assetPlacer`, strony z numerem, nowym numerem (zajęty) albo przesunięte o stałą;
 //   – plik `.show.json` w Trio to kopia całego show (playlisty, rundowny, makra), nie sposób przenoszenia belek.
 export const PACK_TYPE = 'vizrs_pack';
 export const PACK_VERSION = 1;
@@ -145,6 +148,8 @@ export function sceneAssets(scene, known) {
  */
 export async function buildPack({ scenes, pages = [], known, fetchAsset, generator = 'VizRS' }) {
   const enc = new TextEncoder();
+  const ids = new Set(scenes.map((s) => s.id));
+  pages = pages.filter((p) => ids.has(p.scene)); // tylko strony pakowanych scen – także przy zbieraniu plików
   const names = new Set();
   for (const s of scenes) sceneAssets(s, known).forEach((n) => names.add(n));
   for (const p of pages) sceneAssets(p.values || {}, known).forEach((n) => names.add(n));
@@ -163,9 +168,8 @@ export async function buildPack({ scenes, pages = [], known, fetchAsset, generat
       assets.push({ path: 'assets/' + name, name, kind: assetKind(name), bytes: data.length, crc32: crc32(data) });
     } catch { missing.push(name); }
   }
-  const ids = new Set(scenes.map((s) => s.id));
   const strip = ({ rev, ...o }) => o; // eslint-disable-line no-unused-vars
-  const pk = renameAssets({ scenes: scenes.map(strip), pages: pages.filter((p) => ids.has(p.scene)).map(strip) }, same);
+  const pk = renameAssets({ scenes: scenes.map(strip), pages: pages.map(strip) }, same);
   for (const s of pk.scenes) if (Array.isArray(s.packAssets)) s.packAssets = [...new Set(s.packAssets)];
   const manifest = {
     _type: PACK_TYPE, _packVersion: PACK_VERSION, generator, created: new Date().toISOString(),
@@ -298,19 +302,21 @@ export function assetPlacer({ existing, fetchAsset, upload }) {
 
 /**
  * Instaluje pliki z paczki w assets wg reguł `assetPlacer`; odnośniki w scenach przepisuje `renameAssets(…, map)`.
- * Zwraca { map: Map<stara, nowa>, uploaded[], skipped[], reused[[stara, istniejąca]], renamed[[stara, nowa]] }.
+ * Zwraca { map: Map<stara, nowa>, placed: [{ from, name, status }], uploaded[], skipped[], reused[[stara, istniejąca]],
+ * renamed[[stara, nowa]] }. `upload`, który niczego nie zapisuje (zwraca nazwę), daje przebieg „na sucho” dla planu importu.
  */
 export async function installAssets(assets, opts) {
   const place = assetPlacer(opts);
-  const map = new Map(), uploaded = [], skipped = [], reused = [], renamed = [];
+  const map = new Map(), placed = [], uploaded = [], skipped = [], reused = [], renamed = [];
   for (const [name, data] of assets) {
     const r = await place(name, data);
+    placed.push(r);
     if (r.name !== name) map.set(name, r.name);
     if (r.status === 'same') skipped.push(r.name);
     else if (r.status === 'reused') reused.push([name, r.name]);
     else { uploaded.push(r.name); if (r.status === 'renamed') renamed.push([name, r.name]); }
   }
-  return { map, uploaded, skipped, reused, renamed };
+  return { map, placed, uploaded, skipped, reused, renamed };
 }
 
 // ---------------------------------------------------------------- import (wspólny dla Artist i Trio)
@@ -336,52 +342,255 @@ export function legacyScenePack(text) {
   return { manifest: { _type: PACK_TYPE, legacy: true }, scenes: [s], pages: [], assets: new Map() };
 }
 
+/** Kanoniczna treść obiektu (klucze posortowane, bez `id` i `rev`) – „ta sama scena” niezależnie od kolejności pól. */
+export function sceneKey(s) {
+  const canon = (v) => {
+    if (Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
+    if (v && typeof v === 'object') return '{' + Object.keys(v).filter((k) => v[k] !== undefined).sort().map((k) => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+    return JSON.stringify(v ?? null);
+  };
+  const { id, rev, ...o } = s || {}; // eslint-disable-line no-unused-vars
+  return canon(o);
+}
+
+/** Wolna nazwa sceny: `nazwa`, a gdy zajęta – `nazwa (2)`, `nazwa (3)`… (`taken` – Set nazw). */
+export function uniqueName(name, taken) {
+  const base = String(name ?? '').slice(0, 190);
+  if (!taken.has(base)) return base;
+  for (let i = 2; ; i++) { const n = `${base} (${i})`; if (!taken.has(n)) return n; }
+}
+
+const MAX_PAGE = 99999; // jak `validate.rs` (numer strony 1…99 999)
+
 /**
- * Import paczki (wynik `readPack` albo `legacyScenePack`) na serwer albo do magazynu Artist:
- *  – pliki wg reguł `assetPlacer`, odnośniki w scenach i stronach przepisane (`renameAssets`);
- *  – sceny zawsze jako nowe (istniejące nie są nadpisywane; ta sama nazwa → raport „dodano jako kopię”);
- *  – strony (`withPages`) wskazują nowe sceny; zajęty numer → nowy numer.
- * `api(method, path, body)` → Promise (JSON, błąd z komunikatem serwera), `existing` – nazwy w assets,
- * `fetchAsset`, `upload` – jak w `assetPlacer`, `sceneNames` – nazwy scen już istniejących.
- * Zwraca { scenes: [zapisane], pages, report: [], uploaded, skipped, reused, renamed }.
+ * Czynności możliwe dla stanu sceny w planie (pierwsza – domyślna, gdy `action` nie jest wymagane od użytkownika):
+ *  new        – brak sceny o tym `id`:            add (z tym `id`), skip
+ *  same       – scena o tym `id` z tą samą treścią: skip (strony paczki wskazują istniejącą), copy
+ *  changed    – scena o tym `id` w innej wersji:   update (strony zostają) | copy | skip – wybiera użytkownik
+ *  name-taken – inna scena o tej samej nazwie:     copy (nazwa „… (2)”) | update (zastępuje tamtą) | skip – wybiera użytkownik
  */
-export async function importPack(pk, { api, existing, fetchAsset, upload, sceneNames = [], withPages = true }) {
+export const SCENE_CHOICES = { new: ['add', 'skip'], same: ['skip', 'copy'], changed: ['update', 'copy', 'skip'], 'name-taken': ['copy', 'update', 'skip'] };
+/** Stany, w których czynność wybiera zawsze użytkownik (bez domyślnej). */
+export const MUST_DECIDE = new Set(['changed', 'name-taken']);
+
+/**
+ * Plan importu paczki – nic nie zapisuje. `show` – bieżący show celu ({ scenes, pages }), `existing` – nazwy w assets,
+ * `fetchAsset` – jak w `assetPlacer`. Pliki są umieszczane „na sucho” (te same reguły co przy zapisie), sceny porównywane
+ * po treści (`sceneKey`, po przepisaniu nazw plików). Zwraca { scenes: [...], pages: [...], files: [...], refs: [...], offset }:
+ *  – sceny: { id, name, status, target, targetName, targetRev, action, choices } – `action` = null tam, gdzie decyduje użytkownik;
+ *  – strony i odniesienia liczy `planPages` (wywoływana tu i po każdej zmianie czynności sceny albo przesunięcia numerów).
+ */
+export async function planImport(pk, { show, existing, fetchAsset, withPages = true, offset = 0 }) {
+  const dry = await installAssets(pk.assets, { existing, fetchAsset, upload: async (n) => n });
+  const scenesIn = renameAssets(pk.scenes, dry.map);
+  const cur = show?.scenes || [];
+  const byId = new Map(cur.map((s) => [s.id, s])), byName = new Map(cur.map((s) => [s.name, s]));
+  const scenes = scenesIn.map((s) => {
+    const base = { id: s.id ?? null, name: s.name || '', target: null, targetName: null, targetRev: null };
+    const there = s.id != null ? byId.get(s.id) : null;
+    const other = !there ? byName.get(s.name) : null;
+    const hit = there || other;
+    if (hit) Object.assign(base, { target: hit.id, targetName: hit.name, targetRev: hit.rev ?? null });
+    const status = there ? (sceneKey(s) === sceneKey(there) ? 'same' : 'changed') : other ? 'name-taken' : 'new';
+    return { ...base, status, choices: SCENE_CHOICES[status], action: MUST_DECIDE.has(status) ? null : SCENE_CHOICES[status][0] };
+  });
+  const files = dry.placed.map((r) => ({ from: r.from, name: r.name, status: r.status }));
+  const plan = { scenes, files, pages: [], refs: [], offset, withPages, legacy: !!pk.manifest?.legacy, _pk: pk, _show: show || { scenes: [], pages: [] } };
+  return planPages(plan, offset);
+}
+
+/**
+ * Strony i odniesienia planu wg bieżących czynności scen i przesunięcia numerów `offset` (zmienia i zwraca `plan`).
+ * Strona: { id, number, name, scene, status, to, action, choices }:
+ *  new          – numer wolny:                   add
+ *  number-taken – numer zajęty (także przez inną stronę paczki): renumber (pierwszy wolny po najwyższym, jak serwer) | skip
+ *  exists       – strona o tym `id` już jest:    skip | overwrite (wartości z paczki, numer istniejący)
+ *  no-scene     – scena strony pominięta / spoza paczki: skip (z powodem w raporcie)
+ * Wybór użytkownika (`action` z listy `choices`) przeżywa przeliczenie, gdy stan się nie zmienił.
+ * Odniesienia (`refs`): powiązania `dock` scen z paczki wskazujące numer strony, który się zmieni (`page:N`),
+ * albo nazwę sceny dodawanej jako kopia (`scene:<nazwa>`) – `importPack` może je poprawić (`fixRefs`).
+ */
+export function planPages(plan, offset = plan.offset || 0) {
+  const pk = plan._pk, show = plan._show;
+  offset = Math.trunc(Number(offset) || 0);
+  plan.offset = offset;
+  const prev = new Map(plan.pages.map((p) => [p.id + '|' + p.number, p]));
+  const sceneOf = new Map(plan.scenes.map((e) => [e.id, e]));
+  const curPages = show.pages || [];
+  const byId = new Map(curPages.map((p) => [p.id, p]));
+  const taken = new Set(curPages.map((p) => p.number));
+  let top = Math.max(1000, ...curPages.map((p) => p.number || 0));
+  const pages = [];
+  for (const p of plan.withPages ? pk.pages : []) {
+    const e = sceneOf.get(p.scene);
+    const want = Number.isInteger(p.number) ? p.number + offset : null;
+    const row = { id: p.id ?? null, number: p.number ?? null, name: p.name || '', scene: p.scene, to: want, status: 'new', choices: ['add'], action: 'add', reason: '' };
+    if (!e) Object.assign(row, { status: 'no-scene', choices: ['skip'], action: 'skip', reason: 'jej sceny nie ma w paczce' });
+    else if (e.action === 'skip' && !e.target) Object.assign(row, { status: 'no-scene', choices: ['skip'], action: 'skip', reason: `scena „${e.name}” pominięta` });
+    else if (p.id != null && byId.has(p.id)) {
+      const there = byId.get(p.id);
+      Object.assign(row, { status: 'exists', to: there.number, choices: ['skip', 'overwrite'], action: 'skip', targetRev: there.rev ?? null });
+    } else if (want == null || want < 1 || want > MAX_PAGE || taken.has(want)) {
+      Object.assign(row, { status: 'number-taken', choices: ['renumber', 'skip'], action: 'renumber' });
+    }
+    const old = prev.get(row.id + '|' + row.number);
+    if (old && old.status === row.status && row.choices.includes(old.action)) row.action = old.action;
+    if (row.action === 'renumber') { do top++; while (taken.has(top)); row.to = top; }
+    if (row.action === 'add' || row.action === 'renumber') { taken.add(row.to); top = Math.max(top, row.to); }
+    pages.push(row);
+  }
+  plan.pages = pages;
+  // odniesienia: dock scen z paczki → numery stron i nazwy kopii
+  const moved = new Map(pages.filter((r) => (r.action === 'add' || r.action === 'renumber') && r.to !== r.number).map((r) => [r.number, r.to]));
+  const names = copyNames(plan);
+  const refs = [];
+  for (const s of pk.scenes) {
+    const e = sceneOf.get(s.id ?? null);
+    if (!e || e.action === 'skip') continue;
+    for (const d of Array.isArray(s.dock) ? s.dock : []) {
+      for (const t of String(d?.target || '').split('|')) {
+        const m = /^\s*page:(\d+)\s*$/.exec(t), n = /^\s*scene:(.+?)\s*$/.exec(t);
+        if (m && moved.has(+m[1])) refs.push({ scene: e.name, from: t.trim(), to: 'page:' + moved.get(+m[1]) });
+        else if (n && names.has(n[1])) refs.push({ scene: e.name, from: t.trim(), to: 'scene:' + names.get(n[1]) });
+      }
+    }
+  }
+  plan.refs = refs;
+  return plan;
+}
+
+/** Nazwy scen dodawanych jako kopia: nazwa w paczce → nazwa po imporcie (`… (2)`). */
+function copyNames(plan) {
+  const taken = new Set((plan._show.scenes || []).map((s) => s.name)), out = new Map();
+  for (const e of plan.scenes) if (e.action === 'add') taken.add(e.name);
+  for (const e of plan.scenes) {
+    if (e.action !== 'copy') continue;
+    const n = uniqueName(e.name, taken);
+    taken.add(n);
+    if (n !== e.name) out.set(e.name, n);
+  }
+  return out;
+}
+
+/** Sceny bez wybranej czynności (import czeka na decyzję użytkownika). */
+export const undecided = (plan) => plan.scenes.filter((e) => !e.action);
+
+/** Przepisuje cele `dock` (`page:N`, `scene:<nazwa>`) wg listy `refs` planu. */
+function fixDock(scene, refs) {
+  if (!refs.length || !Array.isArray(scene.dock)) return scene;
+  const map = new Map(refs.filter((r) => r.scene === scene.name).map((r) => [r.from, r.to]));
+  if (!map.size) return scene;
+  return { ...scene, dock: scene.dock.map((d) => ({ ...d, target: String(d.target || '').split('|').map((t) => map.get(t.trim()) || t).join('|') })) };
+}
+
+/**
+ * Import paczki (wynik `readPack` albo `legacyScenePack`) na serwer albo do magazynu Artist wg planu (`planImport`):
+ *  – pliki wg reguł `assetPlacer`, odnośniki w scenach i stronach przepisane (`renameAssets`);
+ *  – sceny wg czynności planu: add (z `id` z paczki), update (PUT z `rev` z planu – strony celu zostają; konflikt → raport),
+ *    copy (nazwa „… (2)”, `id` z paczki, gdy wolne), skip (strony paczki wskazują istniejącą scenę, gdy jest);
+ *  – strony (`withPages`): add / renumber (numer z planu; numer zajęty w międzyczasie → nadany przez serwer) / overwrite / skip;
+ *  – `fixRefs` (domyślnie tak) poprawia powiązania dock scen z paczki wskazujące przenumerowane strony i nazwy kopii.
+ * Bez `plan` liczy plan sam i tam, gdzie decyduje użytkownik, przyjmuje „dodaj jako kopię” (zachowanie bez okna planu).
+ * `api(method, path, body)` → Promise (JSON, błąd z komunikatem serwera), `existing` – nazwy w assets,
+ * `fetchAsset`, `upload` – jak w `assetPlacer`, `show` – bieżący show celu (albo `sceneNames` – same nazwy scen).
+ * Zwraca { scenes: [dodane], updated: [zaktualizowane], pages, report: [], uploaded, skipped, reused, renamed }.
+ */
+export async function importPack(pk, { api, existing, fetchAsset, upload, show = null, sceneNames = [], withPages = true, plan = null, fixRefs = true }) {
+  // bez `show` (dawne wywołanie z samymi nazwami): pełny show celu – bez znanych `id` kopia z `id` z paczki nadpisałaby scenę
+  show ||= await Promise.resolve().then(() => api('GET', '/api/show')).catch(() => null);
+  if (!show?.scenes) show = { scenes: sceneNames.map((name) => ({ id: null, name })), pages: [] };
+  const knownIds = show.scenes.every((s) => s.id != null);
+  if (!plan) {
+    plan = await planImport(pk, { show, existing, fetchAsset, withPages });
+    for (const e of plan.scenes) if (!e.action) e.action = 'copy';
+    planPages(plan);
+  }
+  const left = undecided(plan);
+  if (left.length) throw new Error('wybierz, co zrobić ze sceną: ' + left.map((e) => `„${e.name}”`).join(', '));
   const report = [];
   const inst = await installAssets(pk.assets, { existing, fetchAsset, upload });
   for (const [a, b] of inst.renamed) report.push(`plik ${a} zapisano jako ${b} (nazwa zajęta przez inny plik albo niedozwolone znaki)`);
   for (const [a, b] of inst.reused) report.push(`${FONT_RE.test(a) ? 'czcionka' : 'plik'} ${a} jest już w zasobach jako ${b} – użyto istniejącej (bez kopii)`);
-  const scenesIn = renameAssets(pk.scenes, inst.map), pagesIn = renameAssets(pk.pages, inst.map);
+  const refs = fixRefs ? plan.refs : [];
+  const scenesIn = renameAssets(pk.scenes, inst.map).map((s) => fixDock(s, refs)), pagesIn = renameAssets(pk.pages, inst.map);
   if (pk.manifest?.legacy) {
     report.push('starszy format .vizrs.json – bez grafik i czcionek; elementy przenoś paczką .cgpack (⇩ Eksport)');
     for (const n of missingFiles(scenesIn, [...existing, ...inst.uploaded])) report.push(`brak pliku ${n} w zasobach – wgraj go albo zaimportuj paczkę .cgpack z tą sceną`);
   }
-  const names = new Set(sceneNames), ids = new Map(), saved = [];
-  for (const s of scenesIn) {
+  for (const r of refs) report.push(`scena „${r.scene}”: powiązanie ${r.from} → ${r.to}`);
+  if (!fixRefs && plan.refs.length) for (const r of plan.refs) report.push(`scena „${r.scene}”: powiązanie ${r.from} wskazuje teraz co innego (po imporcie: ${r.to}) – popraw je w Artist`);
+  const names = copyNames(plan), curIds = new Set((show.scenes || []).map((s) => s.id).filter(Boolean));
+  const keepId = (id) => knownIds && id != null && !curIds.has(id); // `id` z paczki tylko, gdy na pewno wolne
+  const ids = new Map(), saved = [], updated = [];
+  scenesIn.forEach((s, i) => {
+    const e = plan.scenes[i];
+    if (e.target && (e.action === 'skip' || e.action === 'update')) ids.set(s.id ?? i, e.target); // strony → istniejąca scena
+  });
+  for (let i = 0; i < scenesIn.length; i++) {
+    const s = scenesIn[i], e = plan.scenes[i], key = s.id ?? i;
     const { id, rev, ...body } = s; // eslint-disable-line no-unused-vars
-    if (names.has(body.name)) report.push(`scena „${body.name}” już istnieje – dodano jako kopię`);
-    try { const sv = await api('POST', '/api/scenes', body); saved.push(sv); ids.set(id, sv.id); names.add(body.name); }
-    catch (e) { report.push(`scena „${body.name}”: ${e.message}`); }
-  }
-  let pages = 0;
-  if (!withPages && pagesIn.length) report.push(`${pagesIn.length} stron Trio pominięto – praca lokalna tworzy tylko sceny (strony zaimportuje Trio)`);
-  for (const p of withPages ? pagesIn : []) {
-    const sid = ids.get(p.scene); if (!sid) continue;
-    const { id, rev, ...body } = p; // eslint-disable-line no-unused-vars
-    body.scene = sid;
-    try { await api('POST', '/api/pages', body); pages++; }
-    catch (e) {
-      if (/zajęty/.test(e.message)) {
-        delete body.number;
-        try { await api('POST', '/api/pages', body); pages++; report.push(`strona ${p.number} „${p.name || ''}”: numer zajęty – nadano nowy`); }
-        catch (e2) { report.push(`strona ${p.number}: ${e2.message}`); }
-      } else report.push(`strona ${p.number}: ${e.message}`);
+    try {
+      if (e.action === 'add') {
+        const sv = await api('POST', '/api/scenes', keepId(id) ? { ...body, id } : body);
+        saved.push(sv); ids.set(key, sv.id);
+      } else if (e.action === 'copy') {
+        body.name = names.get(e.name) || e.name;
+        const sv = await api('POST', '/api/scenes', keepId(id) ? { ...body, id } : body);
+        saved.push(sv); ids.set(key, sv.id);
+        report.push(e.status === 'same' ? `scena „${e.name}”: dodano kopię jako „${sv.name}”` : `scena „${e.name}”: ${e.status === 'name-taken' ? 'nazwa zajęta' : 'jest już w innej wersji'} – dodano jako „${sv.name}”`);
+      } else if (e.action === 'update') {
+        const sv = await api('PUT', '/api/scenes/' + encodeURIComponent(e.target), { ...body, id: e.target, ...(e.targetRev != null ? { rev: e.targetRev } : {}) });
+        updated.push(sv);
+        report.push(e.status === 'name-taken' ? `scena „${e.name}”: zastąpiono istniejącą scenę o tej nazwie (jej strony zostały)` : `scena „${e.name}”: zaktualizowano (strony zostały)`);
+      } else if (e.status !== 'same') report.push(`scena „${e.name}”: pominięto${e.target ? ' – strony z paczki wskazują istniejącą' : ''}`);
+    } catch (err) {
+      ids.delete(key);
+      report.push(/^konflikt/.test(err.message) ? `scena „${e.name}”: zmieniona w międzyczasie – nie zaktualizowano (zaimportuj paczkę ponownie)` : `scena „${e.name}”: ${err.message}`);
+      if (e.target && e.action === 'update') ids.set(key, e.target);
     }
   }
-  return { scenes: saved, pages, report, uploaded: inst.uploaded, skipped: inst.skipped, reused: inst.reused, renamed: inst.renamed };
+  let pages = 0;
+  if (!withPages && pagesIn.length) report.push(`${pagesIn.length} stron Trio pominięto – praca lokalna tworzy tylko sceny (strony zaimportuje Trio z tej samej paczki)`);
+  const sceneKeyOf = (p) => { const i = pk.scenes.findIndex((s) => (s.id ?? null) === (p.scene ?? null)); return i < 0 ? undefined : pk.scenes[i].id ?? i; };
+  for (let i = 0; i < (withPages ? pagesIn.length : 0); i++) {
+    const p = pagesIn[i], row = plan.pages[i] || { action: 'add', to: p.number, status: 'new' };
+    const label = `strona ${p.number ?? '?'}${p.name ? ` „${p.name}”` : ''}`;
+    if (row.action === 'skip') {
+      if (row.status === 'no-scene') report.push(`${label}: pominięto – ${row.reason}`);
+      else if (row.status === 'exists') report.push(`${label}: jest już w show – pominięto`);
+      else report.push(`${label}: pominięto`);
+      continue;
+    }
+    const sid = ids.get(sceneKeyOf(p));
+    if (!sid) { report.push(`${label}: pominięto – jej scena nie została zapisana`); continue; }
+    const { id, rev, ...body } = p; // eslint-disable-line no-unused-vars
+    body.scene = sid;
+    try {
+      if (row.action === 'overwrite') {
+        await api('PUT', '/api/pages/' + encodeURIComponent(id), { ...body, id, number: row.to, ...(row.targetRev != null ? { rev: row.targetRev } : {}) });
+        pages++; report.push(`${label}: nadpisano wartościami z paczki`);
+        continue;
+      }
+      body.number = row.to;
+      if (id != null && knownIds && !(show.pages || []).some((q) => q.id === id)) body.id = id;
+      try { await api('POST', '/api/pages', body); }
+      catch (e) {
+        if (!/zajęty/.test(e.message)) throw e;
+        delete body.number; // numer zajęty w międzyczasie – nadaje serwer
+        const sv = await api('POST', '/api/pages', body);
+        row.status = 'number-taken'; row.to = sv?.number ?? null;
+      }
+      pages++;
+      if (row.to !== p.number) report.push(`${label}: numer ${row.status === 'number-taken' ? 'zajęty' : 'przesunięty'} – nadano ${row.to ?? 'nowy'}`);
+    } catch (e) { report.push(`${label}: ${e.message}`); }
+  }
+  if (withPages && pagesIn.length) report.push('playlisty, rundowny i makra nie jadą w paczce – dodaj strony do nich w Trio');
+  return { scenes: saved, updated, pages, report, uploaded: inst.uploaded, skipped: inst.skipped, reused: inst.reused, renamed: inst.renamed };
 }
 
 /** Jedno zdanie podsumowania importu (raport Artist i Trio). */
 export function importSummary(r, withPages = true) {
   const fonts = r.uploaded.filter((n) => FONT_RE.test(n)), had = r.skipped.length + r.reused.length;
-  return `Zaimportowano paczkę: ${r.scenes.length} scen${withPages ? `, ${r.pages} stron` : ''}, ${r.uploaded.length} nowych plików${fonts.length ? ` (czcionki: ${fonts.join(', ')})` : ''}${had ? `, ${had} plików już było` : ''}`;
+  const upd = r.updated?.length ? `, ${r.updated.length} zaktualizowanych` : '';
+  return `Zaimportowano paczkę: ${r.scenes.length} scen${upd}${withPages ? `, ${r.pages} stron` : ''}, ${r.uploaded.length} nowych plików${fonts.length ? ` (czcionki: ${fonts.join(', ')})` : ''}${had ? `, ${had} plików już było` : ''}`;
 }

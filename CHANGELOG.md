@@ -2,6 +2,13 @@
 
 ## Niewydane
 
+- **Przenoszenie belek i stron – jedna logika w całym pakiecie** (plan [PLAN-przenoszenie.md](docs/plany/PLAN-przenoszenie.md), P0–P4):
+  - **plan importu paczki** w Trio i VizRS CG Artist: zanim cokolwiek zostanie zapisane, okno pokazuje stan każdej sceny, strony i pliku; scena w innej wersji albo o zajętej nazwie czeka na decyzję operatora – **Zaktualizuj** (strony, playlisty i rundowny zostają), **Kopia** („nazwa (2)”) albo **Pomiń**. Dotąd import zawsze dodawał scenę obok, a podmiana belki wymagała usunięcia starej sceny razem z jej stronami;
+  - **tożsamość sceny i strony to `id`** – import zachowuje `id` z paczki, więc późniejsza wysyłka z VizRS CG Artist i ponowny import rozpoznają tę samą scenę (bez duplikatów);
+  - **⇩ Eksport paczki w Trio** – wybrane strony z ich scenami, grafikami i czcionkami (przenoszenie stron między serwerami i między show), także w szufladzie na telefonie;
+  - strony: zajęty numer → pierwszy wolny (liczony przez import, nie po treści błędu serwera), **przesunięcie numerów o stałą**, strona o tym samym `id` – pomiń albo nadpisz; reguły dock `page:N` / `scene:<nazwa>` w scenach z paczki poprawiane razem z numerami i nazwami kopii;
+  - poprawki: eksport sceny nie dokłada grafik ze stron innych scen; strona pominięta (scena niezapisana albo spoza paczki) ma wiersz w raporcie; paczka rozpakowywana raz; reguły plików paczki sprawdzają wspólne wektory (`source/tests/vectors/cgpack-placer.json`) – te same w `node tests/cgpack.mjs` i w teście wysyłki VizRS CG Artist.
+  DOKUMENTACJA §8.7, §9; INSTRUKCJA.
 - **Wydanie:** AppImage okna Trio (`VizRS-Trio-<wersja>-x86_64.AppImage`) znów buduje akcja Release na GitHubie (Ubuntu 22.04, krok sprawdza `--version`) – bez budowy lokalnej i ręcznego `gh release upload`. DOKUMENTACJA §12.
 
 ## 26.11.7 (2026-11-14)

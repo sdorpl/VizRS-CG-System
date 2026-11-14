@@ -90,8 +90,9 @@ async function server() {
     await pg.setInputFiles('#fileIn', file);
     await sleep(1500);
     const show2 = await Z.api('/api/show');
-    const copies = show2.scenes.filter((x) => x.name === 'Belka paczka');
-    ok(copies.length === 2 && show2.pages.length === 2, 'Ponowny import: druga scena i strona z nowym numerem', [copies.length, show2.pages.map((p) => p.number)]);
+    const copies = show2.scenes.filter((x) => x.name.startsWith('Belka paczka'));
+    ok(copies.length === 2 && copies[1].name === 'Belka paczka (2)' && show2.pages.length === 1, 'Ponowny import bez okna planu (/artist): scena w innej wersji jako kopia „(2)”, strona o tym samym id pominięta', [copies.map((c) => c.name), show2.pages.map((p) => p.number)]);
+    ok(sc?.id === 'pk', 'Import zachowuje id sceny z paczki', sc?.id);
     const names2 = (await Z.api('/api/assets')).map((a) => a.name);
     ok(names2.includes('logo_2.png') && copies[1].nodes[0].props.src === 'logo_2.png', 'Konflikt nazwy pliku: nowa nazwa i przepisany odnośnik', [names2, copies[1]?.nodes[0].props.src]);
 
@@ -103,19 +104,57 @@ async function server() {
     const z2 = fs.readFileSync(file2).toString('latin1');
     ok(/\.cgpack$/.test(dl2.suggestedFilename()) && z2.includes('assets/MojaCzcionka.woff2') && z2.includes('scenes.json'), 'Eksport sceny zapisuje paczkę .cgpack z czcionką', dl2.suggestedFilename());
 
-    // Trio: import paczki dodaje sceny i strony wg tych samych reguł (czcionka bez kopii)
+    // Trio: import paczki – okno planu; scena w innej wersji czeka na decyzję operatora, „Zaktualizuj” zachowuje strony
     const tr = await ctx.newPage();
     tr.on('pageerror', (e) => errs.push('trio: ' + e.message));
-    tr.on('dialog', (d) => d.accept());
     await tr.goto(Z.B + '/trio'); await sleep(1000);
     await tr.click('#bImpPack');
     await tr.setInputFiles('#fileIn', file2);
+    await tr.waitForSelector('.pk-back', { timeout: 5000 });
+    ok(await tr.locator('.pk-back [data-x="go"]').isDisabled(), 'Trio: plan importu – „Importuj” zablokowany do decyzji dla sceny w innej wersji');
+    ok((await tr.textContent('.pk-back')).includes('jest już w show w innej wersji') && (await tr.textContent('.pk-back')).includes('jest już w show'), 'Trio: plan pokazuje stan sceny i strony', await tr.textContent('.pk-back'));
+    await tr.selectOption('.pk-back select[data-sc="0"]', 'update');
+    await tr.click('.pk-back [data-x="go"]');
     await sleep(1500);
+    await tr.keyboard.press('Escape').catch(() => {});
     const show3 = await Z.api('/api/show');
     const names3 = (await Z.api('/api/assets')).map((a) => a.name);
-    const sc3 = show3.scenes.filter((x) => x.name === 'Belka paczka');
-    ok(sc3.length === 3 && show3.pages.length === 3 && sc3[2].nodes[1].props.font === 'Juz_wgrana.woff2' && !names3.includes('MojaCzcionka.woff2'), 'Trio: import paczki – scena, strona, czcionka bez kopii', [sc3.length, show3.pages.length, names3]);
+    const pk3 = show3.scenes.filter((x) => x.id === 'pk');
+    ok(pk3.length === 1 && pk3[0].nodes[0].props.src === 'logo_2.png' && pk3[0].nodes[1].props.font === 'Juz_wgrana.woff2' && !names3.includes('MojaCzcionka.woff2'), 'Trio: „Zaktualizuj” podmienia scenę w miejscu (pliki wg reguł, czcionka bez kopii)', [pk3, names3]);
+    ok(show3.pages.length === show2.pages.length && show3.pages.find((p) => p.number === 4321)?.scene === 'pk', 'Trio: aktualizacja sceny nie usuwa jej stron', show3.pages);
+
+    // Trio: eksport wybranych stron do paczki
+    await tr.click('#bExpPack');
+    await tr.waitForSelector('.pk-back [data-q]');
+    await tr.fill('.pk-back [data-q]', '4321');
+    await tr.click('.pk-back [data-p="all"]');
+    ok((await tr.textContent('.pk-back [data-sum]')).startsWith('1 stron · 1 scen'), 'Trio: okno eksportu liczy strony i sceny', await tr.textContent('.pk-back [data-sum]'));
+    const [dl3] = await Promise.all([tr.waitForEvent('download'), tr.click('.pk-back [data-x="go"]')]);
+    const file3 = path.join(A.data, 'strony.cgpack');
+    await dl3.saveAs(file3);
+    const P = await import(require('url').pathToFileURL(path.join(__dirname, '../../web/cgpack.js')).href);
+    const pk = await P.readPack(new Uint8Array(fs.readFileSync(file3)));
+    ok(/^4321_/.test(dl3.suggestedFilename()) && pk.pages.length === 1 && pk.pages[0].number === 4321 && pk.scenes.length === 1 && pk.assets.has('Juz_wgrana.woff2') && pk.assets.has('logo_2.png'), 'Trio: eksport strony – paczka ze stroną, sceną, grafiką i czcionką', [dl3.suggestedFilename(), pk.pages, [...pk.assets.keys()]]);
     await tr.close();
+
+    // import stron z Trio na trzecim serwerze z przesunięciem numerów
+    const C = await server();
+    try {
+      const tc = await ctx.newPage();
+      tc.on('pageerror', (e) => errs.push('trio C: ' + e.message));
+      await tc.goto(C.B + '/trio'); await sleep(1000);
+      await tc.click('#bImpPack');
+      await tc.setInputFiles('#fileIn', file3);
+      await tc.waitForSelector('.pk-back [data-off]');
+      await tc.fill('.pk-back [data-off]', '1000');
+      await tc.locator('.pk-back [data-off]').dispatchEvent('change');
+      ok((await tc.textContent('.pk-back')).includes('5321'), 'Trio: przesunięcie numerów widoczne w planie', await tc.textContent('.pk-back'));
+      await tc.click('.pk-back [data-x="go"]');
+      await sleep(1500);
+      const sc4 = await C.api('/api/show');
+      ok(sc4.scenes.length === 1 && sc4.scenes[0].id === 'pk' && sc4.pages[0]?.number === 5321 && sc4.pages[0]?.scene === 'pk', 'Trio: import stron – scena z id z paczki, strona z numerem przesuniętym o 1000', [sc4.scenes.map((x) => x.id), sc4.pages]);
+      await tc.close();
+    } finally { C.proc.kill(); fs.rmSync(C.data, { recursive: true, force: true }); }
 
     // dawny eksport sceny .vizrs.json: tylko odczyt, przez ten sam import (scena zapisana, raport o formacie)
     const legacy = path.join(A.data, 'stara.vizrs.json');

@@ -427,13 +427,27 @@ Zapis sceny nie zmienia grafiki na antenie: warstwa dostaje znacznik **⏳ nowa 
 
 ### 8.7 Paczka belek (.cgpack)
 
-Paczka przenosi belki między stanowiskami i serwerami jednym plikiem – razem z grafikami i czcionkami.
+Paczka przenosi belki i strony między stanowiskami, serwerami i show jednym plikiem – razem z grafikami i czcionkami.
 
-**Zasady przenoszenia** (jedne dla VizRS CG Artist, `/artist` i Trio; kod: `web/cgpack.js`):
-- Elementy grafiki (belki, tickery, plansze) przenosi się **tylko paczką `.cgpack`**. Eksport jednej sceny (**⇩ Eksport**) i kilku (**⇩ Paczka**) zapisuje `.cgpack` – sceny, ich strony, grafiki i czcionki.
-- Dawny eksport sceny `.vizrs.json` (bez plików) jest tylko **czytany**: przechodzi przez ten sam import co paczka (scena zapisana jako nowa), a raport wymienia pliki, których brak w assets. Nowych plików `.vizrs.json` program nie zapisuje.
-- Import paczki jest jeden (`cgpack.importPack`) – w Artist (**⇧ Import**) i w Trio (**⇧ Import paczki**, §9): pliki wg reguł poniżej, sceny zawsze jako nowe (istniejące nie są nadpisywane), strony z numerem albo nowym, gdy numer jest zajęty; bieżący show i antena zostają.
-- Wysyłka scen z VizRS CG Artist na serwer stosuje te same reguły plików (`src/deploy.rs` w Artist).
+**Zasady przenoszenia** (jedne dla VizRS CG Artist, `/artist` i Trio; kod: `web/cgpack.js`, okna: `web/pack-ui.js`; plan: [PLAN-przenoszenie.md](plany/PLAN-przenoszenie.md)):
+- Elementy grafiki (belki, tickery, plansze) i strony przenosi się **tylko paczką `.cgpack`**. W Artist eksport jednej sceny (**⇩ Eksport**) i kilku (**⇩ Paczka**), w Trio **⇩ Eksport paczki** (wybrane strony) zapisują `.cgpack` – sceny, strony, grafiki i czcionki.
+- **Tożsamość to `id`.** Paczka niesie `id` scen i stron. Import tworzy scenę i stronę z tym `id` (gdy jest wolne), a wysyłka z VizRS CG Artist aktualizuje scenę o tym samym `id` – obie drogi rozpoznają tę samą scenę, więc poprawiona belka nie dubluje się na serwerze.
+- Dawny eksport sceny `.vizrs.json` (bez plików) jest tylko **czytany**: przechodzi przez ten sam import co paczka, a raport wymienia pliki, których brak w assets. Nowych plików `.vizrs.json` program nie zapisuje.
+- **Import = najpierw plan, potem zapis** (`cgpack.planImport`, `cgpack.importPack`) – w Artist (**⇧ Import**) i w Trio (**⇧ Import paczki**, §9). Okno planu pokazuje stan każdej sceny, strony i pliku, zanim cokolwiek zostanie zapisane; bieżący show i antena zostają.
+
+| Scena w paczce | Stan w planie | Czynność |
+|---|---|---|
+| brak sceny o tym `id` i tej nazwie | nowa | **Dodaj** (z `id` z paczki) albo Pomiń |
+| scena o tym `id` z tą samą treścią | taka sama jest już w show | **Pomiń** (strony z paczki wskazują istniejącą) albo dodaj kopię |
+| scena o tym `id` w innej wersji | jest już w show w innej wersji | **wybiera użytkownik:** Zaktualizuj istniejącą (jej strony, playlisty i rundowny zostają) / Dodaj jako kopię / Pomiń |
+| inna scena o tej samej nazwie | w show jest inna scena o tej nazwie | **wybiera użytkownik:** Dodaj jako kopię / Zastąp tamtą (jej strony zostają) / Pomiń |
+
+- Dla scen w innej wersji i o zajętej nazwie nie ma czynności domyślnej: **⇧ Importuj** działa dopiero po wyborze dla każdej z nich (przyciski „wszystkie konflikty: Zaktualizuj / Kopia / Pomiń” ustawiają wszystkie naraz). Kopia dostaje wolną nazwę **„nazwa (2)”, „nazwa (3)”…** – nazwy scen w show się nie powtarzają (ważne dla reguł dock `scene:<nazwa>`). Aktualizacja zapisuje scenę z `rev` odczytanym przy planie: gdy ktoś zmienił ją w międzyczasie, nie jest nadpisywana, a raport każe zaimportować paczkę ponownie.
+- **Strony:** numer z paczki, gdy wolny; zajęty (także przez inną stronę tej paczki) → pierwszy wolny po najwyższym numerze w show („Dodaj z nowym numerem” albo Pomiń); strona o tym samym `id` już jest → Pomiń albo „Nadpisz wartościami z paczki” (numer zostaje). **Przesuń numery o** dodaje stałą do numerów wszystkich stron paczki (np. +1000 – oprawa w osobnym bloku numerów). Strona, której scena jest pominięta albo spoza paczki, jest pomijana z powodem w raporcie. Playlisty, rundowny i makra nie jadą w paczce.
+- **Powiązania:** reguły dock scen z paczki wskazujące stronę, która dostanie inny numer (`page:N`), albo scenę dodawaną jako kopia (`scene:<nazwa>`), plan wypisuje; „popraw je w scenach z paczki” (domyślnie zaznaczone) przepisuje je przy imporcie. Makra i reguły w scenach, które już są w show, nie są zmieniane.
+- Bez okna planu (zamrożony `/artist`) import przyjmuje: sceny w innej wersji i o zajętej nazwie – kopia, strony o tym samym `id` – pominięte.
+- W VizRS CG Artist w pracy lokalnej import tworzy tylko sceny; strony z tej samej paczki importuje Trio.
+- Wysyłka scen z VizRS CG Artist na serwer stosuje te same reguły plików (`src/deploy.rs` w Artist; przypadki wspólne w `source/tests/vectors/cgpack-placer.json`) i te same nazwy stanów (nowa, bez zmian – także gdy treść na serwerze jest taka sama, zmieniona, inna scena o tej nazwie).
 - `.show.json` w Trio (**⇩ Kopia show / ⇧ Przywróć show**) to kopia zapasowa całego show (strony, playlisty, rundowny, makra; bez plików), nie sposób przenoszenia belek.
 
 - **⇩ Paczka** otwiera listę scen (bieżąca zaznaczona), opcję „dołącz strony z Trio” i podsumowanie (ile scen, grafik, czcionek). **Pobierz .cgpack** zapisuje plik. Niezapisane zmiany bieżącej sceny trafiają do paczki w wersji z edytora.
@@ -446,7 +460,8 @@ Paczka przenosi belki między stanowiskami i serwerami jednym plikiem – razem 
   3. plik o tej samej nazwie i treści jest pomijany;
   4. nic nie jest nadpisywane: ta sama nazwa (bez względu na wielkość liter – Windows i macOS ich nie rozróżniają) z inną treścią → `nazwa_2.ext`, `nazwa_3.ext`…; gdy któraś z tych kopii ma już tę treść (ponowny import, ponowna wysyłka), używana jest ona zamiast kolejnej.
 - **Eksport:** ta sama czcionka wgrana pod kilkoma nazwami trafia do paczki raz; odnośniki w scenach i `packAssets` paczki wskazują jedną nazwę (grafiki – bez zmian, każda nazwa osobno).
-- **⇧ Import** przyjmuje `.cgpack`: pliki trafiają do assets wg reguł wyżej (raport wymienia pliki zapisane pod nową nazwą i czcionki zastąpione istniejącymi), sceny są dodawane jako nowe (istniejące nie są nadpisywane), strony dostają swój numer albo nowy, gdy numer jest zajęty. Raport pokazuje, co się zmieniło.
+- **⇧ Import** przyjmuje `.cgpack`: okno planu (wyżej), potem pliki do assets wg reguł wyżej (raport wymienia pliki zapisane pod nową nazwą i czcionki zastąpione istniejącymi), sceny i strony wg wybranych czynności. Raport pokazuje, co się zmieniło.
+- **⇩ Eksport paczki** w Trio: lista stron show (wyszukiwanie po numerze, nazwie i scenie; zaznaczona strona wybrana), podsumowanie (strony, sceny, grafiki, czcionki), **⇩ Zapisz .cgpack** – wybrane strony z ich scenami i plikami (`<numer>_<nazwa>.cgpack` dla jednej strony).
 - Czcionki z paczki serwuje serwer (`/assets/<plik>`); wyjście `/output` ładuje je zawczasu (§4.8).
 
 Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista scen i plików z sumą CRC-32), `scenes.json` (`{ scenes, pages }` jak w show), `assets/<nazwa>`. Odczyt sprawdza ścieżki, typy plików, sumy i limity (200 plików, 256 MB).
@@ -462,7 +477,7 @@ Format (ZIP): `manifest.json` (`_type: "vizrs_pack"`, `_packVersion: 1`, lista s
 | Lewa | **Strony** (pole `nr` + Enter = wczytaj, szukaj, ⧉ Duplikuj, 🗑) i **Szablony** (＋ = nowa strona z wartościami domyślnymi) |
 | Środkowa | edytor strony: numer, nazwa, skrót klawiszowy, Zapisz, Przywróć zapisane; status (szablon, **wybór warstwy**, ● ON AIR, 🔒, **⏱ kanał**); **pola**; duży **podgląd** strony; przyciski TAKE / CONTINUE / OUT / UPDATE / ARM |
 | Prawa | monitor **PGM** (rzeczywiste wyjście, wybór tła monitora, **OBS ⧉** – adres wyjścia do wklejenia w OBS z przyciskiem Kopiuj: host i port serwera, kanał wybranej anteny, przypomnienie o `?token=`, gdy serwer go wymaga), **Na antenie – warstwy** (⏭ continue, ⏏ out, ⇅ dock, Wdróż teraz), zakładki **Playlista / Rundown / Makra** |
-| Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇧ Import paczki (`.cgpack` – dodaje sceny, strony i pliki, §8.7), ⇩ Kopia show, ⇧ Przywróć show (`.show.json`), ✖ CLEAR ALL |
+| Pasek górny | lista show (paczka grafiki audycji) z ▾ (nowy / kopia / usuń), stan połączenia, „⚠ zapis show nieudany”, „⚠ błędy scen”, ⚙ Stan, ⇧ Import paczki (`.cgpack` – plan importu, potem sceny, strony i pliki, §8.7), ⇩ Eksport paczki (wybrane strony ze scenami i plikami, §8.7), ⇩ Kopia show, ⇧ Przywróć show (`.show.json`), ✖ CLEAR ALL |
 
 Lista **Antena** na górnym pasku wybiera antenę główną albo kanał playoutu (`+ nowy kanał…` dopisuje numer z ErsatzTV; adres `/trio?channel=2` otwiera go od razu). Na wybranej antenie działają TAKE, CONTINUE, OUT, CLEAR, lista „Na antenie”, monitor PGM, karuzela, rundown (każda antena ma własny kursor), makra i dock. Dane stron są wspólne, więc UPDATE dociera na każdą antenę z tą stroną, a Preview (ARM) jest jeden. Lista kanałów przeżywa restart; `− usuń kanał` zdejmuje jego grafikę.
 
@@ -518,7 +533,7 @@ F2 i F3 działają na warstwie, na której strona faktycznie gra, także gdy sza
 
 ### 9.6 Show na audycję
 
-Lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Przywróć show zastępuje show aktywny kopią `.show.json` – żeby wczytać kopię jako osobną audycję, utwórz najpierw nowy show i dopiero potem przywróć. Belki z innego stanowiska dodaje **⇧ Import paczki** (`.cgpack`) – bez zastępowania show.
+Lista w pasku górnym przełącza aktywny show (sceny + strony + playlisty + rundowny + makra) – każda audycja może mieć własną paczkę grafiki. Przełączenie zdejmuje wszystko z anteny i podglądu, zatrzymuje karuzelę i makro. **▾** tworzy nowy pusty show, kopię bieżącego (te same szablony pod inną nazwą) albo usuwa nieaktywny show z dysku. ⇧ Przywróć show zastępuje show aktywny kopią `.show.json` – żeby wczytać kopię jako osobną audycję, utwórz najpierw nowy show i dopiero potem przywróć. Belki i strony z innego stanowiska albo z innego show dodaje **⇧ Import paczki** (`.cgpack`) – bez zastępowania show; strony do przeniesienia zapisuje **⇩ Eksport paczki**.
 
 ### 9.7 ⚙ Stan systemu
 
@@ -541,7 +556,7 @@ Adres z tokenem: `http://<adres-serwera>:8088/trio?token=<token>`. Telefon sięg
 | Część | Zawartość |
 |---|---|
 | nagłówek | **☰** (szuflada), nazwa show, stan połączenia; gdy coś jest na antenie, nagłówek i pasek systemowy telefonu są czerwone |
-| szuflada spod **☰** | antena (główna albo kanał), show i jego menu, **⚙ Stan**, import paczki, kopia show, **CLEAR ALL**, odświeżenie danych, instalacja aplikacji, wyjście w nowej karcie. Zamyka ją dotknięcie obok, **Esc** albo wykonana czynność |
+| szuflada spod **☰** | antena (główna albo kanał), show i jego menu, **⚙ Stan**, import i eksport paczki, kopia show, **CLEAR ALL**, odświeżenie danych, instalacja aplikacji, wyjście w nowej karcie. Zamyka ją dotknięcie obok, **Esc** albo wykonana czynność |
 | **Strony** | lista z wyszukiwaniem i polem numeru, ● = na antenie, 🔒 = edytuje ktoś inny; szablony z **＋** (nowa strona). Przytrzymanie strony otwiera menu strony: Edytuj pola, ARM na Preview, Wyczyść Preview, Duplikuj, Usuń |
 | **Edycja** | podgląd strony w pierwszym stopie nad polami, numer, nazwa, **Zapisz**, **↺**, warstwa szablonu, **⏱ kanał**, wszystkie pola strony jak na stanowisku (także formatowanie, czcionki, ticker) |
 | **Antena** | monitor PGM (`/output?fps=15`, działa tylko na tym widoku), warstwy z ⇅, ⏭ i ⏏, **Wdróż** przy nowej wersji szablonu, **CLEAR ALL** z potwierdzeniem |
@@ -831,11 +846,11 @@ cd source
 cargo clippy --all-targets -- -D warnings
 cargo test                                           # silnik, API, JSON, walidacja, kopie
 node tests/vectors/run.js                            # wektory modelu tekstu
-node tests/cgpack.mjs                                # reguły paczki .cgpack (pliki, import)
+node tests/cgpack.mjs                                # reguły paczki .cgpack (pliki – wektory vectors/cgpack-placer.json, plan importu, import)
 node tests/e2e/run.js target/release/vizrs           # E2E Trio/Output (Playwright)
 node tests/e2e/mobile.js target/release/vizrs [katalog]   # E2E Trio w układzie telefonu (emulacja dotyku; katalog = zrzuty)
 node tests/e2e/artist.js target/release/vizrs        # E2E Artist
-node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, import, font na /output)
+node tests/e2e/pack.js target/release/vizrs          # E2E paczki .cgpack (eksport, plan importu i aktualizacja w Trio, eksport stron, font na /output)
 node tests/motion.js                                 # ruch: krzywe, presety, efekty tekstu, pętle, sekwencja
 node tests/e2e/motion.js target/release/vizrs        # E2E ruchu (panel Artist, /output, klatki lekkiego wyjścia ?fps/?fx=step)
 node tests/e2e/golden.js target/release/vizrs [--update]   # zrzuty wzorcowe

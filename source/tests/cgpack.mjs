@@ -22,47 +22,21 @@ ok(P.safeAssetName('Moja Czcionka Ł.ttf') === 'Moja_Czcionka__.ttf', 'safeAsset
 ok(P.safeAssetName('..ukryty.otf') === 'ukryty.otf', 'safeAssetName: bez kropek na początku');
 ok(P.safeAssetName('') === null && P.safeAssetName('x'.repeat(121)) === null, 'safeAssetName: pusta i za długa → null');
 
-{ // czcionka o tej samej treści pod inną nazwą → istniejąca, bez wgrywania
-  const io = store({ 'Oswald-Bold.ttf': b('FONT-A') });
-  const r = await placer(io)('oswald bold (kopia).ttf', b('FONT-A'));
-  ok(r.status === 'reused' && r.name === 'Oswald-Bold.ttf' && io.uploads.length === 0, 'Czcionka już wgrana pod inną nazwą: użyta istniejąca', r);
-}
-{ // ta sama nazwa i treść → pominięta
-  const io = store({ 'Bahn.otf': b('F1') });
-  const r = await placer(io)('Bahn.otf', b('F1'));
-  ok(r.status === 'same' && r.name === 'Bahn.otf' && !io.uploads.length, 'Ta sama czcionka pod tą samą nazwą: pominięta', r);
-}
-{ // ta sama nazwa, inna treść → nowa nazwa, stara zostaje
-  const io = store({ 'Bahn.otf': b('F1') });
-  const r = await placer(io)('Bahn.otf', b('F2'));
-  ok(r.status === 'renamed' && r.name === 'Bahn_2.otf' && new TextDecoder().decode(io.fsys.get('Bahn.otf')) === 'F1', 'Inna czcionka pod zajętą nazwą: Bahn_2.otf, nic nie nadpisane', r);
-}
-{ // wielkość liter: Windows/macOS nie rozróżniają
-  const io = store({ 'Logo.PNG': b('IMG1') });
-  const r = await placer(io)('logo.png', b('IMG2'));
-  ok(r.name === 'logo_2.png', 'Nazwa różna tylko wielkością liter traktowana jako zajęta', r);
-  const r2 = await placer(io)('logo.png', b('IMG1'));
-  ok(r2.status === 'same' && r2.name === 'Logo.PNG', 'Ta sama grafika pod nazwą różną wielkością liter: pominięta', r2);
-}
-{ // ponowny import tej samej (innej) grafiki: wcześniejsza kopia logo_2.png, nie logo_3.png
-  const io = store({ 'logo.png': b('A'), 'logo_2.png': b('B') });
-  const r = await placer(io)('logo.png', b('B'));
-  ok(r.status === 'reused' && r.name === 'logo_2.png' && !io.uploads.length, 'Kolizja nazwy: wcześniejsza kopia o tej treści użyta ponownie', r);
-}
-{ // nazwa poprawiana jak na serwerze – odnośnik wskazuje zapisany plik
-  const io = store();
-  const r = await placer(io)('Moja Czcionka.woff2', b('W'));
-  ok(r.status === 'renamed' && r.name === 'Moja_Czcionka.woff2' && io.fsys.has('Moja_Czcionka.woff2'), 'Nazwa ze spacją: zapisana i zwrócona jako Moja_Czcionka.woff2', r);
-}
-{ // różne rozszerzenia nie są łączone, nawet przy tej samej treści
-  const io = store({ 'A.ttf': b('X') });
-  const r = await placer(io)('A.otf', b('X'));
-  ok(r.status === 'new' && r.name === 'A.otf', 'Czcionka o innym rozszerzeniu nie jest podmieniana', r);
-}
-{ // grafiki o tej samej treści pod inną nazwą – zostają osobno (porównujemy tylko czcionki)
-  const io = store({ 'a.png': b('P') });
-  const r = await placer(io)('b.png', b('P'));
-  ok(r.status === 'new' && r.name === 'b.png', 'Grafika pod inną nazwą: wgrana (deduplikacja dotyczy czcionek)', r);
+// reguły plików: wspólne wektory z VizRS CG Artist (src/deploy.rs czyta ten sam plik)
+{
+  const fs = await import('node:fs');
+  const V = JSON.parse(fs.readFileSync(new URL('./vectors/cgpack-placer.json', import.meta.url), 'utf8'));
+  for (const c of V.cases) {
+    const io = store(Object.fromEntries(Object.entries(c.existing).map(([n, d]) => [n, b(d)])));
+    let place = placer(io);
+    for (const st of c.steps) {
+      if (st.fresh) place = placer(io);
+      const r = await place(st.from, b(st.data));
+      ok(r.status === st.status && r.name === st.name, `wektor: ${c.name} – ${st.from}`, r);
+    }
+    const now = Object.fromEntries([...io.fsys].map(([n, d]) => [n, new TextDecoder().decode(d)]));
+    ok(JSON.stringify(Object.entries(now).sort()) === JSON.stringify(Object.entries(c.files).sort()), `wektor: ${c.name} – stan assets`, now);
+  }
 }
 { // dwie czcionki o tej samej treści w jednej paczce → jedna w assets
   const io = store({ 'Inne.ttf': b('Z') });
@@ -106,9 +80,9 @@ ok(P.safeAssetName('') === null && P.safeAssetName('x'.repeat(121)) === null, 's
     assets: new Map([['kopia.ttf', b('FONT')]]),
   };
   const r = await P.importPack(pk, { api, existing: io.existing(), fetchAsset: io.fetchAsset, upload: io.upload, sceneNames: ['Belka'] });
-  ok(r.scenes.length === 1 && r.scenes[0].nodes[0].props.font === 'F.ttf' && !('rev' in r.scenes[0]), 'importPack: scena jako nowa, font wskazuje istniejącą czcionkę', r.scenes[0]);
+  ok(r.scenes.length === 1 && r.scenes[0].nodes[0].props.font === 'F.ttf' && !('rev' in r.scenes[0]) && r.scenes[0].name === 'Belka (2)', 'importPack bez planu: zajęta nazwa → kopia „Belka (2)”, font wskazuje istniejącą czcionkę', r.scenes[0]);
   ok(r.pages === 1 && made[1].scene === 'n0' && !('number' in made[1]), 'importPack: strona wskazuje nową scenę, zajęty numer → nowy', made[1]);
-  ok(r.report.some((l) => l.includes('już istnieje – dodano jako kopię')) && r.report.some((l) => l.includes('użyto istniejącej')) && r.report.some((l) => l.includes('numer zajęty')), 'importPack: raport', r.report);
+  ok(r.report.some((l) => l.includes('nazwa zajęta – dodano jako „Belka (2)”')) && r.report.some((l) => l.includes('użyto istniejącej')) && r.report.some((l) => l.includes('numer zajęty')), 'importPack: raport', r.report);
   const r2 = await P.importPack(pk, { api, existing: io.existing(), fetchAsset: io.fetchAsset, upload: io.upload, withPages: false });
   ok(r2.pages === 0 && r2.report.some((l) => l.includes('stron Trio pominięto')), 'importPack bez stron (praca lokalna)', r2.report);
   ok(/1 scen, 1 stron, 0 nowych plików, 1 plików już było/.test(P.importSummary(r)), 'importSummary', P.importSummary(r));
@@ -119,6 +93,85 @@ ok(P.safeAssetName('') === null && P.safeAssetName('x'.repeat(121)) === null, 's
   ok(r.scenes.length === 1 && r.report.some((l) => l.includes('starszy format')) && r.report.some((l) => l.includes('brak pliku tlo.png')) && !r.report.some((l) => l.includes('Jest.ttf')), 'legacyScenePack: scena wczytana, brakujący plik w raporcie', r.report);
   let err = null; try { P.legacyScenePack('{"a":1}'); } catch (e) { err = e.message; }
   ok(err === 'to nie jest scena VizRS', 'legacyScenePack: odrzuca inny JSON', err);
+}
+
+
+// P0: buildPack nie zbiera plików ze stron innych scen
+{
+  const files = { 'a.png': b('A'), 'obca.png': b('O') };
+  const scenes = [{ id: 's1', name: 'jeden', nodes: [{ props: { src: 'a.png' } }] }];
+  const pages = [{ id: 'p1', number: 1, scene: 's1', values: {} }, { id: 'p2', number: 2, scene: 'inna', values: { img: 'obca.png' } }];
+  const { assets, blob } = await P.buildPack({ scenes, pages, known: Object.keys(files), fetchAsset: async (n) => files[n] });
+  const pk = await P.readPack(new Uint8Array(await blob.arrayBuffer()));
+  ok(assets.map((a) => a.name).join() === 'a.png' && pk.pages.length === 1, 'buildPack: pliki tylko ze stron pakowanych scen', assets);
+}
+
+// plan importu: stany scen, decyzja użytkownika, aktualizacja z rev, numeracja stron, przesunięcie, powiązania
+{
+  const mkApi = (log) => async (m, path, body) => {
+    log.push([m, path, structuredClone(body)]);
+    if (m === 'PUT' && path.startsWith('/api/scenes/') && body.rev != null && body.rev !== 7) throw new Error('konflikt: obiekt zmieniony w międzyczasie');
+    return { ...body, id: body.id || 'gen' + log.length, number: body.number ?? 5000 };
+  };
+  const show = {
+    scenes: [
+      { id: 'same', name: 'Taka sama', rev: 2, nodes: [{ props: { text: 'x' } }] },
+      { id: 'chg', name: 'Zmieniona', rev: 7, nodes: [{ props: { text: 'stara' } }] },
+      { id: 'inna', name: 'Zajęta', rev: 1, nodes: [] },
+    ],
+    pages: [{ id: 'pz', number: 1001, scene: 'chg', values: {}, rev: 3 }, { id: 'pe', number: 2000, scene: 'same', values: {}, rev: 4 }],
+  };
+  const pk = {
+    manifest: { _type: 'vizrs_pack' },
+    scenes: [
+      { id: 'same', name: 'Taka sama', nodes: [{ props: { text: 'x' } }] },
+      { id: 'chg', name: 'Zmieniona', nodes: [{ props: { text: 'nowa' } }] },
+      { id: 'nz', name: 'Zajęta', nodes: [], dock: [{ target: 'page:1001|scene:Zajęta', dy: -90 }] },
+      { id: 'nowa', name: 'Nowa', nodes: [] },
+    ],
+    pages: [
+      { id: 'p1', number: 1001, scene: 'chg', values: { a: 1 } },
+      { id: 'p2', number: 1002, scene: 'nowa', values: {} },
+      { id: 'pe', number: 2000, scene: 'same', values: { b: 2 } },
+      { id: 'p3', number: 1003, scene: 'brak', values: {} },
+    ],
+    assets: new Map(),
+  };
+  const io = store();
+  const plan = await P.planImport(pk, { show, existing: [], fetchAsset: io.fetchAsset });
+  ok(plan.scenes.map((e) => e.status).join() === 'same,changed,name-taken,new', 'planImport: stany scen same/changed/name-taken/new', plan.scenes.map((e) => e.status));
+  ok(plan.scenes.map((e) => e.action).join() === 'skip,,,add' && P.undecided(plan).length === 2, 'planImport: zmieniona i zajęta nazwa czekają na decyzję', plan.scenes.map((e) => e.action));
+  ok(plan.pages.map((r) => r.status).join() === 'number-taken,new,exists,no-scene' && plan.pages[0].to === 2001, 'planPages: zajęty numer → pierwszy wolny po najwyższym, istniejąca strona, strona bez sceny', plan.pages);
+  let err = null; try { await P.importPack(pk, { api: mkApi([]), existing: [], fetchAsset: io.fetchAsset, upload: io.upload, show, plan }); } catch (e) { err = e.message; }
+  ok(/wybierz, co zrobić/.test(err || ''), 'importPack: bez decyzji dla konfliktów nic nie zapisuje', err);
+
+  plan.scenes[1].action = 'update'; plan.scenes[2].action = 'copy';
+  P.planPages(plan, 100);
+  ok(plan.pages.map((r) => r.to).join() === '1101,1102,2000,1103' && plan.pages[0].status === 'new', 'planPages: przesunięcie numerów o +100', plan.pages.map((r) => r.to));
+  ok(plan.refs.length === 2 && plan.refs.some((r) => r.from === 'page:1001' && r.to === 'page:1101') && plan.refs.some((r) => r.to === 'scene:Zajęta (2)'), 'planPages: powiązania dock wskazujące przenumerowaną stronę i nazwę kopii', plan.refs);
+  plan.pages[2].action = 'overwrite';
+  const log = [];
+  const r = await P.importPack(pk, { api: mkApi(log), existing: [], fetchAsset: io.fetchAsset, upload: io.upload, show, plan });
+  const put = log.find(([m, p]) => m === 'PUT' && p === '/api/scenes/chg');
+  ok(put && put[2].rev === 7 && put[2].nodes[0].props.text === 'nowa', 'importPack: aktualizacja sceny PUT z rev z planu', put);
+  const cp = log.find(([m, p, bd]) => m === 'POST' && p === '/api/scenes' && bd.name === 'Zajęta (2)');
+  ok(cp && cp[2].id === 'nz' && cp[2].dock[0].target === 'page:1101|scene:Zajęta (2)', 'importPack: kopia „Zajęta (2)” z id z paczki i poprawionymi powiązaniami', cp);
+  ok(log.some(([m, p, bd]) => m === 'POST' && p === '/api/scenes' && bd.id === 'nowa'), 'importPack: nowa scena zachowuje id z paczki');
+  const pp = log.filter(([, p]) => p.startsWith('/api/pages'));
+  ok(pp.length === 3 && pp[0][2].number === 1101 && pp[0][2].scene === 'chg' && pp[0][2].id === 'p1', 'importPack: strona aktualizowanej sceny wskazuje istniejącą scenę, numer z planu', pp[0]);
+  ok(pp.some(([m, p, bd]) => m === 'PUT' && p === '/api/pages/pe' && bd.rev === 4 && bd.number === 2000 && bd.values.b === 2), 'importPack: nadpisanie strony o tym samym id (rev, numer istniejący)', pp);
+  ok(r.updated.length === 1 && r.scenes.length === 2 && r.pages === 3 && r.report.some((l) => l.includes('strona 1003') && l.includes('jej sceny nie ma w paczce')), 'importPack: wynik i raport pominiętej strony', r);
+  ok(/1 zaktualizowanych/.test(P.importSummary(r)), 'importSummary: zaktualizowane sceny', P.importSummary(r));
+
+  // konflikt rewizji przy aktualizacji: raport, strony dalej wskazują istniejącą scenę
+  const plan2 = await P.planImport(pk, { show: { ...show, scenes: show.scenes.map((s) => (s.id === 'chg' ? { ...s, rev: 6 } : s)) }, existing: [], fetchAsset: io.fetchAsset });
+  plan2.scenes[1].action = 'update'; plan2.scenes[2].action = 'skip'; P.planPages(plan2);
+  const log2 = [];
+  const r2 = await P.importPack(pk, { api: mkApi(log2), existing: [], fetchAsset: io.fetchAsset, upload: io.upload, show, plan: plan2 });
+  ok(r2.report.some((l) => l.includes('zmieniona w międzyczasie')) && log2.some(([, p, bd]) => p === '/api/pages' && bd.scene === 'chg'), 'importPack: konflikt rev – raport, strony wskazują istniejącą scenę', r2.report);
+  ok(log2.some(([, p, bd]) => p === '/api/pages' && bd.scene === 'inna') === false && !log2.some(([, p, bd]) => p === '/api/scenes' && bd.name?.startsWith('Zajęta')), 'importPack: pominięta scena o zajętej nazwie nie jest zapisywana', log2);
+  ok(P.uniqueName('A', new Set(['A', 'A (2)'])) === 'A (3)' && P.uniqueName('B', new Set(['A'])) === 'B', 'uniqueName');
+  ok(P.sceneKey({ id: 1, rev: 2, b: 1, a: [1, { y: 1, x: 2 }] }) === P.sceneKey({ a: [1, { x: 2, y: 1 }], b: 1 }), 'sceneKey: bez id/rev, niezależny od kolejności kluczy');
 }
 
 console.log(failures ? `\n${failures} FAIL z ${checks}` : `OK (${checks} sprawdzeń)`);

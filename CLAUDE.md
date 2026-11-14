@@ -120,9 +120,10 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/web/ticker-model.js`, `ticker-items.js`, `color-picker.js` | model wiadomości tickera; edytor listy wiadomości i wybór koloru (Trio i Artist) |
 | `source/web/qr.js` | generator kodów QR offline |
 | `source/web/motion.js` | ruch (`node.motion`): krzywe GSAP, presety IN/OUT, efekty tekstu, pętle uwagi, sekwencja `after` – czyste funkcje, rysuje `renderer.js` |
-| `source/web/cgpack.js` | paczka belek VizRS `.cgpack` (sceny + strony + grafiki + czcionki): zapis ZIP, odczyt, instalacja plików |
+| `source/web/cgpack.js` | paczka belek VizRS `.cgpack` (sceny + strony + grafiki + czcionki): zapis ZIP, odczyt, instalacja plików, plan importu (`planImport`) i import wg planu |
+| `source/web/pack-ui.js` | okna paczki wspólne dla Trio i VizRS CG Artist: plan importu (`planDialog`), wybór stron do eksportu (`pickPages`) |
 | `source/web/demo_show.json` | show startowy (INFO24) |
-| `source/tests/` | `vectors/` (model tekstu), `cgpack.mjs` (reguły paczki), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
+| `source/tests/` | `vectors/` (model tekstu; `cgpack-placer.json` – reguły plików paczki, wspólne z VizRS CG Artist), `cgpack.mjs` (reguły paczki), `e2e/` (Playwright), `golden/` (zrzuty wzorcowe) |
 | `source/tools/` | narzędzia pakietów, galerii, filmów i zgodności (`build-packs.mjs`, `gallery.js`, `engines.js`, `video.js`…); pełna lista: DOKUMENTACJA §14 |
 | `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json` i `assets/` (używane przez testy) |
 | `deploy/`, `render.yaml` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |

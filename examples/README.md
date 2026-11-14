@@ -1,7 +1,7 @@
 # Paczki grafik
 
 Każda oprawa to jeden plik `.cgpack`: sceny, strony, grafiki i czcionki. Wczytanie: w Trio utwórz nowy show (▾),
-potem Trio → **⇧ Import paczki** (albo Artist → **⇧ Import**) → plik paczki (sceny i strony dochodzą do bieżącego show, pliki trafiają do assets).
+potem Trio → **⇧ Import paczki** (albo Artist → **⇧ Import**) → plik paczki → plan importu → **⇧ Importuj** (sceny i strony dochodzą do bieżącego show, pliki trafiają do assets; poprawioną wersję tej samej oprawy wczytasz tak samo, wybierając „Zaktualizuj”).
 Paczka nie przenosi playlist.
 
 | Paczka | Sceny | Strony | Pliki w paczce |

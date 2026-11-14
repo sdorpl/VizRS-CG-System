@@ -1,0 +1,65 @@
+{
+  "_doc": "Reguły umieszczania plików paczki .cgpack (cgpack.assetPlacer w web/cgpack.js i Placer w src/deploy.rs VizRS CG Artist – kopia przez tools/sync-cg.sh). existing – pliki w assets (nazwa → treść), steps – kolejne place(from, data) na jednym placerze (fresh: true – nowy placer na bieżącym stanie), files – stan assets po krokach. Uruchamiają: node tests/cgpack.mjs, cargo test w VizRS CG Artist.",
+  "cases": [
+    {
+      "name": "czcionka już wgrana pod inną nazwą – użyta istniejąca, nic nie wgrane",
+      "existing": { "Oswald-Bold.ttf": "FONT-A" },
+      "steps": [{ "from": "oswald bold (kopia).ttf", "data": "FONT-A", "status": "reused", "name": "Oswald-Bold.ttf" }],
+      "files": { "Oswald-Bold.ttf": "FONT-A" }
+    },
+    {
+      "name": "ta sama czcionka pod tą samą nazwą – pominięta",
+      "existing": { "Bahn.otf": "F1" },
+      "steps": [{ "from": "Bahn.otf", "data": "F1", "status": "same", "name": "Bahn.otf" }],
+      "files": { "Bahn.otf": "F1" }
+    },
+    {
+      "name": "inna czcionka pod zajętą nazwą – nazwa_2, nic nie nadpisane",
+      "existing": { "Bahn.otf": "F1" },
+      "steps": [{ "from": "Bahn.otf", "data": "F2", "status": "renamed", "name": "Bahn_2.otf" }],
+      "files": { "Bahn.otf": "F1", "Bahn_2.otf": "F2" }
+    },
+    {
+      "name": "nazwa różna tylko wielkością liter jest zajęta; ta sama treść pod taką nazwą – pominięta",
+      "existing": { "Logo.PNG": "IMG1" },
+      "steps": [
+        { "from": "logo.png", "data": "IMG2", "status": "renamed", "name": "logo_2.png" },
+        { "fresh": true, "from": "logo.png", "data": "IMG1", "status": "same", "name": "Logo.PNG" }
+      ],
+      "files": { "Logo.PNG": "IMG1", "logo_2.png": "IMG2" }
+    },
+    {
+      "name": "ponowny import – wcześniejsza kopia nazwa_2 o tej treści, bez kolejnej",
+      "existing": { "logo.png": "A", "logo_2.png": "B" },
+      "steps": [{ "from": "logo.png", "data": "B", "status": "reused", "name": "logo_2.png" }],
+      "files": { "logo.png": "A", "logo_2.png": "B" }
+    },
+    {
+      "name": "nazwa ze spacją zapisana jak na serwerze",
+      "existing": {},
+      "steps": [{ "from": "Moja Czcionka.woff2", "data": "W", "status": "renamed", "name": "Moja_Czcionka.woff2" }],
+      "files": { "Moja_Czcionka.woff2": "W" }
+    },
+    {
+      "name": "czcionka o innym rozszerzeniu nie jest łączona",
+      "existing": { "A.ttf": "X" },
+      "steps": [{ "from": "A.otf", "data": "X", "status": "new", "name": "A.otf" }],
+      "files": { "A.ttf": "X", "A.otf": "X" }
+    },
+    {
+      "name": "grafika o tej samej treści pod inną nazwą – wgrana (łączymy tylko czcionki)",
+      "existing": { "a.png": "P" },
+      "steps": [{ "from": "b.png", "data": "P", "status": "new", "name": "b.png" }],
+      "files": { "a.png": "P", "b.png": "P" }
+    },
+    {
+      "name": "dwie czcionki o tej samej treści w jednej wysyłce – druga wskazuje pierwszą",
+      "existing": {},
+      "steps": [
+        { "from": "F.ttf", "data": "Q", "status": "new", "name": "F.ttf" },
+        { "from": "F kopia.ttf", "data": "Q", "status": "reused", "name": "F.ttf" }
+      ],
+      "files": { "F.ttf": "Q" }
+    }
+  ]
+}
