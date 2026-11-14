@@ -165,6 +165,9 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 | `clipL/R/T/B` (maska L/P/G/D %) | 0 | tak | przycięcie z każdej strony – wejścia „wipe” |
 | `blur`, `skewX` | 0 | tak | rozmycie, pochylenie° |
 | `blink` | 0 | – | miganie z okresem w s (kropka NA ŻYWO) |
+| `mask` (maska – węzeł) | – | – | nazwa (albo id) węzła z **tej samej grupy**: jego prostokąt przycina element – maska warstwy (Viz: mask) |
+
+**Maska warstwy** (`mask`, każdy węzeł): prostokąt węzła maski – jego `x`, `y`, `w`, `h` z punktem zaczepienia w bieżącym czasie (z kluczami; bez obrotu, skali i ruchu presetów maski) – wycina z elementu wszystko poza sobą; łączy się z `clipL/R/T/B` (większe przycięcie wygrywa). Liczone w układzie wspólnej grupy razem z ruchem presetów elementu, więc tekst wjeżdżający presetem „wjazd” wychodzi zza krawędzi maski, a maska stoi. Maska może być niewidoczna (krycie 0 albo ukryta), a jej położenie i wymiar można animować kluczami (okno, które się otwiera). Węzeł spoza grupy elementu albo nieistniejący – bez maski. Prostokąt także przy obróconym elemencie liczony bez jego obrotu. Renderer natywny – ten sam wzór (`scene.rs: mask_clip`), zgodność sprawdza `tools/native-compare.js`.
 
 **Autofollow** (`rect`, `ellipse`, `group`, `image`): `follow` = nazwa węzła tekstu (lub kilka: `name,title`), `followAxis` `w`/`h`/`wh`, `followPad` (margines, domyślnie 40), `followMin` (minimum). Tło dopasowuje się do treści, płynnie także po UPDATE na antenie.
 

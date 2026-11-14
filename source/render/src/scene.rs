@@ -358,6 +358,46 @@ impl Player {
         }
     }
 
+    /// Maska warstwy (`mask` = nazwa węzła z tej samej grupy): prostokąt węzła maski (x / y / w / h z punktem zaczepienia,
+    /// bez obrotu i skali) przycina węzeł i – wcięcia w % jego ramki, łączone z clipL… (większe wygrywa). Jak renderer.js.
+    fn mask_clip(&self, i: usize, w: f32, h: f32, left: f32, top: f32, c: (f32, f32, f32, f32)) -> (f32, f32, f32, f32) {
+        let name = self.txt(i, "mask");
+        let name = name.trim();
+        if name.is_empty() || w <= 0.0 || h <= 0.0 {
+            return c;
+        }
+        let Some(&j) = self.by_name.get(name) else { return c };
+        if j == i || self.parents[j] != self.parents[i] {
+            return c;
+        }
+        let (tw, th) = (self.num(j, "w").max(0.0), self.num(j, "h").max(0.0));
+        let (tax, tay) = (self.txt(j, "anchorX"), self.txt(j, "anchorY"));
+        let mx = self.num(j, "x")
+            - if tax == "right" {
+                tw
+            } else if tax == "center" {
+                tw / 2.0
+            } else {
+                0.0
+            };
+        let my = self.num(j, "y")
+            - if tay == "bottom" {
+                th
+            } else if tay == "middle" {
+                th / 2.0
+            } else {
+                0.0
+            };
+        let cp = |v: f32| v.clamp(0.0, 100.0);
+        let (cl, cr, ct, cb) = c;
+        (
+            cl.max(cp((mx - left) / w * 100.0)),
+            cr.max(cp((left + w - mx - tw) / w * 100.0)),
+            ct.max(cp((my - top) / h * 100.0)),
+            cb.max(cp((top + h - my - th) / h * 100.0)),
+        )
+    }
+
     fn txt(&self, i: usize, k: &str) -> String {
         str_of(&self.prop(i, k))
     }
@@ -561,6 +601,7 @@ impl Player {
             let mut d = DNode::new(m, w, h);
             d.opacity = op.clamp(0.0, 1.0);
             let (cl, cr, ct, cb) = (self.num(i, "clipL"), self.num(i, "clipR"), self.num(i, "clipT"), self.num(i, "clipB"));
+            let (cl, cr, ct, cb) = self.mask_clip(i, w, h, left, top, (cl, cr, ct, cb));
             if cl != 0.0 || cr != 0.0 || ct != 0.0 || cb != 0.0 {
                 d.clip = Some([ct, cr, cb, cl]);
             }

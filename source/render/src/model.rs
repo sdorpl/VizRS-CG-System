@@ -27,7 +27,7 @@ pub fn prop_def(prop: &str) -> (Kind, Value) {
         "scale" | "opacity" => n(1.0),
         "anchorX" => s("left"),
         "anchorY" => s("top"),
-        "follow" => s(""),
+        "follow" | "mask" => s(""),
         "followAxis" => s("w"),
         "followPad" => n(40.0),
         "followMin" => n(0.0),

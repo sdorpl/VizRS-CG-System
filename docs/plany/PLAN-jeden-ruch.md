@@ -1,6 +1,6 @@
 # Plan: jeden model ruchu w Artist – presety jako klipy na osi czasu (J1–J6)
 
-Stan: propozycja (2026-11-07), wariant C wybrany przez użytkownika; czeka na wdrożenie od J1.
+Stan: **J1–J5 zrobione** (2026-11-14). J1–J4 – w VizRS CG Artist (`web/artist.html`, DOKUMENTACJA Artist §4 „Oś czasu”); J5 – maska warstwy `props.mask` (renderer.js, renderer natywny, validate.rs); auto-szerokość tła względem tekstu – istniejące `follow` / `followAxis` / `followPad` / `followMin` wystarczają (szerokość / wysokość zmierzonego tekstu + margines, minimum, kierunek wzrostu z punktu zaczepienia tła), bez nowych trybów. Odstępstwa: wyjście (klip od ostatniego stopu) przeciąga się tylko opóźnieniem, bez pytania o przesunięcie stopu; zaznaczony element ma wiersz osi także bez ruchu (dodawanie presetu); maska – prostokąt węzła (bez obrotu i kształtu elipsy / tekstu). J6 – w [PLAN-ruch-belek.md](PLAN-ruch-belek.md).
 
 ## Cel
 

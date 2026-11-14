@@ -199,6 +199,12 @@ fn node(n: &Json, depth: usize, count: &mut usize) -> R {
         if let Some(v) = opt(p, "fillSqueeze") {
             num_in(v, "props.fillSqueeze", 0.0, 1.0)?;
         }
+        // maska warstwy (renderer.js: PROPS.mask) – nazwa węzła z tej samej grupy
+        match opt(p, "mask") {
+            None => {}
+            Some(Json::Str(m)) if m.chars().count() <= 128 => {}
+            Some(_) => return Err("props.mask: oczekiwano nazwy węzła (do 128 znaków)".into()),
+        }
         // strefa zegara (renderer.js: PROPS.tz) – nazwa IANA, np. Europe/Warsaw, albo `local`
         match opt(p, "tz") {
             None => {}
@@ -790,6 +796,10 @@ mod tests {
         assert!(scene(&p(r#"{"nodes":[{"type":"clock","props":{"tz":2}}]}"#)).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"textFit":"squeeze-lines","lineBreak":"fill","fillSqueeze":0.9}}]}"#)).is_ok());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"lineBreak":"wrap"}}]}"#)).is_err());
+        // maska warstwy: nazwa węzła (tekst do 128 znaków)
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"mask":"okno"}},{"type":"rect","name":"okno"}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"mask":3}}]}"#)).is_err());
+        assert!(scene(&p(&format!(r#"{{"nodes":[{{"type":"text","props":{{"mask":"{}"}}}}]}}"#, "a".repeat(129)))).is_err());
         assert!(scene(&p(r#"{"nodes":[{"type":"text","props":{"fillSqueeze":2}}]}"#)).is_err());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"maxItems":20,"cats":["PILNE","SPORT"]}}}"#)).is_ok());
         assert!(scene(&p(r#"{"fieldMeta":{"news":{"cats":"PILNE"}}}"#)).is_err());

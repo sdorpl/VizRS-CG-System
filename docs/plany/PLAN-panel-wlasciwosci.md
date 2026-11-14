@@ -1,6 +1,6 @@
 # Plan: prostszy panel Właściwości w Artist (P1–P8)
 
-Stan: P1–P7 wdrożone (2026-11-07); P8 (edycja wielu zaznaczonych) czeka na zaznaczanie wielokrotne w drzewie.
+Stan: P1–P8 wdrożone. P8 (edycja wielu zaznaczonych) – w VizRS CG Artist 26.11.5 (plan `../VizRS CG Artist/docs/plany/PLAN-edycja-na-kanwie.md` K1).
 Różnica względem propozycji: lista właściwości zaawansowanych (`ADV`) i reguły widoczności (`WHEN`) są w `artist.html`, nie w `PROPS` – renderer zostaje bez zmian.
 
 ## Diagnoza

@@ -28,6 +28,7 @@ export const PROPS = {
   blink: { t: 'num', d: 0, g: 'Maska / efekty', min: 0, step: 0.1, label: 'miganie (okres s)' },
 
   follow: { t: 'node', d: '', g: 'Autofollow', label: 'śledź węzeł(y)' },
+  mask: { t: 'node', d: '', g: 'Maska', label: 'maska (węzeł)' },
   followAxis: { t: 'select', d: 'w', g: 'Autofollow', opts: ['w', 'h', 'wh'], label: 'oś' },
   followPad: { t: 'num', d: 40, g: 'Autofollow', label: 'margines' },
   followMin: { t: 'num', d: 0, g: 'Autofollow', min: 0, label: 'minimum' },
@@ -97,7 +98,7 @@ export const PROPS = {
   catFg: { t: 'color', d: '#ffffff', g: 'Ticker', label: 'tekst kategorii' },
 };
 
-const COMMON = ['x', 'y', 'w', 'h', 'anchorX', 'anchorY', 'rotation', 'scale', 'opacity', 'clipL', 'clipR', 'clipT', 'clipB', 'blur', 'skewX', 'blink'];
+const COMMON = ['x', 'y', 'w', 'h', 'anchorX', 'anchorY', 'rotation', 'scale', 'opacity', 'clipL', 'clipR', 'clipT', 'clipB', 'blur', 'skewX', 'blink', 'mask'];
 const FOLLOW = ['follow', 'followAxis', 'followPad', 'followMin'];
 const RADIUS = ['radius', 'radiusTL', 'radiusTR', 'radiusBR', 'radiusBL', 'radiusL', 'radiusR', 'radiusT', 'radiusB'];
 const TEXT_STYLE = ['font', 'size', 'weight', 'italic', 'upper', 'spacing', 'lineHeight', 'align', 'valign', 'textFit', 'maxLines', 'squeezeMin', 'lineBreak', 'fillSqueeze', 'padX', 'color', 'shadow'];
@@ -1756,6 +1757,23 @@ export class ScenePlayer {
       css(el, 'transformOrigin', org ? `${org[0] * 100}% ${org[1] * 100}%` : '50% 50%');
       css(el, 'boxShadow', bg?.glow ? [it.bsh, `0 0 ${bg.glow.toFixed(2)}px ${p('color')}`].filter(Boolean).join(', ') : it.bsh);
       let cl = p('clipL'), cr = p('clipR'), ct = p('clipT'), cb = p('clipB');
+      // maska warstwy (mask = nazwa węzła z tej samej grupy): prostokąt węzła maski (x / y / w / h, punkt zaczepienia, bieżący
+      // czas; bez obrotu, skali i ruchu maski) przycina element – w układzie rodzica, z przesunięciem ruchu elementu, więc treść
+      // wjeżdża zza maski. Ten sam wzór w rendererze natywnym (scene.rs). Maska nie musi być widoczna.
+      const mk = String(p('mask') || '').trim();
+      if (mk && w > 0 && h > 0) {
+        const tg = this.byName.get(mk);
+        if (tg && tg !== it && tg.el.parentElement === el.parentElement) {
+          const q = tg.p || ((k) => propAt(tg.node, k, t, V)), tw = Math.max(0, q('w')), th = Math.max(0, q('h'));
+          const tax = q('anchorX'), tay = q('anchorY');
+          const mx = q('x') - (tax === 'right' ? tw : tax === 'center' ? tw / 2 : 0), my = q('y') - (tay === 'bottom' ? th : tay === 'middle' ? th / 2 : 0);
+          const ex = p('x') - (ax === 'right' ? w : ax === 'center' ? w / 2 : 0) + (mo ? mo.tx : 0) + (lp ? lp.tx : 0);
+          const ey = p('y') - (ay === 'bottom' ? h : ay === 'middle' ? h / 2 : 0) + (mo ? mo.ty : 0) + (lp ? lp.ty : 0);
+          const cp = (v) => Math.min(100, Math.max(0, v));
+          cl = Math.max(cl, cp((mx - ex) / w * 100)); ct = Math.max(ct, cp((my - ey) / h * 100));
+          cr = Math.max(cr, cp((ex + w - mx - tw) / w * 100)); cb = Math.max(cb, cp((ey + h - my - th) / h * 100));
+        }
+      }
       if (mo?.clip) { cl = Math.max(cl, mo.clip[0] * 100); ct = Math.max(ct, mo.clip[1] * 100); cr = Math.max(cr, 100 - mo.clip[2] * 100); cb = Math.max(cb, 100 - mo.clip[3] * 100); }
       if (mo && mo.diag >= 0) {
         // maska ukośna (mask-diag): krawędź pochylona o 25% szerokości przesuwa się przez pole
