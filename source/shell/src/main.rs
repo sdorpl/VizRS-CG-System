@@ -16,6 +16,7 @@ mod connect;
 mod desktop;
 mod gpu;
 mod paths;
+mod screen;
 mod server;
 
 use std::collections::{HashMap, HashSet};
@@ -417,6 +418,7 @@ fn open_window(app: &AppHandle, kind: Kind, url: String, monitor: Option<Monitor
     };
     allow_server(app, &base);
     let (w, h) = st.size.unwrap_or(if kind == Kind::Output { (960.0, 540.0) } else { (1600.0, 900.0) });
+    let (w, h) = screen::fit_to_screen(app, w, h); // skalowanie ułamkowe: okno nie większe niż ekran
     let (app_dl, app_nav, app_new) = (app.clone(), app.clone(), app.clone());
     let mut b = native_look(WebviewWindowBuilder::new(app, &label, WebviewUrl::External(parsed)))
         .title(&title)

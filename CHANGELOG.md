@@ -2,6 +2,7 @@
 
 ## Niewydane
 
+- **Okno Trio – rozmiar przy skalowaniu ułamkowym:** okno bez zapisanego rozmiaru (1600×900 px logicznych) albo z rozmiarem z innego ekranu jest przycinane do obszaru roboczego monitora (1920×1080 przy 125 % = 1536×864) – nie wychodzi poza ekran. `source/shell/src/screen.rs` (ten sam moduł w VizRS CG Artist i VizRS Live). DOKUMENTACJA §12.2.
 - **Maska warstwy** (`props.mask` – nazwa węzła z tej samej grupy, plan [PLAN-jeden-ruch.md](docs/plany/PLAN-jeden-ruch.md) J5): prostokąt węzła maski (położenie i wymiar w bieżącym czasie, także z kluczy; maska może być niewidoczna) przycina element razem z ruchem presetów – tekst wjeżdża zza krawędzi maski. `renderer.js` i renderer natywny (`scene.rs`) tym samym wzorem (`native-compare.js`: 0,00% różnicy), walidacja `validate.rs` + test. DOKUMENTACJA §4.3.
 
 - **Okno Trio / wyjścia (`vizrs-shell`) – akceleracja sprzętowa na Linuksie z kartą NVIDIA** (sterownik własnościowy): okno wymusza renderer DMA-BUF WebKitGTK (`WEBKIT_FORCE_DMABUF_RENDERER=1`, `__NV_DISABLE_EXPLICIT_SYNC=1`) – dotąd WebKitGTK sam wyłączał akcelerację i strony rysowały się na CPU (animacja 37 → 60 kl./s w oknie połączenia, pełne okno – kilkanaście razy szybciej). `--gpu` / `VIZRS_GPU` przyjmują też `x11` (XWayland) i `system` (bez zmian); zmienne `WEBKIT_*` użytkownika mają pierwszeństwo. Moduł `source/shell/src/gpu.rs` – ten sam w VizRS CG Artist i VizRS Live. DOKUMENTACJA §12.2.
