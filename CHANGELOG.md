@@ -2,6 +2,11 @@
 
 ## Niewydane
 
+## 26.11.6 (2026-11-14)
+
+- **Okno Trio – poprawka skalowania ułamkowego na Linuksie** (zgłoszenie: 1920×1080, KDE Plasma Wayland 125 %, NVIDIA): WebKitGTK rysował stronę ×2 i kompozytor ją zmniejszał – nierówne cienkie linie, 2,56× więcej pikseli. W KDE przy niecałkowitej skali okno otwiera się teraz przez XWayland: ostre piksele, ta sama wielkość interfejsu, animacja 18 zamiast 5 kl./s (pomiar). `--gpu wayland` / `VIZRS_GPU=wayland` – jak dawniej. Ten sam moduł (`gpu.rs`, `scale.rs`) w VizRS CG Artist 26.11.7 i VizRS Live. DOKUMENTACJA §12.
+- **AppImage okna Trio** dołączony do wydania (`VizRS-Trio-<wersja>-x86_64.AppImage`, `deploy/appimage/build.sh`).
+
 ## 26.11.5 (2026-11-14)
 
 - **Okno Trio – rozmiar przy skalowaniu ułamkowym:** okno bez zapisanego rozmiaru (1600×900 px logicznych) albo z rozmiarem z innego ekranu jest przycinane do obszaru roboczego monitora (1920×1080 przy 125 % = 1536×864) – nie wychodzi poza ekran. `source/shell/src/screen.rs` (ten sam moduł w VizRS CG Artist i VizRS Live). DOKUMENTACJA §12.2.

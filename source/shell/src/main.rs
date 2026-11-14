@@ -16,6 +16,7 @@ mod connect;
 mod desktop;
 mod gpu;
 mod paths;
+mod scale;
 mod screen;
 mod server;
 
@@ -124,7 +125,7 @@ Użycie: vizrs-shell [trio|output|connect] [opcje]   (domyślnie trio; connect �
   --token T       token serwera (VIZRS_TOKEN)
   --connect URL   okno dla serwera zdalnego, np. https://cg.example.pl (VIZRS_CONNECT)
   --local         serwer lokalny, nawet gdy zapisano łączenie z serwerem zdalnym przy uruchomieniu
-  --gpu TRYB      akceleracja GPU stron: auto, on, off, x11, system (VIZRS_GPU; Linux)
+  --gpu TRYB      akceleracja GPU stron: auto, on, off, x11, wayland, system (VIZRS_GPU; Linux)
   --vizrs PLIK    plik vizrs do uruchomienia serwera (VIZRS_BIN; domyślnie obok vizrs-shell albo w PATH)
   --probe JS --probe-out JSON   narzędzie testowe: po wczytaniu strony wykonaj skrypt, zapisz wynik, zakończ
 

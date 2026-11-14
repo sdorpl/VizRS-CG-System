@@ -7,8 +7,11 @@
 //! (błąd protokołu 71). Inne karty (Mesa: Intel, AMD, nouveau) i maszyny bez GPU – wybór zostaje przy WebKitGTK.
 //!
 //! `VIZRS_GPU` (w VizRS CG System także `--gpu`): `auto` (domyślnie; `on` – to samo), `off` – bez akceleracji (zepsuty sterownik),
-//! `x11` – okno przez XWayland z akceleracją,
-//! `system` – nic nie zmieniaj. Zmienne `WEBKIT_*` / `GDK_BACKEND` ustawione przez użytkownika mają zawsze pierwszeństwo.
+//! `x11` – okno przez XWayland z akceleracją, `wayland` – nie przełączaj na XWayland przy skali ułamkowej,
+//! `system` – nic nie zmieniaj.
+//!
+//! Skala ułamkowa KDE (`scale.rs`): w trybie `auto` sesja Wayland z `[Xwayland] Scale` niecałkowitym (np. 1.25) otwiera
+//! okno przez XWayland – ostre piksele i bufor 1× zamiast ×2 (GTK 3 nie zna skali ułamkowej). Zmienne `WEBKIT_*` / `GDK_BACKEND` ustawione przez użytkownika mają zawsze pierwszeństwo.
 
 /// Stan karty NVIDIA ze sterownikiem własnościowym (moduł `nvidia_drm`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -36,8 +39,9 @@ const USER_KEYS: [&str; 5] = [
     "WEBKIT_DMABUF_RENDERER_FORCE_SHM",
 ];
 
-/// Decyzja bez efektów ubocznych: `env` – odczyt zmiennej środowiska, `nv` – stan karty NVIDIA.
-pub fn decide(env: &dyn Fn(&str) -> Option<String>, nv: Nvidia) -> Plan {
+/// Decyzja bez efektów ubocznych: `env` – odczyt zmiennej środowiska, `nv` – stan karty NVIDIA,
+/// `xwl` – skala programów X11 w sesji KDE (`scale::kde_xwayland`).
+pub fn decide(env: &dyn Fn(&str) -> Option<String>, nv: Nvidia, xwl: Option<f64>) -> Plan {
     let mode = env("VIZRS_GPU")
         .map(|v| v.trim().to_ascii_lowercase())
         .unwrap_or_default();
@@ -62,29 +66,40 @@ pub fn decide(env: &dyn Fn(&str) -> Option<String>, nv: Nvidia) -> Plan {
             note: "VIZRS_GPU=off – bez akceleracji".into(),
         };
     }
-    let x11 = mode == "x11";
-    if !x11 && mode != "auto" && mode != "on" {
+    if !["auto", "on", "x11", "wayland"].contains(&mode.as_str()) {
         return none(format!(
-            "VIZRS_GPU={mode} – nieznana wartość (auto, on, off, x11, system), bez zmian"
+            "VIZRS_GPU={mode} – nieznana wartość (auto, on, off, x11, wayland, system), bez zmian"
         ));
     }
+    // skala ułamkowa KDE: GTK 3 rysowałby ×2 i kompozytor zmniejszał – XWayland daje natywne piksele
+    let frac = xwl.filter(|s| {
+        mode != "wayland" && env("WAYLAND_DISPLAY").is_some() && crate::scale::fractional(*s)
+    });
     let mut set = Vec::new();
-    if x11 && env("GDK_BACKEND").is_none() {
+    let mut pre = String::new();
+    if (mode == "x11" || frac.is_some()) && env("GDK_BACKEND").is_none() {
         set.push(("GDK_BACKEND", "x11"));
+        if let (Some(s), false) = (frac, mode == "x11") {
+            pre = format!("skala ułamkowa {s} – okno przez XWayland; ");
+        }
     }
+    let plan = |set, note: &str| Plan {
+        set,
+        note: format!("{pre}{note}"),
+    };
     match nv {
         Nvidia::Modeset => {
             set.push(("WEBKIT_FORCE_DMABUF_RENDERER", "1"));
             if env("__NV_DISABLE_EXPLICIT_SYNC").is_none() {
                 set.push(("__NV_DISABLE_EXPLICIT_SYNC", "1"));
             }
-            Plan { set, note: "NVIDIA: akceleracja przez renderer DMA-BUF (GBM)".into() }
+            plan(set, "NVIDIA: akceleracja przez renderer DMA-BUF (GBM)")
         }
-        Nvidia::NoModeset => Plan {
+        Nvidia::NoModeset => plan(
             set,
-            note: "NVIDIA bez nvidia-drm.modeset=1 – WebKitGTK rysuje na CPU; włącz modeset w jądrze, żeby mieć akcelerację".into(),
-        },
-        Nvidia::None => Plan { set, note: "akceleracja wg WebKitGTK".into() },
+            "NVIDIA bez nvidia-drm.modeset=1 – WebKitGTK rysuje na CPU; włącz modeset w jądrze, żeby mieć akcelerację",
+        ),
+        Nvidia::None => plan(set, "akceleracja wg WebKitGTK"),
     }
 }
 
@@ -129,6 +144,7 @@ pub fn prepare(mode: Option<&str>) -> String {
             _ => std::env::var(k).ok().filter(|v| !v.is_empty()),
         },
         nvidia(),
+        crate::scale::kde_xwayland(),
     );
     for (k, v) in &plan.set {
         std::env::set_var(k, v);
@@ -154,8 +170,27 @@ mod tests {
     }
 
     #[test]
+    fn skala_ulamkowa_kde_przelacza_na_xwayland() {
+        let way = [("WAYLAND_DISPLAY", "wayland-0")];
+        let p = decide(&env(&way), Nvidia::None, Some(1.25));
+        assert_eq!(p.set, vec![("GDK_BACKEND", "x11")]);
+        assert!(p.note.contains("1.25"));
+        // skala całkowita, sesja X11, wybór użytkownika – bez przełączenia
+        assert!(decide(&env(&way), Nvidia::None, Some(2.0)).set.is_empty());
+        assert!(decide(&env(&[]), Nvidia::None, Some(1.25)).set.is_empty());
+        let w = [("WAYLAND_DISPLAY", "wayland-0"), ("VIZRS_GPU", "wayland")];
+        assert!(decide(&env(&w), Nvidia::None, Some(1.25)).set.is_empty());
+        let g = [("WAYLAND_DISPLAY", "wayland-0"), ("GDK_BACKEND", "wayland")];
+        assert!(decide(&env(&g), Nvidia::None, Some(1.25)).set.is_empty());
+        let s = [("WAYLAND_DISPLAY", "wayland-0"), ("VIZRS_GPU", "system")];
+        assert!(decide(&env(&s), Nvidia::None, Some(1.25)).set.is_empty());
+        // NVIDIA: XWayland razem z rendererem DMA-BUF (pomiar: 18 kl./s zamiast 5)
+        assert_eq!(decide(&env(&way), Nvidia::Modeset, Some(1.5)).set.len(), 3);
+    }
+
+    #[test]
     fn nvidia_modeset_wymusza_dmabuf_i_wylacza_explicit_sync() {
-        let p = decide(&env(&[]), Nvidia::Modeset);
+        let p = decide(&env(&[]), Nvidia::Modeset, None);
         assert_eq!(
             p.set,
             vec![
@@ -167,8 +202,8 @@ mod tests {
 
     #[test]
     fn inne_karty_i_nvidia_bez_modeset_bez_zmian() {
-        assert!(decide(&env(&[]), Nvidia::None).set.is_empty());
-        let p = decide(&env(&[]), Nvidia::NoModeset);
+        assert!(decide(&env(&[]), Nvidia::None, None).set.is_empty());
+        let p = decide(&env(&[]), Nvidia::NoModeset, None);
         assert!(p.set.is_empty() && p.note.contains("modeset"));
     }
 
@@ -176,16 +211,20 @@ mod tests {
     fn ustawienia_uzytkownika_maja_pierwszenstwo() {
         assert!(decide(
             &env(&[("WEBKIT_DISABLE_DMABUF_RENDERER", "1")]),
-            Nvidia::Modeset
+            Nvidia::Modeset,
+            None
         )
         .set
         .is_empty());
-        assert!(decide(&env(&[("VIZRS_GPU", "system")]), Nvidia::Modeset)
-            .set
-            .is_empty());
+        assert!(
+            decide(&env(&[("VIZRS_GPU", "system")]), Nvidia::Modeset, None)
+                .set
+                .is_empty()
+        );
         let p = decide(
             &env(&[("__NV_DISABLE_EXPLICIT_SYNC", "0")]),
             Nvidia::Modeset,
+            None,
         );
         assert_eq!(p.set, vec![("WEBKIT_FORCE_DMABUF_RENDERER", "1")]);
     }
@@ -193,27 +232,30 @@ mod tests {
     #[test]
     fn vizrs_gpu_off_x11_i_nieznana_wartosc() {
         assert_eq!(
-            decide(&env(&[("VIZRS_GPU", "off")]), Nvidia::Modeset).set,
+            decide(&env(&[("VIZRS_GPU", "off")]), Nvidia::Modeset, None).set,
             vec![("WEBKIT_DISABLE_COMPOSITING_MODE", "1")]
         );
-        let p = decide(&env(&[("VIZRS_GPU", "X11")]), Nvidia::Modeset);
+        let p = decide(&env(&[("VIZRS_GPU", "X11")]), Nvidia::Modeset, None);
         assert_eq!(p.set[0], ("GDK_BACKEND", "x11"));
         assert_eq!(
             decide(
                 &env(&[("VIZRS_GPU", "x11"), ("GDK_BACKEND", "wayland")]),
-                Nvidia::None
+                Nvidia::None,
+                None
             )
             .set,
             vec![]
         );
         assert_eq!(
-            decide(&env(&[("VIZRS_GPU", "on")]), Nvidia::Modeset)
+            decide(&env(&[("VIZRS_GPU", "on")]), Nvidia::Modeset, None)
                 .set
                 .len(),
             2
         );
-        assert!(decide(&env(&[("VIZRS_GPU", "turbo")]), Nvidia::Modeset)
-            .set
-            .is_empty());
+        assert!(
+            decide(&env(&[("VIZRS_GPU", "turbo")]), Nvidia::Modeset, None)
+                .set
+                .is_empty()
+        );
     }
 }
