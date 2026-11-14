@@ -6,6 +6,12 @@
 //! (`nvidia-drm.modeset=1`); na Waylandzie potrzebuje też `__NV_DISABLE_EXPLICIT_SYNC=1`, inaczej kompozytor zrywa połączenie
 //! (błąd protokołu 71). Inne karty (Mesa: Intel, AMD, nouveau) i maszyny bez GPU – wybór zostaje przy WebKitGTK.
 //!
+//! Przy NVIDIA rysowanie Skia (rasteryzacja warstw) idzie na CPU – `WEBKIT_SKIA_ENABLE_CPU_RENDERING=1`; składanie warstw
+//! zostaje na GPU. Rasteryzacja Skia na GPU wywraca proces strony w `libnvidia-eglcore` (zgłoszenie 2026-11-14, sterownik
+//! 580, Quadro P400, WebKitGTK 2.52: segfault wątku `SkiaGPUWorker` po kilku sekundach albo przy zmianie rozmiaru okna –
+//! pusta lub nieaktualna treść okna, utracone przełączenie serwera). Pomiar: 3 awarie w 3 uruchomieniach → 0, animacja
+//! 61–62 kl./s bez zmian.
+//!
 //! `VIZRS_GPU` (w VizRS CG System także `--gpu`): `auto` (domyślnie; `on` – to samo), `off` – bez akceleracji (zepsuty sterownik),
 //! `x11` – okno przez XWayland z akceleracją, `wayland` – nie przełączaj na XWayland przy skali ułamkowej,
 //! `system` – nic nie zmieniaj.
@@ -93,7 +99,14 @@ pub fn decide(env: &dyn Fn(&str) -> Option<String>, nv: Nvidia, xwl: Option<f64>
             if env("__NV_DISABLE_EXPLICIT_SYNC").is_none() {
                 set.push(("__NV_DISABLE_EXPLICIT_SYNC", "1"));
             }
-            plan(set, "NVIDIA: akceleracja przez renderer DMA-BUF (GBM)")
+            // rasteryzacja Skia na GPU wywraca proces strony w libnvidia-eglcore
+            if env("WEBKIT_SKIA_ENABLE_CPU_RENDERING").is_none() {
+                set.push(("WEBKIT_SKIA_ENABLE_CPU_RENDERING", "1"));
+            }
+            plan(
+                set,
+                "NVIDIA: akceleracja przez renderer DMA-BUF (GBM), rysowanie Skia na CPU",
+            )
         }
         Nvidia::NoModeset => plan(
             set,
@@ -185,7 +198,7 @@ mod tests {
         let s = [("WAYLAND_DISPLAY", "wayland-0"), ("VIZRS_GPU", "system")];
         assert!(decide(&env(&s), Nvidia::None, Some(1.25)).set.is_empty());
         // NVIDIA: XWayland razem z rendererem DMA-BUF (pomiar: 18 kl./s zamiast 5)
-        assert_eq!(decide(&env(&way), Nvidia::Modeset, Some(1.5)).set.len(), 3);
+        assert_eq!(decide(&env(&way), Nvidia::Modeset, Some(1.5)).set.len(), 4);
     }
 
     #[test]
@@ -195,9 +208,26 @@ mod tests {
             p.set,
             vec![
                 ("WEBKIT_FORCE_DMABUF_RENDERER", "1"),
-                ("__NV_DISABLE_EXPLICIT_SYNC", "1")
+                ("__NV_DISABLE_EXPLICIT_SYNC", "1"),
+                ("WEBKIT_SKIA_ENABLE_CPU_RENDERING", "1")
             ]
         );
+    }
+
+    #[test]
+    fn nvidia_skia_na_cpu_chyba_ze_uzytkownik_wybral() {
+        let p = decide(
+            &env(&[("WEBKIT_SKIA_ENABLE_CPU_RENDERING", "0")]),
+            Nvidia::Modeset,
+            None,
+        );
+        assert!(!p
+            .set
+            .iter()
+            .any(|(k, _)| *k == "WEBKIT_SKIA_ENABLE_CPU_RENDERING"));
+        assert!(p.set.contains(&("WEBKIT_FORCE_DMABUF_RENDERER", "1")));
+        // inne karty – Skia wg WebKitGTK
+        assert!(decide(&env(&[]), Nvidia::None, None).set.is_empty());
     }
 
     #[test]
@@ -226,7 +256,13 @@ mod tests {
             Nvidia::Modeset,
             None,
         );
-        assert_eq!(p.set, vec![("WEBKIT_FORCE_DMABUF_RENDERER", "1")]);
+        assert_eq!(
+            p.set,
+            vec![
+                ("WEBKIT_FORCE_DMABUF_RENDERER", "1"),
+                ("WEBKIT_SKIA_ENABLE_CPU_RENDERING", "1")
+            ]
+        );
     }
 
     #[test]
@@ -250,7 +286,7 @@ mod tests {
             decide(&env(&[("VIZRS_GPU", "on")]), Nvidia::Modeset, None)
                 .set
                 .len(),
-            2
+            3
         );
         assert!(
             decide(&env(&[("VIZRS_GPU", "turbo")]), Nvidia::Modeset, None)

@@ -400,6 +400,35 @@ fn webkit_settings(w: &WebviewWindow, gpu: Option<bool>) {
     let _ = (w, gpu);
 }
 
+/// Linux: proces strony WebKitGTK padł (sterownik GPU, brak pamięci) – WebKitGTK zostawia wtedy puste okno.
+/// Strona wczytuje się od nowa z adresu bieżącego serwera (wyjście na monitorze – z adresu, z którym je otwarto),
+/// najwyżej 3 razy na minutę – przy awarii za każdym wczytaniem okno zostaje puste zamiast mielić w kółko.
+/// Ten sam mechanizm w oknie VizRS CG Artist i aplikacji VizRS Live.
+fn reload_after_crash(app: &AppHandle, w: &WebviewWindow, kind: Kind, fixed: Option<String>) {
+    #[cfg(target_os = "linux")]
+    {
+        let app = app.clone();
+        let _ = w.with_webview(move |pv| {
+            use webkit2gtk::WebViewExt;
+            let recent = std::cell::RefCell::new(Vec::<Instant>::new());
+            pv.inner().connect_web_process_terminated(move |v, reason| {
+                let mut r = recent.borrow_mut();
+                r.retain(|t| t.elapsed() < Duration::from_secs(60));
+                let again = r.len() < 3;
+                let what = if again { " – wczytuję stronę ponownie" } else { " – okno zostaje puste" };
+                eprintln!("proces strony zakończył się ({reason:?}){what}");
+                if again {
+                    r.push(Instant::now());
+                    let url = fixed.clone().unwrap_or_else(|| state(&app).url(kind));
+                    v.load_uri(&url);
+                }
+            });
+        });
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = (app, w, kind, fixed);
+}
+
 /// Okno strony serwera; `monitor` – pełnoekranowe wyjście na wskazanym monitorze (bez menu i zapamiętywania).
 fn open_window(app: &AppHandle, kind: Kind, url: String, monitor: Option<Monitor>) {
     let parsed = match url.parse() {
@@ -476,6 +505,7 @@ fn open_window(app: &AppHandle, kind: Kind, url: String, monitor: Option<Monitor
                 let _ = w.set_zoom(z);
             }
             webkit_settings(&w, gpu);
+            reload_after_crash(app, &w, kind, monitor.is_some().then(|| url.clone()));
             // Linux: nowe okno ustawia wariant GTK z ustawień systemu – przywróć ciemny
             app.set_theme(Some(Theme::Dark));
             state(app).focused = Some(label.clone());
