@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Wydanie:** AppImage okna Trio (`VizRS-Trio-<wersja>-x86_64.AppImage`) znów buduje akcja Release na GitHubie (Ubuntu 22.04, krok sprawdza `--version`) – bez budowy lokalnej i ręcznego `gh release upload`. DOKUMENTACJA §12.
+
 ## 26.11.7 (2026-11-14)
 
 - **Okno Trio – poprawka: puste, „rozjechane” okno na Linuksie z kartą NVIDIA** (zgłoszenie: KDE Plasma 125 %, Quadro P400, sterownik 580; od 26.11.5): rasteryzacja Skia na GPU wywracała proces strony WebKitGTK (`libnvidia-eglcore`) – po kilku sekundach albo przy zmianie rozmiaru okna treść znikała lub zostawała w starym rozmiarze. Przy NVIDIA warstwy rysuje teraz Skia na CPU, składa je dalej GPU (`WEBKIT_SKIA_ENABLE_CPU_RENDERING=1`; animacja bez zmian). Gdy proces strony mimo to padnie, okno samo wczytuje stronę od nowa zamiast zostawać puste. Ten sam `gpu.rs` w VizRS CG Artist 26.11.8 i VizRS Live 26.11.10. DOKUMENTACJA §12.
