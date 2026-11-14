@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 26.11.5 (2026-11-14)
+
 - **Okno Trio – rozmiar przy skalowaniu ułamkowym:** okno bez zapisanego rozmiaru (1600×900 px logicznych) albo z rozmiarem z innego ekranu jest przycinane do obszaru roboczego monitora (1920×1080 przy 125 % = 1536×864) – nie wychodzi poza ekran. `source/shell/src/screen.rs` (ten sam moduł w VizRS CG Artist i VizRS Live). DOKUMENTACJA §12.2.
 - **Maska warstwy** (`props.mask` – nazwa węzła z tej samej grupy, plan [PLAN-jeden-ruch.md](docs/plany/PLAN-jeden-ruch.md) J5): prostokąt węzła maski (położenie i wymiar w bieżącym czasie, także z kluczy; maska może być niewidoczna) przycina element razem z ruchem presetów – tekst wjeżdża zza krawędzi maski. `renderer.js` i renderer natywny (`scene.rs`) tym samym wzorem (`native-compare.js`: 0,00% różnicy), walidacja `validate.rs` + test. DOKUMENTACJA §4.3.
 
