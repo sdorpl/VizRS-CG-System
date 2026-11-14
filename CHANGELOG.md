@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 26.11.8 (2026-11-14)
+
 - **Przenoszenie belek i stron – jedna logika w całym pakiecie** (plan [PLAN-przenoszenie.md](docs/plany/PLAN-przenoszenie.md), P0–P4):
   - **plan importu paczki** w Trio i VizRS CG Artist: zanim cokolwiek zostanie zapisane, okno pokazuje stan każdej sceny, strony i pliku; scena w innej wersji albo o zajętej nazwie czeka na decyzję operatora – **Zaktualizuj** (strony, playlisty i rundowny zostają), **Kopia** („nazwa (2)”) albo **Pomiń**. Dotąd import zawsze dodawał scenę obok, a podmiana belki wymagała usunięcia starej sceny razem z jej stronami;
   - **tożsamość sceny i strony to `id`** – import zachowuje `id` z paczki, więc późniejsza wysyłka z VizRS CG Artist i ponowny import rozpoznają tę samą scenę (bez duplikatów);
