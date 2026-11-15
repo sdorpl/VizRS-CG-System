@@ -42,6 +42,13 @@ jobs:
             source/target/release/vizrs-app
             source/target/release/vizrs-app.exe
 
+  zasady:
+    # zasady pakietu VizRS: to repo jest źródłem; AGENTS.md = kopia CLAUDE.md (tools/sync-zasady.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: tools/sync-zasady.sh --check
+
   e2e:
     needs: test
     runs-on: ubuntu-latest

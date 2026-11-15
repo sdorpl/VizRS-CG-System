@@ -7,16 +7,56 @@ Projektowanie scen to od 2026-11-07 osobny program **VizRS CG Artist** (`../VizR
 rysowania z `source/web` (`tools/sync-cg.sh` po jego stronie), więc zmiana w `renderer.js` i spółce trafia tam przez synchronizację.
 `/artist` w serwerze jest **zamrożony** (zapas do pracy w przeglądarce, do 3.0): tylko poprawki błędów, nowe funkcje Artist – w VizRS CG Artist.
 
-Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komunikaty UI też są po polsku — pisz zgodnie z otoczeniem.
+<!-- pakiet:A – blok wspólny pakietu VizRS; źródło: VizRS CG System/CLAUDE.md, kopie: tools/sync-zasady.sh (nie edytuj w kopii) -->
+Język pracy z użytkownikiem, dokumentacji, komentarzy, komunikatów i UI: **polski** – pisz zgodnie z otoczeniem.
+
+## Pakiet VizRS
+
+To repo jest częścią pakietu **VizRS**. Opis całego pakietu (mapa aplikacji, styki, stos, porty, plan porządków): [sdorpl/VizRS](https://github.com/sdorpl/VizRS) (lokalnie `../VizRS`).
+
+| Aplikacja (katalog obok, `../`) | Rola | Dostawca styku |
+|---|---|---|
+| **VizRS CG System** (`VizRS CG System`) | silnik grafiki: Trio, wyjście `/output`, TCP 6100, HTTP/SSE, `vizrs-render`; źródło wspólnego kodu i zasad pakietu | protokół VizRS, `/output`, `vizrs-render`, format show i `.cgpack` (`docs/API.md`) |
+| **VizRS CG Artist** (`VizRS CG Artist`) | edytor scen i animacji (Tauri 2) | – (klient CG System) |
+| **VizRS CG Playout** (`VirtRS CG Playout`) | sidecar grafiki i live ingest obok ErsatzTV; Live API | Live API `:7700` (DOKUMENTACJA §1) |
+| **VizRS Live** (`VizRS Live`) | panel kanału nad ErsatzTV legacy, VizRS Bridge, natywny klient panelu | most `/vizrs-bridge/*`, wspólny stos compose |
+
+Kierunek (decyzja 2026-11-15): VizRS Live łączy się z VizRS CG Playout w jeden produkt **„VizRS CG Playout”** (plan: sdorpl/VizRS §3).
+
+Zgodność – wszystkie aplikacje w bieżących wersjach działają razem:
+- **Styk zmienia się po obu stronach w tym samym cyklu.** Opis styku jest u dostawcy; klient opisuje tylko, jak z niego korzysta.
+- **Starsza wersja sąsiada nie psuje aplikacji ani emisji** – brak nowego pola lub ścieżki to „niedostępne w tej wersji”, nie błąd.
+- **Wydania razem:** przed wydaniem sprawdź z bieżącymi wersjami sąsiadów; zmianę wymagającą nowszego sąsiada odnotuj w `CHANGELOG.md` z minimalną wersją.
+<!-- /pakiet:A -->
 
 ## Zacznij każdą sesję tutaj
 
-1. Przeczytaj [docs/STATUS.md](docs/STATUS.md) (bieżący etap, następne zadanie), `git log -5` i `git status`.
-2. Przeczytaj [docs/LUKI.md](docs/LUKI.md): znane braki, uszeregowane G1 (niezawodność) → G2 (wierność) → G3 (funkcje).
-3. Przy zmianie zachowania aplikacji przeczytaj właściwą sekcję [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) — w tym samym commicie ją zaktualizujesz.
-4. Plany i analizy są w [docs/plany/](docs/plany/README.md). Przy tickerach: [PLAN-ticker.md](docs/plany/PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](docs/plany/PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](docs/plany/PLAN-natywne-i-serwer.md); playout kanału (VizRS CG Playout, osobne repo): [PLAN-kanal.md](docs/plany/PLAN-kanal.md), lekkie wyjście: [PLAN-lekkie-output.md](docs/plany/PLAN-lekkie-output.md).
+<!-- pakiet:S -->
+- Przeczytaj [docs/STATUS.md](docs/STATUS.md) (bieżący etap, następne zadanie), `git log -5` i `git status`.
+- Przeczytaj [docs/LUKI.md](docs/LUKI.md): znane braki, uszeregowane G1 (niezawodność i bezpieczeństwo) → G2 (wierność) → G3 (funkcje).
+- Przy zmianie zachowania przeczytaj właściwą sekcję [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) – w tym samym commicie ją zaktualizujesz.
+- Zmiana dotyka styku z inną aplikacją pakietu – przeczytaj opis styku u dostawcy (tabela „Pakiet VizRS”) i sprawdź drugą stronę.
+<!-- /pakiet:S -->
+- Plany projektu: [docs/plany/](docs/plany/README.md). Przy tickerach: [PLAN-ticker.md](docs/plany/PLAN-ticker.md); przy większych pracach: [PLAN-rozbudowy.md](docs/plany/PLAN-rozbudowy.md); okna aplikacji i serwer VPS/Docker: [PLAN-natywne-i-serwer.md](docs/plany/PLAN-natywne-i-serwer.md); playout kanału (VizRS CG Playout, osobne repo): [PLAN-kanal.md](docs/plany/PLAN-kanal.md), lekkie wyjście: [PLAN-lekkie-output.md](docs/plany/PLAN-lekkie-output.md).
 
 ## Niepodważalne zasady
+
+### Wspólne dla pakietu
+
+<!-- pakiet:B -->
+- **Emisja nie pada przez nasz błąd.** Błędy przez `Result`, limity czasu na połączeniach, blokady odporne na zatrucie; awaria grafiki, panelu albo zapisu na dysk nie zatrzymuje anteny ani kanału.
+- **Dane z zewnątrz są obce.** Wejście z sieci, plików, ErsatzTV i sąsiednich aplikacji – walidacja i limity; tekst do DOM tylko przez `textContent` (bez `innerHTML`/`eval`); sekrety (tokeny) nie trafiają do przeglądarki ani do logów.
+- **Zależności tylko z listy.** Serwery pakietu (`vizrs`, `vizrs-live`) nie mają zależności zewnętrznych; front-end to czysty JS (moduły ES) bez bundlera, bibliotek i CDN. Wyjątki (okna Tauri, renderer natywny, sidecar) – tylko crate'y wymienione w nagłówku ich `Cargo.toml`; nowa zależność to decyzja użytkownika.
+- **Kod wspólny tylko przez synchronizację.** Kod, wygląd (`vizrs-ui.css`), moduły okna (`gpu.rs`, `scale.rs`, `screen.rs`) i zasady pakietu mają źródło w VizRS CG System; kopie aktualizują skrypty (`tools/sync-cg.sh`, `scripts/sync-ui.sh`, `tools/sync-zasady.sh`) ze sprawdzaniem `--check` w CI – kopii nie edytuje się ręcznie. Cudzy kod tylko na licencji zgodnej z MIT i z wpisem w `THIRD-PARTY.md`. ErsatzTV – wyłącznie przez jego interfejsy (element „script”, ścieżka FFmpeg, startup hook mostu, komendy MediatR), bez kopiowania i bez zmian w jego kodzie.
+- **Licencja: MIT** (`LICENSE`, `Copyright (c) 2026 sdorpl`; pole `license` w manifestach); składniki zewnętrzne – `THIRD-PARTY.md`.
+- **Numer wersji: rok.miesiąc.rewizja** (`26.11.1` = listopad 2026, pierwsze wydanie w miesiącu; kolejne `26.11.2`, w grudniu od `26.12.1`), bez zer wiodących (semver: Cargo, paczki, obrazy). Znacznik `v<wersja>` = wersja we wszystkich manifestach projektu (lista – „Tego projektu”). Wydania z gałęzi `main`; `main-oldstable` to stan sprzed 26.11.1.
+- **Gdzie co opisywać:** README tylko wprowadza i odsyła; opis działania, opcje i zmienne tylko w `docs/DOKUMENTACJA.md` (nie powielaj w README, planach ani STATUS); API, którego aplikacja jest dostawcą – `docs/API.md` (albo sekcja wskazana w „Tego projektu”); praca użytkownika – `docs/INSTRUKCJA*.md`; wdrożenie i awarie – `docs/RUNBOOK.md`; plany – `docs/plany/` + wiersz w `docs/plany/README.md`; opis całego pakietu – sdorpl/VizRS.
+- **Dokumentacja razem z kodem:** commit zmieniający zachowanie (UI, API, format, opcje, obrazy) aktualizuje w tym samym commicie `docs/DOKUMENTACJA.md`, a gdy dotyczy codziennej pracy – także instrukcję; API – `docs/API.md`; wdrożenie – `docs/RUNBOOK.md`; zmiany wydania – `CHANGELOG.md` (sekcja „Niewydane”); zamknięta luka – usuń wiersz z `docs/LUKI.md`; zmiana etapu – `docs/STATUS.md`.
+- **Produkcji i danych użytkownika nie ruszaj bez prośby.** Testy na kopii danych, innym porcie albo stosie testowym; działających serwerów, stosów i kontenerów nie zatrzymuj (mogą nadawać).
+- **Zobacz wynik.** Przy pracy nad UI zrzut ekranu (Playwright; pliki PNG poza repo) i obejrzenie go przed commitem.
+<!-- /pakiet:B -->
+
+### Tego projektu
 
 - **Zero zależności w rdzeniu.** `source/Cargo.toml` (serwer `vizrs`) nie ma sekcji zależności — własny HTTP/1.1, SSE, JSON, OSC. Nie dodawaj tam crate'ów. Front-end to czysty JS (moduły ES), bez bundlera i bez bibliotek z CDN (wyjście musi działać offline).
 - **Wyjątek: okno natywne `source/shell/`** (`vizrs-shell`, Tauri 2 od 2026-11-12 – decyzja użytkownika, plan [PLAN-wyglad-live-i-tauri.md](docs/plany/PLAN-wyglad-live-i-tauri.md) T1) — osobny workspace z własnym `Cargo.lock`; dozwolone tylko crate'y wymienione w nagłówku `source/shell/Cargo.toml` (tauri, tauri-plugin-dialog, tauri-plugin-single-instance, serde_json, webkit2gtk; tauri-build) – te same co VizRS CG Artist. Okno nie wkompilowuje serwera, tylko uruchamia `vizrs serve --idle-exit` albo dołącza do działającego; nie dawaj stronie dostępu do systemu: komenda `ipc` z białą listą (`bridge.rs`), uprawnienie tylko dla adresu bieżącego serwera (`allow_server`). Zmiana renderera → `node tools/engines.js` (Chromium vs WebView okna, musi być 0 różnic).
@@ -26,23 +66,31 @@ Język pracy z użytkownikiem i dokumentacji: **polski**. Kod, komentarze i komu
   - `start-linux.sh` uruchamia `bin/linux-x86_64/vizrs` (plik w repo) — po zmianach UI skopiuj tam `source/target/release/vizrs`.
 - **Jeden renderer.** `web/renderer.js` (`ScenePlayer`) renderuje wyjście OBS, podgląd w Trio i kanwę Artist. Nie duplikuj logiki rysowania w Trio/Artist.
 - **Wyjątek: renderer natywny `source/render/`** (`vizrs-render`, gałąź `render-native`, plan [PLAN-native.md](docs/plany/PLAN-native.md)) — drugi wykonawca tej samej semantyki tylko dla playoutu kanału bez GPU; osobny workspace z własnym `Cargo.lock`, dozwolone crate'y z nagłówka `source/render/Cargo.toml` (tiny-skia, rustybuzz, wuff, serde_json, png, jpeg-decoder). Czego nie umie, zgłasza (`check`, flaga klatki) zamiast zgadywać. Zmiana w `renderer.js` (rysowanie, tekst, krzywe, ticker) → ta sama w `source/render/` + `node tools/native-compare.js`.
-- **Dane z zewnątrz są wrogie.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
-- **Nie wywalaj serwera:** błędy przez `Result`, blokady odporne na zatrucie (`lk()`), wolny klient SSE jest odłączany. Antena ma działać dalej, nawet gdy zapis na dysk się nie uda.
+- **`validate.rs` – granica danych.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
+- **Serwer nie pada:** blokady `lk()` odporne na zatrucie, wolny klient SSE jest odłączany. Antena ma działać dalej, nawet gdy zapis na dysk się nie uda.
 - **Model tekstu:** `web/text-model.js` (sanityzacja, RichText, typografia PL, reguły pól, Word Replace); zachowanie pilnują wektory `source/tests/vectors/*.json` (`node tests/vectors/run.js`) – zmiana zachowania = zmiana wektorów w tym samym commicie.
-- **Gdzie co opisywać:** README tylko wprowadza i odsyła; opis działania tylko w `docs/DOKUMENTACJA.md` (nie powielaj go w README ani w planach); wdrożenie i awarie – `docs/RUNBOOK.md`; paczki – `examples/README.md`; nowy plan – `docs/plany/` + wiersz w `docs/plany/README.md`.
-- **Numer wersji: rok.miesiąc.rewizja** (`26.11.1` = listopad 2026, pierwsze wydanie w miesiącu; kolejne `26.11.2`, w grudniu od `26.12.1`), bez zer wiodących (semver: Cargo, paczki, obrazy). Znacznik `v<wersja>` = `version` w `source/Cargo.toml` i `source/shell/Cargo.toml` (renderer natywny `source/render/` ma własną wersję protokołu). Wydania idą z gałęzi `main`; `main-oldstable` to stan sprzed 26.11.1.
-- **Dokumentacja razem z kodem:** commit zmieniający zachowanie (UI, skróty, format show, API, opcje CLI) aktualizuje w tym samym commicie `docs/DOKUMENTACJA.md`, a gdy dotyczy codziennej pracy — także `docs/INSTRUKCJA-poczatkujacy.md`; API → `docs/API.md`; zmiany wydania → `CHANGELOG.md` (sekcja „Niewydane”); zamknięta luka → wiersz z `docs/LUKI.md`.
+- **Gdzie co opisywać (uzupełnienie):** paczki – `examples/README.md`; instrukcja operatora – `docs/INSTRUKCJA-poczatkujacy.md`; API (dostawca styków pakietu: TCP 6100, HTTP/SSE, `/output`, `vizrs-render`) – `docs/API.md`.
+- **Manifesty wersji:** znacznik `v<wersja>` = `version` w `source/Cargo.toml`, `source/shell/Cargo.toml` i `source/shell/tauri.conf.json` (renderer natywny `source/render/` ma własną wersję protokołu).
 
 ## Współpraca z Gemini
 
-Szczegóły: [docs/AGENCI.md](docs/AGENCI.md); ten sam podział obowiązuje w całym pakiecie VizRS. W skrócie:
+<!-- pakiet:C -->
+Szczegóły: [docs/AGENCI.md](docs/AGENCI.md) – wspólny dla pakietu. W skrócie:
 
-- **Claude dowodzi i jako jedyny pisze kod** (także `source/web/`, `source/shell/src/bridge.rs` z białą listą, `validate.rs`, `deploy/`, `.github/`, pliki zasad).
-- **Gemini wykonuje lekkie zadania:** redaguje wskazane pliki `.md`, uruchamia kompilację i bramkę, streszcza długie wyjścia, przeszukuje źródła (także `../VizRS CG Artist`). Nie commituje.
-- **Kontekst Gemini:** `AGENTS.md` to dowiązanie do tego pliku – `agy` sam wczytuje `AGENTS.md` i `GEMINI.md`, także w `-p` (pomiar agy 1.5.3, 2026-11-08: plik 19 KB w całości); importów `@plik` nie rozwija. Zasady zmieniaj tylko tutaj, `GEMINI.md` opisuje wyłącznie rolę wykonawcy i niczego stąd nie powiela.
-- **Wywołanie:** `~/.gemini/bin/agy` (poza `PATH`), przełączniki – AGENCI §5. Wygodniej przez wrapper wtyczki antigravity: `PATH="$HOME/.gemini/bin:$PATH" agy-delegate [--tier flash|flash-lo] [--digest] [--mode plan] --dir . "<zlecenie>"`. Wrapper sam stawia `-p` na końcu i odcina stdin. Zamiast kodu 0 zwraca kod błędu: 10 – limit, 11 – logowanie, 12 – przekroczony czas, 14 – brak modelu, 15 – odmowa uprawnień, 3 – pusta odpowiedź. Na stderr wypisuje wiersz `AGY_USAGE` z tokenami i modelem. Tylko subskrypcja Google (bez kluczy API). `--yolo` / `--dangerously-skip-permissions` – nigdy: daje zgodę na cały komputer, a `--sandbox` jej nie ogranicza.
+- **Claude dowodzi i jako jedyny pisze kod** (lista „Kod” niżej oraz pliki zasad, CI, Docker, testy, skrypty, manifesty, licencje, białe listy, decyzje w planach).
+- **Gemini wykonuje lekkie zadania:** redaguje wskazane pliki `.md` z listy „Dokumentacja”, uruchamia bramkę z listy „Bramka” i streszcza wynik, streszcza długie wyjścia, przeszukuje źródła (także sąsiednich repozytoriów pakietu – tylko do czytania). Nie commituje.
+- **Kontekst Gemini:** `AGENTS.md` to **kopia** tego pliku (nie dowiązanie: Portainer GitOps odrzuca repozytorium z symlinkiem, a Windows bywa z nimi zawodny) – zmienia się razem z `CLAUDE.md` (`tools/sync-zasady.sh` kopiuje, `--check` w CI porównuje). `agy` sam wczytuje `AGENTS.md` i `GEMINI.md`, także w `-p`; importów `@plik` nie rozwija. `GEMINI.md` i `docs/AGENCI.md` są wspólne dla pakietu (źródło: VizRS CG System) i niczego stąd nie powielają.
+- **Wywołanie:** `~/.gemini/bin/agy` (poza `PATH`), przełączniki – AGENCI §5. Wygodniej przez wrapper wtyczki antigravity: `PATH="$HOME/.gemini/bin:$PATH" agy-delegate [-m "Gemini 3.8 Flash (High)"] [--digest] [--mode plan] --dir . "<zlecenie>"` (poziomu `--tier pro` w tej subskrypcji nie ma). Wrapper sam stawia `-p` na końcu i odcina stdin. Zamiast kodu 0 zwraca kod błędu: 10 – limit, 11 – logowanie, 12 – przekroczony czas, 14 – brak modelu, 15 – odmowa uprawnień, 3 – pusta odpowiedź. Na stderr wypisuje wiersz `AGY_USAGE` z tokenami i modelem. Tylko subskrypcja Google (bez kluczy API). `--yolo` / `--dangerously-skip-permissions` – nigdy: daje zgodę na cały komputer, a `--sandbox` jej nie ogranicza.
 - **Próg opłacalności:** każde zlecenie ma koszt stały (zlecenie, czekanie, przegląd). Małe, jednorazowe i wymagające decyzji zadania rób sam – ich zlecanie to zmierzona strata. Zlecaj duże porcje tekstu przy niewielu decyzjach: prozę dokumentacji (też w kilku repozytoriach naraz, AGENCI §5), przeszukanie dużych źródeł, nieustrukturyzowane logi. Jedno duże zlecenie zamiast wielu małych. Bierz streszczenie (`--digest`), nie surowe wyjście; plików, które przerobił Gemini, nie czytaj ponownie – przeglądaj diff. Logi (bramka, kompilacja, testy) czytaj sam przez plik i filtr (`tail`, `grep`) – AGENCI §4.
 - **Weryfikacja:** przed zleceniem migawka `git status` (i `git diff`, gdy pliki mają już zmiany), po zleceniu przegląd diffu – razem z usuniętymi wierszami. Kod 0 i raport „gotowe” niczego nie dowodzą. Bramkę uruchom sam, w czystym stanie – `agy` potrafi zmienić środowisko (połatać pakiety, podstawić atrapy), żeby test przeszedł. Każdą liczbę, ścieżkę i stan etapu sprawdź z kodem (Gemini dopowiada fakty).
+<!-- /pakiet:C -->
+
+### Ten projekt
+
+- **Kod (tylko Claude):** `source/**` – serwer (`source/src/*.rs`; `validate.rs` – granica danych, `guard.rs` – tokeny i CSRF), strony i moduły `source/web/*` (wkompilowane w binarkę), okno `source/shell/` (`src/bridge.rs` – biała lista), renderer `source/render/`, testy i narzędzia; `deploy/**`, `start-*`, `build-*`, `bin/`, `examples/*.cgpack`, `examples/**/*.json`, `render.yaml`, `Dockerfile`, `tools/sync-zasady.sh`.
+- **Dokumentacja (Gemini – tylko pliki wskazane w zleceniu):** `README.md`, `CHANGELOG.md`, `SZYBKI_START.txt`, `examples/README.md`, `docs/DOKUMENTACJA.md`, `docs/INSTRUKCJA-poczatkujacy.md`, `docs/API.md`, `docs/COMPANION.md`, `docs/RUNBOOK.md`, `docs/STATUS.md`, `docs/LUKI.md`, `docs/README.md`.
+- **Bramka (Gemini może uruchomić i streścić):** `cargo clippy --manifest-path source/Cargo.toml --all-targets -- -D warnings`, `cargo test --manifest-path source/Cargo.toml`, `cargo build --release --manifest-path source/Cargo.toml` (okno i renderer: `source/shell/Cargo.toml`, `source/render/Cargo.toml`); `cargo fmt` tylko z `--check`.
+- **Zawsze:** serwer i okna tylko na kopii danych i innym porcie (`--data <kopia> --port 8099 --tcp 0`); nie zatrzymuj działającego `vizrs` (może nadawać grafikę na antenę).
 
 ## Uruchamianie
 
@@ -83,6 +131,7 @@ node tools/native-compare.js                      # zgodność renderera natywne
 node tests/cgpack.mjs                             # reguły zasobów paczki (nazwy, czcionki bez duplikatów)
 node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch (node.motion)
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
+../tools/sync-zasady.sh --check                  # AGENTS.md = CLAUDE.md (zasady pakietu)
 ```
 
 Playwright nie jest zależnością repo: `PLAYWRIGHT_DIR` wskazuje katalog z `node_modules/playwright` (bez niej – zwykłe `require('playwright')`).
@@ -127,6 +176,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/tools/` | narzędzia pakietów, galerii, filmów i zgodności (`build-packs.mjs`, `gallery.js`, `engines.js`, `video.js`…); pełna lista: DOKUMENTACJA §14 |
 | `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json` i `assets/` (używane przez testy) |
 | `deploy/`, `render.yaml` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
+| `tools/sync-zasady.sh` | zasady pakietu VizRS (bloki `pakiet:*` w `CLAUDE.md`, `GEMINI.md`, `docs/AGENCI.md`): to repo jest źródłem; pozostałe repo kopiują je tym skryptem (`--check` w CI) |
+| `LICENSE`, `THIRD-PARTY.md` | licencja MIT; składniki zewnętrzne (fonty SIL OFL, crate'y okna i renderera) |
 | `docs/` | dokumentacja (spis: `docs/README.md`); `docs/plany/` – plany i raport (dokumenty projektowe, nie opis bieżącego działania) |
 | `Dockerfile` | obraz `scratch` ze statyczną binarką musl; wieloarchitekturowy (amd64, arm64 z optymalizacją pod Ampere A1 Neoverse-N1: `-C target-cpu=neoverse-n1 -C opt-level=3` przez `rust-lld` bez emulacji QEMU) |
 | `bin/linux-x86_64/vizrs` | gotowa binarka Linux (w repo, używa jej `start-linux.sh`) |
@@ -140,7 +191,9 @@ i `showIf` (wariant). Szczegóły: [docs/DOKUMENTACJA.md](docs/DOKUMENTACJA.md) 
 
 ## Commity
 
-- Jedna spójna zmiana = jeden commit, po polsku, opisowo (styl historii: „Tickery: …”). Tylko zielone stany.
-- Pliki dodawaj jawnie (`git add ścieżka`), nie `git add -A`. Nie commituj `source/target/`, zrzutów i plików tymczasowych.
-- Binarkę `bin/linux-x86_64/vizrs` aktualizuj w commicie, który zmienia UI lub serwer (inaczej `start-linux.sh` uruchamia starą wersję); `bin/linux-x86_64/vizrs-shell` – w commicie zmieniającym `source/shell/`.
+<!-- pakiet:D -->
+- Jedna spójna zmiana = jeden commit, po polsku, opisowo (styl historii repo). Tylko zielone stany (bramka z „Testy”).
+- Pliki dodawaj jawnie (`git add ścieżka`), nie `git add -A`. Nie commituj katalogów `target/`, zrzutów, logów, plików tymczasowych, `.env` ani sekretów.
 - Commit i push tylko na prośbę użytkownika.
+<!-- /pakiet:D -->
+- Binarkę `bin/linux-x86_64/vizrs` aktualizuj w commicie, który zmienia UI lub serwer (inaczej `start-linux.sh` uruchamia starą wersję); `bin/linux-x86_64/vizrs-shell` – w commicie zmieniającym `source/shell/`.
