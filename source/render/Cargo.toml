@@ -11,6 +11,7 @@
 [package]
 name = "vizrs-render"
 version = "0.3.0"
+license = "MIT"
 edition = "2021"
 description = "Natywny renderer grafiki VizRS (wyjście kanału bez Chromium)"
 

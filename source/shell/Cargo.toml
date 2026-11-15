@@ -12,6 +12,7 @@
 [package]
 name = "vizrs-shell"
 version = "26.11.8"
+license = "MIT"
 edition = "2021"
 description = "Natywne okno VizRS Trio (Tauri 2)"
 repository = "https://github.com/sdorpl/VizRS-CG-System"

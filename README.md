@@ -49,3 +49,7 @@ Domyślnie serwer słucha tylko na `127.0.0.1`; w sieci wymaga tokenu.
 | [Spis wszystkich dokumentów](docs/README.md) | w tym stan prac, znane braki, plany |
 
 Programiści i agenci: [CLAUDE.md](CLAUDE.md) (zasady, struktura, testy, commity).
+
+## Licencja
+
+MIT – [LICENSE](LICENSE). Składniki zewnętrzne (fonty, biblioteki, obrazy): [THIRD-PARTY.md](THIRD-PARTY.md). Opis całego pakietu VizRS: [sdorpl/VizRS](https://github.com/sdorpl/VizRS).

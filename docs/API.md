@@ -68,6 +68,7 @@ Przy `--token` adres musi mieć postać `/vizrs/<token>/take …`.
 
 ## Strumień zdarzeń (SSE) `GET /events`
 Zdarzenia: `snapshot` (stan startowy; osobny z `bus:"preview"`), `take`, `continue`, `out`, `clear`, `update`, `rescene`, `relayer`, `dock`, `show`, `state`, `error`, `wordreplace`.
+Serwer nie ma WebSocket – zdarzenia idą wyłącznie przez SSE (`GET /events`). Wyjścia wideo (NDI, SRT, RTMP) nie są częścią VizRS CG System: obraz daje strona `/output` (przeglądarka, OBS) albo `vizrs-render stream` (VizRS CG Playout).
 
 ## Wyjście `/output`
 `?layers=main,front` · `?bg=%2300ff00` · `?w=1280&h=720` · `?checker=1` · `?status=1` · `?bus=preview` · `?bus=ch-2` (antena kanału, TCP `@2`) · `?mode=fill` (kolor na czerni) · `?mode=key` (alfa jako luma). Fill + Key = dwa źródła przeglądarki dla ATEM/Tricastera.

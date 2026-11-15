@@ -1,6 +1,6 @@
 # VizRS – dokumentacja aplikacji
 
-> Wersja 2.0.19 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
+> Wersja 26.11.8 + zmiany „Niewydane” z [CHANGELOG.md](../CHANGELOG.md). Dokument opisuje stan z kodu (`source/`).
 > Instrukcja krok po kroku dla nowych osób: [INSTRUKCJA-poczatkujacy.md](INSTRUKCJA-poczatkujacy.md).
 > API: [API.md](API.md) · Companion: [COMPANION.md](COMPANION.md) · awarie: [RUNBOOK.md](RUNBOOK.md) · braki: [LUKI.md](LUKI.md).
 
@@ -60,6 +60,8 @@ VizRS CG System to jedna z czterech aplikacji pakietu VizRS, które mają być *
 | [VizRS CG Playout](../../VirtRS%20CG%20Playout) (katalog `VirtRS CG Playout`) | grafika VizRS i sloty na żywo na kanałach ErsatzTV (sidecar `cg`, bez zmian w ErsatzTV) | protokół VizRS: komendy TCP 6100 (`AUTH`, `STATE`, `TAKE`, `OUT`…), strona `/output`, renderer `vizrs-render stream` (dostawca styku: VizRS CG System, `docs/API.md`) |
 | [VizRS Live](../../VizRS%20Live) | panel kanału nad ErsatzTV legacy (sterowanie kanałami, ramówką, playoutami bez web GUI legacy) | tylko z przeglądarki operatora: ramka `/output` (token wyjścia) i odnośniki do Trio |
 | [VizRS CG Artist](../../VizRS%20CG%20Artist) | samodzielny edytor grafik i animacji (Tauri 2), projektuje sceny; działa też bez serwera | wysyłanie scen na serwer `vizrs` (dostawca styku: VizRS CG System) |
+
+Opis całego pakietu (mapa, styki, plan porządkowania – m.in. połączenie VizRS Live z VizRS CG Playout w jeden produkt „VizRS CG Playout”): [sdorpl/VizRS](https://github.com/sdorpl/VizRS).
 
 Zasady zgodności:
 
