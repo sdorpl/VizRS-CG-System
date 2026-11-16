@@ -1,6 +1,6 @@
 //! Miniatury stron (`vizrs-render thumb`): kadr klatki przycięty do miejsca, w którym strona rysuje,
 //! i zmniejszony do zadanej szerokości. Używa ich VizRS CG Playout (miniatury elementów graficznych
-//! w panelu VizRS Live) – opis: docs/DOKUMENTACJA.md §10.1.
+//! w panelu VizRS CG Playout) – opis: docs/DOKUMENTACJA.md §10.1.
 
 use serde_json::{Map, Value};
 use tiny_skia::Pixmap;

@@ -403,7 +403,7 @@ fn webkit_settings(w: &WebviewWindow, gpu: Option<bool>) {
 /// Linux: proces strony WebKitGTK padł (sterownik GPU, brak pamięci) – WebKitGTK zostawia wtedy puste okno.
 /// Strona wczytuje się od nowa z adresu bieżącego serwera (wyjście na monitorze – z adresu, z którym je otwarto),
 /// najwyżej 3 razy na minutę – przy awarii za każdym wczytaniem okno zostaje puste zamiast mielić w kółko.
-/// Ten sam mechanizm w oknie VizRS CG Artist i aplikacji VizRS Live.
+/// Ten sam mechanizm w oknie VizRS CG Artist i oknie panelu VizRS CG Playout.
 fn reload_after_crash(app: &AppHandle, w: &WebviewWindow, kind: Kind, fixed: Option<String>) {
     #[cfg(target_os = "linux")]
     {
