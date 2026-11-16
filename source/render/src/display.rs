@@ -34,6 +34,9 @@ pub enum Fill {
 pub struct TextBlock {
     pub key: u64,
     pub lines: Vec<Line>,
+    /// Obrys elementu tekstu (`span`, po ściśnięciu `scaleX`) względem położenia napisu: l, t, r, b –
+    /// jak `getBoundingClientRect` elementu tekstu (obrys w spoczynku dla powiązań krawędzi); zera – nieznany.
+    pub span: [f32; 4],
 }
 
 #[derive(Clone, Debug)]

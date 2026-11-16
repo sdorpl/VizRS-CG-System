@@ -232,9 +232,16 @@ Pole wyboru na poziomie sceny (`fieldMeta.<pole> = {type: "select", options: [..
 
 ### 4.7 Powiązania (dock)
 
-`scene.dock = [{ target, dx, dy, dur }]` – scena przesuwa się o (`dx`, `dy`) w czasie `dur` s, gdy na antenie jest wskazana grafika:
+`scene.dock = [{ target, dx, dy, dur, ease, edge, gap, back }]` – scena przesuwa się o (`dx`, `dy`) w czasie `dur` s, gdy na antenie jest wskazana grafika:
 `layer:<warstwa>`, `page:<numer>` albo `scene:<nazwa>`; kilka celów rozdzielonych `|` (np. `page:15001|page:15002`) – przesunięcie raz, gdy na antenie jest którykolwiek. Przykład: belka unosi się o 90 px, gdy na warstwie `back` jest ticker.
 Przesunięcie zmienia się płynnie w czasie `dur`, gdy cel wchodzi albo schodzi. Grafika z regułą, która wchodzi, gdy cel już jest na antenie (także po odświeżeniu wyjścia), stoi od razu na przesuniętym miejscu – bez dojazdu z położenia bazowego (tak samo `renderer.js` i renderer natywny).
+Krzywa ruchu `ease`: `std` (domyślna, `cubic-bezier(.4,0,.2,1)`) albo `out` (`cubic-bezier(.22,1,.36,1)` – szybki start, miękkie hamowanie). Odjazd ma czas i krzywą ostatniej reguły, której cel jest na antenie; powrót (żaden cel nie jest na antenie) – ostatniej reguły sceny. Osobne reguły z celami na antenie sumują przesunięcia; żeby kilka celów dawało jedno przesunięcie, wpisz je w jednej regule (`a|b`).
+**Reguła krawędzi** (`edge`: `top` | `bottom` | `left` | `right`, `gap` px, domyślnie 0): zamiast stałego przesunięcia scena odsuwa się od krawędzi celu – `top`: nasz dół `gap` px nad górą celu, `bottom`: nasza góra pod dołem celu, `left` / `right` – w poziomie. Przesunięcie wynika z obrysów w spoczynku: celu (z wartościami jego strony, np. belka z 1 albo 2 wierszami) i tej sceny – pierwszy stop point, suma pól elementów z tłem albo ramką, całych pól tickera, obrazu i kodu QR oraz obrysów napisów (bez grup, pustych prostokątów, cieni i przycięć), z `scene.x/y`. Tylko odsuwanie i tylko przy kolizji: gdy zakresy na drugiej osi się nie nakładają albo scena już jest dalej, przesunięcia nie ma. UPDATE celu (inne wartości) przelicza obrys. Gdy obrysu nie da się zmierzyć (cel nic nie rysuje), działa zapasowe `dx` / `dy` reguły – to samo przesunięcie stosuje starszy silnik, który nie zna `edge`.
+- **łańcuch:** obrys celu liczy się z jego własnym przesunięciem z powiązań (WS nad belką, belka nad tickerem – WS jedzie razem z belką); pętla reguł krawędzi (A nad B, B pod A) nie zawiesza wyjścia – w pętli przesunięcie celu jest pomijane, a wyjście zgłasza błąd sceny `(dock)` (`/api/state` → `errors`);
+- **kilka celów i reguł krawędzi tej samej osi:** największe przesunięcie (odsunięcie od najdalszej kolizji), nie suma; reguły stałe dodają się do niego;
+- **powrót** `back`: `start` (domyślnie) – w chwili OUT celu, `end` – dopiero po animacji wyjścia celu (od ostatniego stop pointu do końca sceny celu).
+
+Cel może być na dowolnej warstwie, także pominiętej w `/output?layers=…`: wyjście (i renderer natywny) zna obecność wszystkich warstw anteny, a rysuje tylko wybrane – dzięki temu playout z osobnym procesem na warstwę przesuwa grafikę tak samo jak jedno wyjście.
 Operator może wyłączyć powiązanie na antenie (⇅ w Trio, `/api/dock/<warstwa>/off`). Stan jest odtwarzany po odświeżeniu wyjścia.
 
 ### 4.8 Fonty
@@ -653,6 +660,8 @@ vizrs-render stream --url 'http://vizrs:8088/output?token=…' --size 1920x1080 
 ```
 
 `frame`, `check` i `bench` biorą fonty z `--fonts` (domyślnie `web/fonts` obok) i pliki z `--assets`; `stream` – z serwera.
+
+**Powiązania na antenie:** każdy proces (także `stream` z `?layers=` – jeden proces na warstwę w playoucie) zna wszystkie warstwy anteny z tych samych zdarzeń i liczy powiązania (§4.7) tak samo jak `/output`: cele i ich obrysy z innych warstw, łańcuch, powrót po OUT celu; rysuje tylko swoje warstwy. Diagnostyka: `VIZRS_RENDER_DOCK=1` wypisuje na stderr przy każdym przeliczeniu obrys w spoczynku i przesunięcie każdej grafiki na antenie (np. `dock main [Belka] strona 1001 obrys Some([60.0, 835.0, 1860.0, 998.0]) przesunięcie 0 0`).
 
 **Granice stron (`bounds`)**: odtwarza każdą stronę jak na antenie: TAKE, dojście do kolejnych stop pointów (`stops` sceny) i na każdym spoczynek `--hold` sekund (domyślnie 4; pętle, tickery, zegary), CONTINUE do następnego, po ostatnim OUT i wyjście (najwyżej 10 s); scena bez stop pointów: `duration` + spoczynek, potem OUT. W każdej klatce (`--fps`, domyślnie 25) zaznacza komórki siatki `--cell` px (domyślnie 16), w których jest choć jeden piksel z alfą > 0; domyślnie rysuje w połowie rozmiaru (`--half 0` wyłącza) – te same komórki w pikselach `--size`, ok. 4× mniej rysowania. Strony: `--page N` (można powtórzyć) albo `--all 1`; z `--url` fonty i pliki `/assets` z serwera jak na antenie (token wyjścia wystarcza), bez niego `--fonts`/`--assets` jak w `frame`; rozmiar sceny wyjścia z `w`/`h` w adresie, inaczej 1920×1080. Wynik: jeden wiersz JSON na stronę: `id`, `number`, `size`, `cell`, `rects` (`[x, y, w, h]` w px `--size`, poziome serie komórek sklejone pionowo) i `issues` (czego renderer natywny nie umie – granice wtedy niepełne); strona bez sceny: `error`. Pomiar: przykładowe INFO24 (22 strony) przy 1600x900 – 3,7 s na komputerze x86 (jeden proces). Używa tego VizRS CG Playout przy `VIZRS_AREA=auto` (PLAN-strefy S6 w tamtym repozytorium).
 

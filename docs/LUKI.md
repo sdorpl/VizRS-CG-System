@@ -15,7 +15,6 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | # | Luka | Uwagi |
 |---|---|---|
 | 6 | `OUT` zdejmuje warstwę w silniku od razu; animację OUT gra tylko klient | kolejny TAKE w czasie OUT może ją ściąć |
-| 7 | Dock tylko przesuwa (dx, dy); brak reguł względem rozmiaru/wysokości celu | brak osi i krawędzi celu |
 | 10 | Pisownia: natywna przeglądarki (lang=pl); brak własnego słownika (sjp.pl/Hunspell) | w CEF (OBS dock) zależy od przeglądarki |
 
 ## G3 – funkcje

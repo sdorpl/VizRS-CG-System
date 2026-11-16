@@ -335,6 +335,26 @@ pub fn scene(s: &Json) -> R {
                 if let Some(v) = opt(d, "dur") {
                     num_in(v, "dock.dur", 0.0, 30.0)?;
                 }
+                // krzywa ruchu (renderer.js `DOCK_EASES`, render `DockEase`)
+                match opt(d, "ease") {
+                    None | Some(Json::Null) => {}
+                    Some(Json::Str(e)) if ["std", "out"].contains(&e.as_str()) => {}
+                    _ => return Err("dock.ease: oczekiwano std lub out".into()),
+                }
+                // reguła krawędzi (dynamiczna wysokość celu) i powrót po animacji OUT celu
+                match opt(d, "edge") {
+                    None | Some(Json::Null) => {}
+                    Some(Json::Str(e)) if ["top", "bottom", "left", "right"].contains(&e.as_str()) => {}
+                    _ => return Err("dock.edge: oczekiwano top, bottom, left lub right".into()),
+                }
+                if let Some(v) = opt(d, "gap") {
+                    num_in(v, "dock.gap", -2_000.0, 2_000.0)?;
+                }
+                match opt(d, "back") {
+                    None | Some(Json::Null) => {}
+                    Some(Json::Str(e)) if ["start", "end"].contains(&e.as_str()) => {}
+                    _ => return Err("dock.back: oczekiwano start lub end".into()),
+                }
             }
         }
         Some(_) => return Err("scena.dock: oczekiwano listy".into()),
@@ -768,6 +788,12 @@ mod tests {
         assert!(scene(&p(r#"{"dock":[{"target":"page:15001|"}]}"#)).is_err());
         assert!(scene(&p(r#"{"dock":[{"target":"page:3001","dx":99999}]}"#)).is_err());
         assert!(scene(&p(r#"{"dock":[{"target":"scene:Ticker","dur":-1}]}"#)).is_err());
+        assert!(scene(&p(r#"{"dock":[{"target":"scene:Ticker","ease":"out"}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"dock":[{"target":"scene:Ticker","ease":"zly"}]}"#)).is_err());
+        assert!(scene(&p(r#"{"dock":[{"target":"page:1001","edge":"top","gap":15,"dy":-90,"back":"end"}]}"#)).is_ok());
+        assert!(scene(&p(r#"{"dock":[{"target":"page:1001","edge":"gora"}]}"#)).is_err());
+        assert!(scene(&p(r#"{"dock":[{"target":"page:1001","gap":99999}]}"#)).is_err());
+        assert!(scene(&p(r#"{"dock":[{"target":"page:1001","back":"later"}]}"#)).is_err());
     }
 
     #[test]

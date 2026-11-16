@@ -423,7 +423,7 @@ async function waitUp() {
     sh4.scenes.push(rectScene('dkB', 'DockB', 'back'));
     sh4.scenes.push(rectScene('dkC', 'DockC', 'front'));
     // tekst i ruch: pomiar tekstu zatwierdza style nowego elementu – bez poprawki przesunięcie dojeżdżało z położenia bazowego
-    sh4.scenes.push(rectScene('dkE', 'DockE', 'z1_e', { duration: 0.8, stops: [0.4], dock: [{ target: 'layer:back', dx: 0, dy: -60, dur: 0.6 }],
+    sh4.scenes.push(rectScene('dkE', 'DockE', 'z1_e', { duration: 0.8, stops: [0.4], dock: [{ target: 'layer:back', dx: 0, dy: -60, dur: 0.6, ease: 'out' }],
       nodes: [{ id: 'dkEn', type: 'rect', name: 'plakietka', props: { x: 100, y: 700, w: 300, h: 50, color: '#d0102b' }, motion: { in: { type: 'zoom', dur: 0.3 } },
         children: [{ id: 'dkEt', type: 'text', name: 'napis', props: { x: 10, y: 0, w: 280, h: 50, text: 'Wydanie specjalne', size: 28, color: '#ffffff' } }] }] }));
     sh4.pages.push({ id: 'pdkE', number: 9305, scene: 'dkE', values: {} });
@@ -445,6 +445,15 @@ async function waitUp() {
     const out2 = await page('/output?checker=1'); await sleep(1200);
     ok(await out2.evaluate(() => { const e = document.querySelector('.vz-layer[data-layer="main"] .vz-scene'); return new DOMMatrix(getComputedStyle(e).transform).f === -100; }), 'dock: nowe wyjście (snapshot) ma przesunięcie od razu');
     await out2.close();
+    // wyjście jednej warstwy (?layers=main, jak proces warstwy w playoucie): cel z warstwy spoza filtra też przesuwa
+    const out3l = await page('/output?checker=1&layers=main&token=' + TOKEN); await sleep(1200);
+    const tfL = () => out3l.evaluate(() => { const e = document.querySelector('.vz-layer[data-layer="main"] .vz-scene'); return e ? new DOMMatrix(getComputedStyle(e).transform).f : null; });
+    ok((await tfL()) === -100 && (await out3l.evaluate(() => !document.querySelector('.vz-layer[data-layer="back"] .vz-scene'))), 'dock: ?layers=main – cel z innej warstwy (snapshot) przesuwa, sam cel nie jest rysowany', await tfL());
+    await api('/api/out/back'); await sleep(900);
+    ok((await tfL()) === 0, 'dock: ?layers=main – zejście celu z innej warstwy (out) – powrót', await tfL());
+    await api('/api/take/9302'); await sleep(900);
+    ok((await tfL()) === -100, 'dock: ?layers=main – wejście celu z innej warstwy (take) przesuwa', await tfL());
+    await out3l.close();
     // grafika z regułą wchodząca, gdy cel już jest na antenie – od razu na miejscu (jak w BTB CG), bez dojazdu
     const tfE = () => out.evaluate(() => { const e = document.querySelector('.vz-layer[data-layer="z1_e"] .vz-scene'); return e ? new DOMMatrix(getComputedStyle(e).transform).f : null; });
     await api('/api/take/9305'); await sleep(120);
@@ -452,10 +461,57 @@ async function waitUp() {
     await api('/api/out/back'); await sleep(250);
     const midE = await tfE();
     ok(midE > -60 && midE < 0, 'dock: zejście celu – powrót płynny (przejście)', midE);
+    const trE = await out.evaluate(() => document.querySelector('.vz-layer[data-layer="z1_e"] .vz-scene')?.style.transition || '');
+    ok(/0\.6s cubic-bezier\(0?\.22, ?1, ?0?\.36, ?1\)/.test(trE), 'dock: krzywa reguły (ease: out) także przy powrocie', trE);
     await api('/api/take/9302'); await sleep(900);
     await api('/api/out/z1_e'); await sleep(500);
     await api('/api/out/back'); await sleep(900);
     ok((await dockTf()) === '0,0', 'dock: po zdjęciu grafiki scena wraca na miejsce', await dockTf());
+    await api('/api/clear');
+
+    // --- powiązania krawędzi (edge, B1–B4): obrys celu w spoczynku, łańcuch, największe przesunięcie, powrót po OUT celu ---
+    const fn = await out.evaluate(async () => {
+      const m = await import('/renderer.js'), r = {};
+      r.top = m.edgeShift('top', 15, [220, 930, 560, 974], [220, 859, 1870, 975]);
+      r.miss = m.edgeShift('top', 15, [220, 930, 560, 974], [1000, 859, 1300, 975]);
+      r.bottom = m.edgeShift('bottom', 10, [0, 100, 100, 150], [0, 0, 100, 120]);
+      r.right = m.edgeShift('right', 0, [0, 0, 50, 50], [10, 10, 80, 40]);
+      const air = [{ layer: 'main', scene: 'Belka', rect: [200, 950, 1700, 990] }, { layer: 'back', scene: 'Pas', rect: [0, 1000, 1920, 1080] }];
+      r.max = m.dockShift([{ target: 'scene:Belka|scene:Pas', edge: 'top', gap: 5 }], air, 'z2_ws', { rect: [200, 930, 500, 970] });
+      r.chain = m.dockShift([{ target: 'scene:Belka', edge: 'top', gap: 5 }], air, 'z2_ws', { rect: [200, 930, 500, 970], offset: () => ({ dx: 0, dy: -30 }) });
+      r.fallback = m.dockShift([{ target: 'scene:Belka', edge: 'top', dy: -77 }], [{ layer: 'main', scene: 'Belka', rect: null }], 'z2_ws', { rect: [0, 0, 1, 1] });
+      r.mixed = m.dockShift([{ target: 'layer:main', dy: -10 }, { target: 'layer:main', edge: 'top' }], air, 'z2_ws', { rect: [200, 930, 500, 970] });
+      r.backStart = m.dockHits({ target: 'layer:main' }, [{ layer: 'main', leaving: true }], 'x').length;
+      r.backEnd = m.dockHits({ target: 'layer:main', back: 'end' }, [{ layer: 'main', leaving: true }], 'x').length;
+      r.cyc = [...(m.dockCycles(new Map([['a', ['b']], ['b', ['a']], ['c', ['a']]]))).keys()].sort().join(',');
+      r.outMs = m.outMs({ duration: 2, stops: [0.5] });
+      return r;
+    });
+    ok(fn.top === -130 && fn.miss === 0 && fn.bottom === 30 && fn.right === 80, 'dock edge: odsunięcie z obrysów, tylko przy kolizji', fn);
+    ok(fn.max.dy === -25 && fn.chain.dy === -55 && fn.fallback.dy === -77 && fn.mixed.dy === -30, 'dock edge: największe z celów, łańcuch, zapasowe dy, stała + krawędź', fn);
+    ok(fn.backStart === 0 && fn.backEnd === 1 && fn.cyc === 'a,b' && fn.outMs === 1500, 'dock: back end, pętle, czas OUT', fn);
+    const sh5 = await api('/api/show');
+    const rs = (id, x, y, w, h, extra = {}) => ({ id, type: 'rect', name: id, props: { x, y, w, h, color: '#3060c0' }, ...extra });
+    const scn = (id, name, layer, nodes, extra = {}) => ({ id, name, layer, width: 1920, height: 1080, duration: 0.4, stops: [0.2], nodes, ...extra });
+    sh5.scenes.push(scn('egP', 'EPas', 'back', [rs('egPr', 0, 1000, 1920, 80)], { duration: 1.2 }));
+    sh5.scenes.push(scn('egB', 'EBelka', 'main', [rs('egBr', 200, 950, 1500, 40, { fields: { h: 'wys' } })], { dock: [{ target: 'scene:EPas', edge: 'top', gap: 10 }] }));
+    sh5.scenes.push(scn('egW', 'EWs', 'z2_ws', [rs('egWr', 200, 930, 300, 40)], { dock: [{ target: 'scene:EBelka|scene:EPas', edge: 'top', gap: 5, dur: 0.2 }, { target: 'scene:EPas', dx: 40, back: 'end', dur: 0.2 }] }));
+    sh5.pages.push({ id: 'pegP', number: 9401, scene: 'egP', values: {} }, { id: 'pegB', number: 9402, scene: 'egB', values: { wys: '40' } }, { id: 'pegW', number: 9403, scene: 'egW', values: {} });
+    const putE = await fetch(B + '/api/show?force=1', { method: 'PUT', headers: { 'X-Token': TOKEN }, body: JSON.stringify(sh5) });
+    ok(putE.ok, 'show z regułami edge / gap / back zapisany (validate.rs)', putE.status);
+    const solo = await page('/output?checker=1&layers=z2_ws&token=' + TOKEN);
+    const tfOf = (pg, layer) => pg.evaluate((l) => { const e = document.querySelector(`.vz-layer[data-layer="${l}"] .vz-scene`); if (!e) return null; const m = new DOMMatrix(getComputedStyle(e).transform); return [m.e, m.f]; }, layer);
+    await api('/api/take/9401'); await api('/api/take/9402'); await api('/api/take/9403'); await sleep(1100);
+    ok(JSON.stringify(await tfOf(out, 'z2_ws')) === '[40,-25]' && JSON.stringify(await tfOf(out, 'main')) === '[0,0]', 'dock edge na wyjściu: WS nad belką (−25) i stałe dx przy pasie', [await tfOf(out, 'z2_ws'), await tfOf(out, 'main')]);
+    await api('/api/update/9402?wys=70&save=0'); await sleep(900);
+    ok(JSON.stringify(await tfOf(out, 'main')) === '[0,-30]' && JSON.stringify(await tfOf(out, 'z2_ws')) === '[40,-55]', 'dock edge: wyższa belka (UPDATE) odsuwa się od pasa, WS jedzie z nią (łańcuch)', [await tfOf(out, 'main'), await tfOf(out, 'z2_ws')]);
+    ok(JSON.stringify(await tfOf(solo, 'z2_ws')) === '[40,-55]', 'dock edge: wyjście samej warstwy (?layers=z2_ws) liczy to samo', await tfOf(solo, 'z2_ws'));
+    await api('/api/out/back'); await sleep(500); // OUT pasa trwa 1 s: reguła back: end czeka
+    const midB = await tfOf(out, 'z2_ws');
+    await sleep(1100);
+    const endB = await tfOf(out, 'z2_ws');
+    ok(midB?.[0] === 40 && endB?.[0] === 0, 'dock back: end – dx zostaje do końca OUT celu, potem wraca', [midB, endB]);
+    await solo.close();
     await api('/api/clear');
 
     // --- ściskanie tekstu (squeeze): wskaźnik w Trio, ostrzeżenie po przekroczeniu squeezeMin ---

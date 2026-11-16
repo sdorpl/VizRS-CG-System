@@ -309,7 +309,12 @@ function loadAssetFont(name, assetBase, tries) {
 }
 let fontEpoch = 0;
 /** Nowy font: teksty mierzą się od nowa (także w scenach, które stoją i nie są odrysowywane w każdej klatce). */
-function fontsChanged() { fontEpoch++; wake(); }
+// hosty warstw, które mierzyły obrysy (powiązania krawędzi): po wczytaniu fontów liczą przesunięcia od nowa
+const rectHosts = new Set();
+function fontsChanged() {
+  fontEpoch++; wake();
+  for (const h of rectHosts) { clearTimeout(h.fontTimer); h.fontTimer = setTimeout(() => h.recomputeDock(), 0); }
+}
 if (typeof document !== 'undefined' && document.fonts) {
   document.fonts.addEventListener?.('loadingdone', fontsChanged);
 }
@@ -987,10 +992,10 @@ export class ScenePlayer {
    * Pierwsze ustawienie po powstaniu odtwarzacza (TAKE, odświeżenie wyjścia) – od razu na miejscu, bez przejścia:
    * grafika wchodząca, gdy cel już jest na antenie, nie dojeżdża z położenia bazowego (jak w BTB CG).
    */
-  setDock(dx, dy, dur) {
+  setDock(dx, dy, dur, ease) {
     const st = this.el.style, first = !this.dockSet;
     this.dockSet = true;
-    st.transition = dur > 0 && !first ? `transform ${dur}s cubic-bezier(.4,0,.2,1)` : 'none';
+    st.transition = dur > 0 && !first ? `transform ${dur}s ${DOCK_EASES[ease] || DOCK_EASES.std}` : 'none';
     st.transform = dx || dy ? `translate(${dx}px, ${dy}px)` : '';
     // położenie początkowe zatwierdzone w stylu, zanim kolejna zmiana włączy przejście
     if (first) void this.el.offsetWidth;
@@ -1799,16 +1804,189 @@ export class ScenePlayer {
 }
 
 // ------------------------------------------------------------------ host warstw (wyjście)
+/**
+ * Krzywe ruchu powiązań (dock), pole reguły `ease` (to samo w `source/render`, `DockEase`):
+ * `std` (domyślna), `out` – szybki start i miękkie hamowanie.
+ */
+export const DOCK_EASES = { std: 'cubic-bezier(.4,0,.2,1)', out: 'cubic-bezier(.22,1,.36,1)' };
+
+/** Krawędzie reguły dock (`edge`): nasza przeciwna krawędź dosuwa się do tej krawędzi celu (B1). */
+export const DOCK_EDGES = ['top', 'bottom', 'left', 'right'];
+
+/** Część celu reguły (`layer:` / `page:` / `scene:`) pasuje do grafiki `a`. */
+function dockMatch(part, a) {
+  const i = part.indexOf(':'), kind = i < 0 ? part : part.slice(0, i), val = i < 0 ? '' : part.slice(i + 1);
+  return kind === 'layer' ? a.layer === val : kind === 'page' ? String(a.page) === val : kind === 'scene' ? a.scene === val : false;
+}
+
+/**
+ * Grafiki z `air`, które wyzwalają regułę `r` sceny z warstwy `self` (własna warstwa nie wyzwala).
+ * Grafika schodząca (`leaving` – trwa jej animacja OUT) liczy się tylko w regule z `back: "end"` (B4).
+ */
+export function dockHits(r, air, self) {
+  const parts = String(r?.target || '').split('|').filter(Boolean);
+  return air.filter((a) => a.layer !== self && (!a.leaving || r.back === 'end') && parts.some((t) => dockMatch(t, a)));
+}
+
+/**
+ * Przesunięcie osi z reguły krawędzi (B1): obrys sceny `s` i obrys celu `t` (`[l, t, r, b]`, px kadru) w spoczynku.
+ * Tylko odsuwanie i tylko przy kolizji – gdy zakresy na drugiej osi się nakładają; inaczej 0.
+ * `top` – nasz dół do góry celu (− `gap`), `bottom` – nasza góra pod dół celu, `left` / `right` – analogicznie w poziomie.
+ */
+export function edgeShift(edge, gap, s, t) {
+  if (!s || !t) return null;
+  const g = +gap || 0;
+  if (edge === 'top' || edge === 'bottom') {
+    if (!(s[0] < t[2] && t[0] < s[2])) return 0;
+    return edge === 'top' ? Math.min(0, t[1] - g - s[3]) : Math.max(0, t[3] + g - s[1]);
+  }
+  if (!(s[1] < t[3] && t[1] < s[3])) return 0;
+  return edge === 'left' ? Math.min(0, t[0] - g - s[2]) : Math.max(0, t[2] + g - s[0]);
+}
+
+/**
+ * Przesunięcie sceny z reguł `dock` przy grafikach na antenie `air` (`[{ layer, page, scene, rect?, leaving? }]`), scena na warstwie `self`.
+ * Cele: `layer:<nazwa>`, `page:<numer>`, `scene:<nazwa>`, kilka: `a|b` (reguła działa raz, gdy na antenie jest którykolwiek).
+ * - reguła stała: `dx` / `dy`; osobne reguły się sumują;
+ * - reguła krawędzi (`edge`, `gap`, B1): przesunięcie z obrysu celu (`a.rect` + przesunięcie celu z jego powiązań – `opts.offset(a)`, B2)
+ *   i własnego (`opts.rect`, wartość albo funkcja); przy kilku celach i kilku regułach jednej osi – największe przesunięcie, nie suma (B3);
+ *   bez obrysu (cel albo scena nie rysują nic mierzalnego) – zapasowe `dx` / `dy` reguły;
+ * - czas i krzywa: z ostatniej trafionej reguły; bez trafienia (powrót) – z ostatniej reguły sceny.
+ * Wynik w całych px. Także podgląd w VizRS CG Artist; ta sama semantyka w `source/render` (`host.rs`).
+ */
+export function dockShift(rules, air, self, opts = {}) {
+  let dx = 0, dy = 0, ex = 0, ey = 0, dur = 0.6, ease = 'std', own;
+  const ownRect = () => (own === undefined ? (own = (typeof opts.rect === 'function' ? opts.rect() : opts.rect) || null) : own);
+  const far = (a, b) => (Math.abs(b) > Math.abs(a) ? b : a);
+  const last = rules?.length ? rules[rules.length - 1] : null;
+  if (last) { dur = last.dur ?? dur; ease = last.ease || ease; }
+  for (const r of rules || []) {
+    const hits = dockHits(r, air, self);
+    if (!hits.length) continue;
+    dur = r.dur ?? dur; ease = r.ease || 'std';
+    if (!DOCK_EDGES.includes(r.edge)) { dx += +r.dx || 0; dy += +r.dy || 0; continue; }
+    const vert = r.edge === 'top' || r.edge === 'bottom', fallback = vert ? +r.dy || 0 : +r.dx || 0;
+    for (const h of hits) {
+      const tr = h.rect, o = tr && opts.offset ? opts.offset(h) : null;
+      const t = tr && o ? [tr[0] + o.dx, tr[1] + o.dy, tr[2] + o.dx, tr[3] + o.dy] : tr;
+      const v = edgeShift(r.edge, r.gap, ownRect(), t);
+      if (vert) ey = far(ey, v ?? fallback); else ex = far(ex, v ?? fallback);
+    }
+  }
+  return { dx: Math.round(dx + ex), dy: Math.round(dy + ey), dur, ease };
+}
+
+/**
+ * Warstwy w pętlach powiązań krawędzi (A → B → … → A): przesunięcie celu z jego powiązań (łańcuch, B2) liczy się tylko
+ * poza pętlą. `deps`: warstwa → warstwy jej celów. Wynik: warstwa → zbiór warstw tej samej pętli.
+ */
+export function dockCycles(deps) {
+  const reach = (from) => {
+    const seen = new Set(), st = [...(deps.get(from) || [])];
+    while (st.length) { const x = st.pop(); if (seen.has(x)) continue; seen.add(x); st.push(...(deps.get(x) || [])); }
+    return seen;
+  };
+  const R = new Map([...deps.keys()].map((k) => [k, reach(k)])), out = new Map();
+  for (const [k, rk] of R) {
+    if (!rk.has(k)) continue;
+    out.set(k, new Set([...rk].filter((x) => R.get(x)?.has(k))));
+  }
+  return out;
+}
+
+/** Czas animacji OUT sceny w ms (od ostatniego stop pointu do końca; bez wyjścia – 0), jak `ScenePlayer.out`. */
+export function outMs(scene) {
+  const s = [...(scene?.stops || [])].sort((a, b) => a - b), d = +scene?.duration || 0;
+  return s.length && d > s[s.length - 1] + 1e-3 ? (d - s[s.length - 1]) * 1000 : 0;
+}
+
+/** Czy element kanwy coś rysuje (styl w linii: display, visibility, krycie – do `stop` włącznie). */
+function shownTo(el, stop) {
+  for (let e = el; e && e !== stop; e = e.parentElement) {
+    const st = e.style;
+    if (st.display === 'none' || st.visibility === 'hidden' || (st.opacity !== '' && +st.opacity <= 0)) return false;
+  }
+  return true;
+}
+
+/**
+ * Obrys sceny w spoczynku (B1): pierwszy stop point, wartości strony `values`; `[l, t, r, b]` w px kadru (z `scene.x/y`,
+ * bez powiązań) albo null, gdy nic nie rysuje. Suma prostokątów elementów rysujących: tekst – obrys napisu, prostokąt / elipsa
+ * z wypełnieniem, tłem albo ramką, obraz, kod QR, ticker; bez grup, pustych prostokątów i cieni. Scena budowana poza widokiem w `mount`.
+ */
+export function restRect(scene, values, mount) {
+  if (!scene || !mount) return null;
+  const box = document.createElement('div');
+  Object.assign(box.style, { position: 'absolute', left: '0', top: '0', width: '0', height: '0', visibility: 'hidden', pointerEvents: 'none' });
+  mount.appendChild(box);
+  let p = null;
+  try {
+    p = new ScenePlayer(box, scene, values || {}, {});
+    // stan ustalony jak w pierwszej klatce (autofollow, dopasowanie tekstu bez dochodzenia), nie po klatce z chwili 0
+    p._lastApply = 0;
+    p.seekStop(0);
+    const base = p.el.getBoundingClientRect(), k = base.width / (+scene.width || 1920) || 1;
+    let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+    for (const it of p.items) {
+      const n = it.node;
+      if (n.type === 'group' || !shownTo(it.el, p.el)) continue;
+      let el = it.el;
+      if (n.type === 'text' || n.type === 'clock') {
+        if (!it.span?.textContent.trim()) continue;
+        el = it.span;
+      } else if (n.type === 'rect' || n.type === 'ellipse') {
+        const cs = getComputedStyle(it.el), bg = (cs.backgroundColor.match(/[\d.]+/g) || []).map(Number);
+        if (!((bg.length === 4 ? bg[3] > 0 : bg.length === 3) || cs.backgroundImage !== 'none' || parseFloat(cs.borderTopWidth) > 0 || parseFloat(cs.borderLeftWidth) > 0)) continue;
+      }
+      const q = el.getBoundingClientRect();
+      if (!(q.width > 0 && q.height > 0)) continue;
+      l = Math.min(l, q.left); t = Math.min(t, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom);
+    }
+    if (!(r > l && b > t)) return null;
+    const px = (v, o) => Math.round(((v - o) / k) * 100) / 100;
+    return [px(l, base.left), px(t, base.top), px(r, base.left), px(b, base.top)];
+  } catch { return null; } finally { p?.destroy(); box.remove(); }
+}
+
 export class LayerHost {
   constructor(el, opts = {}) {
     this.el = el;
     this.opts = opts;
     this.layers = new Map();
+    // obecność na antenie warstw spoza `?layers` (warstwa → { page, scene }): nie są rysowane, ale bywają celem powiązań;
+    // bez tego wyjście jednej warstwy (playout z osobnym procesem na warstwę) nie widzi celów z innych warstw
+    this.foreign = new Map();
+    // grafiki w trakcie animacji OUT (do `until`, performance.now) – cele reguł z `back: "end"` (B4)
+    this.leaving = [];
+    // obrysy w spoczynku (B1): scena → { values, rect } (pomiar raz na stronę i wartości)
+    this.rects = new WeakMap();
+    // ostatnie przesunięcia warstw (łańcuch dla grafik schodzących, B2)
+    this.shifts = new Map();
     this.filter = opts.layers || null; // np. ['main','front']
     this.dockOff = new Set(); // warstwy z wyłączonym powiązaniem (nadpisanie operatora)
     this.bus = opts.bus || 'program'; // 'program' | 'preview' (zdarzenia z `bus` innym niż ten są pomijane)
   }
   accepts(name) { return !this.filter || this.filter.includes(name); }
+  setForeign(name, scene, page, values) {
+    if (scene && typeof scene === 'object') this.foreign.set(name, { page: page?.number, scene: scene.name, src: scene, values: values || {} });
+    else this.foreign.delete(name);
+  }
+  /** Grafika `src` z warstwy `layer` zaczyna OUT: do końca jej animacji wyjścia jest celem reguł z `back: "end"`. */
+  leave(layer, src, values, page) {
+    const ms = outMs(src);
+    if (!src || ms <= 0) return;
+    this.leaving.push({ layer, page: page?.number, scene: src.name, src, values: values || {}, until: performance.now() + ms, off: this.shifts.get(layer) || null });
+  }
+  /** Obrys sceny w spoczynku z pamięci (pomiar przy nowej stronie, wartościach albo wersji szablonu). */
+  rectOf(src, values) {
+    if (!src) return null;
+    const c = this.rects.get(src);
+    if (c && c.values === values && c.fe === fontEpoch) return c.rect;
+    const rect = restRect(src, values, this.el);
+    this.rects.set(src, { values, rect, fe: fontEpoch }); // po wczytaniu fontów tekst mierzony od nowa
+    rectHosts.add(this);
+    return rect;
+  }
   layer(name) {
     let L = this.layers.get(name);
     if (!L) {
@@ -1823,9 +2001,14 @@ export class LayerHost {
     return L;
   }
   take(name, scene, values, since, page) {
-    if (!this.accepts(name)) return;
+    if (!this.accepts(name)) {
+      const f = this.foreign.get(name);
+      if (f) this.leave(name, f.src, f.values, { number: f.page });
+      this.setForeign(name, scene, page, values);
+      return;
+    }
     const L = this.layer(name);
-    if (L.player && !L.player.dead) L.player.out();
+    if (L.player && !L.player.dead) { this.leave(name, L.player.scene, L.player.values, L.page); L.player.out(); }
     try {
       L.player = new ScenePlayer(L.div, scene, values, { assetBase: this.opts.assetBase });
       L.player.take();
@@ -1839,28 +2022,51 @@ export class LayerHost {
   /**
    * Powiązania (dock): scena z regułami `dock` przesuwa się, gdy wskazana grafika jest na antenie
    * (`layer:<nazwa>`, `page:<numer>`, `scene:<nazwa>`, kilka: `a|b`). Własna warstwa nie wyzwala własnej reguły.
+   * Liczone dla wszystkich warstw anteny (także spoza `?layers` – łańcuch, B2), przesuwane są tylko rysowane tutaj.
    */
   recomputeDock() {
+    const now = performance.now(), host = this;
+    this.leaving = this.leaving.filter((x) => x.until > now);
+    const entry = (layer, page, src, values, extra) => ({ layer, page, scene: src?.name, src, values, ...extra, get rect() { return host.rectOf(this.src, this.values); } });
     const air = [];
-    for (const [name, L] of this.layers) if (L.player && !L.player.dead) air.push({ layer: name, page: L.page?.number, scene: L.player.scene?.name });
-    for (const [name, L] of this.layers) {
-      const p = L.player; if (!p || p.dead) continue;
-      let dx = 0, dy = 0, dur = 0.6;
-      if (!this.dockOff.has(name)) {
-        for (const r of p.scene?.dock || []) {
-          // kilka celów „a|b”: przesunięcie raz, gdy na antenie jest którykolwiek
-          const hit = String(r.target || '').split('|').some((t) => {
-            const [kind, ...rest] = t.split(':'); const val = rest.join(':');
-            return air.some((a) => a.layer !== name && (kind === 'layer' ? a.layer === val : kind === 'page' ? String(a.page) === val : kind === 'scene' ? a.scene === val : false));
-          });
-          if (hit) { dx += +r.dx || 0; dy += +r.dy || 0; dur = r.dur ?? dur; }
-        }
-      }
-      p.setDock(dx, dy, dur);
+    for (const [name, L] of this.layers) if (L.player && !L.player.dead) air.push(entry(name, L.page?.number, L.player.scene, L.player.values, { player: L.player }));
+    for (const [name, f] of this.foreign) air.push(entry(name, f.page, f.src, f.values));
+    const live = [...air];
+    for (const x of this.leaving) air.push(entry(x.layer, x.page, x.src, x.values, { leaving: true, off: x.off }));
+    const rulesOf = (e) => (this.dockOff.has(e.layer) ? [] : e.src?.dock || []);
+    // pętle reguł krawędzi: łańcuch tylko poza pętlą (zgłoszenie raz na zmianę)
+    const deps = new Map(live.map((e) => [e.layer, rulesOf(e).filter((r) => DOCK_EDGES.includes(r.edge)).flatMap((r) => dockHits(r, air, e.layer).filter((h) => !h.leaving).map((h) => h.layer))]));
+    const cyc = dockCycles(deps);
+    const loop = [...cyc.keys()].sort().join(',');
+    if (loop && loop !== this.loopSeen) ScenePlayer.onError?.({ scene: [...cyc.keys()].map((l) => live.find((e) => e.layer === l)?.scene || l).join(' ↔ '), node: '(dock)', message: 'pętla powiązań krawędzi – przesunięcie celów w pętli pominięte' });
+    this.loopSeen = loop;
+    const memo = new Map(), busy = new Set();
+    const shiftOf = (e) => {
+      if (memo.has(e.layer)) return memo.get(e.layer);
+      if (busy.has(e.layer)) return { dx: 0, dy: 0 };
+      busy.add(e.layer);
+      const same = cyc.get(e.layer);
+      const d = dockShift(rulesOf(e), air, e.layer, {
+        rect: () => e.rect,
+        offset: (h) => (h.leaving ? h.off : same?.has(h.layer) ? null : shiftOf(h)),
+      });
+      busy.delete(e.layer); memo.set(e.layer, d);
+      return d;
+    };
+    this.shifts = new Map();
+    for (const e of live) {
+      const d = shiftOf(e);
+      this.shifts.set(e.layer, { dx: d.dx, dy: d.dy });
+      e.player?.setDock(d.dx, d.dy, d.dur, d.ease);
     }
+    // koniec animacji OUT celu – przeliczenie dla reguł z back: "end"
+    clearTimeout(this.leaveTimer);
+    if (this.leaving.length) this.leaveTimer = setTimeout(() => this.recomputeDock(), Math.max(0, Math.min(...this.leaving.map((x) => x.until)) - now) + 5);
   }
   /** Wdrożenie nowej wersji szablonu w miejscu, bez ponownej animacji (stan czasu zostaje). */
   rescene(name, scene, stop) {
+    const f = this.foreign.get(name);
+    if (f && scene && typeof scene === 'object') { f.scene = scene.name; f.src = scene; } // nowa wersja szablonu: nazwa, reguły, obrys
     const p = this.layers.get(name)?.player;
     if (!p || p.dead) return;
     try { p.setScene(scene); if (!p.playing) p.seekStop(stop || 0); } catch (e) {
@@ -1871,7 +2077,13 @@ export class LayerHost {
   relayer(ev) {
     const { layer: from, to } = ev, A = this.layers.get(from), live = A?.player && !A.player.dead;
     if (this.dockOff.delete(from)) this.dockOff.add(to); else this.dockOff.delete(to);
-    if (!this.accepts(to)) { if (live) this.out(from); return; } // wyjście z ?layers: grafika opuszcza pokazywane warstwy
+    const wasForeign = this.foreign.delete(from); this.foreign.delete(to);
+    this.leaving = this.leaving.filter((x) => x.layer !== from && x.layer !== to);
+    if (!this.accepts(to)) { // wyjście z ?layers: grafika opuszcza pokazywane warstwy
+      if (live) { A.player.out(); A.player = null; } // nadal na antenie (inna warstwa) – nie „schodzi”
+      if (live || wasForeign) this.setForeign(to, ev.scene, ev.page, ev.values);
+      return;
+    }
     if (!live) { // wyjście z ?layers: grafika wchodzi na pokazywaną warstwę
       this.take(to, ev.scene, ev.values, ev.since, ev.page);
       if (ev.stop) this.layers.get(to)?.player?.seekStop(ev.stop);
@@ -1887,12 +2099,20 @@ export class LayerHost {
   }
   cont(name) { this.layers.get(name)?.player?.cont(); }
   out(name) {
+    const f = this.foreign.get(name);
+    if (f) { this.leave(name, f.src, f.values, { number: f.page }); this.foreign.delete(name); }
     const L = this.layers.get(name);
-    if (L?.player && !L.player.dead) L.player.out();
+    if (L?.player && !L.player.dead) { this.leave(name, L.player.scene, L.player.values, L.page); L.player.out(); }
     if (L) L.player = null;
   }
-  update(name, values) { const p = this.layers.get(name)?.player; if (p && !p.dead) p.update(values); }
+  update(name, values) {
+    const f = this.foreign.get(name);
+    if (f) f.values = values || {};
+    const p = this.layers.get(name)?.player; if (p && !p.dead) p.update(values);
+  }
   clear() {
+    this.foreign.clear();
+    this.leaving = [];
     for (const L of this.layers.values()) {
       if (L.player) L.player.destroy();
       L.player = null;
@@ -1905,8 +2125,10 @@ export class LayerHost {
    */
   snapshot(list) {
     const keep = new Set();
+    this.foreign.clear();
+    this.leaving = [];
     for (const l of list || []) {
-      if (!this.accepts(l.layer)) continue;
+      if (!this.accepts(l.layer)) { this.setForeign(l.layer, l.scene, l.page, l.values); continue; }
       const L = this.layer(l.layer);
       keep.add(l.layer);
       if (L.player && !L.player.dead && l.since && L.since === l.since) {
@@ -1937,11 +2159,11 @@ export class LayerHost {
       case 'snapshot': this.dockOff = new Set(ev.dockOff || []); this.snapshot(ev.layers); this.recomputeDock(); break;
       case 'take': this.take(ev.layer, ev.scene, ev.values, ev.since, ev.page); this.recomputeDock(); break;
       case 'dock': if (ev.off) this.dockOff.add(ev.layer); else this.dockOff.delete(ev.layer); this.recomputeDock(); break;
-      case 'rescene': this.rescene(ev.layer, ev.scene, ev.stop); break;
+      case 'rescene': this.rescene(ev.layer, ev.scene, ev.stop); this.recomputeDock(); break;
       case 'relayer': this.relayer(ev); this.recomputeDock(); break;
       case 'continue': this.cont(ev.layer); break;
       case 'out': this.out(ev.layer); this.recomputeDock(); break;
-      case 'update': this.update(ev.layer, ev.values); break;
+      case 'update': this.update(ev.layer, ev.values); this.recomputeDock(); break;
       case 'clear': this.clear(); this.recomputeDock(); break;
     }
   }

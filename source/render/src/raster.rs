@@ -626,6 +626,53 @@ fn glyph_tf(line: &crate::text::Line, g: &crate::text::Glyph, k: f32) -> Transfo
 }
 
 /// Obwiednia tekstu w px elementu tekstu.
+/// Obrys tego, co scena rysuje (`[l, t, r, b]` w px układu `tree`), jak `restRect` w `renderer.js`: suma pól elementów
+/// z tłem albo ramką, całych pól tickera, obrazu i kodu QR oraz obrysów elementów tekstu; bez grup, pustych prostokątów,
+/// cieni, rozmycia i przycięć `clip` (`getBoundingClientRect` ich nie uwzględnia). `None` – nic nie rysuje.
+pub fn drawn_rect(tree: &DNode) -> Option<[f64; 4]> {
+    fn walk(node: &DNode, parent: Transform, out: &mut Bounds) {
+        if node.opacity <= 0.001 {
+            return;
+        }
+        let m = mul(parent, node.m);
+        // ticker, obraz, kod QR (pole z przycięciem): całe pole, jak element w przeglądarce
+        if node.overflow.is_some() {
+            if node.w > 0.0 && node.h > 0.0 {
+                *out = out.union(Bounds::mapped(0.0, 0.0, node.w, node.h, &m));
+            }
+            return;
+        }
+        for p in &node.paints {
+            let r = match p {
+                Paint::Box { fill: Fill::Solid(c), .. } if c[3] <= 0.0 => None,
+                Paint::Box { .. } | Paint::Image { .. } | Paint::Qr { .. } => Some((0.0, 0.0, node.w, node.h)),
+                Paint::Border { width, .. } if *width > 0.0 => Some((0.0, 0.0, node.w, node.h)),
+                Paint::Rect { x, y, w, h, .. } => Some((*x, *y, x + w, y + h)),
+                Paint::Text { block, x, y, .. } if !block.lines.is_empty() && block.span[2] > block.span[0] => {
+                    Some((x + block.span[0], y + block.span[1], x + block.span[2], y + block.span[3]))
+                }
+                _ => None,
+            };
+            if let Some((l, t, r, b)) = r {
+                if r > l && b > t {
+                    *out = out.union(Bounds::mapped(l, t, r, b, &m));
+                }
+            }
+        }
+        let cm = mul(m, node.child_m);
+        for c in &node.children {
+            walk(c, cm, out);
+        }
+    }
+    // korzeń sceny przycina do kadru – liczy się treść, jak w przeglądarce (bez przycięcia)
+    let mut b = Bounds::empty();
+    let cm = mul(tree.m, tree.child_m);
+    for c in &tree.children {
+        walk(c, cm, &mut b);
+    }
+    (!b.is_empty()).then(|| [f64::from(b.l), f64::from(b.t), f64::from(b.r), f64::from(b.b)])
+}
+
 fn text_bounds(block: &TextBlock, res: &Resources) -> Bounds {
     let db = res.fonts.read().unwrap_or_else(|e| e.into_inner());
     let mut out = Bounds::empty();

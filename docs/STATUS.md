@@ -2,10 +2,12 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [plany/PLAN-rozbudowy.md](plany/PLAN-rozbudowy.md).
 >
-> **Ostatnia aktualizacja:** 2026-11-15
+> **Ostatnia aktualizacja:** 2026-11-16
 
 ## Bieżący etap
 **Wydanie 26.11.8** (2026-11-14). Od 26.11.1 (2026-11-12) numeracja rok.miesiąc.rewizja; wydania 26.11.1–26.11.8 opisuje [CHANGELOG.md](../CHANGELOG.md).
+
+**Ruch belek (powiązania dock)** – [plany/PLAN-ruch-belek.md](plany/PLAN-ruch-belek.md): wdrożony (2026-11-16) – cel na innej warstwie w wyjściu jednej warstwy (A0b), krzywa `ease` (A1), edytor w VizRS CG Artist (A2), reguła krawędzi z obrysu celu, łańcuch, największe przesunięcie, powrót po OUT celu (B1–B4). Odłożone: ustawianie w Trio (A3), nazwany stos (B5).
 
 **Osobny Artist (VizRS CG Artist)** – krok A7 planu [plany/PLAN-artist-osobny.md](plany/PLAN-artist-osobny.md) wdrożony (2026-11-07): projektowanie scen to od teraz osobny program **VizRS CG Artist** (`vizrs-cg-artist`, repo https://github.com/sdorpl/VizRS-CG-Artist, wydanie 0.3.0 z 2026-11-07, Tauri 2). W `vizrs-shell` okno Artist usunięte – powłoka obsługuje tylko Trio i wyjście (podgląd); `vizrs-shell artist` i podanie pliku kończą się błędem (kod 2) z odesłaniem do VizRS CG Artist. Paczki `.deb` i AppImage bez wpisów Artist (tylko Trio; brak skojarzeń MIME `.cgpack`/`.vizrs.json`), a `/artist` serwera zostaje jako zamrożony zapas w przeglądarce do 3.0.
 

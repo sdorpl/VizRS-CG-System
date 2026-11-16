@@ -86,13 +86,39 @@ struct NState {
     extra: Vec<DNode>,
 }
 
-/// Przesunięcie powiązania (dock): przejście `transform` z krzywą cubic-bezier(.4,0,.2,1).
+/// Krzywa ruchu powiązania (dock), pole reguły `ease` (jak `DOCK_EASES` w `renderer.js`):
+/// `std` (domyślna) – cubic-bezier(.4,0,.2,1), `out` – cubic-bezier(.22,1,.36,1) (szybki start, miękkie hamowanie).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum DockEase {
+    #[default]
+    Std,
+    Out,
+}
+
+impl DockEase {
+    pub fn of(v: Option<&Value>) -> DockEase {
+        match v.and_then(Value::as_str) {
+            Some("out") => DockEase::Out,
+            _ => DockEase::Std,
+        }
+    }
+
+    fn at(self, u: f64) -> f64 {
+        match self {
+            DockEase::Std => cubic_bezier(0.4, 0.0, 0.2, 1.0, u),
+            DockEase::Out => cubic_bezier(0.22, 1.0, 0.36, 1.0, u),
+        }
+    }
+}
+
+/// Przesunięcie powiązania (dock): przejście `transform` z krzywą reguły (`DockEase`).
 #[derive(Clone, Copy, Debug, Default)]
 struct Dock {
     from: (f64, f64),
     to: (f64, f64),
     start: f64,
     dur: f64,
+    ease: DockEase,
 }
 
 pub struct Player {
@@ -131,6 +157,27 @@ fn flatten(nodes: &[Node], parent: Option<usize>, out: &mut Vec<Node>, parents: 
 
 fn color(v: &str) -> Option<Color> {
     parse_color(v).map(|c| [(c[0] / 255.0) as f32, (c[1] / 255.0) as f32, (c[2] / 255.0) as f32, c[3] as f32])
+}
+
+/// Obrys sceny w spoczynku (powiązania krawędzi): pierwszy stop point z wartościami strony, `[l, t, r, b]` w px kadru
+/// (z `scene.x/y`, bez dock), jak `restRect` w `renderer.js`; `None` – nic nie rysuje.
+pub fn rest_rect(scene: &Scene, values: &Map<String, Value>, res: &Resources) -> Option<[f64; 4]> {
+    let clk = Clock { now: 0.0, wall: 0.0 };
+    let mut p = Player::new(scene.clone(), values.clone(), clk);
+    p.seek_stop(0);
+    p.apply(clk, res, Output::default());
+    let r = crate::raster::drawn_rect(p.tree.as_ref()?)?;
+    Some(r.map(|v| (v * 100.0).round() / 100.0))
+}
+
+/// Czas animacji OUT sceny w ms (od ostatniego stop pointu do końca; bez wyjścia – 0), jak `outMs` w `renderer.js`.
+pub fn out_ms(scene: &Scene) -> f64 {
+    let last = scene.stops.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    if last.is_finite() && scene.duration > last + 1e-3 {
+        (scene.duration - last) * 1000.0
+    } else {
+        0.0
+    }
 }
 
 /// Krzywa przejścia CSS `cubic-bezier(x1, y1, x2, y2)` w punkcie `u`.
@@ -300,18 +347,18 @@ impl Player {
         self.build();
     }
 
-    pub fn set_dock(&mut self, dx: f64, dy: f64, dur: f64, now: f64) {
+    pub fn set_dock(&mut self, dx: f64, dy: f64, dur: f64, ease: DockEase, now: f64) {
         // pierwsze ustawienie: od razu na miejscu (grafika wchodząca przy celu na antenie nie dojeżdża) – jak `renderer.js`
         if !self.dock_set {
             self.dock_set = true;
-            self.dock = Dock { from: (dx, dy), to: (dx, dy), start: now, dur: 0.0 };
+            self.dock = Dock { from: (dx, dy), to: (dx, dy), start: now, dur: 0.0, ease };
             return;
         }
         if (dx, dy) == self.dock.to {
             return;
         }
         let cur = self.dock_at(now);
-        self.dock = Dock { from: if dur > 0.0 { cur } else { (dx, dy) }, to: (dx, dy), start: now, dur: dur.max(0.0) };
+        self.dock = Dock { from: if dur > 0.0 { cur } else { (dx, dy) }, to: (dx, dy), start: now, dur: dur.max(0.0), ease };
     }
 
     /// Przesunięcie dock w chwili `now` (ms zegara klatek).
@@ -321,7 +368,7 @@ impl Player {
             return d.to;
         }
         let u = ((now - d.start) / 1000.0 / d.dur).clamp(0.0, 1.0);
-        let k = cubic_bezier(0.4, 0.0, 0.2, 1.0, u);
+        let k = d.ease.at(u);
         (d.from.0 + (d.to.0 - d.from.0) * k, d.from.1 + (d.to.1 - d.from.1) * k)
     }
 
@@ -853,7 +900,15 @@ impl Player {
             let st = &mut self.states[i];
             st.mw = Some(layout.w);
             st.mh = Some(layout.h);
-            st.block = Some(Arc::new(TextBlock { key: hash_str(&[&key]), lines }));
+            // obrys elementu tekstu: ściśnięcie całego elementu (`scaleX`) wokół osi wg wyrównania, jak w renderer.js
+            let sx0 = if layout.per_line { 1.0 } else { layout.lines.first().map_or(1.0, |l| l.sx) };
+            let l0 = match align.as_str() {
+                "right" => layout.span_w * (1.0 - sx0),
+                "center" => layout.span_w * (1.0 - sx0) / 2.0,
+                _ => 0.0,
+            };
+            let span = [l0, 0.0, l0 + layout.span_w * sx0, layout.span_h];
+            st.block = Some(Arc::new(TextBlock { key: hash_str(&[&key]), lines, span }));
             if std::env::var_os("VIZRS_RENDER_LAYOUT").is_some() {
                 // diagnostyka zgodności z Chromium: rozmiar fontu, ściśnięcie i wymiary elementu tekstu
                 let lines: Vec<String> =
@@ -1185,7 +1240,7 @@ fn slot_nodes(o: &SlotOpts, x: &Item) -> (DNode, DNode) {
             l.sx = sx;
             l.ox = 0.0;
         }
-        block = Arc::new(TextBlock { key: block.key ^ u64::from(sx.to_bits()).rotate_left(17), lines });
+        block = Arc::new(TextBlock { key: block.key ^ u64::from(sx.to_bits()).rotate_left(17), lines, span: [0.0; 4] });
     }
     bx.paints.push(Paint::Text { block, color: o.fg, shadow: o.shadow, x: 18.0, y: 0.0 });
     (bx, cat)
@@ -1382,7 +1437,7 @@ fn line_block(res: &Resources, style: &Style, text: &str, h: f32) -> (Arc<TextBl
     let w = run.offset_width();
     let baseline = h / 2.0 + base;
     let key = hash_str(&[text, &format!("{style:?}|{h}")]);
-    (Arc::new(TextBlock { key, lines: vec![text::Line { run, x: 0.0, baseline, sx: 1.0, ox: 0.0 }] }), w, lh)
+    (Arc::new(TextBlock { key, lines: vec![text::Line { run, x: 0.0, baseline, sx: 1.0, ox: 0.0 }], span: [0.0; 4] }), w, lh)
 }
 
 /// Etykieta tickera: tekst wyśrodkowany w polu `w`×`h`.
