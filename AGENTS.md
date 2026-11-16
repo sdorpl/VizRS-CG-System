@@ -18,10 +18,9 @@ To repo jest częścią pakietu **VizRS**. Opis całego pakietu (mapa aplikacji,
 |---|---|---|
 | **VizRS CG System** (`VizRS CG System`) | silnik grafiki: Trio, wyjście `/output`, TCP 6100, HTTP/SSE, `vizrs-render`; źródło wspólnego kodu i zasad pakietu | protokół VizRS, `/output`, `vizrs-render`, format show i `.cgpack` (`docs/API.md`) |
 | **VizRS CG Artist** (`VizRS CG Artist`) | edytor scen i animacji (Tauri 2) | – (klient CG System) |
-| **VizRS CG Playout** (`VirtRS CG Playout`) | sidecar grafiki i live ingest obok ErsatzTV; Live API | Live API `:7700` (DOKUMENTACJA §1) |
-| **VizRS Live** (`VizRS Live`) | panel kanału nad ErsatzTV legacy, VizRS Bridge, natywny klient panelu | most `/vizrs-bridge/*`, wspólny stos compose |
+| **VizRS CG Playout** (`VirtRS CG Playout`) | sidecar grafiki i live ingest obok ErsatzTV; panel kanału nad ErsatzTV legacy (`panel/`, dawny VizRS Live): VizRS Bridge, natywny klient panelu; stos compose | Live API `:7700`, API panelu i most `/vizrs-bridge/*` (`docs/API.md`) |
 
-Kierunek (decyzja 2026-11-15): VizRS Live łączy się z VizRS CG Playout w jeden produkt **„VizRS CG Playout”** (plan: sdorpl/VizRS §3).
+VizRS Live (panel, most, okno) połączono 2026-11-15 z VizRS CG Playout w jeden produkt **„VizRS CG Playout”** z jedną wersją i jednym wydaniem (decyzja D1, plan: sdorpl/VizRS §3); repo `sdorpl/VizRS-Live-Playout` przechodzi do archiwum.
 
 Zgodność – wszystkie aplikacje w bieżących wersjach działają razem:
 - **Styk zmienia się po obu stronach w tym samym cyklu.** Opis styku jest u dostawcy; klient opisuje tylko, jak z niego korzysta.
@@ -158,13 +157,13 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/fonts.rs`, `fonts_data.rs` | wbudowane fonty offline (`/fonts/fonts.css`) |
 | `source/web/renderer.js` | `ScenePlayer`, `PROPS`, `TYPES`, krzywe, pola, autofollow, tekst, ticker, zegar |
 | `source/web/artist.html` | edytor scen (zamrożony – zapas w przeglądarce) |
-| `source/web/trio.html` | playout – jedna strona na stanowisko i telefon (układ dotykowy ≤ 760 px, jak panel VizRS Live) |
+| `source/web/trio.html` | playout – jedna strona na stanowisko i telefon (układ dotykowy ≤ 760 px, jak panel VizRS CG Playout) |
 | `source/web/trio-sw.js`, `trio.webmanifest`, `trio-icon.*`, `login.html` | Trio jako aplikacja na telefon (PWA): service worker, manifest, ikony, ekran logowania |
 | `source/web/dialogs.js`, `native.js` | okna pytań aplikacji (`ask`, `askText`, `choose`) zamiast `confirm()`/`prompt()`; most strony z oknem natywnym |
 | `source/web/field-rules.js` | reguły pól (limity, wersaliki, typografia) |
 | `source/web/output.html` | wyjście OBS (`?layers`, `?bus=preview`, `?mode=fill|key`, `?bg`, `?checker`) |
 | `source/web/index.html`, `ui.css`, `ui-frozen.css` | strona startowa; `ui.css` – style własne Trio i Artist (ładowane po `vizrs-ui.css`); `ui-frozen.css` – zamrożony dawny wygląd dla `/artist` i strony startowej |
-| `source/web/vizrs-ui.css` | wspólny rdzeń wyglądu rodziny VizRS (tokeny i kontrolki panelu VizRS Live); źródło kopii w VizRS Live (`scripts/sync-ui.sh`) i VizRS CG Artist (`tools/sync-cg.sh`), obie sprawdzane w CI (`--check`) – zmieniaj tylko tutaj |
+| `source/web/vizrs-ui.css` | wspólny rdzeń wyglądu rodziny VizRS (tokeny i kontrolki panelu VizRS CG Playout); źródło kopii w VizRS CG Playout (`panel/scripts/sync-ui.sh`) i VizRS CG Artist (`tools/sync-cg.sh`), obie sprawdzane w CI (`--check`) – zmieniaj tylko tutaj |
 | `source/web/text-model.js`, `richtext.js` | reguły pól, typografia PL, Word Replace; znaczniki `{b}{i}{u}{c=}{sz=}` i `[[ ]]` |
 | `source/web/ticker-model.js`, `ticker-items.js`, `color-picker.js` | model wiadomości tickera; edytor listy wiadomości i wybór koloru (Trio i Artist) |
 | `source/web/qr.js` | generator kodów QR offline |
