@@ -52,20 +52,19 @@ Odpowiedniki pojęć Viz:
 
 ### Pakiet VizRS – zgodność aplikacji
 
-VizRS CG System to jedna z czterech aplikacji pakietu VizRS, które mają być **zawsze ze sobą zgodne** (bieżące wersje działają razem).
+VizRS CG System to jedna z trzech aplikacji pakietu VizRS, które mają być **zawsze ze sobą zgodne** (bieżące wersje działają razem).
 
 | Repozytorium | Rola | Styk z tą aplikacją |
 |---|---|---|
 | **VizRS CG System** (to repo) | silnik grafiki (Rust): Trio (playout stron), wyjście `/output` (też anteny kanałów `bus=ch-N`), API TCP 6100 / HTTP / SSE (opis: `docs/API.md`), serwer `vizrs`; zamrożony zapasowy Artist w przeglądarce | – |
-| [VizRS CG Playout](../../VirtRS%20CG%20Playout) (katalog `VirtRS CG Playout`) | grafika VizRS i sloty na żywo na kanałach ErsatzTV (sidecar `cg`, bez zmian w ErsatzTV) | protokół VizRS: komendy TCP 6100 (`AUTH`, `STATE`, `TAKE`, `OUT`…), strona `/output`, renderer `vizrs-render stream` (dostawca styku: VizRS CG System, `docs/API.md`) |
-| [VizRS Live](../../VizRS%20Live) | panel kanału nad ErsatzTV legacy (sterowanie kanałami, ramówką, playoutami bez web GUI legacy) | tylko z przeglądarki operatora: ramka `/output` (token wyjścia) i odnośniki do Trio |
+| [VizRS CG Playout](../../VirtRS%20CG%20Playout) (katalog `VirtRS CG Playout`) | grafika VizRS i sloty na żywo na kanałach ErsatzTV (sidecar `cg`, bez zmian w ErsatzTV) oraz panel kanału nad ErsatzTV legacy (`panel/`, dawny VizRS Live) | sidecar: protokół VizRS – komendy TCP 6100 (`AUTH`, `STATE`, `TAKE`, `OUT`…), strona `/output`, renderer `vizrs-render stream`/`thumb`; panel: tylko z przeglądarki operatora – ramka `/output` (token wyjścia) i odnośniki do Trio (dostawca styku: VizRS CG System, `docs/API.md`) |
 | [VizRS CG Artist](../../VizRS%20CG%20Artist) | samodzielny edytor grafik i animacji (Tauri 2), projektuje sceny; działa też bez serwera | wysyłanie scen na serwer `vizrs` (dostawca styku: VizRS CG System) |
 
-Opis całego pakietu (mapa, styki, plan porządkowania – m.in. połączenie VizRS Live z VizRS CG Playout w jeden produkt „VizRS CG Playout”): [sdorpl/VizRS](https://github.com/sdorpl/VizRS).
+Opis całego pakietu (mapa, styki, plan porządkowania; VizRS Live połączony 2026-11-15 z VizRS CG Playout w jeden produkt „VizRS CG Playout”): [sdorpl/VizRS](https://github.com/sdorpl/VizRS).
 
 Zasady zgodności:
 
-- **Styk zmienia się w obu repozytoriach naraz.** VizRS CG System jest dostawcą protokołu TCP 6100, API HTTP/SSE, wyjścia `/output` i Trio dla pozostałych aplikacji pakietu (opis: `docs/API.md`). Zmiana formatu komend, parametrów, struktury scen lub stron albo zachowania wyjścia po stronie serwera wymaga dostosowania klientów (VizRS CG Playout, VizRS CG Artist, VizRS Live) i ich dokumentacji, zanim wejdzie do wydania.
+- **Styk zmienia się w obu repozytoriach naraz.** VizRS CG System jest dostawcą protokołu TCP 6100, API HTTP/SSE, wyjścia `/output` i Trio dla pozostałych aplikacji pakietu (opis: `docs/API.md`). Zmiana formatu komend, parametrów, struktury scen lub stron albo zachowania wyjścia po stronie serwera wymaga dostosowania klientów (VizRS CG Playout z panelem, VizRS CG Artist) i ich dokumentacji, zanim wejdzie do wydania.
 - **Starsza wersja sąsiada nie psuje serwera ani wyjścia.** Serwer i wyjście zachowują kompatybilność wsteczną – brak nowszych pól, obecność starszych wariantów zapytań czy nieznane parametry nie mogą przerywać pracy silnika ani zakłócać emisji grafiki na żywo.
 - **Wydania razem.** Przed wydaniem VizRS CG System sprawdź z bieżącymi wersjami pozostałych aplikacji pakietu; zmianę wymagającą nowszego sąsiada odnotuj w `CHANGELOG.md` z minimalną wersją.
 

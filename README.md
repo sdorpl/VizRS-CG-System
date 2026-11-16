@@ -11,7 +11,7 @@ OBS (albo vMix, Tricaster, ATEM przez Fill/Key) pobiera przez źródło **Przegl
 
 ## Pakiet VizRS
 
-VizRS CG System to jedna z czterech aplikacji pakietu VizRS, które mają być ze sobą **zawsze zgodne**: **VizRS CG System** (to repo; silnik grafiki, Trio, `/output`), [VizRS CG Playout](../VirtRS%20CG%20Playout) (grafika i sloty na żywo na kanałach ErsatzTV), [VizRS Live](../VizRS%20Live) (panel kanału nad ErsatzTV legacy) i [VizRS CG Artist](../VizRS%20CG%20Artist) (edytor grafik i animacji). Styki i zasady zgodności: [DOKUMENTACJA §1](docs/DOKUMENTACJA.md#pakiet-vizrs--zgodność-aplikacji).
+VizRS CG System to jedna z trzech aplikacji pakietu VizRS, które mają być ze sobą **zawsze zgodne**: **VizRS CG System** (to repo; silnik grafiki, Trio, `/output`), [VizRS CG Playout](../VirtRS%20CG%20Playout) (grafika i sloty na żywo na kanałach ErsatzTV oraz panel kanału nad ErsatzTV legacy – dawny VizRS Live) i [VizRS CG Artist](../VizRS%20CG%20Artist) (edytor grafik i animacji). Styki i zasady zgodności: [DOKUMENTACJA §1](docs/DOKUMENTACJA.md#pakiet-vizrs--zgodność-aplikacji).
 
 ## Uruchomienie
 
