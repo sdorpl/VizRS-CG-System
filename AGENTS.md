@@ -59,7 +59,7 @@ Zgodność – wszystkie aplikacje w bieżących wersjach działają razem:
 
 - **Zero zależności w rdzeniu.** `source/Cargo.toml` (serwer `vizrs`) nie ma sekcji zależności — własny HTTP/1.1, SSE, JSON, OSC. Nie dodawaj tam crate'ów. Front-end to czysty JS (moduły ES), bez bundlera i bez bibliotek z CDN (wyjście musi działać offline).
 - **Wyjątek: okno natywne `source/shell/`** (`vizrs-shell`, Tauri 2 od 2026-11-12 – decyzja użytkownika, plan [PLAN-wyglad-live-i-tauri.md](docs/plany/PLAN-wyglad-live-i-tauri.md) T1) — osobny workspace z własnym `Cargo.lock`; dozwolone tylko crate'y wymienione w nagłówku `source/shell/Cargo.toml` (tauri, tauri-plugin-dialog, tauri-plugin-single-instance, serde_json, webkit2gtk; tauri-build) – te same co VizRS CG Artist. Okno nie wkompilowuje serwera, tylko uruchamia `vizrs serve --idle-exit` albo dołącza do działającego; nie dawaj stronie dostępu do systemu: komenda `ipc` z białą listą (`bridge.rs`), uprawnienie tylko dla adresu bieżącego serwera (`allow_server`). Zmiana renderera → `node tools/engines.js` (Chromium vs WebView okna, musi być 0 różnic).
-- **UI jest wbudowane w binarkę** (`include_str!` w `source/src/main.rs`, tablica `STATIC`). Wniosek:
+- **UI jest wbudowane w binarkę** (`include_str!` w `source/src/static_files.rs`, tablica `STATIC`). Wniosek:
   - zmiana w `source/web/*` nie działa w uruchomionym programie, dopóki nie przebudujesz binarki albo nie uruchomisz z `--web source/web`;
   - nowy plik w `web/` trzeba dopisać do `STATIC`;
   - `start-linux.sh` uruchamia `bin/linux-x86_64/vizrs` (plik w repo) — po zmianach UI skopiuj tam `source/target/release/vizrs`.
@@ -141,6 +141,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | Ścieżka | Rola |
 |---|---|
 | `source/src/main.rs` | serwer HTTP, routing `/api/*`, pliki statyczne (`STATIC`), port TCP, tryb okna (`app_window`) |
+| `source/src/static_files.rs` | pliki statyczne: UI wbudowane w binarkę (`STATIC`, `include_str!`), fonty, `/assets/*`, `mime`, `safe_name` |
 | `source/src/config.rs` | opcje CLI i zmienne `VIZRS_*` (czysty parser), komendy `serve`/`artist`/`trio`/`output`, `--healthcheck` |
 | `source/src/app.rs` | okna aplikacji: wyszukiwanie Chromium/Edge, argumenty `--app`, profil, `--connect` |
 | `source/src/datalock.rs`, `client.rs`, `shutdown.rs` | blokada katalogu danych (`.vizrs.lock`), klient HTTP GET, SIGTERM/Ctrl+C bez zależności |
