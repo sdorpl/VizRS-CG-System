@@ -140,7 +140,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 
 | Ścieżka | Rola |
 |---|---|
-| `source/src/main.rs` | serwer HTTP, routing `/api/*`, pliki statyczne (`STATIC`), port TCP, tryb okna (`app_window`) |
+| `source/src/main.rs` | serwer HTTP (połączenia, limity, SSE), routing `/api/*`, tryb okna (`app_window`) |
+| `source/src/commands.rs` | komendy tekstowe (`exec_command`, `@kanał`): port TCP 6100, OSC, makra, komendy zbiorcze |
 | `source/src/static_files.rs` | pliki statyczne: UI wbudowane w binarkę (`STATIC`, `include_str!`), fonty, `/assets/*`, `mime`, `safe_name` |
 | `source/src/config.rs` | opcje CLI i zmienne `VIZRS_*` (czysty parser), komendy `serve`/`artist`/`trio`/`output`, `--healthcheck` |
 | `source/src/app.rs` | okna aplikacji: wyszukiwanie Chromium/Edge, argumenty `--app`, profil, `--connect` |
