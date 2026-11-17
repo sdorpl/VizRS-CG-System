@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Powiązania (dock) – poprawka: reguła krawędzi w rendererze natywnym po wczytaniu fontu celu.** `vizrs-render stream` pobiera fonty z zasobów w tle; proces warstwy mierzył obrys celu (np. belki z fontem `Bahnschrift_2.ttf` i tłem z autofollow) jeszcze bez fontu i trzymał ten pomiar do następnego zdarzenia – grafika odsuwała się od belki o wysokości bez tekstu i nachodziła na dwuwierszową belkę (S2, kanał 4, 2026-11-17). Teraz nowy font albo obraz unieważnia obrysy i powiązania liczą się od nowa (jak w `renderer.js`). Test `vizrs-render`. DOKUMENTACJA §4.7.
+
 ## 26.11.9 (2026-11-16)
 
 - **Powiązania (dock) – poprawka: cel na innej warstwie przy wyjściu z `?layers=`:** wyjście pokazujące wybrane warstwy (`/output?layers=…`, a w playoucie VizRS CG Playout – proces `vizrs-render` na każdą warstwę, `native_layers`) nie widziało grafik z pozostałych warstw, więc reguła z celem na innej warstwie nigdy nie działała na antenie. Teraz `renderer.js` i renderer natywny śledzą obecność wszystkich warstw (take, out, snapshot, relayer, rescene, clear), a rysują tylko wybrane. Testy e2e i `vizrs-render`. DOKUMENTACJA §4.7, plan [PLAN-ruch-belek.md](docs/plany/PLAN-ruch-belek.md) A0b.

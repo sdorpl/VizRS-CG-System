@@ -216,6 +216,8 @@ pub struct Host {
     dock_dirty: bool,
     /// Ostatnio zgłoszona pętla powiązań.
     loop_seen: String,
+    /// Wersja zasobów (fonty, obrazy) przy ostatnim pomiarze obrysów: font wczytany w tle zmienia obrys tekstu.
+    rest_epoch: u64,
     pub output: Output,
     /// Wymiar sceny (strona /output: `?w=&h=`, domyślnie 1920×1080).
     pub stage: (f64, f64),
@@ -262,6 +264,7 @@ impl Host {
             shifts: HashMap::new(),
             dock_dirty: false,
             loop_seen: String::new(),
+            rest_epoch: 0,
             output: Output::default(),
             stage: (1920.0, 1080.0),
             last_tick: None,
@@ -745,6 +748,22 @@ impl Host {
             self.last_tick = None;
             return;
         }
+        // nowy font albo obraz (wczytany w tle, `stream`): obrysy mierzone bez niego są nieaktualne – jak `rectHosts` w renderer.js
+        let epoch = res.epoch();
+        if epoch != self.rest_epoch {
+            self.rest_epoch = epoch;
+            let mut had = false;
+            for l in &mut self.layers {
+                had |= l.rest.take().is_some();
+            }
+            for f in &mut self.foreign {
+                had |= f.rest.take().is_some();
+            }
+            for x in &mut self.leaving {
+                had |= x.rest.take().is_some();
+            }
+            self.dock_dirty |= had;
+        }
         // powiązania: po zdarzeniach anteny i po końcu animacji OUT celu (back: "end"); przed ruchem klatki
         if self.dock_dirty || self.leaving.iter().any(|x| x.until <= clk.now) {
             self.recompute_dock(clk.now, res);
@@ -971,6 +990,43 @@ mod tests {
         };
         assert_eq!(run("start"), (0.0, 0.0), "domyślnie powrót w chwili OUT celu");
         assert_eq!(run("end"), (-100.0, 0.0), "back: end – na miejscu do końca OUT celu, potem powrót");
+    }
+
+    /// Font celu wczytywany w tle (`stream`): obrys zmierzony bez niego jest odświeżany po wczytaniu – reguła krawędzi
+    /// przelicza się sama (dotąd do następnego zdarzenia zostawało przesunięcie z obrysu bez tekstu).
+    #[test]
+    fn dock_edge_remeasures_after_font_loads() {
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../web/fonts/barlow/barlow-latin-700-normal.woff2")).unwrap();
+        let fetch: std::sync::Arc<crate::res::Fetch> = std::sync::Arc::new(move |_p: &str| {
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            Ok(bytes.clone())
+        });
+        let res = Resources::new(crate::font::FontDb::new(), Some(fetch), false);
+        let belka = json!({"name":"Belka","duration":1,"stops":[0.5],"nodes":[
+            {"id":"t","type":"text","props":{"x":0,"y":800,"w":1000,"h":200,"text":"TEKST","font":"Test.woff2","size":60,"color":"#ffffff"}}]});
+        let kafel = json!({"name":"Kafel","duration":1,"stops":[0.5],"nodes":[rect("k", 0.0, 950.0, 100.0, 50.0)],
+            "dock":[{"target":"page:1001","edge":"top","gap":0,"dy":-5}]});
+        let mut h = Host::new(Some(vec!["prog".into()]), "program");
+        let step = |h: &mut Host, e: &Value, now: f64| {
+            h.handle(e, clk(now));
+            h.tick(clk(now), &res);
+        };
+        step(&mut h, &json!({"t":"take","layer":"prog","scene":kafel}), 0.0);
+        step(&mut h, &json!({"t":"take","layer":"main","scene":belka,"page":{"number":1001}}), 0.0);
+        let first = h.current("prog").map(|p| p.dock_at(1e9).1).unwrap_or_default();
+        let mut now = 0.0;
+        let mut last = first;
+        for _ in 0..60 {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            now += 50.0;
+            h.tick(clk(now), &res);
+            last = h.current("prog").map(|p| p.dock_at(1e9).1).unwrap_or_default();
+            if last != first {
+                break;
+            }
+        }
+        assert_eq!(first, -5.0, "bez fontu – zapasowe dy");
+        assert!(last < -20.0, "po wczytaniu fontu – obrys tekstu: {last}");
     }
 
     #[test]
