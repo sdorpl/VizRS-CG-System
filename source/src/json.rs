@@ -69,6 +69,7 @@ impl Json {
         }
     }
 
+    #[cfg(test)]
     pub fn as_arr(&self) -> &[Json] {
         match self {
             Json::Arr(a) => a,
@@ -76,17 +77,11 @@ impl Json {
         }
     }
 
+    #[cfg(test)]
     pub fn as_str(&self) -> Option<&str> {
         if let Json::Str(s) = self { Some(s) } else { None }
     }
 
-    pub fn as_f64(&self) -> Option<f64> {
-        match self {
-            Json::Num(n) => Some(*n),
-            Json::Str(s) => s.trim().parse().ok(),
-            _ => None,
-        }
-    }
 
     pub fn is_obj(&self) -> bool {
         matches!(self, Json::Obj(_))

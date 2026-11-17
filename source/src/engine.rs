@@ -784,21 +784,8 @@ impl Engine {
         if ch.is_empty() { self.take(key, ov) } else { self.channel_take(ch, key, ov) }
     }
 
-    pub fn cont_on(&self, ch: &str, key: &str) -> Result<Json, String> {
-        if ch.is_empty() { self.cont(key) } else { self.channel_cont(ch, key) }
-    }
-
     pub fn out_on(&self, ch: &str, key: &str) -> Result<Json, String> {
         if ch.is_empty() { self.out(key) } else { self.channel_out(ch, key) }
-    }
-
-    pub fn clear_on(&self, ch: &str) -> Result<Json, String> {
-        if ch.is_empty() {
-            self.clear();
-            Ok(Json::obj().with("ok", true))
-        } else {
-            self.channel_clear(ch)
-        }
     }
 
     pub fn deploy_on(&self, ch: &str, key: &str) -> Result<Json, String> {
@@ -1329,6 +1316,7 @@ impl Engine {
         Ok(r.with("item", target.as_str()))
     }
 
+    #[cfg(test)]
     pub fn rundown_cursor(&self, rid: &str, item_id: &str) -> Result<(), String> {
         self.rundown_cursor_on("", rid, item_id)
     }
