@@ -160,7 +160,8 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/fonts.rs`, `fonts_data.rs` | wbudowane fonty offline (`/fonts/fonts.css`) |
 | `source/web/renderer.js` | `ScenePlayer`, `PROPS`, `TYPES`, krzywe, pola, autofollow, tekst, ticker, zegar |
 | `source/web/artist.html` | edytor scen (zamrożony – zapas w przeglądarce) |
-| `source/web/trio.html` | playout – jedna strona na stanowisko i telefon (układ dotykowy ≤ 760 px, jak panel VizRS CG Playout) |
+| `source/web/trio.html` | playout – jedna strona na stanowisko i telefon (układ dotykowy ≤ 760 px, jak panel VizRS CG Playout); HTML i style, skrypt w `web/trio/` |
+| `source/web/trio/` | moduły ES Trio: `core.js` (DOM, antena, API, show i stan, blokady), `pages.js` (lista stron, edytor), `preview.js` (zoom podglądu), `fields.js` (pola, reguły, Word Replace, zapis), `onair.js` (sterowanie anteną), `rundown.js` (playlisty, rundown, makra), `system.js` (stan systemu, biblioteka show, import/eksport, klawiatura, okno natywne), `mobile.js` (telefon), `main.js` (wejście: `init()` modułów po kolei, zdarzenia z serwera); zmienne innego modułu przypisuje się przez `set…()` |
 | `source/web/trio-sw.js`, `trio.webmanifest`, `trio-icon.*`, `login.html` | Trio jako aplikacja na telefon (PWA): service worker, manifest, ikony, ekran logowania |
 | `source/web/dialogs.js`, `native.js` | okna pytań aplikacji (`ask`, `askText`, `choose`) zamiast `confirm()`/`prompt()`; most strony z oknem natywnym |
 | `source/web/field-rules.js` | reguły pól (limity, wersaliki, typografia) |
