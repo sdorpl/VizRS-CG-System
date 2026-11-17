@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 26.11.10 (2026-11-17)
+
 - **Powiązania (dock) – poprawka: reguła krawędzi w rendererze natywnym po wczytaniu fontu celu.** `vizrs-render stream` pobiera fonty z zasobów w tle; proces warstwy mierzył obrys celu (np. belki z fontem `Bahnschrift_2.ttf` i tłem z autofollow) jeszcze bez fontu i trzymał ten pomiar do następnego zdarzenia – grafika odsuwała się od belki o wysokości bez tekstu i nachodziła na dwuwierszową belkę (S2, kanał 4, 2026-11-17). Teraz nowy font albo obraz unieważnia obrysy i powiązania liczą się od nowa (jak w `renderer.js`). Test `vizrs-render`. DOKUMENTACJA §4.7.
 
 ## 26.11.9 (2026-11-16)
