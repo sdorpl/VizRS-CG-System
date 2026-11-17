@@ -15,14 +15,26 @@ let failures = 0;
 const ok = (cond, msg, info) => { console.log((cond ? 'PASS ' : 'FAIL ') + msg + (!cond && info !== undefined ? ' → ' + JSON.stringify(info) : '')); if (!cond) failures++; };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Port wolny według systemu (losowy port bywał zajęty przez inny serwer testu – test rozmawiał wtedy z cudzymi danymi). */
+const freePort = () => new Promise((res, rej) => { const s = require('net').createServer(); s.once('error', rej); s.listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => res(port)); }); });
+
 async function server() {
-  const port = 20000 + Math.floor(Math.random() * 900);
+  const port = await freePort();
   const data = fs.mkdtempSync(path.join(os.tmpdir(), 'vizrs-pack-'));
   fs.writeFileSync(path.join(data, 'show.json'), JSON.stringify({ scenes: [], pages: [], playlists: [] }));
   const proc = spawn(BIN, ['--port', String(port), '--tcp', '0', '--data', data], { stdio: 'ignore' });
   const B = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 50; i++) { try { await fetch(B + '/api/state'); break; } catch (e) { await sleep(100); } }
+  // odpowiada nasz proces, nie inny serwer na tym porcie
+  if (proc.exitCode !== null) throw new Error(`serwer testu nie wystartował na porcie ${port}`);
   return { B, proc, data, api: (p, o = {}) => fetch(B + p, o).then((r) => r.json()) };
+}
+/** Zatrzymanie serwera i usunięcie danych: po SIGTERM serwer jeszcze dopisuje log i zwalnia blokadę katalogu. */
+async function stop(s) {
+  const exited = s.proc.exitCode !== null ? Promise.resolve() : new Promise((r) => s.proc.once('exit', r));
+  s.proc.kill();
+  await Promise.race([exited, sleep(5000)]);
+  fs.rmSync(s.data, { recursive: true, force: true, maxRetries: 5 });
 }
 
 (async () => {
@@ -154,7 +166,7 @@ async function server() {
       const sc4 = await C.api('/api/show');
       ok(sc4.scenes.length === 1 && sc4.scenes[0].id === 'pk' && sc4.pages[0]?.number === 5321 && sc4.pages[0]?.scene === 'pk', 'Trio: import stron – scena z id z paczki, strona z numerem przesuniętym o 1000', [sc4.scenes.map((x) => x.id), sc4.pages]);
       await tc.close();
-    } finally { C.proc.kill(); fs.rmSync(C.data, { recursive: true, force: true }); }
+    } finally { await stop(C); }
 
     // dawny eksport sceny .vizrs.json: tylko odczyt, przez ten sam import (scena zapisana, raport o formacie)
     const legacy = path.join(A.data, 'stara.vizrs.json');
@@ -176,8 +188,7 @@ async function server() {
     console.error(e); failures++;
   } finally {
     if (browser) await browser.close();
-    A.proc.kill(); Z.proc.kill();
-    fs.rmSync(A.data, { recursive: true, force: true }); fs.rmSync(Z.data, { recursive: true, force: true });
+    await stop(A); await stop(Z);
     console.log(failures ? `\n${failures} FAIL` : '\nOK');
     process.exit(failures ? 1 : 0);
   }
