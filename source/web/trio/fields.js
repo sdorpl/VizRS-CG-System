@@ -10,7 +10,7 @@ import { act } from './onair.js';
 
 export function renderStatus() {
   renderLayerSel();
-  if (!draft) { $('#estatus').innerHTML = ''; return; }
+  if (!draft) { $('#estatus').textContent = ''; return; }
   const s = sceneOf(draft), L = onAirLayer(draft.id);
   const st = s ? `szablon <b>${esc(s.name)}</b> · stopów: ${(s.stops || []).length}` : '';
   $('#estatus').innerHTML = (lockedBy ? `<b style="color:#ff9a3d">🔒 edytuje ${esc(lockedBy)}</b> · ` : '') + (L ? `<b class="on">● ON AIR</b> (stop ${L.stop + 1}/${Math.max(1, L.stops)}) · ` : '') + st;

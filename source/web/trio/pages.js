@@ -163,7 +163,7 @@ export function showSqueeze() {
   for (const [fid, ed] of tkEditors) ed.setSqueeze(pv.tickerSqueeze(fid));
   for (const el of $$('[data-sq]')) {
     const its = pv.items.filter((i) => i.vis && i.node.fields && Object.values(i.node.fields).includes(el.dataset.sq) && i.sq);
-    if (!its.length) { el.innerHTML = ''; continue; }
+    if (!its.length) { el.textContent = ''; continue; }
     // ten sam tekst w kilku węzłach (np. warianty): pokazujemy najmocniej ściśnięty
     const it = its.reduce((a, b) => (Math.min(...b.sq) < Math.min(...a.sq) || b.over ? b : a));
     const one = it.sq.length === 1;

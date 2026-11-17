@@ -897,7 +897,7 @@ export class ScenePlayer {
   get duration() { return +this.scene.duration || 0; }
 
   build() {
-    this.el.innerHTML = '';
+    this.el.textContent = '';
     this.items = [];
     this.byName = new Map();
     this._lastApply = 0;
@@ -1090,7 +1090,7 @@ export class ScenePlayer {
     if (it.cache.key !== key || !it.slots) {
       it.cache.key = key;
       if (it.tk?.mode === 'crawl') it.tk = null;
-      it.strip.innerHTML = '';
+      it.strip.textContent = '';
       const sh = p('shadow');
       Object.assign(S, { position: 'absolute', inset: '0', left: '0', top: '0', width: '100%', height: '100%', transform: '', display: 'block', color: p('color'),
         fontFamily: `"${font}", "Barlow Condensed", Inter, Arial, sans-serif`, fontWeight: p('weight'), fontSize: p('size') + 'px',
@@ -1263,7 +1263,7 @@ export class ScenePlayer {
     let tk = it.tk;
     if (!tk || tk.mode !== 'crawl') {
       it.strip._vzCss = null; // tryb slotów zapisywał styl paska wprost
-      it.strip.innerHTML = '';
+      it.strip.textContent = '';
       it.slots = null; it.cache.key = null;
       Object.assign(S, { position: 'absolute', inset: '0', left: '0', top: '0', width: '100%', height: '100%', display: 'block', transform: '', whiteSpace: 'pre' });
       const clip = document.createElement('div');
@@ -1318,7 +1318,7 @@ export class ScenePlayer {
     if (it.pin != null && n) {
       const x = items[Math.max(0, Math.min(n - 1, it.pin))];
       const k = styleKey + '|' + JSON.stringify(x);
-      if (tk.pinK !== k) { tk.pinK = k; cssWrites++; tk.pinEl.innerHTML = ''; const el = segOf(x); el.style.left = '18px'; tk.pinEl.appendChild(el); }
+      if (tk.pinK !== k) { tk.pinK = k; cssWrites++; tk.pinEl.textContent = ''; const el = segOf(x); el.style.left = '18px'; tk.pinEl.appendChild(el); }
       css(tk.pinEl, 'display', 'block'); tk.tape.style.visibility = 'hidden';
       return;
     }
@@ -1595,7 +1595,7 @@ export class ScenePlayer {
           if (it.cache.src !== src) {
             it.cache.src = src;
             cssWrites++;
-            el.innerHTML = '';
+            el.textContent = '';
             if (src) {
               const url = /^(https?:|data:|\/)/.test(src) ? src : (this.opts.assetBase || '') + '/assets/' + encodeURIComponent(src);
               const isVid = /\.(mp4|webm|mov)$/i.test(src);
@@ -2116,7 +2116,7 @@ export class LayerHost {
     for (const L of this.layers.values()) {
       if (L.player) L.player.destroy();
       L.player = null;
-      L.div.innerHTML = '';
+      L.div.textContent = '';
     }
   }
   /**
@@ -2136,7 +2136,7 @@ export class LayerHost {
         continue;
       }
       if (L.player) L.player.destroy();
-      L.div.innerHTML = '';
+      L.div.textContent = '';
       try {
         L.player = new ScenePlayer(L.div, l.scene, l.values, { assetBase: this.opts.assetBase }).seekStop(l.stop || 0);
         L.since = l.since;
@@ -2150,7 +2150,7 @@ export class LayerHost {
       if (keep.has(name)) continue;
       if (L.player) L.player.destroy();
       L.player = null;
-      L.div.innerHTML = '';
+      L.div.textContent = '';
     }
   }
   handle(ev) {
