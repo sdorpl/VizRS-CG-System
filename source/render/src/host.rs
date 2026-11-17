@@ -501,32 +501,62 @@ impl Host {
     fn recompute_dock(&mut self, now: f64, res: &Resources) {
         self.dock_dirty = false;
         self.leaving.retain(|x| x.until > now);
-        let off_of =
-            |dock_off: &[String], name: &str, rules: &[Value]| if dock_off.iter().any(|x| x == name) { Vec::new() } else { rules.to_vec() };
-        // obrysy potrzebne tylko przy regułach krawędzi
+        self.dock_rests(res);
+        let (air, rules, live) = self.dock_air();
+        let cyc = self.dock_loops(&air, &rules, live);
+        let shifts = dock_shifts(&air, &rules, &cyc, live);
+        if std::env::var_os("VIZRS_RENDER_DOCK").is_some() {
+            // diagnostyka powiązań: obrys w spoczynku i wynik każdej grafiki na antenie
+            for (i, a) in air.iter().enumerate() {
+                let s = shifts.get(i).map(|s| format!("{} {}", s.dx, s.dy)).unwrap_or_else(|| "schodzi".into());
+                eprintln!("dock {} [{}] strona {} obrys {:?} przesunięcie {s}", a.layer, a.scene, a.page, a.rect);
+            }
+        }
+        self.shifts = (0..live).map(|i| (air[i].layer.clone(), (shifts[i].dx, shifts[i].dy))).collect();
+        for l in &mut self.layers {
+            if !l.current {
+                continue;
+            }
+            let Some(i) = air[..live].iter().position(|a| a.layer == l.name) else { continue };
+            if let Some(p) = l.players.last_mut().filter(|p| !p.dead) {
+                let s = shifts[i];
+                p.set_dock(s.dx, s.dy, s.dur, s.ease, now);
+            }
+        }
+    }
+
+    /// Obrysy grafik w spoczynku – liczone tylko, gdy któraś reguła dotyczy krawędzi.
+    fn dock_rests(&mut self, res: &Resources) {
         let edges = |rules: &[Value]| rules.iter().any(|r| r.get("edge").and_then(Value::as_str).is_some_and(|e| DOCK_EDGES.contains(&e)));
         let need = self.layers.iter().any(|l| l.current && l.players.last().is_some_and(|p| !p.dead && edges(&p.scene.dock)))
             || self.foreign.iter().any(|f| edges(&f.src.dock));
-        if need {
-            for l in &mut self.layers {
-                if l.current && l.rest.is_none() {
-                    if let Some(p) = l.players.last().filter(|p| !p.dead) {
-                        l.rest = Some(rest_rect(&p.scene, &p.values, res));
-                    }
-                }
-            }
-            for f in &mut self.foreign {
-                if f.rest.is_none() {
-                    f.rest = Some(rest_rect(&f.src, &f.values, res));
-                }
-            }
-            for x in &mut self.leaving {
-                if x.rest.is_none() {
-                    x.rest = Some(rest_rect(&x.src, &x.values, res));
+        if !need {
+            return;
+        }
+        for l in &mut self.layers {
+            if l.current && l.rest.is_none() {
+                if let Some(p) = l.players.last().filter(|p| !p.dead) {
+                    l.rest = Some(rest_rect(&p.scene, &p.values, res));
                 }
             }
         }
-        // grafiki na antenie: najpierw bieżące (z regułami), potem schodzące
+        for f in &mut self.foreign {
+            if f.rest.is_none() {
+                f.rest = Some(rest_rect(&f.src, &f.values, res));
+            }
+        }
+        for x in &mut self.leaving {
+            if x.rest.is_none() {
+                x.rest = Some(rest_rect(&x.src, &x.values, res));
+            }
+        }
+    }
+
+    /// Grafiki na antenie: najpierw bieżące (z regułami, bez wyłączonych przez operatora), potem schodzące.
+    /// Zwraca listę, reguły bieżących i ich liczbę.
+    fn dock_air(&self) -> (Vec<AirE>, Vec<Vec<Value>>, usize) {
+        let off_of =
+            |dock_off: &[String], name: &str, rules: &[Value]| if dock_off.iter().any(|x| x == name) { Vec::new() } else { rules.to_vec() };
         let mut air = Vec::new();
         let mut rules: Vec<Vec<Value>> = Vec::new();
         for l in &self.layers {
@@ -564,13 +594,17 @@ impl Host {
                 rect: x.rest.flatten(),
             });
         }
-        // pętle reguł krawędzi: łańcuch tylko poza pętlą
+        (air, rules, live)
+    }
+
+    /// Pętle reguł krawędzi (łańcuch działa tylko poza pętlą); nową pętlę zgłasza raz.
+    fn dock_loops(&mut self, air: &[AirE], rules: &[Vec<Value>], live: usize) -> HashMap<String, HashSet<String>> {
         let deps: Vec<(String, Vec<String>)> = (0..live)
             .map(|i| {
                 let d = rules[i]
                     .iter()
                     .filter(|r| r.get("edge").and_then(Value::as_str).is_some_and(|e| DOCK_EDGES.contains(&e)))
-                    .flat_map(|r| dock_hits(r, &air, &air[i].layer))
+                    .flat_map(|r| dock_hits(r, air, &air[i].layer))
                     .filter(|&h| !air[h].leaving)
                     .map(|h| air[h].layer.clone())
                     .collect();
@@ -585,59 +619,7 @@ impl Host {
             eprintln!("vizrs-render: pętla powiązań krawędzi ({lp}) – przesunięcie celów w pętli pominięte");
         }
         self.loop_seen = lp;
-        struct Ctx<'a> {
-            air: &'a [AirE],
-            rules: &'a [Vec<Value>],
-            cyc: &'a HashMap<String, HashSet<String>>,
-            live: usize,
-            memo: HashMap<usize, Shift>,
-            busy: HashSet<usize>,
-        }
-        fn shift_of(c: &mut Ctx, i: usize) -> Shift {
-            if let Some(s) = c.memo.get(&i) {
-                return *s;
-            }
-            if !c.busy.insert(i) {
-                return Shift { dx: 0.0, dy: 0.0, dur: 0.6, ease: DockEase::default() };
-            }
-            let (air, rules, cyc) = (c.air, c.rules, c.cyc);
-            let me = air[i].layer.as_str();
-            let same = cyc.get(me);
-            let mut offset = |h: usize| -> Option<(f64, f64)> {
-                if air[h].leaving {
-                    return air[h].off;
-                }
-                if same.is_some_and(|s| s.contains(&air[h].layer)) || h >= c.live {
-                    return None;
-                }
-                let s = shift_of(c, h);
-                Some((s.dx, s.dy))
-            };
-            let s = dock_shift(&rules[i], air, me, air[i].rect, &mut offset);
-            c.busy.remove(&i);
-            c.memo.insert(i, s);
-            s
-        }
-        let mut ctx = Ctx { air: &air, rules: &rules, cyc: &cyc, live, memo: HashMap::new(), busy: HashSet::new() };
-        let shifts: Vec<Shift> = (0..live).map(|i| shift_of(&mut ctx, i)).collect();
-        if std::env::var_os("VIZRS_RENDER_DOCK").is_some() {
-            // diagnostyka powiązań: obrys w spoczynku i wynik każdej grafiki na antenie
-            for (i, a) in air.iter().enumerate() {
-                let s = shifts.get(i).map(|s| format!("{} {}", s.dx, s.dy)).unwrap_or_else(|| "schodzi".into());
-                eprintln!("dock {} [{}] strona {} obrys {:?} przesunięcie {s}", a.layer, a.scene, a.page, a.rect);
-            }
-        }
-        self.shifts = (0..live).map(|i| (air[i].layer.clone(), (shifts[i].dx, shifts[i].dy))).collect();
-        for l in &mut self.layers {
-            if !l.current {
-                continue;
-            }
-            let Some(i) = air[..live].iter().position(|a| a.layer == l.name) else { continue };
-            if let Some(p) = l.players.last_mut().filter(|p| !p.dead) {
-                let s = shifts[i];
-                p.set_dock(s.dx, s.dy, s.dur, s.ease, now);
-            }
-        }
+        cyc
     }
 
     /// Zdarzenie z `/events`.
@@ -876,6 +858,46 @@ impl Host {
         self.last_print = Some(print);
         true
     }
+}
+
+/// Przesunięcia bieżących grafik na antenie (pierwsze `live` z `air`): łańcuch powiązań liczony rekurencyjnie z pamięcią,
+/// cel w tej samej pętli albo schodzący bez łańcucha.
+fn dock_shifts(air: &[AirE], rules: &[Vec<Value>], cyc: &HashMap<String, HashSet<String>>, live: usize) -> Vec<Shift> {
+    struct Ctx<'a> {
+        air: &'a [AirE],
+        rules: &'a [Vec<Value>],
+        cyc: &'a HashMap<String, HashSet<String>>,
+        live: usize,
+        memo: HashMap<usize, Shift>,
+        busy: HashSet<usize>,
+    }
+    fn shift_of(c: &mut Ctx, i: usize) -> Shift {
+        if let Some(s) = c.memo.get(&i) {
+            return *s;
+        }
+        if !c.busy.insert(i) {
+            return Shift { dx: 0.0, dy: 0.0, dur: 0.6, ease: DockEase::default() };
+        }
+        let (air, rules, cyc) = (c.air, c.rules, c.cyc);
+        let me = air[i].layer.as_str();
+        let same = cyc.get(me);
+        let mut offset = |h: usize| -> Option<(f64, f64)> {
+            if air[h].leaving {
+                return air[h].off;
+            }
+            if same.is_some_and(|s| s.contains(&air[h].layer)) || h >= c.live {
+                return None;
+            }
+            let s = shift_of(c, h);
+            Some((s.dx, s.dy))
+        };
+        let s = dock_shift(&rules[i], air, me, air[i].rect, &mut offset);
+        c.busy.remove(&i);
+        c.memo.insert(i, s);
+        s
+    }
+    let mut ctx = Ctx { air, rules, cyc, live, memo: HashMap::new(), busy: HashSet::new() };
+    (0..live).map(|i| shift_of(&mut ctx, i)).collect()
 }
 
 #[cfg(test)]
