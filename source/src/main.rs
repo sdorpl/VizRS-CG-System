@@ -791,6 +791,28 @@ mod tests {
         std::fs::remove_dir_all(d).ok();
     }
 
+    /// Podział `route` na grupy według prefiksu: każdy prefiks API trafia do swojej funkcji.
+    #[test]
+    fn every_api_prefix_is_routed() {
+        let (e, cfg, d) = setup("prefixes");
+        for (m, url) in [
+            ("GET", "/api/show"), ("GET", "/api/state"), ("POST", "/api/macros"),
+            ("POST", "/api/preview/clear"), ("GET", "/api/clear"), ("GET", "/api/update/1001?save=0"), ("GET", "/api/dock/main/on"),
+            ("GET", "/api/variables"), ("GET", "/api/ticker/3001"), ("GET", "/api/carousel/stop"), ("GET", "/api/macro/stop"),
+            ("GET", "/api/assets"), ("DELETE", "/api/assets/nie-ma.png"),
+            ("GET", "/api/errors"), ("GET", "/api/health"), ("GET", "/api/locks"), ("GET", "/api/animpresets"), ("GET", "/api/wordreplace"), ("GET", "/api/fonts"), ("GET", "/api/audit"),
+            ("GET", "/api/shows"), ("GET", "/api/backups"),
+        ] {
+            let body = if url == "/api/macros" { r#"{"name":"M","steps":[{"cmd":"CLEAR"}]}"# } else { "" };
+            let (c, b) = call(&e, &cfg, m, url, body);
+            assert_ne!(c, 404, "{m} {url}: {b}");
+        }
+        for (m, url) in [("GET", "/api"), ("GET", "/api/show/x"), ("POST", "/api/report/x"), ("GET", "/api/rundown"), ("GET", "/api/pages")] {
+            assert_eq!(call(&e, &cfg, m, url, "").0, 404, "{m} {url}");
+        }
+        std::fs::remove_dir_all(d).ok();
+    }
+
     #[test]
     fn locks_over_http() {
         let (e, cfg, d) = setup("lockhttp");
