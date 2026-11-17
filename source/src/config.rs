@@ -127,53 +127,112 @@ fn flag_true(v: &str) -> bool {
 }
 
 /// Parsuje argumenty (bez nazwy programu). `env` zwraca wartość zmiennej (puste = brak).
+/// Opcja z wartością: flagi, zmienna środowiskowa (jeśli jest) i zapis wartości do konfiguracji.
+/// `name` w zapisie to nazwa użyta przez użytkownika (flaga albo zmienna) – trafia do komunikatu o błędzie.
+struct ValueOpt {
+    flags: &'static [&'static str],
+    env: Option<&'static str>,
+    set: fn(&mut Config, &str, String) -> Result<(), String>,
+}
+
+/// Opcje z wartością; zmienne środowiskowe czytane w tej kolejności.
+const VALUE_OPTS: &[ValueOpt] = &[
+    ValueOpt { flags: &["--port", "-p"], env: Some("VIZRS_PORT"), set: |c, n, v| {
+        c.port = num(n, &v)?;
+        c.port_set = true;
+        Ok(())
+    } },
+    ValueOpt { flags: &["--tcp"], env: Some("VIZRS_TCP"), set: |c, n, v| {
+        c.tcp_port = num(n, &v)?;
+        Ok(())
+    } },
+    ValueOpt { flags: &["--osc"], env: Some("VIZRS_OSC"), set: |c, n, v| {
+        c.osc_port = num(n, &v)?;
+        Ok(())
+    } },
+    ValueOpt { flags: &["--bind"], env: Some("VIZRS_BIND"), set: |c, _, v| {
+        c.bind = v;
+        Ok(())
+    } },
+    ValueOpt { flags: &["--token"], env: Some("VIZRS_TOKEN"), set: |c, n, v| {
+        c.token = Some(token(n, &v)?);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--output-token"], env: Some("VIZRS_OUTPUT_TOKEN"), set: |c, n, v| {
+        c.output_token = Some(token(n, &v)?);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--webhook"], env: Some("VIZRS_WEBHOOK"), set: |c, n, v| {
+        c.webhook = Some(webhook(n, &v)?);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--data", "-d"], env: Some("VIZRS_DATA"), set: |c, _, v| {
+        c.data = PathBuf::from(v);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--web"], env: Some("VIZRS_WEB"), set: |c, _, v| {
+        c.web_dir = Some(PathBuf::from(v));
+        Ok(())
+    } },
+    ValueOpt { flags: &["--connect"], env: Some("VIZRS_CONNECT"), set: |c, _, v| {
+        c.connect = Some(app::check_connect(&v)?);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--browser"], env: Some("VIZRS_BROWSER"), set: |c, _, v| {
+        c.window.browser = Some(v);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--position"], env: None, set: |c, _, v| {
+        let ok = v.split_once(',').map(|(x, y)| x.trim().parse::<i32>().is_ok() && y.trim().parse::<i32>().is_ok()).unwrap_or(false);
+        if !ok {
+            return Err(format!("--position: podaj X,Y (np. 1920,0), nie „{v}”"));
+        }
+        c.window.position = Some(v.replace(' ', ""));
+        Ok(())
+    } },
+    ValueOpt { flags: &["--query"], env: None, set: |c, _, v| {
+        c.window.query = Some(v);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--idle-exit"], env: None, set: |c, _, v| {
+        c.idle_exit = Some(v.trim().parse().map_err(|_| "--idle-exit: liczba sekund".to_string())?);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--linger"], env: None, set: |c, _, v| {
+        c.linger_s = v.trim().parse().map_err(|_| "--linger: liczba sekund".to_string())?;
+        Ok(())
+    } },
+];
+
+/// Przełącznik bez wartości: flaga, zmienna środowiskowa (`1`/`true`/…; jeśli jest) i zapis do konfiguracji.
+struct Switch {
+    flag: &'static str,
+    env: Option<&'static str>,
+    set: fn(&mut Config, bool),
+}
+
+const SWITCHES: &[Switch] = &[
+    Switch { flag: "--trust-proxy", env: Some("VIZRS_TRUST_PROXY"), set: |c, on| c.trust_proxy = on },
+    Switch { flag: "--log-stdout", env: Some("VIZRS_LOG_STDOUT"), set: |c, on| c.log_stdout = on },
+    Switch { flag: "--insecure", env: Some("VIZRS_INSECURE"), set: |c, on| c.insecure = on },
+    Switch { flag: "--fullscreen", env: None, set: |c, on| c.window.fullscreen = on },
+    Switch { flag: "--healthcheck", env: None, set: |c, _| c.mode = Mode::Healthcheck },
+];
+
 pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cli, String> {
     let mut c = Config::default();
     let env = |k: &str| env(k).filter(|v| !v.trim().is_empty());
 
     // 1. zmienne środowiskowe
-    if let Some(v) = env("VIZRS_PORT") {
-        c.port = num("VIZRS_PORT", &v)?;
-        c.port_set = true;
+    for o in VALUE_OPTS {
+        if let Some((k, v)) = o.env.and_then(|k| env(k).map(|v| (k, v))) {
+            (o.set)(&mut c, k, v)?;
+        }
     }
-    if let Some(v) = env("VIZRS_TCP") {
-        c.tcp_port = num("VIZRS_TCP", &v)?;
-    }
-    if let Some(v) = env("VIZRS_OSC") {
-        c.osc_port = num("VIZRS_OSC", &v)?;
-    }
-    if let Some(v) = env("VIZRS_BIND") {
-        c.bind = v;
-    }
-    if let Some(v) = env("VIZRS_TOKEN") {
-        c.token = Some(token("VIZRS_TOKEN", &v)?);
-    }
-    if let Some(v) = env("VIZRS_OUTPUT_TOKEN") {
-        c.output_token = Some(token("VIZRS_OUTPUT_TOKEN", &v)?);
-    }
-    if let Some(v) = env("VIZRS_TRUST_PROXY") {
-        c.trust_proxy = flag_true(&v);
-    }
-    if let Some(v) = env("VIZRS_LOG_STDOUT") {
-        c.log_stdout = flag_true(&v);
-    }
-    if let Some(v) = env("VIZRS_WEBHOOK") {
-        c.webhook = Some(webhook("VIZRS_WEBHOOK", &v)?);
-    }
-    if let Some(v) = env("VIZRS_DATA") {
-        c.data = PathBuf::from(v);
-    }
-    if let Some(v) = env("VIZRS_WEB") {
-        c.web_dir = Some(PathBuf::from(v));
-    }
-    if let Some(v) = env("VIZRS_CONNECT") {
-        c.connect = Some(app::check_connect(&v)?);
-    }
-    if let Some(v) = env("VIZRS_BROWSER") {
-        c.window.browser = Some(v);
-    }
-    if let Some(v) = env("VIZRS_INSECURE") {
-        c.insecure = flag_true(&v);
+    for o in SWITCHES {
+        if let Some(v) = o.env.and_then(env) {
+            (o.set)(&mut c, flag_true(&v));
+        }
     }
 
     // 2. flagi i podkomenda
@@ -186,59 +245,35 @@ pub fn parse(args: &[String], env: &dyn Fn(&str) -> Option<String>) -> Result<Cl
             Some((n, v)) if n.starts_with("--") => (n, Some(v.to_string())),
             _ => (a, None),
         };
-        let mut val = || -> Result<String, String> {
-            if let Some(v) = inline.clone() {
-                return Ok(v);
-            }
-            i += 1;
-            args.get(i).cloned().ok_or(format!("{name}: brak wartości"))
-        };
-        match name {
-            "--port" | "-p" => {
-                c.port = num(name, &val()?)?;
-                c.port_set = true;
-            }
-            "--tcp" => c.tcp_port = num(name, &val()?)?,
-            "--osc" => c.osc_port = num(name, &val()?)?,
-            "--bind" => c.bind = val()?,
-            "--token" => c.token = Some(token(name, &val()?)?),
-            "--output-token" => c.output_token = Some(token(name, &val()?)?),
-            "--trust-proxy" => c.trust_proxy = true,
-            "--log-stdout" => c.log_stdout = true,
-            "--webhook" => c.webhook = Some(webhook(name, &val()?)?),
-            "--data" | "-d" => c.data = PathBuf::from(val()?),
-            "--web" => c.web_dir = Some(PathBuf::from(val()?)),
-            "--insecure" => c.insecure = true,
-            "--healthcheck" => c.mode = Mode::Healthcheck,
-            "--connect" => c.connect = Some(app::check_connect(&val()?)?),
-            "--browser" => c.window.browser = Some(val()?),
-            "--fullscreen" => c.window.fullscreen = true,
-            "--position" => {
-                let v = val()?;
-                let ok = v.split_once(',').map(|(x, y)| x.trim().parse::<i32>().is_ok() && y.trim().parse::<i32>().is_ok()).unwrap_or(false);
-                if !ok {
-                    return Err(format!("--position: podaj X,Y (np. 1920,0), nie „{v}”"));
+        if let Some(o) = VALUE_OPTS.iter().find(|o| o.flags.contains(&name)) {
+            let v = match inline {
+                Some(v) => v,
+                None => {
+                    i += 1;
+                    args.get(i).cloned().ok_or(format!("{name}: brak wartości"))?
                 }
-                c.window.position = Some(v.replace(' ', ""));
+            };
+            (o.set)(&mut c, name, v)?;
+        } else if let Some(o) = SWITCHES.iter().find(|o| o.flag == name) {
+            (o.set)(&mut c, true);
+        } else {
+            match name {
+                "--version" | "-V" => return Ok(Cli::Version),
+                "--help" | "-h" => return Ok(Cli::Help),
+                "serve" if !mode_set => mode_set = true,
+                "artist" | "trio" | "output" if !mode_set => {
+                    mode_set = true;
+                    c.mode = Mode::App(match a {
+                        "artist" => Window::Artist,
+                        "trio" => Window::Trio,
+                        _ => Window::Output,
+                    });
+                }
+                "help" if !mode_set => return Ok(Cli::Help),
+                _ if a.starts_with('-') => return Err(format!("nieznana opcja {a}")),
+                _ if !mode_set => return Err(format!("nieznana komenda „{a}” (dostępne: serve, artist, trio, output)")),
+                _ => return Err(format!("nadmiarowy argument „{a}”")),
             }
-            "--query" => c.window.query = Some(val()?),
-            "--idle-exit" => c.idle_exit = Some(val()?.trim().parse().map_err(|_| "--idle-exit: liczba sekund".to_string())?),
-            "--linger" => c.linger_s = val()?.trim().parse().map_err(|_| "--linger: liczba sekund".to_string())?,
-            "--version" | "-V" => return Ok(Cli::Version),
-            "--help" | "-h" => return Ok(Cli::Help),
-            "serve" if !mode_set => mode_set = true,
-            "artist" | "trio" | "output" if !mode_set => {
-                mode_set = true;
-                c.mode = Mode::App(match a {
-                    "artist" => Window::Artist,
-                    "trio" => Window::Trio,
-                    _ => Window::Output,
-                });
-            }
-            "help" if !mode_set => return Ok(Cli::Help),
-            _ if a.starts_with('-') => return Err(format!("nieznana opcja {a}")),
-            _ if !mode_set => return Err(format!("nieznana komenda „{a}” (dostępne: serve, artist, trio, output)")),
-            _ => return Err(format!("nadmiarowy argument „{a}”")),
         }
         i += 1;
     }
@@ -350,6 +385,35 @@ mod tests {
         assert!(!run(&[], &[]).unwrap().port_set);
         assert!(run(&["-p", "8088"], &[]).unwrap().port_set);
         assert!(run(&[], &[("VIZRS_PORT", "9000")]).unwrap().port_set);
+    }
+
+    /// Każda zmienna `VIZRS_*` daje to samo co jej flaga; błędy wartości nazywają zmienną albo flagę.
+    #[test]
+    fn env_matches_flag() {
+        let base = [("VIZRS_TOKEN", "operator-token")];
+        for (flag, env, v) in [
+            ("--port", "VIZRS_PORT", "9001"), ("--tcp", "VIZRS_TCP", "6200"), ("--osc", "VIZRS_OSC", "9000"), ("--bind", "VIZRS_BIND", "0.0.0.0"),
+            ("--output-token", "VIZRS_OUTPUT_TOKEN", "wyjscie"), ("--webhook", "VIZRS_WEBHOOK", "http://127.0.0.1:9/h"),
+            ("--data", "VIZRS_DATA", "/tmp/d"), ("--web", "VIZRS_WEB", "web"), ("--browser", "VIZRS_BROWSER", "/usr/bin/chromium"),
+        ] {
+            let by_env = run(&[], &[base[0], (env, v)]).unwrap();
+            let by_flag = run(&[flag, v], &base).unwrap();
+            assert_eq!(format!("{by_env:?}"), format!("{by_flag:?}"), "{flag} / {env}");
+        }
+        for (flag, env) in [("--trust-proxy", "VIZRS_TRUST_PROXY"), ("--log-stdout", "VIZRS_LOG_STDOUT"), ("--insecure", "VIZRS_INSECURE")] {
+            assert_eq!(format!("{:?}", run(&[], &[(env, "1")]).unwrap()), format!("{:?}", run(&[flag], &[]).unwrap()), "{flag}");
+            assert_eq!(format!("{:?}", run(&[], &[(env, "0")]).unwrap()), format!("{:?}", run(&[], &[]).unwrap()), "{env}=0");
+        }
+        let c = run(&["trio"], &[("VIZRS_CONNECT", "https://cg.example.pl/")]).unwrap();
+        assert_eq!(c.connect.as_deref(), Some("https://cg.example.pl"));
+        assert_eq!(run(&["-d", "x"], &[]).unwrap().data, PathBuf::from("x"));
+        assert_eq!(run(&["--port=9002"], &[]).unwrap().port, 9002);
+        assert!(run(&["--tcp", "x"], &[]).unwrap_err().starts_with("--tcp"));
+        assert!(run(&["-p", "x"], &[]).unwrap_err().starts_with("-p"));
+        assert!(run(&[], &[("VIZRS_OSC", "x")]).unwrap_err().starts_with("VIZRS_OSC"));
+        assert!(run(&["--osc"], &[]).unwrap_err().starts_with("--osc: brak wartości"));
+        assert!(run(&["--trust-proxy=0"], &[]).unwrap().trust_proxy, "przełącznik nie bierze wartości");
+        assert_eq!(run(&["--healthcheck"], &[]).unwrap().mode, Mode::Healthcheck);
     }
 
     #[test]
