@@ -78,7 +78,8 @@ Zasady zgodności:
       │  HTTP /api/*  ·  SSE /events
       ▼
  vizrs (Rust, jeden plik, zero zależności)
-   engine.rs  show + warstwy on-air + karuzela/rundown/makra
+   engine/  show + warstwy on-air + kanały + karuzela/rundown/makra
+   routes.rs  API  ·  commands.rs  komendy TCP/OSC  ·  static_files.rs  UI
    validate.rs  schemat i limity  ·  backup.rs  kopie  ·  audit.rs  log
    TCP :6100  ·  OSC (UDP)  ·  webhook
       │
