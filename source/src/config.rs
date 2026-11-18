@@ -50,6 +50,9 @@ pub struct Config {
     pub idle_exit: Option<u64>,
     /// Identyfikator tej instancji serwera (z blokady katalogu danych), widoczny w `/health`.
     pub instance: String,
+    /// Panel VizRS CG Playout, którego kontami można się logować (`host:port`, `--panel-login`);
+    /// czy wolno – decyduje przełącznik w panelu. `None` = tylko tokeny.
+    pub panel_login: Option<String>,
 }
 
 impl Default for Config {
@@ -74,6 +77,7 @@ impl Default for Config {
             linger_s: 10,
             idle_exit: None,
             instance: String::new(),
+            panel_login: None,
         }
     }
 }
@@ -164,6 +168,10 @@ const VALUE_OPTS: &[ValueOpt] = &[
     } },
     ValueOpt { flags: &["--webhook"], env: Some("VIZRS_WEBHOOK"), set: |c, n, v| {
         c.webhook = Some(webhook(n, &v)?);
+        Ok(())
+    } },
+    ValueOpt { flags: &["--panel-login"], env: Some("VIZRS_PANEL_LOGIN"), set: |c, n, v| {
+        c.panel_login = Some(crate::panel_login::parse_url(&v).map_err(|e| format!("{n}: {e}"))?);
         Ok(())
     } },
     ValueOpt { flags: &["--data", "-d"], env: Some("VIZRS_DATA"), set: |c, _, v| {
@@ -340,6 +348,8 @@ Opcje (w nawiasie zmienna środowiskowa; flaga ma pierwszeństwo):
   --insecure     pozwól na nasłuch w sieci bez tokenu (VIZRS_INSECURE=1) – tylko w zaufanej sieci
   --trust-proxy  serwer za reverse proxy: adres klienta z X-Forwarded-For (log, limity) (VIZRS_TRUST_PROXY=1)
   --log-stdout   log audytowy także na standardowe wyjście, JSON w linii (VIZRS_LOG_STDOUT=1)
+  --panel-login URL  panel VizRS CG Playout (http://host:port, VIZRS_PANEL_LOGIN): logowanie do Trio i Artist
+                 kontami panelu, gdy panel ma włączone „logowanie w pakiecie”; token działa dalej
   --webhook URL  http://host:port/ścieżka dla zdarzeń onAir/offAir/error (VIZRS_WEBHOOK)
   --data KAT     katalog z show.json i assets/ (VIZRS_DATA, domyślnie vizrs-data)
   --web KAT      serwuj pliki UI z dysku zamiast wbudowanych (VIZRS_WEB)

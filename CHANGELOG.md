@@ -2,6 +2,7 @@
 
 ## Niewydane
 
+- **Logowanie do Trio i Artist kontami panelu VizRS CG Playout (opcja):** w stosie z panelem jedno konto działa w całym pakiecie. Gdy administrator panelu włączy „logowanie w pakiecie” (panel → Użytkownicy), ekran logowania Trio i Artist przyjmuje login i hasło z panelu, a kto jest zalogowany w panelu pod tym samym adresem serwera, wchodzi do Trio bez ponownego logowania. Usunięcie konta albo wyłączenie przełącznika kończy jego sesję w Trio w ciągu minuty; gdy panel nie odpowiada, Trio działa dalej. Token serwera działa jak dotąd, a Trio uruchomione samo (OBS) nie zależy od panelu. Nowa opcja `--panel-login` / `VIZRS_PANEL_LOGIN` (w stosie CG Playout ustawiona w compose), ścieżki `/login/info`, `/login`, `/logout`, ciasteczko `vizrs_session`; log audytowy podpisuje operacje kontem. Wymaga panelu VizRS CG Playout z kontami (`/api/sso`); starszy panel = tylko token. Klient HTTP serwera czyta też odpowiedzi `Transfer-Encoding: chunked`. DOKUMENTACJA §12.
 - **Bezpieczeństwo stron:** HTML w Trio i oknach wspólnych z VizRS CG Artist (paczka `.cgpack`, pytania, kolor, edytor tickera, kod QR) powstaje tylko przez szablon `html` z nowego modułu `web/dom.js`, który escapuje każdą wstawianą wartość. Przy okazji escapowane są miejsca, które wcześniej wstawiały dane bez zmian: opcje pól typu lista w edytorze strony Trio i kolory kodu QR (wartość z `"` albo `<` nie zmienia już znaczników). Bez zmian w wyglądzie i działaniu.
 
 ## 26.11.10 (2026-11-17)

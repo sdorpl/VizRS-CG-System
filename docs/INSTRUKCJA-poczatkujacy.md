@@ -27,6 +27,8 @@
 **Okno natywne (zalecane dla Trio):** `vizrs-shell` – Trio w prawdziwym oknie systemowym z menu i oknem wyjścia (Linux: `bin/linux-x86_64/vizrs-shell`; domyślnie Trio, wyjście: `vizrs-shell output`). Zamknięcie okna nie zdejmuje grafiki z anteny. Przy niezapisanych zmianach okno zapyta o zapis, a po awarii zaproponuje przywrócenie kopii roboczej. Wyjście na wybrany monitor: menu **Wyjście**. Do projektowania scen zainstaluj osobny program **[VizRS CG Artist](https://github.com/sdorpl/VizRS-CG-Artist/releases)** (Tauri 2: Linux .deb/.rpm/AppImage, Windows .msi/instalator, macOS .dmg).
 Ikony w menu: Linux `deploy/install-desktop-linux.sh`, Windows `deploy\install-windows-shortcuts.ps1` (bez czarnego okna konsoli) – same wybiorą okno natywne, jeśli jest. Wyjście na drugi monitor zamiast OBS: `vizrs output --fullscreen --position 1920,0`.
 
+**Logowanie kontem panelu:** w stosie z panelem VizRS CG Playout ekran logowania Trio może pokazać login i hasło – to Twoje konto z panelu (włącza to administrator panelu: Użytkownicy → „Logowanie w pakiecie VizRS”). Jeśli jesteś zalogowany w panelu pod tym samym adresem, Trio otworzy się od razu. Token serwera działa zawsze.
+
 Sterowanie serwerem na VPS z własnego komputera: w oknie natywnym **Plik → Połącz z serwerem…** (Ctrl+Shift+K) – wpisz adres serwera i token, kliknij **Połącz** (zaznacz „zapamiętaj token”, by następnym razem wybrać serwer z listy; **Serwer lokalny** wraca do pracy na swoim komputerze). Z wiersza poleceń: `vizrs trio --connect https://twoj-serwer.pl --token TOKEN`.
 
 Możesz też otworzyć strony w zwykłej przeglądarce:

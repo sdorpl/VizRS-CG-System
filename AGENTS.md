@@ -121,6 +121,7 @@ node tests/e2e/mobile.js target/release/vizrs     # Trio w układzie telefonu
 node tests/e2e/artist.js target/release/vizrs     # Artist (zamrożony /artist)
 node tests/e2e/pack.js target/release/vizrs       # paczka .cgpack
 node tests/e2e/app.js target/release/vizrs        # okna aplikacji (udawana przeglądarka)
+node tests/e2e/panel-login.js target/release/vizrs   # logowanie kontami panelu (udawany panel)
 (cd shell && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release)   # okno natywne
 node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell     # okno natywne w działaniu (otwiera okna)
 node tests/e2e/native-smoke.js target/release/vizrs shell/target/release/vizrs-shell   # test dymny okna (CI: Windows z instalatora, macOS)
@@ -154,6 +155,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |
 | `source/src/ticker.rs` | zapis wiadomości tickera (`KAT|treść`), komendy `TICKER` |
 | `source/src/guard.rs` | tokeny (operator, wyjście tylko do odczytu), ochrona przed obcymi witrynami (CSRF), spowalnianie złych prób |
+| `source/src/panel_login.rs` | logowanie kontami panelu VizRS CG Playout (`--panel-login`, przełącznik w panelu): sesje `vizrs_session`, sprawdzanie w panelu co minutę |
 | `source/src/backup.rs`, `audit.rs` | kopie zapasowe show, log audytowy |
 | `source/src/osc.rs`, `hook.rs` | OSC (UDP), webhook |
 | `source/src/http.rs`, `json.rs` | własny parser HTTP/1.1 i JSON |

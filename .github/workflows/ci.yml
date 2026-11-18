@@ -69,6 +69,7 @@ jobs:
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/pack.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/motion.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/app.js target/release/vizrs
+      - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/panel-login.js target/release/vizrs
 
   docker:
     needs: test

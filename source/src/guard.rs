@@ -80,7 +80,18 @@ fn output_allowed(req: &Request) -> bool {
     }
 }
 
+/// Ekran logowania kontem panelu (`/login…`, `/logout`): bez tokenu, ale po kontroli obcych witryn.
+pub fn is_login_path(req: &Request) -> bool {
+    matches!((req.method.as_str(), req.path.as_str()), ("GET", "/login/info") | ("POST", "/login") | ("POST", "/logout"))
+}
+
+#[cfg(test)]
 pub fn check(req: &Request, tokens: &Tokens) -> Verdict {
+    check_with(req, tokens, false)
+}
+
+/// Jak [`check`]; `session` = ważna sesja konta panelu (`panel_login`) – uprawnienia jak token operatora.
+pub fn check_with(req: &Request, tokens: &Tokens, session: bool) -> Verdict {
     // 1. żądania z obcych witryn
     let site = req.header("sec-fetch-site");
     let navigate = req.header("sec-fetch-mode") == Some("navigate");
@@ -101,8 +112,11 @@ pub fn check(req: &Request, tokens: &Tokens) -> Verdict {
     if req.method == "GET" && matches!(req.path.as_str(), "/trio.webmanifest" | "/trio-icon.svg" | "/trio-icon.png") {
         return Verdict::Allow;
     }
-    // 2. token: najsilniejsza rola spośród nagłówka, ciasteczka i ?token=
-    if tokens.operator.is_none() {
+    if is_login_path(req) {
+        return Verdict::Allow;
+    }
+    // 2. token: najsilniejsza rola spośród nagłówka, ciasteczka i ?token= (albo sesja konta panelu)
+    if tokens.operator.is_none() || session {
         return Verdict::Allow;
     }
     let bearer = req.header("authorization").and_then(|a| a.strip_prefix("Bearer "));
@@ -250,6 +264,19 @@ mod tests {
         assert_eq!(code(check(&req("/api/take/1", &[], &[("token", "sekret-1")]), &t)), 200);
         assert!(matches!(check(&req("/trio", &[], &[("token", "sekret-1")]), &t), Verdict::AllowSetCookie(_)));
         assert_eq!(code(check(&req("/trio", &[], &[("token", "sekret-2")]), &t)), 401);
+    }
+
+    #[test]
+    fn panel_session_and_login_paths() {
+        let t = Tokens { operator: Some("op-1".into()), output: None };
+        assert_eq!(code(check_with(&req("/api/state", &[], &[]), &t, true)), 200, "sesja konta = operator");
+        assert_eq!(code(check_with(&req("/api/state", &[], &[]), &t, false)), 401);
+        assert_eq!(code(check(&req("/login/info", &[], &[]), &t)), 200, "ekran logowania bez tokenu");
+        let mut post = req("/login", &[("sec-fetch-site", "cross-site")], &[]);
+        post.method = "POST".into();
+        assert_eq!(code(check(&post, &t)), 403, "logowanie z obcej witryny – nie");
+        let foreign = req("/api/state", &[("sec-fetch-site", "cross-site")], &[]);
+        assert_eq!(code(check_with(&foreign, &t, true)), 403, "sesja nie omija ochrony przed obcymi witrynami");
     }
 
     #[test]

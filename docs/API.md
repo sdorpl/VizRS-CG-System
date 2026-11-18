@@ -4,6 +4,7 @@ W tabelach ścieżki HTTP podano bez przedrostka `/api` (`/take/1001` = `/api/ta
 Przy `--token`: nagłówek `Authorization: Bearer <token>`, `X-Token: <token>` albo `?token=<token>`. Żądania z obcych witryn są odrzucane (403).
 Token wyjścia (`--output-token`) daje tylko odczyt: `GET /output`, skrypty/style, `/fonts/*`, `/assets/*`, `/events`, `/health`, `GET /api/assets`, `POST /api/report`; wszystko inne → 403.
 Po 5 nieudanych próbach tokenu z jednego adresu odpowiedzi 401 są opóźniane (do 3 s).
+Konta panelu VizRS CG Playout (opcja `--panel-login`, DOKUMENTACJA §12): ciasteczko `vizrs_session` z `POST /login` działa jak token operatora. Bez tokenu (ekran logowania): `GET /login/info` → `{"panel":bool}` (czy panel pozwala logować się swoimi kontami), `POST /login` `{"user","password"}` → 200 i `Set-Cookie: vizrs_session=…` albo 401 `{"error":…}` (zły login lub hasło, panel nie pozwala, panel nie odpowiada), `POST /logout` – koniec sesji konta. Serwer korzysta przy tym z API panelu `/api/sso…` (opis u dostawcy: VizRS CG Playout `docs/API.md` §2).
 Kody: `400` zły argument/walidacja · `401` brak tokenu · `403` obca witryna albo token wyjścia poza odczytem · `409` konflikt rewizji (`rev`) lub blokady · `413` treść żądania ponad 64 MB · `500` błąd zapisu na dysk · `503` za dużo połączeń (łącznie albo z jednego adresu).
 
 ## Show, strony, sceny, playlisty, rundowny, makra

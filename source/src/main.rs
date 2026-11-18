@@ -18,6 +18,7 @@ mod hook;
 mod http;
 mod json;
 mod osc;
+mod panel_login;
 mod routes;
 mod shutdown;
 mod static_files;
@@ -429,11 +430,35 @@ fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
         Response::new(302, "text/plain; charset=utf-8", "").header("Location", &format!("/trio{q}")).write_to(&mut stream).ok();
         return;
     }
-    let cookie = match guard::check(&req, &cfg.tokens()) {
+    // sesja konta panelu VizRS CG Playout (opcja --panel-login, przełącznik w panelu)
+    let account = match (&cfg.panel_login, cfg.token.is_some()) {
+        (Some(addr), true) => req.cookie(panel_login::COOKIE).and_then(|id| panel_login::session_user(addr, id)),
+        _ => None,
+    };
+    let cookie = match guard::check_with(&req, &cfg.tokens(), account.is_some()) {
+        guard::Verdict::Allow if guard::is_login_path(&req) => {
+            account_login(&req, &engine, &cfg).write_to(&mut stream).ok();
+            return;
+        }
         guard::Verdict::Allow => None,
         guard::Verdict::AllowSetCookie(t) => Some(guard::cookie_header(&t)),
         guard::Verdict::Deny(code, msg) => {
-            let login = code == 401 && req.method == "GET" && req.path == "/trio";
+            let login = code == 401 && req.method == "GET" && matches!(req.path.as_str(), "/trio" | "/artist");
+            // zalogowany w panelu pod tym samym hostem (ciasteczko panelu jedzie też tutaj) – wchodzi bez ponownego logowania
+            if login {
+                if let (Some(addr), Some(sid)) = (&cfg.panel_login, req.cookie("vizrs_live")) {
+                    if let Some((id, name)) = panel_login::from_panel_cookie(addr, sid) {
+                        engine.audit.log(&format!("http:{}", req.peer), &format!("logowanie kontem panelu: {name} (sesja panelu)"), Some(302));
+                        let q = if req.raw_query.is_empty() { String::new() } else { format!("?{}", req.raw_query) };
+                        Response::new(302, "text/plain; charset=utf-8", "")
+                            .header("Location", &format!("{}{q}", req.path))
+                            .header("Set-Cookie", &panel_login::cookie_header(&id, panel_login::COOKIE_AGE))
+                            .write_to(&mut stream)
+                            .ok();
+                        return;
+                    }
+                }
+            }
             // wejście na ekran logowania bez tokenu to nie próba zgadywania
             if code == 401 && !(login && req.q("token").is_none()) {
                 engine.audit.log(&format!("http:{}", req.peer), &format!("odmowa: zły token – {} {}", req.method, req.path), Some(401));
@@ -454,13 +479,55 @@ fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
         .unwrap_or_else(|_| Response::err(500, "błąd wewnętrzny"));
     if req.method != "GET" && req.method != "OPTIONS" || is_playout_get(&req.path) {
         let q = if req.raw_query.is_empty() { String::new() } else { format!("?{}", req.raw_query) };
-        engine.audit.log(&format!("http:{}", req.peer), &format!("{} {}{}", req.method, req.path, q), Some(resp.status));
+        let actor = match &account {
+            Some(name) => format!("http:{} · {name}", req.peer),
+            None => format!("http:{}", req.peer),
+        };
+        engine.audit.log(&actor, &format!("{} {}{}", req.method, req.path, q), Some(resp.status));
     }
     let resp = match cookie {
         Some(c) => resp.header("Set-Cookie", &c),
         None => resp,
     };
     resp.write_to(&mut stream).ok();
+}
+
+/// Ekran logowania kontem panelu: `GET /login/info` (czy wolno), `POST /login {user,password}`, `POST /logout`.
+fn account_login(req: &http::Request, engine: &Engine, cfg: &Config) -> Response {
+    let addr = cfg.panel_login.as_deref().filter(|_| cfg.token.is_some());
+    match req.path.as_str() {
+        "/login/info" => {
+            let on = addr.is_some_and(panel_login::enabled);
+            Response::json(&json::Json::obj().with("panel", json::Json::Bool(on)))
+        }
+        "/logout" => {
+            if let Some(id) = req.cookie(panel_login::COOKIE) {
+                panel_login::end(id);
+            }
+            Response::ok().header("Set-Cookie", &panel_login::cookie_header("", 0))
+        }
+        _ => {
+            let Some(addr) = addr else {
+                return Response::err(404, "logowanie kontem panelu nie jest skonfigurowane – zaloguj się tokenem");
+            };
+            let body = req.json().unwrap_or(json::Json::Null);
+            let (user, password) = (body.str("user").unwrap_or(""), body.str("password").unwrap_or(""));
+            if user.is_empty() || user.len() > 64 || password.len() > 1024 {
+                return Response::err(400, "podaj login i hasło");
+            }
+            match panel_login::login(addr, user, password) {
+                Ok((id, name)) => {
+                    engine.audit.log(&format!("http:{}", req.peer), &format!("logowanie kontem panelu: {name}"), Some(200));
+                    Response::ok().header("Set-Cookie", &panel_login::cookie_header(&id, panel_login::COOKIE_AGE))
+                }
+                Err(e) => {
+                    engine.audit.log(&format!("http:{}", req.peer), &format!("logowanie kontem panelu odrzucone: {e}"), Some(401));
+                    std::thread::sleep(guard::note_failure(&req.peer));
+                    Response::err(401, &e)
+                }
+            }
+        }
+    }
 }
 
 /// Server-Sent Events – kanał zdarzeń dla wyjść i UI.
