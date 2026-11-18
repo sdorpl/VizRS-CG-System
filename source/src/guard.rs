@@ -7,6 +7,9 @@
 
 use crate::http::Request;
 
+/// Odmowa dla tokenu wyjścia poza odczytem (main.rs rozpoznaje ją, żeby pokazać ekran logowania).
+pub const OUTPUT_ONLY: &str = "token wyjścia pozwala tylko na odczyt (/output)";
+
 pub enum Verdict {
     /// Przepuść.
     Allow,
@@ -128,7 +131,7 @@ pub fn check_with(req: &Request, tokens: &Tokens, session: bool) -> Verdict {
         return Verdict::Deny(401, "wymagany token (?token=…, nagłówek Authorization: Bearer lub X-Token)");
     }
     if role == Role::Output && !output_allowed(req) {
-        return Verdict::Deny(403, "token wyjścia pozwala tylko na odczyt (/output)");
+        return Verdict::Deny(403, OUTPUT_ONLY);
     }
     // ciasteczko ustawiamy tylko przy wejściu na stronę z ?token=, gdy to on daje najwyższą rolę;
     // wywołania API z ?token= (Companion) go nie potrzebują

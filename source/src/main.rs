@@ -443,7 +443,10 @@ fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
         guard::Verdict::Allow => None,
         guard::Verdict::AllowSetCookie(t) => Some(guard::cookie_header(&t)),
         guard::Verdict::Deny(code, msg) => {
-            let login = code == 401 && req.method == "GET" && matches!(req.path.as_str(), "/trio" | "/artist");
+            // ekran logowania także przy samym ciasteczku z tokenem wyjścia (np. po podglądzie /output w ramce panelu
+            // pod tym samym hostem) – inaczej operator widzi tylko błąd; jawne ?token=<token wyjścia> zostaje 403
+            let output_cookie = code == 403 && msg == guard::OUTPUT_ONLY && req.q("token").is_none();
+            let login = (code == 401 || output_cookie) && req.method == "GET" && matches!(req.path.as_str(), "/trio" | "/artist");
             // zalogowany w panelu pod tym samym hostem (ciasteczko panelu jedzie też tutaj) – wchodzi bez ponownego logowania
             if login {
                 if let (Some(addr), Some(sid)) = (&cfg.panel_login, req.cookie("vizrs_live")) {
@@ -466,6 +469,7 @@ fn handle_conn(mut stream: TcpStream, engine: Arc<Engine>, cfg: Arc<Config>) {
                 std::thread::sleep(guard::note_failure(&req.peer));
             }
             let resp = if login { Response::new(401, "text/html; charset=utf-8", LOGIN) } else { Response::err(code, msg) };
+            // (401 także przy ciasteczku wyjścia: przeglądarka ma się zalogować tokenem operatora albo kontem)
             resp.write_to(&mut stream).ok();
             return;
         }

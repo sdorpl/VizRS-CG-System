@@ -35,6 +35,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     ok((await (await fetch(B + '/trio')).text()).includes('name="token"'), '/trio bez tokenu pokazuje ekran logowania');
     ok((await fetch(B + '/trio.webmanifest')).status === 200 && (await fetch(B + '/trio-icon.png')).headers.get('content-type') === 'image/png', 'manifest i ikona bez tokenu');
     ok((await fetch(`${B}/trio?token=${OUT_TOKEN}`)).status === 403, 'token wyjścia: /trio → 403');
+    // samo ciasteczko z tokenem wyjścia (podgląd /output w ramce panelu pod tym samym hostem): ekran logowania, nie błąd
+    const outCk = await fetch(`${B}/trio`, { headers: { Cookie: `vizrs_token=${OUT_TOKEN}` } });
+    ok(outCk.status === 401 && (await outCk.text()).includes('name="token"'), 'ciasteczko tokenu wyjścia: /trio pokazuje ekran logowania');
+    ok((await fetch(`${B}/api/state`, { headers: { Cookie: `vizrs_token=${OUT_TOKEN}` } })).status === 403, 'ciasteczko tokenu wyjścia: API dalej 403');
     const old = await fetch(`${B}/mobile?channel=7`, { redirect: 'manual' });
     ok(old.status === 302 && old.headers.get('location') === '/trio?channel=7', 'dawne /mobile przekierowuje na /trio z parametrami', [old.status, old.headers.get('location')]);
     ok((await fetch(B + '/mobile.webmanifest')).status !== 200, 'dawny manifest /mobile nie jest podawany');
