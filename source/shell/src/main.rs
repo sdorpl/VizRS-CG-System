@@ -12,6 +12,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod bridge;
+mod conn_url;
 mod connect;
 mod desktop;
 mod gpu;
