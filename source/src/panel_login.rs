@@ -3,7 +3,7 @@
 //! Czy wolno, decyduje przełącznik w panelu („logowanie w pakiecie”, `GET /api/sso`); bez opcji,
 //! bez panelu albo z wyłączonym przełącznikiem serwer zna tylko tokeny – jak dotąd (Trio samo, np. dla OBS).
 //! Panel sprawdza login i hasło (`POST /api/sso/verify`) i zakłada sesję swojego konta; jej identyfikator
-//! zostaje w tym serwerze, a przeglądarka dostaje własną sesję VizRS (`vizrs_session`). Co minutę
+//! zostaje w tym serwerze, a przeglądarka dostaje własną sesję VizRS (`vizrs_session`). Co 15 s
 //! (przy użyciu) serwer pyta panel o sesję konta: konto usunięte albo przełącznik wyłączony = koniec sesji.
 //! Panel nieosiągalny nie wylogowuje – sterowanie anteną działa dalej. Zalogowany w panelu pod tym samym
 //! hostem (ciasteczko `vizrs_live` jedzie też na port VizRS) wchodzi bez ponownego logowania.
@@ -20,8 +20,8 @@ pub const COOKIE: &str = "vizrs_session";
 const TIMEOUT: Duration = Duration::from_secs(3);
 /// Sesja bez użycia tyle czasu wygasa.
 const IDLE: Duration = Duration::from_secs(30 * 24 * 3600);
-/// Co tyle (przy użyciu) sesja jest sprawdzana w panelu.
-const RECHECK: Duration = Duration::from_secs(60);
+/// Co tyle (przy użyciu) sesja jest sprawdzana w panelu – wylogowanie w panelu zamyka Trio najpóźniej po tym czasie.
+const RECHECK: Duration = Duration::from_secs(15);
 const MAX_SESSIONS: usize = 256;
 /// Stan przełącznika w panelu pamiętany tyle czasu (ekran logowania pyta przy każdym wejściu).
 const ENABLED_TTL: Duration = Duration::from_secs(10);

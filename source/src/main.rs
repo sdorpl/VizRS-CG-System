@@ -508,7 +508,8 @@ fn account_login(req: &http::Request, engine: &Engine, cfg: &Config) -> Response
             if let Some(id) = req.cookie(panel_login::COOKIE) {
                 panel_login::end(id);
             }
-            Response::ok().header("Set-Cookie", &panel_login::cookie_header("", 0))
+            // wylogowanie przeglądarki: sesja konta i zapamiętany token
+            Response::ok().header("Set-Cookie", &panel_login::cookie_header("", 0)).header("Set-Cookie", "vizrs_token=; Path=/; SameSite=Strict; HttpOnly; Max-Age=0")
         }
         _ => {
             let Some(addr) = addr else {

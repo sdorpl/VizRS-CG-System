@@ -75,6 +75,13 @@ const winTitle = () => {
 /** Zdarzenia i stan początkowy; woła main.js, moduły w kolejności dawnego skryptu. */
 export function init() {
   $('#bSys').onclick = openSys;
+  // wylogowanie przeglądarki: ciasteczka tokenu i sesji konta panelu (okno natywne loguje się adresem z tokenem – bez przycisku)
+  if (window.__vizrsShell) $('#bLogout').hidden = true;
+  $('#bLogout').onclick = async () => {
+    if (!(await ask('Wylogować tę przeglądarkę z Trio? Grafika na antenie zostaje.', { ok: 'Wyloguj' }))) return;
+    try { await fetch('/logout', { method: 'POST' }); } catch { /* i tak przeładuj */ }
+    location.replace(location.pathname);
+  };
   $('#errPill').onclick = openSys;
   $('#sysModal').addEventListener('mousedown', (e) => { if (e.target.id === 'sysModal') $('#sysModal').classList.remove('open'); });
   addEventListener('vizrs-font-fail', (e) => toast(`Font „${e.detail.name}” niedostępny offline – użyto zastępczego`, true));

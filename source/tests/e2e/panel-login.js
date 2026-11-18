@@ -124,6 +124,14 @@ const panel = http.createServer((req, res) => {
     // wylogowanie kończy sesję konta
     await p.evaluate(async () => fetch('/logout', { method: 'POST' }));
     ok(await p.evaluate(async () => (await fetch('/api/state')).status) === 401, 'po /logout sesja konta nie działa');
+    // przycisk Wyloguj w Trio kasuje też zapamiętany token operatora
+    await p.goto(`${B}/trio?token=${TOKEN}`);
+    await p.waitForSelector('#pages .item');
+    ok((await p.context().cookies(B)).some((c) => c.name === 'vizrs_token'), 'token operatora zapamiętany w ciasteczku');
+    await p.evaluate(() => document.getElementById('bLogout').click());
+    await p.click('.dlg-btns button.acc');
+    await p.waitForSelector('#tok input[name=token]');
+    ok(!(await p.context().cookies(B)).some((c) => c.name === 'vizrs_token' || c.name === 'vizrs_session'), 'Wyloguj w Trio: bez tokenu i sesji, ekran logowania');
   } catch (e) {
     ok(false, 'wyjątek: ' + e.message);
   } finally {
