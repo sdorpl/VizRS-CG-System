@@ -59,6 +59,9 @@ const send = (m) => (window.__vizrsPost || window.ipc.postMessage)(JSON.stringif
 $('now').textContent = 'Teraz: ' + (C.remote ? C.current : 'serwer lokalny (' + C.current + ')');
 if (!C.local) $('local').hidden = true;
 if (C.remote) { $('url').value = C.current; $('token').value = C.token || ''; $('auto').checked = C.auto === C.current; }
+// adres i token z ekranu logowania Trio – tylko wypełnienie, łączy przycisk Połącz
+window.__vizrsPropose = (p) => { if (!p) return; $('url').value = p.url || ''; $('token').value = p.token || ''; $('err').textContent = ''; $('token').focus(); };
+window.__vizrsPropose(C.propose);
 function fill(s) {
   $('url').value = s.url; $('token').value = ''; $('keep').checked = s.hasToken;
   $('token').placeholder = s.hasToken ? 'zapamiętany – zostaw puste' : '';

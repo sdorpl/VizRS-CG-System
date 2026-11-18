@@ -31,6 +31,7 @@ const panel = http.createServer((req, res) => {
   req.on('data', (c) => (body += c));
   req.on('end', () => {
     const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
+    if (req.url.startsWith('/trio')) { res.writeHead(200, { 'Content-Type': 'text/html' }); return res.end('<p>zdalny</p>'); }
     if (req.url === '/api/sso') return send(200, { ok: true, result: { available: true, enabled: fake.enabled } });
     if (!fake.enabled) return send(403, { ok: false, error: 'wyłączone' });
     if (req.url === '/api/sso/verify' && req.method === 'POST') {
@@ -64,6 +65,19 @@ const panel = http.createServer((req, res) => {
     await p.waitForSelector('#tok input[name=token]');
     await sleep(300);
     ok(await p.isHidden('#acc'), 'ekran logowania bez kont panelu, gdy przełącznik wyłączony');
+    // pole serwera: domyślnie ten serwer; zły adres – komunikat; inny serwer – przejście na jego /trio z tokenem
+    ok(await p.inputValue('#server') === B, 'pole serwera: bieżący serwer', await p.inputValue('#server'));
+    await p.fill('#server', 'ftp://zly');
+    await p.fill('#token', 'x');
+    await p.click('#tok button');
+    await p.waitForSelector('#bad:not([hidden])');
+    ok(/Zły adres serwera/.test(await p.textContent('#bad')), 'pole serwera: zły adres – komunikat');
+    await p.fill('#server', `127.0.0.1:${PANEL}`.replace(/^/, 'http://'));
+    await p.fill('#token', 'tok-zdalny');
+    await Promise.all([p.waitForURL(`http://127.0.0.1:${PANEL}/trio?token=tok-zdalny`), p.click('#tok button')]);
+    ok(true, 'pole serwera: inny serwer – przejście na jego /trio z tokenem');
+    await p.goto(B + '/trio');
+    await p.waitForSelector('#tok input[name=token]');
     const login = (user, password) => fetch(B + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, password }) });
     ok((await login('ola', 'haslo-oli-1')).status === 401, 'logowanie kontem odrzucone, gdy panel nie pozwala');
 

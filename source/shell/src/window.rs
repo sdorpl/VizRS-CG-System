@@ -225,13 +225,23 @@ pub(crate) fn open_screen(app: &AppHandle, n: usize, query: &str) {
 }
 
 pub(crate) fn open_connect(app: &AppHandle) {
+    open_connect_with(app, None)
+}
+
+/// Okno połączenia; `propose` – adres i token z ekranu logowania strony (wypełnione pola, bez łączenia).
+pub(crate) fn open_connect_with(app: &AppHandle, propose: Option<(String, Option<String>)>) {
     if let Some(w) = app.get_webview_window(CONNECT) {
+        if let Some((url, token)) = &propose {
+            let fill = serde_json::json!({ "url": url, "token": token });
+            let _ = w.eval(format!("window.__vizrsPropose && window.__vizrsPropose({fill})"));
+        }
         let _ = w.set_focus();
         return;
     }
     let data = {
         let a = state(app);
-        connect::page_data(&connect::Saved::load(), &a.base, a.token.as_deref(), a.local.as_deref())
+        let p = propose.as_ref().map(|(u, t)| (u.as_str(), t.as_deref()));
+        connect::page_data(&connect::Saved::load(), &a.base, a.token.as_deref(), a.local.as_deref(), p)
     };
     // okno dialogowe: stały rozmiar, nad oknem Trio (jeśli jest), bez paska menu programu
     let parent = state(app).target_label().and_then(|l| app.get_webview_window(&l));

@@ -1,6 +1,8 @@
 //! Most strona → powłoka: komunikaty `app:` stron Artist/Trio z serwera (biała lista, limity).
 //! Strona nie dostaje dostępu do systemu: może zmienić tytuł własnego okna, stan pozycji menu,
 //! zdecydować o zamknięciu własnego okna i zapisać kopię roboczą w katalogu powłoki pod nazwą z skrótu.
+//! Serwera sama nie zmieni: `connectWindow` (ekran logowania) tylko otwiera okno „Połącz z serwerem”
+//! z wpisanym adresem i tokenem – połączenie zatwierdza użytkownik w oknie powłoki.
 
 use std::path::PathBuf;
 
@@ -11,6 +13,9 @@ const MAX_ID: usize = 128;
 /// Menu pod prawym przyciskiem: najwięcej pozycji i znaków etykiety.
 const MAX_MENU: usize = 24;
 const MAX_LABEL: usize = 80;
+/// Adres i token podane na ekranie logowania (wypełnienie okna połączenia).
+const MAX_URL: usize = 512;
+const MAX_TOKEN: usize = 128;
 /// Największa kopia robocza sceny.
 pub const MAX_DRAFT: usize = 16 * 1024 * 1024;
 
@@ -25,6 +30,8 @@ pub enum Msg {
     Draft { id: String, data: Option<String> },
     /// Systemowe menu pod prawym przyciskiem w miejscu kursora; wybór wraca do strony jako `id`.
     Menu(Vec<MenuEntry>),
+    /// Ekran logowania: otwórz okno „Połącz z serwerem” z tym adresem i tokenem (bez łączenia).
+    ConnectWindow { url: String, token: Option<String> },
 }
 
 #[derive(Debug, PartialEq)]
@@ -72,6 +79,16 @@ pub fn parse(body: &str) -> Option<Msg> {
             Some(Msg::Draft { id: id()?, data })
         }
         "menu" => menu_entries(&v["items"]).map(Msg::Menu),
+        "connectWindow" => {
+            let ok = |s: &&str, max: usize| s.len() <= max && !s.chars().any(char::is_control);
+            let url = v["url"].as_str().filter(|s| ok(s, MAX_URL))?.trim().to_string();
+            let token = match &v["token"] {
+                Value::Null => None,
+                Value::String(t) if ok(&t.as_str(), MAX_TOKEN) => Some(t.clone()).filter(|t| !t.is_empty()),
+                _ => return None,
+            };
+            Some(Msg::ConnectWindow { url, token })
+        }
         _ => None,
     }
 }
@@ -93,6 +110,14 @@ mod tests {
     fn unknown_and_bad_messages_are_ignored() {
         assert_eq!(parse("śmieci"), None);
         assert_eq!(parse(r#"{"t":"connect","url":"http://zly"}"#), None);
+        assert_eq!(
+            parse(r#"{"t":"connectWindow","url":"https://cg.pl","token":"abc"}"#),
+            Some(Msg::ConnectWindow { url: "https://cg.pl".into(), token: Some("abc".into()) })
+        );
+        assert_eq!(parse(r#"{"t":"connectWindow","url":"cg.pl","token":""}"#), Some(Msg::ConnectWindow { url: "cg.pl".into(), token: None }));
+        assert_eq!(parse(r#"{"t":"connectWindow","url":"a\nb"}"#), None);
+        assert_eq!(parse(&format!(r#"{{"t":"connectWindow","url":"{}"}}"#, "x".repeat(MAX_URL + 1))), None);
+        assert_eq!(parse(r#"{"t":"connectWindow","url":"x","token":5}"#), None);
         assert_eq!(parse(r#"{"t":"draft","id":"","data":"x"}"#), None);
         assert_eq!(parse(r#"{"t":"draft","id":"a","data":5}"#), None);
         let big = format!(r#"{{"t":"draft","id":"a","data":"{}"}}"#, "x".repeat(MAX_DRAFT + 1));

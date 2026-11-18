@@ -161,7 +161,8 @@ pub fn parse_msg(body: &str) -> Result<Msg, String> {
 }
 
 /// Dane dla strony okna (`window.__vizrsConn`).
-pub fn page_data(saved: &Saved, current: &str, current_token: Option<&str>, local: Option<&str>) -> String {
+/// `propose` – adres i token wpisane na ekranie logowania strony (okno je tylko wypełnia).
+pub fn page_data(saved: &Saved, current: &str, current_token: Option<&str>, local: Option<&str>, propose: Option<(&str, Option<&str>)>) -> String {
     let servers: Vec<Value> = saved.servers.iter().map(|(u, t)| json!({ "url": u, "hasToken": t.is_some() })).collect();
     let remote = local != Some(current);
     let data = json!({
@@ -171,6 +172,7 @@ pub fn page_data(saved: &Saved, current: &str, current_token: Option<&str>, loca
         "local": local,
         "auto": saved.auto,
         "servers": servers,
+        "propose": propose.map(|(u, t)| json!({ "url": u, "token": t })),
     });
     format!("window.__vizrsConn = {data};")
 }

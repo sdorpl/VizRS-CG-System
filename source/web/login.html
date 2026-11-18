@@ -36,6 +36,7 @@
   </div>
   <form id="tok" action="/trio" method="get">
     <div id="bad" hidden>Zły token.</div>
+    <input id="server" type="text" inputmode="url" placeholder="adres serwera, np. https://cg.example.pl" autocomplete="url" autocapitalize="none" spellcheck="false" aria-label="Serwer">
     <input id="token" name="token" type="password" placeholder="token serwera" autocomplete="current-password" autofocus>
     <button>Połącz</button>
   </form>
@@ -49,7 +50,32 @@ const form = $('tok');
 form.action = location.pathname;
 if (location.pathname === '/artist') { $('title').textContent = 'VizRS Artist'; document.title = 'VizRS Artist'; }
 $('bad').hidden = !params.has('token');
-form.addEventListener('submit', (e) => { if (!$('token').value) e.preventDefault(); });
+// serwer: ten, z którego przyszła strona; inny = zdalny (w aplikacji – okno „Połącz z serwerem”, w przeglądarce – przejście)
+const server = $('server');
+server.value = location.origin;
+const target = () => {
+  let v = server.value.trim().replace(/\/+$/, '');
+  if (!v) return location.origin;
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(v)) v = 'https://' + v;
+  try { const u = new URL(v); return /^https?:$/.test(u.protocol) && !u.username && !u.password ? u.origin : null; } catch { return null; }
+};
+const remote = () => { const t = target(); return t !== null && t !== location.origin; };
+server.addEventListener('input', () => { $('acc').hidden = !panelOn || remote(); });
+let panelOn = false;
+form.addEventListener('submit', (e) => {
+  const t = target();
+  if (t === null) { e.preventDefault(); $('bad').textContent = 'Zły adres serwera – np. https://cg.example.pl albo http://192.168.1.10:8088'; $('bad').hidden = false; return; }
+  if (t === location.origin) { if (!$('token').value) e.preventDefault(); return; }
+  e.preventDefault();
+  const tok = $('token').value;
+  if (window.__vizrsShell) {
+    // aplikacja (vizrs-shell): strona nie zmienia serwera sama – okno powłoki pyta o potwierdzenie
+    const m = 'app:' + JSON.stringify({ t: 'connectWindow', url: t, token: tok });
+    if (window.__vizrsPost) window.__vizrsPost(m); else window.ipc.postMessage(m);
+    return;
+  }
+  location.href = t + location.pathname + (tok ? '?token=' + encodeURIComponent(tok) : '');
+});
 // konta panelu VizRS CG Playout (opcja serwera --panel-login, przełącznik w panelu)
 async function accountLogin() {
   const bad = $('acc-bad');
@@ -65,7 +91,8 @@ $('acc-go').addEventListener('click', accountLogin);
 $('acc-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); accountLogin(); } });
 fetch('/login/info').then((r) => r.json()).then((d) => {
   if (!d.panel) return;
-  $('acc').hidden = false;
+  panelOn = true;
+  $('acc').hidden = remote();
   if (!params.has('token')) $('acc-user').focus();
 }).catch(() => {});
 fetch('/api/state').then((r) => { if (r.ok && !params.has('token')) location.replace(location.pathname + location.search); else $('box').style.visibility = 'visible'; })

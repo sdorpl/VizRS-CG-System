@@ -129,6 +129,31 @@ const probe = (kind) => {
       const saved = JSON.parse(fs.readFileSync(path.join(cfg, 'connections.json'), 'utf8'));
       ok(saved.servers[0]?.url === `http://127.0.0.1:${RPORT}` && saved.servers[0]?.token === TOKEN, 'serwer i token na liście zapisanych', saved);
       if (process.platform !== 'win32') ok((fs.statSync(path.join(cfg, 'connections.json')).mode & 0o077) === 0, 'lista zapisanych tylko dla właściciela');
+      // 5. ekran logowania w aplikacji: inny serwer → okno „Połącz z serwerem” z wpisanym adresem i tokenem (bez łączenia)
+      const LPROBE = path.join(tmp, 'login.js');
+      fs.writeFileSync(LPROBE, `(async () => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const $ = (id) => document.getElementById(id);
+  const post = (m) => (window.__vizrsPost || ((x) => window.ipc.postMessage(x)))(m);
+  if (document.title === 'Połącz z serwerem') {
+    await sleep(300);
+    post('probe:' + JSON.stringify({ url: $('url').value, token: $('token').value }));
+    return;
+  }
+  for (let i = 0; i < 50 && !$('server'); i++) await sleep(100);
+  if (!$('server')) return post('probe:' + JSON.stringify({ error: 'brak ekranu logowania', href: location.href }));
+  $('server').value = 'cg.example.pl'; $('token').value = 'tok-z-logowania';
+  $('tok').requestSubmit();
+})();`);
+      const lout = path.join(tmp, 'login.json');
+      // osobny serwer z innym tokenem: ciasteczko z punktu 4 (ten sam host) go nie otwiera – okno pokazuje ekran logowania
+      const LPORT = PORT + 3;
+      const locked = spawn(BIN, ['--port', String(LPORT), '--tcp', '0', '--data', path.join(tmp, 'locked'), '--token', 'inny-token-987654321'], { stdio: 'ignore' });
+      await sleep(800);
+      spawnSync(SHELL, ['trio', '--connect', `http://127.0.0.1:${LPORT}`, '--probe', LPROBE, '--probe-out', lout], { encoding: 'utf8', timeout: 60000, env: { ...process.env, VIZRS_CONFIG: path.join(tmp, 'cfg2') } });
+      locked.kill();
+      const l = fs.existsSync(lout) ? JSON.parse(fs.readFileSync(lout, 'utf8')) : {};
+      ok(l.url === 'https://cg.example.pl' && l.token === 'tok-z-logowania', 'ekran logowania: inny serwer otwiera okno połączenia z adresem i tokenem', l);
     } finally {
       remote.kill();
     }

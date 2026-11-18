@@ -98,6 +98,7 @@ pub(crate) fn ipc(app: AppHandle, webview: tauri::Webview, body: String) {
             }
         }
         bridge::Msg::Menu(entries) => context_menu(&app, &label, entries),
+        bridge::Msg::ConnectWindow { url, token } => open_connect_with(&app, Some((url, token))),
         bridge::Msg::Draft { id, data } => {
             let p = bridge::draft_path(&base, &id);
             match data {
