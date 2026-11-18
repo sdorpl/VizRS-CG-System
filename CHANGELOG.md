@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Bezpieczeństwo stron:** HTML w Trio i oknach wspólnych z VizRS CG Artist (paczka `.cgpack`, pytania, kolor, edytor tickera, kod QR) powstaje tylko przez szablon `html` z nowego modułu `web/dom.js`, który escapuje każdą wstawianą wartość. Przy okazji escapowane są miejsca, które wcześniej wstawiały dane bez zmian: opcje pól typu lista w edytorze strony Trio i kolory kodu QR (wartość z `"` albo `<` nie zmienia już znaczników). Bez zmian w wyglądzie i działaniu.
+
 ## 26.11.10 (2026-11-17)
 
 - **Powiązania (dock) – poprawka: reguła krawędzi w rendererze natywnym po wczytaniu fontu celu.** `vizrs-render stream` pobiera fonty z zasobów w tle; proces warstwy mierzył obrys celu (np. belki z fontem `Bahnschrift_2.ttf` i tłem z autofollow) jeszcze bez fontu i trzymał ten pomiar do następnego zdarzenia – grafika odsuwała się od belki o wysokości bez tekstu i nachodziła na dwuwierszową belkę (S2, kanał 4, 2026-11-17). Teraz nowy font albo obraz unieważnia obrysy i powiązania liczą się od nowa (jak w `renderer.js`). Test `vizrs-render`. DOKUMENTACJA §4.7.

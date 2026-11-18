@@ -61,9 +61,10 @@ const STYLE = `
 .cpk-sw button:hover { outline: 1px solid var(--acc, #f0a020); }
 .cpk-h { color: var(--dim, #888); font-size: 10px; margin-bottom: -4px; }
 `;
+import { html, setHtml } from './dom.js';
+
 const PALETTE = ['#c8102e', '#e00000', '#e8590c', '#f0a020', '#f2c400', '#1f8a4c', '#0a9396', '#0050c0', '#5f3dc4', '#111111'];
 const RECENT = 'vizrs.recentColors';
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const loadRecent = () => { try { return JSON.parse(localStorage.getItem(RECENT) || '[]').map(normHex).filter(Boolean).slice(0, 10); } catch { return []; } };
 const saveRecent = (c) => { try { localStorage.setItem(RECENT, JSON.stringify([c, ...loadRecent().filter((x) => x !== c)].slice(0, 10))); } catch { /* brak localStorage */ } };
 
@@ -82,17 +83,17 @@ export function openColorPicker(anchor, o) {
   const start = cur;
   const shown = () => cur || base;
   let hsv = hexToHsv(shown());
-  const sw = (list) => list.map((c) => `<button type="button" data-c="${esc(c)}" style="background:${esc(c)}" title="${esc(c)}"></button>`).join('');
+  const sw = (list) => list.map((c) => html`<button type="button" data-c="${c}" style="background:${c}" title="${c}"></button>`);
   const own = [...new Set((o.palette || []).map(cssHex).filter(Boolean))].slice(0, 10), recent = loadRecent();
   const pop = document.createElement('div');
   pop.className = 'cpk';
-  pop.innerHTML = `<div class="cpk-pv"><span class="cpk-tag"></span><span class="cpk-warn"></span></div>
+  setHtml(pop, html`<div class="cpk-pv"><span class="cpk-tag"></span><span class="cpk-warn"></span></div>
     <div class="cpk-sv"><i></i></div>
     <input type="range" class="cpk-hue" min="0" max="360" step="1" aria-label="Odcień">
-    <div class="cpk-row"><input class="cpk-hex" spellcheck="false" maxlength="9" aria-label="Kolor szesnastkowo"><button type="button" class="cpk-reset" title="Usuń własny kolor – obowiązuje kolor sceny"><span style="display:inline-block;width:9px;height:9px;margin-right:4px;background:${esc(base)}"></span>ze sceny</button></div>
-    ${own.length ? `<div class="cpk-h">W użyciu</div><div class="cpk-sw">${sw(own)}</div>` : ''}
+    <div class="cpk-row"><input class="cpk-hex" spellcheck="false" maxlength="9" aria-label="Kolor szesnastkowo"><button type="button" class="cpk-reset" title="Usuń własny kolor – obowiązuje kolor sceny"><span style="display:inline-block;width:9px;height:9px;margin-right:4px;background:${base}"></span>ze sceny</button></div>
+    ${own.length ? html`<div class="cpk-h">W użyciu</div><div class="cpk-sw">${sw(own)}</div>` : ''}
     <div class="cpk-h">Paleta</div><div class="cpk-sw">${sw(PALETTE)}</div>
-    ${recent.length ? `<div class="cpk-h">Ostatnie</div><div class="cpk-sw">${sw(recent)}</div>` : ''}`;
+    ${recent.length ? html`<div class="cpk-h">Ostatnie</div><div class="cpk-sw">${sw(recent)}</div>` : ''}`);
   document.body.appendChild(pop);
   const q = (s) => pop.querySelector(s);
   const sv = q('.cpk-sv'), hue = q('.cpk-hue'), hex = q('.cpk-hex'), tag = q('.cpk-tag');

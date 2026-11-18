@@ -3,7 +3,8 @@
 import { listFields, layerZ, PROPS, stripMarkup } from '/renderer.js';
 import { ask, askText } from '/dialogs.js';
 import { visLen, limitText, polish } from '/field-rules.js';
-import { $, $$, api, draft, esc, loadState, lockedBy, onAirLayer, onAnt, pv, sceneOf, selId, setAssets, setDirtyFlag, setDraft, show, state, toast } from './core.js';
+import { setHtml as writeHtml } from '/dom.js';
+import { $, $$, api, draft, esc, html, loadState, lockedBy, onAirLayer, onAnt, pv, sceneOf, selId, setAssets, setDirtyFlag, setDraft, show, state, toast } from './core.js';
 import { renderEditor, renderPages, selectPage, setDirtyPage, showSqueeze, tkEditors } from './pages.js';
 import { pvPanned, pvReframe, setPvPanned } from './preview.js';
 import { act } from './onair.js';
@@ -12,8 +13,8 @@ export function renderStatus() {
   renderLayerSel();
   if (!draft) { $('#estatus').textContent = ''; return; }
   const s = sceneOf(draft), L = onAirLayer(draft.id);
-  const st = s ? `szablon <b>${esc(s.name)}</b> · stopów: ${(s.stops || []).length}` : '';
-  $('#estatus').innerHTML = (lockedBy ? `<b style="color:#ff9a3d">🔒 edytuje ${esc(lockedBy)}</b> · ` : '') + (L ? `<b class="on">● ON AIR</b> (stop ${L.stop + 1}/${Math.max(1, L.stops)}) · ` : '') + st;
+  const st = s ? html`szablon <b>${esc(s.name)}</b> · stopów: ${(s.stops || []).length}` : '';
+  writeHtml($('#estatus'), html`${lockedBy ? html`<b style="color:#ff9a3d">🔒 edytuje ${lockedBy}</b> · ` : ''}${L ? html`<b class="on">● ON AIR</b> (stop ${L.stop + 1}/${Math.max(1, L.stops)}) · ` : ''}${st}`);
 }
 // ---- warstwa szablonu strony: zmiana także na antenie, bez ponownej animacji
 const NEW_LAYER = '+nowa';
@@ -27,8 +28,8 @@ function renderLayerSel() {
   const air = (n) => state.layers.find((l) => l.layer === n);
   const label = (n) => (air(n) ? `${n} ● ${air(n).page?.number ?? ''}` : n);
   const pages = show.pages.filter((p) => p.scene === s.id).length;
-  const html = [...names].sort((a, b) => layerZ(a) - layerZ(b) || a.localeCompare(b)).map((n) => `<option value="${esc(n)}">${esc(label(n))}</option>`).join('') + `<option value="${NEW_LAYER}">＋ nowa warstwa…</option>`;
-  if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
+  const opts = html`${[...names].sort((a, b) => layerZ(a) - layerZ(b) || a.localeCompare(b)).map((n) => html`<option value="${n}">${label(n)}</option>`)}<option value="${NEW_LAYER}">＋ nowa warstwa…</option>`;
+  if (sel.dataset.html !== String(opts)) { writeHtml(sel, opts); sel.dataset.html = opts; }
   sel.value = cur;
   sel.title = `Warstwa należy do szablonu „${s.name}”: zmiana obejmie stron: ${pages}. ● = zajęta na antenie`;
 }
@@ -134,7 +135,7 @@ function wordReplaceAt(el) {
   if (hit.words.length === 1) return wrApply(el, hit, hit.words[0]);
   const r = el.getBoundingClientRect();
   Object.assign(wrMenu.style, { display: 'block', left: r.left + 'px', top: r.bottom + 2 + 'px' });
-  wrMenu.innerHTML = hit.words.map((w, i) => `<div data-wi="${i}"><b>${i + 1}</b> ${esc(w)}</div>`).join('');
+  writeHtml(wrMenu, hit.words.map((w, i) => html`<div data-wi="${i}"><b>${i + 1}</b> ${w}</div>`));
   wrCtx = { el, hit };
 }
 // ---- skrót klawiszowy strony

@@ -4,8 +4,7 @@
 //   pickPages({ pages, scenes, current, assetsOf }) → Promise<string[] | null>  – wybór stron do eksportu (id stron)
 // Wygląd: zmienne rdzenia vizrs-ui.css (--panel, --line, --acc…), własne klasy `pk-*` (bez zależności od ui.css strony).
 import { planPages, undecided, FONT_RE } from './cgpack.js';
-
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+import { esc, html, orEmpty, setHtml } from './dom.js';
 
 const CSS = `
 .pk-back{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;display:flex;align-items:center;justify-content:center}
@@ -41,8 +40,8 @@ function shell(title, sub) {
   const back = document.activeElement;
   const d = document.createElement('div');
   d.className = 'pk-back';
-  d.innerHTML = `<div class="pk-box" role="dialog" aria-modal="true"><div class="pk-head"><b>${esc(title)}</b>${sub ? `<div class="pk-dim" style="margin-top:4px">${sub}</div>` : ''}</div>
-    <div class="pk-body"></div><div class="pk-foot"></div></div>`;
+  setHtml(d, html`<div class="pk-box" role="dialog" aria-modal="true"><div class="pk-head"><b>${title}</b>${sub ? html`<div class="pk-dim" style="margin-top:4px">${sub}</div>` : ''}</div>
+    <div class="pk-body"></div><div class="pk-foot"></div></div>`);
   const keys = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(null); } else if (d.contains(e.target)) e.stopPropagation(); };
   const close = (v) => { d.remove(); removeEventListener('keydown', keys, true); back?.focus?.(); done(v); };
   addEventListener('keydown', keys, true); // modalne: skróty strony (F-klawisze Trio) nie działają pod oknem
@@ -76,33 +75,33 @@ export function planDialog(plan, { title = 'Import paczki .cgpack' } = {}) {
   let fixRefs = true;
   const render = () => {
     const sc = plan.scenes, conflicts = sc.filter((e) => e.choices.length > 2 || !e.action);
-    let h = `<div class="pk-sec">Sceny${conflicts.length ? `<span class="pk-grow"></span><span class="pk-dim">wszystkie konflikty:</span>
+    let h = html`<div class="pk-sec">Sceny${conflicts.length ? html`<span class="pk-grow"></span><span class="pk-dim">wszystkie konflikty:</span>
       <button data-all="update">Zaktualizuj / zastąp</button><button data-all="copy">Kopia</button><button data-all="skip">Pomiń</button>` : ''}</div>
-      <table class="pk-t">${sc.map((e, i) => `<tr class="${e.action ? '' : 'pk-need'}"><td>${esc(e.name)}</td>
-        <td class="${e.status === 'changed' || e.status === 'name-taken' ? 'pk-warn' : 'pk-dim'}">${esc(SCENE_STATUS[e.status])}${e.status === 'changed' && e.targetName !== e.name ? ` (w show: „${esc(e.targetName)}”)` : ''}</td>
-        <td><select data-sc="${i}">${e.action ? '' : '<option value="">— wybierz —</option>'}${e.choices.map((a) => `<option value="${a}" ${a === e.action ? 'selected' : ''}>${esc(sceneChoice(e, a))}</option>`).join('')}</select></td></tr>`).join('')}</table>`;
+      <table class="pk-t">${sc.map((e, i) => html`<tr class="${e.action ? '' : 'pk-need'}"><td>${esc(e.name)}</td>
+        <td class="${e.status === 'changed' || e.status === 'name-taken' ? 'pk-warn' : 'pk-dim'}">${esc(SCENE_STATUS[e.status])}${e.status === 'changed' && e.targetName !== e.name ? ` (w show: „${e.targetName}”)` : ''}</td>
+        <td><select data-sc="${i}">${e.action ? '' : html`<option value="">— wybierz —</option>`}${e.choices.map((a) => html`<option value="${a}" ${a === e.action ? 'selected' : ''}>${esc(sceneChoice(e, a))}</option>`)}</select></td></tr>`)}</table>`;
     if (plan.withPages && plan._pk.pages.length) {
-      h += `<div class="pk-sec">Strony<span class="pk-grow"></span><label class="pk-dim">przesuń numery o <input class="pk-off" type="number" step="1" value="${plan.offset}" data-off></label></div>
-        <table class="pk-t">${pages().map((r, i) => `<tr><td class="pk-n">${r.number ?? '?'}${(r.action === 'add' || r.action === 'renumber' || r.action === 'overwrite') && r.to !== r.number ? ` → <b>${r.to}</b>` : ''}</td>
-          <td>${esc(r.name)}</td><td class="${r.status === 'new' ? 'pk-dim' : 'pk-warn'}">${esc(PAGE_STATUS[r.status])}${r.reason ? ` – ${esc(r.reason)}` : ''}</td>
-          <td>${r.choices.length > 1 ? `<select data-pg="${i}">${r.choices.map((a) => `<option value="${a}" ${a === r.action ? 'selected' : ''}>${esc(pageChoice[a])}</option>`).join('')}</select>` : `<span class="pk-dim">${esc(pageChoice[r.action])}</span>`}</td></tr>`).join('')}</table>
+      h = html`${h}<div class="pk-sec">Strony<span class="pk-grow"></span><label class="pk-dim">przesuń numery o <input class="pk-off" type="number" step="1" value="${plan.offset}" data-off></label></div>
+        <table class="pk-t">${pages().map((r, i) => html`<tr><td class="pk-n">${r.number ?? '?'}${(r.action === 'add' || r.action === 'renumber' || r.action === 'overwrite') && r.to !== r.number ? html` → <b>${r.to}</b>` : ''}</td>
+          <td>${esc(r.name)}</td><td class="${r.status === 'new' ? 'pk-dim' : 'pk-warn'}">${esc(PAGE_STATUS[r.status])}${r.reason ? ` – ${r.reason}` : ''}</td>
+          <td>${r.choices.length > 1 ? html`<select data-pg="${i}">${r.choices.map((a) => html`<option value="${a}" ${a === r.action ? 'selected' : ''}>${esc(pageChoice[a])}</option>`)}</select>` : html`<span class="pk-dim">${esc(pageChoice[r.action])}</span>`}</td></tr>`)}</table>
         <div class="pk-dim" style="margin-top:4px">Playlisty, rundowny i makra nie jadą w paczce.</div>`;
     } else if (!plan.withPages && plan._pk.pages.length) {
-      h += `<div class="pk-sec">Strony</div><div class="pk-dim">${plan._pk.pages.length} stron Trio zostanie pominiętych – praca lokalna tworzy tylko sceny; strony zaimportuje Trio z tej samej paczki.</div>`;
+      h = html`${h}<div class="pk-sec">Strony</div><div class="pk-dim">${plan._pk.pages.length} stron Trio zostanie pominiętych – praca lokalna tworzy tylko sceny; strony zaimportuje Trio z tej samej paczki.</div>`;
     }
     if (plan.refs.length) {
-      h += `<div class="pk-sec pk-warn">Powiązania (dock), które po imporcie wskazywałyby co innego</div>
-        <ul style="margin:2px 0;padding-left:18px">${plan.refs.map((r) => `<li>„${esc(r.scene)}”: ${esc(r.from)} → ${esc(r.to)}</li>`).join('')}</ul>
+      h = html`${h}<div class="pk-sec pk-warn">Powiązania (dock), które po imporcie wskazywałyby co innego</div>
+        <ul style="margin:2px 0;padding-left:18px">${plan.refs.map((r) => html`<li>„${esc(r.scene)}”: ${esc(r.from)} → ${esc(r.to)}</li>`)}</ul>
         <label><input type="checkbox" data-fix ${fixRefs ? 'checked' : ''}> popraw je w scenach z paczki</label>`;
     }
     const renamed = plan.files.filter((f) => f.name !== f.from), had = plan.files.filter((f) => f.status === 'same' || f.status === 'reused');
-    h += `<div class="pk-sec">Pliki</div><div class="pk-dim">${nNew} nowych${had.length ? `, ${had.length} już jest w zasobach` : ''}${plan.files.some((f) => FONT_RE.test(f.name)) ? ` (czcionki: ${plan.files.filter((f) => FONT_RE.test(f.name)).map((f) => esc(f.name)).join(', ')})` : ''}.
-      ${renamed.length ? `Pod inną nazwą: ${renamed.map((f) => `${esc(f.from)} → ${esc(f.name)}`).join(', ')}.` : ''} Istniejące pliki nie są nadpisywane.</div>`;
-    if (plan.legacy) h += `<div class="pk-warn" style="margin-top:8px">Starszy format .vizrs.json – bez grafik i czcionek.</div>`;
-    ui.body.innerHTML = h;
+    h = html`${h}<div class="pk-sec">Pliki</div><div class="pk-dim">${nNew} nowych${had.length ? `, ${had.length} już jest w zasobach` : ''}${plan.files.some((f) => FONT_RE.test(f.name)) ? ` (czcionki: ${plan.files.filter((f) => FONT_RE.test(f.name)).map((f) => f.name).join(', ')})` : ''}.
+      ${renamed.length ? `Pod inną nazwą: ${renamed.map((f) => `${f.from} → ${f.name}`).join(', ')}.` : ''} Istniejące pliki nie są nadpisywane.</div>`;
+    if (plan.legacy) h = html`${h}<div class="pk-warn" style="margin-top:8px">Starszy format .vizrs.json – bez grafik i czcionek.</div>`;
+    setHtml(ui.body, h);
     const left = undecided(plan).length;
-    ui.foot.innerHTML = `<span class="pk-dim pk-grow">${left ? `<span class="pk-warn">Wybierz czynność dla ${left} scen(y) oznaczonych ramką.</span>` : 'Gotowe do importu.'}</span>
-      <button data-x="no">Anuluj</button><button data-x="go" class="acc" ${left ? 'disabled' : ''}>⇧ Importuj</button>`;
+    setHtml(ui.foot, html`<span class="pk-dim pk-grow">${left ? html`<span class="pk-warn">Wybierz czynność dla ${left} scen(y) oznaczonych ramką.</span>` : 'Gotowe do importu.'}</span>
+      <button data-x="no">Anuluj</button><button data-x="go" class="acc" ${left ? 'disabled' : ''}>⇧ Importuj</button>`);
   };
   render();
   ui.d.addEventListener('change', (e) => {
@@ -136,26 +135,26 @@ export function pickPages({ pages, scenes, current = null, assetsOf = null, titl
   const sceneName = new Map(scenes.map((s) => [s.id, s.name]));
   const list = [...pages].sort((a, b) => a.number - b.number);
   const chosen = new Set(current ? [current] : []);
-  ui.body.innerHTML = `<div class="pk-row"><input type="search" placeholder="szukaj: numer, nazwa, scena" data-q class="pk-grow">
+  setHtml(ui.body, html`<div class="pk-row"><input type="search" placeholder="szukaj: numer, nazwa, scena" data-q class="pk-grow">
       <button data-p="all">zaznacz widoczne</button><button data-p="none">żadna</button></div>
-    <div class="pk-list"></div><div class="pk-dim" data-sum style="margin:8px 0"></div>`;
+    <div class="pk-list"></div><div class="pk-dim" data-sum style="margin:8px 0"></div>`);
   const box = ui.body.querySelector('.pk-list');
   const visible = () => {
     const q = ui.body.querySelector('[data-q]').value.trim().toLowerCase();
     return list.filter((p) => !q || `${p.number} ${p.name || ''} ${sceneName.get(p.scene) || ''}`.toLowerCase().includes(q));
   };
   const draw = () => {
-    box.innerHTML = visible().map((p) => `<label><input type="checkbox" value="${esc(p.id)}" ${chosen.has(p.id) ? 'checked' : ''}>
-      <span class="pk-n" style="min-width:4.5em">${p.number}</span><span class="pk-grow">${esc(p.name || '')}</span><span class="pk-dim">${esc(sceneName.get(p.scene) || '?')}</span></label>`).join('') || '<div class="pk-dim">Brak stron.</div>';
+    setHtml(box, orEmpty(visible().map((p) => html`<label><input type="checkbox" value="${esc(p.id)}" ${chosen.has(p.id) ? 'checked' : ''}>
+      <span class="pk-n" style="min-width:4.5em">${p.number}</span><span class="pk-grow">${esc(p.name || '')}</span><span class="pk-dim">${esc(sceneName.get(p.scene) || '?')}</span></label>`), html`<div class="pk-dim">Brak stron.</div>`));
     sum();
   };
   const sum = () => {
     const ps = list.filter((p) => chosen.has(p.id)), sc = new Set(ps.map((p) => p.scene));
     const a = assetsOf ? assetsOf(scenes.filter((s) => sc.has(s.id)), ps) : null;
-    ui.body.querySelector('[data-sum]').innerHTML = `${ps.length} stron · ${sc.size} scen${a ? ` · ${a.images.length} grafik · ${a.fonts.length} czcionek${a.fonts.length ? ': ' + a.fonts.map(esc).join(', ') : ''}` : ''}`;
+    ui.body.querySelector('[data-sum]').textContent = `${ps.length} stron · ${sc.size} scen${a ? ` · ${a.images.length} grafik · ${a.fonts.length} czcionek${a.fonts.length ? ': ' + a.fonts.join(', ') : ''}` : ''}`;
     ui.foot.querySelector('[data-x="go"]').disabled = !ps.length;
   };
-  ui.foot.innerHTML = '<span class="pk-grow"></span><button data-x="no">Anuluj</button><button data-x="go" class="acc">⇩ Zapisz .cgpack</button>';
+  setHtml(ui.foot, html`<span class="pk-grow"></span><button data-x="no">Anuluj</button><button data-x="go" class="acc">⇩ Zapisz .cgpack</button>`);
   draw();
   ui.body.querySelector('[data-q]').addEventListener('input', draw);
   ui.d.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { e.target.checked ? chosen.add(e.target.value) : chosen.delete(e.target.value); sum(); } });

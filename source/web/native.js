@@ -1,5 +1,6 @@
 // Most stron Artist/Trio z oknem natywnym vizrs-shell (w przeglądarce nic nie robi).
 // Strona zgłasza stan (tytuł, zmiany, cofanie, kopia robocza), powłoka wysyła komendy z menu i pliki.
+import { html, setHtml } from './dom.js';
 const shell = window.__vizrsShell;
 // __vizrsPost: okno Tauri (tam `window.ipc` należy do Tauri i nie da się go podmienić); inaczej `window.ipc` (GTK, wry)
 const post = (o) => { try { const m = 'app:' + JSON.stringify(o); if (window.__vizrsPost) window.__vizrsPost(m); else window.ipc.postMessage(m); } catch { /* okno zamykane */ } };
@@ -17,9 +18,9 @@ function askClose(what, save, discard) {
   const d = document.createElement('div');
   d.id = 'nativeClose';
   d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;display:flex;align-items:center;justify-content:center';
-  d.innerHTML = `<div style="width:min(460px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px">
+  setHtml(d, html`<div style="width:min(460px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px">
     <b style="font-size:15px">Niezapisane zmiany</b><div id="ncWhat" style="margin:10px 0 14px"></div>
-    <div class="row" style="gap:6px;justify-content:flex-end"><button data-nc="drop" class="danger">Nie zapisuj</button><button data-nc="stay">Anuluj</button><button data-nc="save" class="acc">Zapisz</button></div></div>`;
+    <div class="row" style="gap:6px;justify-content:flex-end"><button data-nc="drop" class="danger">Nie zapisuj</button><button data-nc="stay">Anuluj</button><button data-nc="save" class="acc">Zapisz</button></div></div>`);
   d.querySelector('#ncWhat').textContent = what;
   const done = (msg) => { d.remove(); removeEventListener('keydown', esc, true); post({ t: msg }); };
   const esc = (e) => { if (e.key === 'Escape') { e.preventDefault(); done('stay'); } };

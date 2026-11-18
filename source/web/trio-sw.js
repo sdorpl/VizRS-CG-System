@@ -1,8 +1,8 @@
 // Service worker Trio: uruchamia aplikację bez sieci (telefon z ikony), żeby operator zobaczył stan połączenia zamiast błędu przeglądarki.
 // Zawsze najpierw sieć: po aktualizacji serwera nikt nie może grać starym interfejsem. Komend i stanu anteny nigdy nie zapisuje.
-const CACHE = 'vizrs-trio-3';
+const CACHE = 'vizrs-trio-4';
 const SHELL = ['/trio', '/vizrs-ui.css', '/ui.css', '/text-model.js', '/renderer.js', '/qr.js', '/ticker-model.js', '/ticker-items.js', '/color-picker.js', '/richtext.js',
-  '/motion.js', '/field-rules.js', '/native.js', '/dialogs.js', '/cgpack.js', '/pack-ui.js', '/trio-icon.svg', '/trio.webmanifest',
+  '/motion.js', '/field-rules.js', '/native.js', '/dialogs.js', '/dom.js', '/cgpack.js', '/pack-ui.js', '/trio-icon.svg', '/trio.webmanifest',
   '/trio/core.js', '/trio/pages.js', '/trio/preview.js', '/trio/fields.js', '/trio/onair.js', '/trio/rundown.js', '/trio/system.js', '/trio/mobile.js', '/trio/main.js'];
 
 addEventListener('install', () => skipWaiting());

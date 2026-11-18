@@ -3,19 +3,19 @@
 //   ask(tekst, { title, ok, cancel, danger }) → Promise<boolean>
 //   askText(tekst, { title, value, ok, cancel, placeholder }) → Promise<string | null>   (pusty tekst = null)
 //   choose(tekst, [{ label, value, danger }], { title }) → Promise<value | null>
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+import { html, setHtml } from './dom.js';
 
 function open({ title, text, input, buttons }) {
   return new Promise((resolve) => {
     const back = document.activeElement;
     const d = document.createElement('div');
     d.className = 'dlg-back';
-    d.innerHTML = `<div class="dlg" role="dialog" aria-modal="true">
-      ${title ? `<div class="dlg-title">${esc(title)}</div>` : ''}
+    setHtml(d, html`<div class="dlg" role="dialog" aria-modal="true">
+      ${title ? html`<div class="dlg-title">${title}</div>` : ''}
       <div class="dlg-text"></div>
-      ${input ? `<input class="dlg-input" spellcheck="false" placeholder="${esc(input.placeholder || '')}">` : ''}
-      <div class="dlg-btns">${buttons.map((b, i) => `<button data-dlg="${i}" class="${b.cls || ''}">${esc(b.label)}</button>`).join('')}</div>
-    </div>`;
+      ${input ? html`<input class="dlg-input" spellcheck="false" placeholder="${input.placeholder || ''}">` : ''}
+      <div class="dlg-btns">${buttons.map((b, i) => html`<button data-dlg="${i}" class="${b.cls || ''}">${b.label}</button>`)}</div>
+    </div>`);
     d.querySelector('.dlg-text').textContent = text;
     const field = d.querySelector('.dlg-input');
     if (field) field.value = input.value ?? '';

@@ -2,7 +2,8 @@
 
 import { DEFAULT_TZ } from '/renderer.js';
 import { ask, askText } from '/dialogs.js';
-import { $, $$, api, draft, esc, loadShow, onAirLayer, onAnt, pageById, phone, setHtml, show, state, toast } from './core.js';
+import { orEmpty, setHtml as writeHtml } from '/dom.js';
+import { $, $$, api, draft, esc, html, loadShow, onAirLayer, onAnt, pageById, phone, setHtml, show, state, toast } from './core.js';
 import { trySelect } from './pages.js';
 import { isConflict } from './fields.js';
 import { act } from './onair.js';
@@ -13,21 +14,21 @@ export let plId = null;
 export function setPlId(v) { plId = v; }
 const curPl = () => show.playlists.find((p) => p.id === plId);
 export function renderPlaylist() {
-  $('#plSel').innerHTML = show.playlists.map((p) => `<option value="${p.id}" ${p.id === plId ? 'selected' : ''}>${esc(p.name)}</option>`).join('') || '<option value="">(brak)</option>';
+  writeHtml($('#plSel'), orEmpty(show.playlists.map((p) => html`<option value="${p.id}" ${p.id === plId ? 'selected' : ''}>${esc(p.name)}</option>`), html`<option value="">(brak)</option>`));
   const pl = curPl();
   const running = state.carousel && state.carousel.playlist === plId;
   $('#plLoop').checked = pl ? pl.loop !== false : false;
   $('#plStart').disabled = !pl || !pl.items?.length;
   $('#plStart').textContent = running ? '▶ gra…' : '▶ Start';
-  if (!pl) { setHtml($('#pl'), '<div class="empty">Utwórz playlistę ＋</div>'); return; }
-  setHtml($('#pl'), (pl.items || []).map((it, i) => {
+  if (!pl) { setHtml($('#pl'), html`<div class="empty">Utwórz playlistę ＋</div>`); return; }
+  setHtml($('#pl'), orEmpty((pl.items || []).map((it, i) => {
     const p = pageById(it.page);
-    return `<div class="item ${running && state.carousel.index === i ? 'cur' : ''}" data-i="${i}">
+    return html`<div class="item ${running && state.carousel.index === i ? 'cur' : ''}" data-i="${i}">
       <span class="dim">${i + 1}</span>
       <span><span style="font-family:var(--mono);color:var(--acc)">${p?.number ?? '?'}</span> ${esc(p?.name ?? '(usunięta)')}</span>
       <input type="number" min="0.5" step="0.5" value="${it.duration ?? 5}" data-dur="${i}" title="czas trwania (s)">
       <span class="row" style="gap:2px"><button class="icon" data-mv="${i}" title="w górę">↑</button><button class="icon danger" data-rm="${i}" title="usuń">×</button></span></div>`;
-  }).join('') || '<div class="empty">Pusta. Zaznacz stronę i kliknij „＋ strona”.</div>');
+  }), html`<div class="empty">Pusta. Zaznacz stronę i kliknij „＋ strona”.</div>`));
 }
 async function savePl(pl) {
   try { const r = await api('PUT', '/api/playlists/' + pl.id, pl); Object.assign(pl, r); renderPlaylist(); }
@@ -52,22 +53,22 @@ const rdRun = () => (state.rundowns || []).find((r) => r.id === rdId) || {};
 export function renderRundown() {
   show.rundowns ||= [];
   if (!rdId || !curRd()) rdId = show.rundowns[0]?.id || null;
-  $('#rdSel').innerHTML = show.rundowns.map((r) => `<option value="${r.id}" ${r.id === rdId ? 'selected' : ''}>${esc(r.name)}</option>`).join('') || '<option value="">(brak)</option>';
+  writeHtml($('#rdSel'), orEmpty(show.rundowns.map((r) => html`<option value="${r.id}" ${r.id === rdId ? 'selected' : ''}>${esc(r.name)}</option>`), html`<option value="">(brak)</option>`));
   const rd = curRd(), run = rdRun();
   $('#rdNext').disabled = !rd || !run.cursor;
-  if (!rd) { setHtml($('#rd'), '<div class="empty">Utwórz rundown ＋ i dodaj strony.</div>'); return; }
+  if (!rd) { setHtml($('#rd'), html`<div class="empty">Utwórz rundown ＋ i dodaj strony.</div>`); return; }
   const done = new Set(run.done || []);
-  setHtml($('#rd'), (rd.items || []).map((it, i) => {
+  setHtml($('#rd'), orEmpty((rd.items || []).map((it, i) => {
     const p = pageById(it.page), air = !!onAirLayer(it.page);
     const cls = air ? 'onair' : it.id === run.cursor ? 'next' : done.has(it.id) ? 'done' : '';
     const mark = air ? '●' : it.id === run.cursor ? '▶' : done.has(it.id) ? '✓' : '';
-    return `<div class="item ${cls}" data-iid="${esc(it.id)}" draggable="true">
+    return html`<div class="item ${cls}" data-iid="${esc(it.id)}" draggable="true">
       <span class="grip" title="Przeciągnij, by zmienić kolejność">☰</span><span class="st" style="color:${air ? 'var(--red)' : 'var(--green)'}">${mark}</span>
       <span style="font-family:var(--mono);color:var(--acc)">${p?.number ?? '?'}</span>
       <span>${esc(p?.name ?? '(usunięta)')}</span>
       <input class="note" data-note="${esc(it.id)}" value="${esc(it.note || '')}" placeholder="notatka">
       <span class="row" style="gap:2px"><button class="icon" data-rdcur="${esc(it.id)}" title="Ustaw jako następną">⏵</button><button class="icon danger" data-rdrm="${esc(it.id)}" title="Usuń z rundownu">×</button></span></div>`;
-  }).join('') || '<div class="empty">Pusty. Zaznacz stronę i kliknij „＋ strona”.</div>');
+  }), html`<div class="empty">Pusty. Zaznacz stronę i kliknij „＋ strona”.</div>`));
 }
 async function saveRd(rd) {
   try { const r = await api('PUT', '/api/rundowns/' + rd.id, rd); Object.assign(rd, r); renderRundown(); }
@@ -104,7 +105,7 @@ const textToSteps = (t) => t.split('\n').map((l) => l.trim()).filter(Boolean).ma
 export function renderMacros() {
   show.macros ||= [];
   if (!mcId || !curMc()) mcId = show.macros[0]?.id || null;
-  $('#mcSel').innerHTML = show.macros.map((m) => `<option value="${m.id}" ${m.id === mcId ? 'selected' : ''}>${esc(m.name)}</option>`).join('') || '<option value="">(brak)</option>';
+  writeHtml($('#mcSel'), orEmpty(show.macros.map((m) => html`<option value="${m.id}" ${m.id === mcId ? 'selected' : ''}>${esc(m.name)}</option>`), html`<option value="">(brak)</option>`));
   const m = curMc();
   if (document.activeElement !== $('#mcText')) $('#mcText').value = m ? stepsToText(m) : '';
   $('#mcText').disabled = !m; $('#mcRun').disabled = !m; $('#mcSave').disabled = !m;

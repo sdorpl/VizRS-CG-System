@@ -1,7 +1,8 @@
 // Trio – telefon i wąskie okno: widoki, pasek, szuflada, instalacja.
 
 import { choose } from '/dialogs.js';
-import { $, $$, PHONE, antQuery, api, buzz, dirtyPage, draft, esc, isNative, loadShow, loadState, onAirLayer, phone, show, state, toast } from './core.js';
+import { setHtml as writeHtml } from '/dom.js';
+import { $, $$, PHONE, antQuery, api, buzz, dirtyPage, draft, html, isNative, loadShow, loadState, onAirLayer, phone, show, state, toast } from './core.js';
 import { syncPv, trySelect } from './pages.js';
 import { fitPv } from './preview.js';
 import { act, arm, busy } from './onair.js';
@@ -41,7 +42,7 @@ export function applyLayout() {
 }
 export function renderBar() {
   const L = draft && onAirLayer(draft.id), ph = phone();
-  $('#barName').innerHTML = draft ? `<span class="num">${draft.number}</span> ${esc(draft.name)}` : '<span class="dim">Wybierz stronę</span>';
+  writeHtml($('#barName'), draft ? html`<span class="num">${draft.number}</span> ${draft.name}` : html`<span class="dim">Wybierz stronę</span>`);
   $('#barSt').textContent = L ? `● ON AIR ${L.stop + 1}/${Math.max(1, L.stops)}` : dirtyPage ? '✎ zmiany' : '';
   $('#barSt').className = L ? 'on' : '';
   // na stanowisku przyciski zostają czynne jak dotąd (skróty F1–F4), na telefonie pokazują, co ma sens

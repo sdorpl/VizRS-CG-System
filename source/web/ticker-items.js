@@ -3,6 +3,7 @@
 // Wynik zawsze trafia do pola jako wiersze `KAT#kolor|treść` (ticker-model.js), więc reszta systemu się nie zmienia.
 import { parseTickerItems, serializeTickerItems, parseCatColors, pageCatColors, catColorOf, checkTickerItems, TICKER_LIMITS } from '/ticker-model.js';
 import { openColorPicker, normHex } from '/color-picker.js';
+import { esc, html, setHtml, replaceHtml } from './dom.js';
 
 const STYLE = `
 .tkx { border: 1px solid var(--line, #333); border-radius: 4px; background: var(--panel2, #1b1d21); }
@@ -38,7 +39,6 @@ const STYLE = `
 `;
 let styled = false;
 let seq = 0;
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const VIEWS = { list: 'Lista', groups: 'Grupy', raw: 'Tekst' };
 
 /**
@@ -82,7 +82,7 @@ export function mountTickerEditor(host, o = {}) {
     const off = R().readonly, bare = !(x.cat || x.color || label());
     const mix = x.mix ? ' mix' : '';
     const tip = off ? 'Kolor kategorii' : bare ? 'Brak plakietki – wpisz najpierw kategorię' : x.mix ? 'Wiadomości tej kategorii mają różne kolory – wybór ujednolici je' : x.cat ? `Kolor kategorii ${x.cat}` : `Kolor etykiety ${label()}`.trim();
-    return `<button type="button" class="tkx-dot${mix}${bare ? ' bare' : ''}" data-a="color" ${attr} style="background:${esc(dot(x))}" title="${esc(tip)}" ${off ? 'disabled' : ''}></button>`;
+    return html`<button type="button" class="tkx-dot${mix}${bare ? ' bare' : ''}" data-a="color" ${attr} style="background:${esc(dot(x))}" title="${esc(tip)}" ${off ? 'disabled' : ''}></button>`;
   };
   const paintDots = () => root.querySelectorAll('.tkx-dot').forEach((d) => {
     const x = d.dataset.i != null ? items[+d.dataset.i] : groups().find((g) => g.cat === d.dataset.cat);
@@ -119,19 +119,19 @@ export function mountTickerEditor(host, o = {}) {
   }
   const catCtl = (x, i) => {
     const ro = R().readonly ? 'disabled' : '';
-    if (R().cats?.length) return `<select class="tkx-cat" data-i="${i}" data-was="${esc(x.cat)}" ${ro}><option value=""></option>${R().cats.map((c) => `<option ${c.toUpperCase() === x.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>`;
-    return `<input class="tkx-cat" data-i="${i}" data-was="${esc(x.cat)}" list="${id}-cats" value="${esc(x.cat)}" placeholder="kategoria" ${ro}>`;
+    if (R().cats?.length) return html`<select class="tkx-cat" data-i="${i}" data-was="${esc(x.cat)}" ${ro}><option value=""></option>${R().cats.map((c) => html`<option ${c.toUpperCase() === x.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`)}</select>`;
+    return html`<input class="tkx-cat" data-i="${i}" data-was="${esc(x.cat)}" list="${id}-cats" value="${esc(x.cat)}" placeholder="kategoria" ${ro}>`;
   };
   const meta = (x, i) => {
     const n = Array.from(x.text).length, mc = maxChars();
     const s = sq?.[i];
     const over = s != null && s < sqMin - 1e-3;
-    return `<span class="tkx-meta">${s != null && s < 0.999 ? `<span class="${over ? 'bad' : 'warn'}" title="${over ? `nie mieści się: potrzebne ściśnięcie poniżej granicy ${Math.round(sqMin * 100)}% – wiadomość zostanie ucięta` : 'ściśnięcie w grafice'}">${over ? '⚠ ' : ''}${Math.round(s * 100)}%</span>` : ''}${isFinite(mc) && R().maxChars ? `<span class="${n >= mc ? 'bad' : n >= mc * 0.85 ? 'warn' : ''}">${n}/${mc}</span>` : ''}</span>`;
+    return html`<span class="tkx-meta">${s != null && s < 0.999 ? html`<span class="${over ? 'bad' : 'warn'}" title="${over ? `nie mieści się: potrzebne ściśnięcie poniżej granicy ${Math.round(sqMin * 100)}% – wiadomość zostanie ucięta` : 'ściśnięcie w grafice'}">${over ? '⚠ ' : ''}${Math.round(s * 100)}%</span>` : ''}${isFinite(mc) && R().maxChars ? html`<span class="${n >= mc ? 'bad' : n >= mc * 0.85 ? 'warn' : ''}">${n}/${mc}</span>` : ''}</span>`;
   };
-  const txt = (x, i) => `<input class="tkx-txt" data-i="${i}" value="${esc(x.text)}" maxlength="${isFinite(maxChars()) ? maxChars() : ''}" placeholder="treść wiadomości" spellcheck="true" lang="pl" ${R().readonly ? 'readonly' : ''}>`;
-  const btns = (i, g) => R().readonly ? '<span></span><span></span>' : `${g ? '' : `<button data-a="up" data-i="${i}" title="W górę (Ctrl+↑)">↑</button><button data-a="down" data-i="${i}" title="W dół (Ctrl+↓)">↓</button>`}<button data-a="del" data-i="${i}" title="Usuń wiadomość">✕</button>`;
-  const row = (x, i) => `<div class="tkx-row" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij, aby przenieść">${i + 1}</span>${swatch(x, `data-i="${i}"`)}${catCtl(x, i)}${txt(x, i)}${meta(x, i)}${btns(i)}</div>`;
-  const grow = (x, i) => `<div class="tkx-row g" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij do innej grupy">${i + 1}</span>${txt(x, i)}${meta(x, i)}<span></span>${btns(i, true)}</div>`;
+  const txt = (x, i) => html`<input class="tkx-txt" data-i="${i}" value="${esc(x.text)}" maxlength="${isFinite(maxChars()) ? maxChars() : ''}" placeholder="treść wiadomości" spellcheck="true" lang="pl" ${R().readonly ? 'readonly' : ''}>`;
+  const btns = (i, g) => R().readonly ? html`<span></span><span></span>` : html`${g ? '' : html`<button data-a="up" data-i="${i}" title="W górę (Ctrl+↑)">↑</button><button data-a="down" data-i="${i}" title="W dół (Ctrl+↓)">↓</button>`}<button data-a="del" data-i="${i}" title="Usuń wiadomość">✕</button>`;
+  const row = (x, i) => html`<div class="tkx-row" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij, aby przenieść">${i + 1}</span>${swatch(x, html`data-i="${i}"`)}${catCtl(x, i)}${txt(x, i)}${meta(x, i)}${btns(i)}</div>`;
+  const grow = (x, i) => html`<div class="tkx-row g" data-row="${i}" draggable="${!R().readonly}"><span class="tkx-n" title="przeciągnij do innej grupy">${i + 1}</span>${txt(x, i)}${meta(x, i)}<span></span>${btns(i, true)}</div>`;
 
   function groups() {
     const map = new Map();
@@ -150,25 +150,24 @@ export function mountTickerEditor(host, o = {}) {
 
   // ---- treść widoków: lista, grupy po kategoriach, tekst surowy
   function listBody(ro, full) {
-    return items.map(row).join('') + (ro ? '' : `<button class="tkx-add" data-a="add" ${full ? 'disabled' : ''}>＋ wiadomość</button>`);
+    return html`${items.map(row)}${ro ? '' : html`<button class="tkx-add" data-a="add" ${full ? 'disabled' : ''}>＋ wiadomość</button>`}`;
   }
   function groupsBody(ro, full) {
-    return groups().map((g) => `<div class="tkx-card" data-cat="${esc(g.cat)}"><div class="tkx-chead">${swatch(g, `data-cat="${esc(g.cat)}"`)}${R().cats?.length
-      ? `<select class="tkx-cname" data-cat="${esc(g.cat)}" ${ro ? 'disabled' : ''}><option value=""></option>${R().cats.map((c) => `<option ${c.toUpperCase() === g.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>`
-      : `<input class="tkx-cname" data-cat="${esc(g.cat)}" list="${id}-cats" value="${esc(g.cat)}" placeholder="(bez kategorii)" ${ro ? 'disabled' : ''}>`}<span class="tkx-meta">${g.idx.length}</span>${ro ? '' : `<button data-a="gdel" data-cat="${esc(g.cat)}" title="Usuń grupę z wiadomościami">✕</button>`}</div>
-        ${g.idx.map((i) => grow(items[i], i)).join('')}${ro ? '' : `<button class="tkx-add" data-a="gadd" data-cat="${esc(g.cat)}" data-color="${esc(g.color)}" ${full ? 'disabled' : ''}>＋ wiadomość</button>`}</div>`).join('') +
-      (ro ? '' : `<button class="tkx-add" data-a="newgroup" ${full ? 'disabled' : ''}>＋ grupa</button>`);
+    return html`${groups().map((g) => html`<div class="tkx-card" data-cat="${esc(g.cat)}"><div class="tkx-chead">${swatch(g, html`data-cat="${esc(g.cat)}"`)}${R().cats?.length
+      ? html`<select class="tkx-cname" data-cat="${esc(g.cat)}" ${ro ? 'disabled' : ''}><option value=""></option>${R().cats.map((c) => html`<option ${c.toUpperCase() === g.cat.toUpperCase() ? 'selected' : ''}>${esc(c)}</option>`)}</select>`
+      : html`<input class="tkx-cname" data-cat="${esc(g.cat)}" list="${id}-cats" value="${esc(g.cat)}" placeholder="(bez kategorii)" ${ro ? 'disabled' : ''}>`}<span class="tkx-meta">${g.idx.length}</span>${ro ? '' : html`<button data-a="gdel" data-cat="${esc(g.cat)}" title="Usuń grupę z wiadomościami">✕</button>`}</div>
+        ${g.idx.map((i) => grow(items[i], i))}${ro ? '' : html`<button class="tkx-add" data-a="gadd" data-cat="${esc(g.cat)}" data-color="${esc(g.color)}" ${full ? 'disabled' : ''}>＋ wiadomość</button>`}</div>`)}${ro ? '' : html`<button class="tkx-add" data-a="newgroup" ${full ? 'disabled' : ''}>＋ grupa</button>`}`;
   }
   function rawBody(ro) {
-    return `<textarea class="tkx-raw" spellcheck="true" lang="pl" ${ro ? 'readonly' : ''}>${esc(serializeTickerItems(items))}</textarea><div class="tkx-help">Jedna wiadomość w wierszu. Kategoria: <code>KAT|treść</code>, z kolorem: <code>KAT#c00|treść</code> (kolor obowiązuje całą kategorię).</div>`;
+    return html`<textarea class="tkx-raw" spellcheck="true" lang="pl" ${ro ? 'readonly' : ''}>${esc(serializeTickerItems(items))}</textarea><div class="tkx-help">Jedna wiadomość w wierszu. Kategoria: <code>KAT|treść</code>, z kolorem: <code>KAT#c00|treść</code> (kolor obowiązuje całą kategorię).</div>`;
   }
 
   function render(focus) {
     const ro = R().readonly;
     const full = items.length >= maxItems();
     const body = view === 'list' ? listBody(ro, full) : view === 'groups' ? groupsBody(ro, full) : rawBody(ro);
-    root.innerHTML = `<div class="tkx-bar">${Object.entries(VIEWS).map(([k, l]) => `<button data-view="${k}" class="${k === view ? 'on' : ''}">${l}</button>`).join('')}<span class="tkx-info"></span></div>
-      <div class="tkx-body">${body}</div><div class="tkx-err"></div><datalist id="${id}-cats">${allCats().map((c) => `<option value="${esc(c)}">`).join('')}</datalist>`;
+    setHtml(root, html`<div class="tkx-bar">${Object.entries(VIEWS).map(([k, l]) => html`<button data-view="${k}" class="${k === view ? 'on' : ''}">${l}</button>`)}<span class="tkx-info"></span></div>
+      <div class="tkx-body">${body}</div><div class="tkx-err"></div><datalist id="${id}-cats">${allCats().map((c) => html`<option value="${esc(c)}">`)}</datalist>`);
     status();
     if (focus != null) {
       const el = root.querySelector(`.tkx-txt[data-i="${focus.i}"]`);
@@ -235,7 +234,7 @@ export function mountTickerEditor(host, o = {}) {
       if (el.classList.contains('tkx-txt')) {
         if (R().upper && el.value !== el.value.toUpperCase()) { const p = el.selectionStart; el.value = el.value.toUpperCase(); el.setSelectionRange(p, p); }
         items[i].text = el.value.replace(/\n/g, ' ');
-        const m = el.parentElement.querySelector('.tkx-meta'); if (m) m.outerHTML = meta(items[i], i);
+        const m = el.parentElement.querySelector('.tkx-meta'); if (m) replaceHtml(m, meta(items[i], i));
         emit(); return;
       }
       if (el.classList.contains('tkx-cat')) {
@@ -376,7 +375,7 @@ export function mountTickerEditor(host, o = {}) {
       items.forEach((x, i) => { if (x.text.trim()) map[i] = arr?.[k++]; });
       sq = arr ? map : null;
       sqMin = arr?.min || 0;
-      root.querySelectorAll('[data-row]').forEach((r) => { const i = +r.dataset.row; const m = r.querySelector('.tkx-meta'); if (m) m.outerHTML = meta(items[i], i); });
+      root.querySelectorAll('[data-row]').forEach((r) => { const i = +r.dataset.row; const m = r.querySelector('.tkx-meta'); if (m) replaceHtml(m, meta(items[i], i)); });
     },
     setOptions(n) { Object.assign(o, n); render(); },
     focus() { root.querySelector('.tkx-txt')?.focus(); },

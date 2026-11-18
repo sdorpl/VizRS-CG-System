@@ -1,7 +1,8 @@
 // Trio – podgląd lokalny, monitor PGM, sterowanie anteną, warstwy na antenie.
 
 import { ask, askText } from '/dialogs.js';
-import { $, ant, antQuery, api, buzz, draft, esc, loadState, onAirLayer, onAnt, phone, pv, renderAnt, setAnt, setHtml, state, toast } from './core.js';
+import { orEmpty } from '/dom.js';
+import { $, ant, antQuery, api, buzz, draft, esc, html, loadState, onAirLayer, onAnt, phone, pv, renderAnt, setAnt, setHtml, state, toast } from './core.js';
 import { applyFinalRules } from './fields.js';
 import { closeDrawer, renderBar } from './mobile.js';
 
@@ -60,13 +61,12 @@ export const upd = () => draft && (applyFinalRules(), true) && act(async () => {
 export const arm = () => draft && (applyFinalRules(), true) && act(() => api('POST', `/api/arm/${draft.number}`, { values: draft.values }), 'ARM');
 export const clearAll = () => act(() => api('POST', onAnt('/api/clear')), 'CLEAR');
 export function renderLayers() {
-  setHtml($('#layers'), state.layers.map((l) => `<div class="item">
+  setHtml($('#layers'), orEmpty(state.layers.map((l) => html`<div class="item">
     <span class="lname">${esc(l.layer)}</span>
-    <span><span class="num" style="font-family:var(--mono);color:var(--acc)">${l.page?.number ?? ''}</span> ${esc(l.page?.name || l.scene)} <span class="dim" style="font-size:11px">stop ${l.stop + 1}/${Math.max(1, l.stops)}</span>${l.pending ? ` <span class="pend" title="Szablon został zmieniony w Artist – wizja gra starą wersję">⏳ nowa wersja szablonu <a href="#" data-ldeploy="${esc(l.layer)}">Wdróż teraz</a></span>` : ''}</span>
-    ${l.hasDock ? `<button class="icon ${l.dockOff ? '' : 'acc'}" data-ldock="${esc(l.layer)}" data-off="${l.dockOff ? 0 : 1}" title="Powiązanie (dock) tej sceny: ${l.dockOff ? 'wyłączone – kliknij, by włączyć' : 'aktywne – kliknij, by wyłączyć (nadpisanie)'}">⇅</button>` : ''}
+    <span><span class="num" style="font-family:var(--mono);color:var(--acc)">${l.page?.number ?? ''}</span> ${esc(l.page?.name || l.scene)} <span class="dim" style="font-size:11px">stop ${l.stop + 1}/${Math.max(1, l.stops)}</span>${l.pending ? html` <span class="pend" title="Szablon został zmieniony w Artist – wizja gra starą wersję">⏳ nowa wersja szablonu <a href="#" data-ldeploy="${esc(l.layer)}">Wdróż teraz</a></span>` : ''}</span>
+    ${l.hasDock ? html`<button class="icon ${l.dockOff ? '' : 'acc'}" data-ldock="${esc(l.layer)}" data-off="${l.dockOff ? 0 : 1}" title="Powiązanie (dock) tej sceny: ${l.dockOff ? 'wyłączone – kliknij, by włączyć' : 'aktywne – kliknij, by wyłączyć (nadpisanie)'}">⇅</button>` : ''}
     <button class="icon" data-lcont="${esc(l.layer)}" title="Continue">⏭</button>
-    <button class="icon danger" data-lout="${esc(l.layer)}" title="Out">⏏</button></div>`).join('')
-    || '<div class="empty">Antena czysta</div>');
+    <button class="icon danger" data-lout="${esc(l.layer)}" title="Out">⏏</button></div>`), html`<div class="empty">Antena czysta</div>`));
   $('#conn').title = `połączone wyjścia/odbiorniki: ${state.outputs ?? '?'}`;
   const se = $('#saveErr');
   se.style.display = state.saveError ? '' : 'none';

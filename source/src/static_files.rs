@@ -36,6 +36,7 @@ pub(crate) const STATIC: &[Static] = &[
     Static { path: "/motion.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/motion.js") },
     Static { path: "/text-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/text-model.js") },
     Static { path: "/qr.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/qr.js") },
+    Static { path: "/dom.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/dom.js") },
     Static { path: "/field-rules.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/field-rules.js") },
     Static { path: "/ticker-model.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-model.js") },
     Static { path: "/ticker-items.js", ctype: "text/javascript; charset=utf-8", body: include_str!("../web/ticker-items.js") },

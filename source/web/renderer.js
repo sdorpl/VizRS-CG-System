@@ -1,4 +1,5 @@
 import { qrSvg } from '/qr.js';
+import { setHtml } from './dom.js';
 import { parseTickerItems, parseCatColors, pageCatColors, catColorOf, labelOf, continuation, TICKER_MODES, SEP_STYLES } from '/ticker-model.js';
 export { parseTickerItem, serializeTickerItem, parseTickerItems, serializeTickerItems, parseCatColors, checkTickerItems } from '/ticker-model.js';
 import { hasMarkup, parseMarkup, stripMarkup, carryLines } from '/richtext.js';
@@ -1689,7 +1690,7 @@ export class ScenePlayer {
         }
         case 'qr': {
           const key = [p('text'), p('color'), p('qrBg')].join('|');
-          if (it.cache.key !== key) { it.cache.key = key; cssWrites++; el.innerHTML = qrSvg(String(p('text') ?? ''), p('color'), p('qrBg')); }
+          if (it.cache.key !== key) { it.cache.key = key; cssWrites++; setHtml(el, qrSvg(String(p('text') ?? ''), p('color'), p('qrBg'))); }
           css(el, 'borderRadius', radiusCss(p));
           const sh = p('shadow');
           it.bsh = sh > 0 ? `0 ${sh / 3}px ${sh}px rgba(0,0,0,.5)` : '';

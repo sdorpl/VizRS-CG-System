@@ -5,7 +5,8 @@ import { nativeBridge, contextMenu } from '/native.js';
 import { ask, askText, choose } from '/dialogs.js';
 import * as PACK from '/cgpack.js';
 import { planDialog, pickPages } from '/pack-ui.js';
-import { $, api, assets, dirtyPage, draft, esc, loadShow, onAirLayer, onAnt, selId, setDirtyFlag, setDraft, setSelId, setWho, show, sortedPages, state, toast, who } from './core.js';
+import { orEmpty, setHtml as writeHtml } from '/dom.js';
+import { $, api, assets, dirtyPage, draft, esc, html, loadShow, onAirLayer, onAnt, selId, setDirtyFlag, setDraft, setSelId, setWho, show, sortedPages, state, toast, who } from './core.js';
 import { trySelect } from './pages.js';
 import { pageHotkey, savePage, setWrList, wrList } from './fields.js';
 import { act, arm, clearAll, cont, out, showObsUrl, take, upd } from './onair.js';
@@ -19,22 +20,22 @@ async function openSys() {
     api('GET', '/api/backups').catch(() => []), api('GET', '/api/audit?n=40').catch(() => []), api('GET', '/api/fonts').catch(() => []),
   ]);
   const aRows = aud.slice().reverse().map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
-  $('#sysBox').innerHTML = `
+  writeHtml($('#sysBox'), html`
     <div class="row"><b style="font-size:15px">Stan systemu</b><span class="grow"></span><button id="sysClose">Zamknij (Esc)</button></div>
     <table><tr><th>Status</th><td>${esc(h.status)} · VizRS ${esc(h.version)} (${esc(h.build)}) · działa ${Math.round((h.uptimeS || 0) / 60)} min · rev ${h.rev}</td></tr>
     <tr><th>Wyjścia</th><td>${h.outputs} połączone · na antenie warstw: ${h.layersOnAir} · ostatnie zdarzenie: ${h.lastEventAgeS == null ? '—' : Math.round(h.lastEventAgeS) + ' s temu'}</td></tr>
-    <tr><th>Zapis</th><td>${h.saveError ? `<b style="color:var(--red-t)">${esc(h.saveError)}</b>` : 'OK'} · kopii: ${h.backups}</td></tr>
+    <tr><th>Zapis</th><td>${h.saveError ? html`<b style="color:var(--red-t)">${esc(h.saveError)}</b>` : 'OK'} · kopii: ${h.backups}</td></tr>
     <tr><th>Ty (blokady edycji)</th><td><input id="whoIn" value="${esc(who)}" style="width:200px"> <span class="dim">nazwa widoczna dla innych operatorów przy edycji strony</span></td></tr>
     <tr><th>Fonty offline</th><td>${esc(fonts.join(', '))}</td></tr></table>
     <h4>Błędy scen na wyjściu (${errs.length}) <button id="errClear" ${errs.length ? '' : 'disabled'}>Wyczyść</button></h4>
-    ${errs.length ? `<table>${errs.map((e) => `<tr><td>${esc(e.scene)}</td><td class="mono">${esc(e.layer)}</td><td>${esc(e.message)}</td><td>×${e.count}</td><td class="mono">${fmtT(e.last)}</td></tr>`).join('')}</table>` : '<div class="dim">Brak błędów.</div>'}
+    ${errs.length ? html`<table>${errs.map((e) => html`<tr><td>${esc(e.scene)}</td><td class="mono">${esc(e.layer)}</td><td>${esc(e.message)}</td><td>×${e.count}</td><td class="mono">${fmtT(e.last)}</td></tr>`)}</table>` : html`<div class="dim">Brak błędów.</div>`}
     <h4>Word Replace – lista zamian słów stanowiska <span class="dim" style="text-transform:none;letter-spacing:0">(w polu tekstowym: skrót + Ctrl+Spacja)</span></h4>
     <textarea id="wrText" rows="5" style="width:100%;font:12px var(--mono)" placeholder="@p: Prezydent | Premier&#10;@m: Minister&#10;# wiersz = skrót: słowo1 | słowo2 (skrót 1–8 znaków, bez spacji)">${esc(window.CGText ? CGText.wordReplaceFormat(wrList) : '')}</textarea>
     <div class="row" style="margin-top:4px"><button id="wrSave">Zapisz listę zamian</button></div>
     <h4>Kopie zapasowe show</h4>
-    <div class="row"><select id="bkSel" style="flex:1">${bks.map((b) => `<option>${esc(b)}</option>`).join('')}</select><button id="bkRestore" class="danger">Przywróć wybraną</button></div>
+    <div class="row"><select id="bkSel" style="flex:1">${bks.map((b) => html`<option>${b}</option>`)}</select><button id="bkRestore" class="danger">Przywróć wybraną</button></div>
     <h4>Ostatnie komendy (log audytowy)</h4>
-    <table>${aRows.map((r) => `<tr><td class="mono">${fmtT(r.t)}</td><td class="mono">${esc(r.src)}</td><td class="mono">${esc(r.cmd)}</td><td>${r.status ?? ''}</td></tr>`).join('') || '<tr><td class="dim">Pusty.</td></tr>'}</table>`;
+    <table>${orEmpty(aRows.map((r) => html`<tr><td class="mono">${fmtT(r.t)}</td><td class="mono">${esc(r.src)}</td><td class="mono">${esc(r.cmd)}</td><td>${r.status ?? ''}</td></tr>`), html`<tr><td class="dim">Pusty.</td></tr>`)}</table>`);
   $('#sysModal').classList.add('open');
   $('#whoIn').onchange = (e) => { setWho(e.target.value.trim() || who); try { localStorage.setItem('vizrs.who', who); } catch { /* ignoruj */ } toast('Zapisano nazwę operatora'); };
   $('#sysClose').onclick = () => $('#sysModal').classList.remove('open');
@@ -54,7 +55,7 @@ async function openSys() {
 let shows = { active: '', shows: [] };
 export async function loadShows() {
   shows = await api('GET', '/api/shows').catch(() => shows);
-  $('#showSel').innerHTML = shows.shows.map((s) => `<option value="${esc(s.id)}"${s.id === shows.active ? ' selected' : ''}>${esc(s.id === shows.active ? show.name || s.name : s.name)}</option>`).join('');
+  writeHtml($('#showSel'), shows.shows.map((s) => html`<option value="${esc(s.id)}"${s.id === shows.active ? ' selected' : ''}>${esc(s.id === shows.active ? show.name || s.name : s.name)}</option>`));
 }
 // paczka .cgpack – te same zasady co w VizRS CG Artist (cgpack.planImport + importPack): najpierw plan (sceny w innej wersji
 // albo o zajętej nazwie – decyduje operator), pliki bez duplikatów i bez nadpisywania, strony z numerem, nowym albo przesuniętym;

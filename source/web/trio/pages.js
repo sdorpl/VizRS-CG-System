@@ -2,8 +2,9 @@
 
 import { ScenePlayer, listFields, parseColor, PROPS, walk, squeezeFloor } from '/renderer.js';
 import { mountTickerEditor } from '/ticker-items.js';
+import { orEmpty, setHtml as writeHtml } from '/dom.js';
 import { ask } from '/dialogs.js';
-import { $, $$, api, assets, dirtyPage, draft, esc, loadShow, lockPage, onAirLayer, otherLocks, pageById, phone, pv, sceneOf, selId, setDirtyFlag, setDraft, setHtml, setPv, setSelId, show, sortedPages, toast } from './core.js';
+import { $, $$, api, assets, dirtyPage, draft, esc, html, loadShow, lockPage, onAirLayer, otherLocks, pageById, phone, pv, sceneOf, selId, setDirtyFlag, setDraft, setHtml, setPv, setSelId, show, sortedPages, toast } from './core.js';
 import { fitPv, pvAuto, pvFrame, pvReframe, setPvAuto, setPvZ } from './preview.js';
 import { lastGood, renderStatus, rulesOf, updateCounters } from './fields.js';
 import { out, take } from './onair.js';
@@ -13,20 +14,20 @@ import { renderBar, view } from './mobile.js';
 export function renderPages() {
   const f = $('#filter').value.trim().toLowerCase();
   const list = sortedPages().filter((p) => !f || `${p.number} ${p.name} ${sceneOf(p)?.name}`.toLowerCase().includes(f));
-  setHtml($('#pages'), list.map((p) => {
+  setHtml($('#pages'), orEmpty(list.map((p) => {
     const L = onAirLayer(p.id), s = sceneOf(p);
-    return `<div class="item ${p.id === selId ? 'sel' : ''}" data-id="${p.id}" title="warstwa: ${esc(s?.layer || 'main')}">
+    return html`<div class="item ${p.id === selId ? 'sel' : ''}" data-id="${p.id}" title="warstwa: ${s?.layer || 'main'}">
       <span class="dot ${L ? 'on' : ''}"></span><span class="num">${p.number}</span>
-      <span><div>${esc(p.name)}${otherLocks().find((l) => l.id === p.id) ? ` <span class="pend" title="Edytuje: ${esc(otherLocks().find((l) => l.id === p.id).who)}">🔒 ${esc(otherLocks().find((l) => l.id === p.id).who)}</span>` : ''}</div><div class="tpl">${esc(s?.name || '⚠ brak szablonu')}</div></span>
-      <span class="pill">${esc(s?.layer || 'main')}</span></div>`;
-  }).join('') || '<div class="empty">Brak stron. Kliknij ＋ przy szablonie poniżej.</div>');
+      <span><div>${p.name}${otherLocks().find((l) => l.id === p.id) ? html` <span class="pend" title="Edytuje: ${otherLocks().find((l) => l.id === p.id).who}">🔒 ${otherLocks().find((l) => l.id === p.id).who}</span>` : ''}</div><div class="tpl">${s?.name || '⚠ brak szablonu'}</div></span>
+      <span class="pill">${s?.layer || 'main'}</span></div>`;
+  }), html`<div class="empty">Brak stron. Kliknij ＋ przy szablonie poniżej.</div>`));
   $('#pcount').textContent = `${show.pages.length} stron`;
 }
 export function renderTemplates() {
-  $('#tpls').innerHTML = show.scenes.map((s) => {
+  writeHtml($('#tpls'), orEmpty(show.scenes.map((s) => {
     const n = listFields(s).length;
-    return `<div class="item" data-tpl="${s.id}"><span><b>${esc(s.name)}</b> <span class="dim" style="font-size:11px">· ${esc(s.layer || 'main')} · ${n} pól</span></span><button class="icon" data-newpage="${s.id}" title="Nowa strona z tego szablonu">＋</button></div>`;
-  }).join('') || '<div class="empty">Brak scen – utwórz je w Artist.</div>';
+    return html`<div class="item" data-tpl="${s.id}"><span><b>${s.name}</b> <span class="dim" style="font-size:11px">· ${s.layer || 'main'} · ${n} pól</span></span><button class="icon" data-newpage="${s.id}" title="Nowa strona z tego szablonu">＋</button></div>`;
+  }), html`<div class="empty">Brak scen – utwórz je w Artist.</div>`));
 }
 // true = strona wybrana; bez niezapisanych zmian wybór dzieje się od razu (przed pierwszym await)
 export async function trySelect(id) {
@@ -73,50 +74,50 @@ function readPlayout() {
 }
 export function setDirtyPage(d) { const was = dirtyPage; setDirtyFlag(d); $('#eSave').classList.toggle('dirty', d); $('#eSave').textContent = d ? 'Zapisz ●' : 'Zapisz'; if (was !== d) renderBar(); }
 function fieldInput(f, v) {
-  const id = `data-f="${esc(f.id)}"`;
+  const id = html`data-f="${f.id}"`;
   switch (f.nodeType === 'variant' ? 'variant' : f.type) {
-    case 'num': return `<input type="number" step="any" ${id} value="${esc(v)}">`;
-    case 'bool': return `<input type="checkbox" ${id} ${v === true || v === 'true' ? 'checked' : ''}>`;
-    case 'color': return `<div class="row"><input type="color" data-fc="${esc(f.id)}" value="${hex6(v)}"><input class="grow mono" ${id} value="${esc(v)}"></div>`;
-    case 'select': return `<select ${id}>${f.opts.map((o) => `<option ${o == v ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
-    case 'variant': return `<div class="segm">${f.opts.map((o) => `<label class="${o == v ? 'on' : ''}"><input type="radio" name="v_${esc(f.id)}" ${id} value="${esc(o)}" ${o == v ? 'checked' : ''}>${esc(o)}</label>`).join('')}</div>`;
-    case 'font': return `<input list="fontlist" ${id} value="${esc(v)}">`;
+    case 'num': return html`<input type="number" step="any" ${id} value="${v}">`;
+    case 'bool': return html`<input type="checkbox" ${id} ${v === true || v === 'true' ? 'checked' : ''}>`;
+    case 'color': return html`<div class="row"><input type="color" data-fc="${f.id}" value="${hex6(v)}"><input class="grow mono" ${id} value="${v}"></div>`;
+    case 'select': return html`<select ${id}>${f.opts.map((o) => html`<option ${o == v ? 'selected' : ''}>${o}</option>`)}</select>`;
+    case 'variant': return html`<div class="segm">${f.opts.map((o) => html`<label class="${o == v ? 'on' : ''}"><input type="radio" name="v_${f.id}" ${id} value="${o}" ${o == v ? 'checked' : ''}>${o}</label>`)}</div>`;
+    case 'font': return html`<input list="fontlist" ${id} value="${v}">`;
     case 'image': {
       const imgs = assets.filter((a) => !/\.(ttf|otf|woff2?)$/i.test(a.name)).map((a) => a.name);
       if (v && !imgs.includes(v)) imgs.unshift(v);
-      return `<div class="row"><select class="grow" ${id}><option value="">— brak —</option>${imgs.map((n) => `<option ${n === v ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select><button class="icon" data-up="${esc(f.id)}" title="Wgraj">⤒</button></div>`;
+      return html`<div class="row"><select class="grow" ${id}><option value="">— brak —</option>${imgs.map((n) => html`<option ${n === v ? 'selected' : ''}>${n}</option>`)}</select><button class="icon" data-up="${f.id}" title="Wgraj">⤒</button></div>`;
     }
     default: {
       const R = f.rules || {};
       // wiadomości tickera: edytor listy (ticker-items.js) zapisujący do ukrytego pola
-      if (f.nodeType === 'ticker' && f.prop === 'text') return `<div data-tkhost="${esc(f.id)}"></div><textarea hidden data-tk="1" ${id}>${esc(v)}</textarea>`;
+      if (f.nodeType === 'ticker' && f.prop === 'text') return html`<div data-tkhost="${f.id}"></div><textarea hidden data-tk="1" ${id}>${v}</textarea>`;
       const maxLines = R.maxLines || f.lines || 1;
       const multi = !R.oneLine && (f.nodeType === 'ticker' || maxLines > 1 || String(v ?? '').includes('\n'));
       const rows = f.nodeType === 'ticker' ? 6 : Math.max(2, maxLines);
-      const attrs = `${id} ${R.readonly ? 'readonly' : ''} ${R.spell === false ? 'spellcheck="false"' : 'spellcheck="true" lang="pl"'}`;
+      const attrs = html`${id} ${R.readonly ? 'readonly' : ''} ${R.spell === false ? html`spellcheck="false"` : html`spellcheck="true" lang="pl"`}`;
       const rich = f.nodeType === 'text' && R.rich !== false && !R.readonly;
-      const tb = rich ? `<div class="rtb" data-rtb="${esc(f.id)}"><button data-fmt="b" title="Pogrubienie {b}"><b>B</b></button><button data-fmt="i" title="Kursywa {i}"><i>I</i></button><button data-fmt="u" title="Podkreślenie {u}"><u>U</u></button><input type="color" data-fmtc="${esc(f.id)}" value="#e30613" title="Kolor zaznaczenia {c=…}"><select data-fmtsz="${esc(f.id)}" title="Rozmiar zaznaczenia {sz=…}"><option value="">rozm.</option><option>70</option><option>85</option><option>120</option><option>150</option><option>200</option></select><button data-fmt="hl" title="Wyróżnienie [[…]]">[[ ]]</button><button data-fmt="clr" title="Usuń formatowanie z zaznaczenia (lub całego pola)">✕</button></div>` : '';
-      const ctl = multi ? `<textarea class="big" ${attrs} rows="${rows}">${esc(v)}</textarea>` : `<input class="big" ${attrs} value="${esc(v)}">`;
-      return tb + ctl + `<div class="cnt" data-cnt="${esc(f.id)}"></div><div class="sq" data-sq="${esc(f.id)}"></div>`;
+      const tb = rich ? html`<div class="rtb" data-rtb="${f.id}"><button data-fmt="b" title="Pogrubienie {b}"><b>B</b></button><button data-fmt="i" title="Kursywa {i}"><i>I</i></button><button data-fmt="u" title="Podkreślenie {u}"><u>U</u></button><input type="color" data-fmtc="${f.id}" value="#e30613" title="Kolor zaznaczenia {c=…}"><select data-fmtsz="${f.id}" title="Rozmiar zaznaczenia {sz=…}"><option value="">rozm.</option><option>70</option><option>85</option><option>120</option><option>150</option><option>200</option></select><button data-fmt="hl" title="Wyróżnienie [[…]]">[[ ]]</button><button data-fmt="clr" title="Usuń formatowanie z zaznaczenia (lub całego pola)">✕</button></div>` : '';
+      const ctl = multi ? html`<textarea class="big" ${attrs} rows="${rows}">${v}</textarea>` : html`<input class="big" ${attrs} value="${v}">`;
+      return html`${tb}${ctl}<div class="cnt" data-cnt="${f.id}"></div><div class="sq" data-sq="${f.id}"></div>`;
     }
   }
 }
 const hex6 = (c) => { const p = parseColor(c); if (!p) return '#000000'; return '#' + p.slice(0, 3).map((x) => Math.round(x).toString(16).padStart(2, '0')).join(''); };
 export function renderEditor() {
   pv?.destroy(); setPv(null); lastGood.clear();
-  if (!draft) { $('#fields').innerHTML = '<div class="empty">Wybierz stronę z listy lub wpisz jej numer.</div>'; $('#enum').value = ''; $('#ename').value = ''; $('#eplay').hidden = true; return; }
+  if (!draft) { writeHtml($('#fields'), html`<div class="empty">Wybierz stronę z listy lub wpisz jej numer.</div>`); $('#enum').value = ''; $('#ename').value = ''; $('#eplay').hidden = true; return; }
   $('#enum').value = draft.number; $('#ename').value = draft.name; $('#ehotkey').value = draft.hotkey || '';
   renderPlayout();
   const s = sceneOf(draft);
-  if (!s) { $('#fields').innerHTML = '<div class="empty">⚠ Szablon tej strony nie istnieje.</div>'; return; }
+  if (!s) { writeHtml($('#fields'), html`<div class="empty">⚠ Szablon tej strony nie istnieje.</div>`); return; }
   // kolejność Tab: pola z regułą `tab` rosnąco, reszta w kolejności sceny
   const fields = listFields(s).map((f, i) => ({ f, i })).sort((a, b) => ((a.f.rules?.tab ?? 1e6) - (b.f.rules?.tab ?? 1e6)) || a.i - b.i).map((x) => x.f);
-  $('#fields').innerHTML = fields.length ? fields.map((f) => {
+  writeHtml($('#fields'), fields.length ? fields.map((f) => {
     const v = draft.values[f.id] ?? f.default;
     const R = f.rules || {}, ml = R.maxLines || f.lines;
     const tk = f.nodeType === 'ticker' && f.prop === 'text';
-    return `<div class="fl"><label>${esc(f.label)}<small>${esc(f.id)}${tk ? ' · Enter = nowa wiadomość · Ctrl+↑↓ = przesuń · najedź = podgląd' : f.type === 'text' ? ' · [[…]] = wyróżnienie' : ''}${ml > 1 && !tk ? ` · Enter = nowy wiersz (maks. ${ml})` : ''}</small>${R.help ? `<div class="hlp">${esc(R.help)}</div>` : ''}</label><div>${fieldInput(f, v)}</div></div>`;
-  }).join('') : '<div class="empty">Ten szablon nie ma pól kontrolnych (dodaj je w Artist ⛓).</div>';
+    return html`<div class="fl"><label>${f.label}<small>${f.id}${tk ? ' · Enter = nowa wiadomość · Ctrl+↑↓ = przesuń · najedź = podgląd' : f.type === 'text' ? ' · [[…]] = wyróżnienie' : ''}${ml > 1 && !tk ? ` · Enter = nowy wiersz (maks. ${ml})` : ''}</small>${R.help ? html`<div class="hlp">${R.help}</div>` : ''}</label><div>${fieldInput(f, v)}</div></div>`;
+  }) : html`<div class="empty">Ten szablon nie ma pól kontrolnych (dodaj je w Artist ⛓).</div>`);
   mountTickers(s);
   updateCounters();
   makePv();
@@ -167,8 +168,7 @@ export function showSqueeze() {
     // ten sam tekst w kilku węzłach (np. warianty): pokazujemy najmocniej ściśnięty
     const it = its.reduce((a, b) => (Math.min(...b.sq) < Math.min(...a.sq) || b.over ? b : a));
     const one = it.sq.length === 1;
-    el.innerHTML = it.sq.map((s, i) => `<span class="${s < 0.7 || it.over ? 'bad' : s < 0.999 ? 'warn' : ''}">${one ? 'ściśnięcie' : 'w' + (i + 1)}: ${Math.round(s * 100)}%</span>`).join('')
-      + (it.over ? `<span class="bad" title="Tekst wymaga ściśnięcia poniżej granicy ${Math.round(squeezeFloor(it.p('squeezeMin')) * 100)}% (squeezeMin) – wystaje poza ramkę">⚠ nie mieści się – skróć tekst</span>` : '');
+    writeHtml(el, html`${it.sq.map((s, i) => html`<span class="${s < 0.7 || it.over ? 'bad' : s < 0.999 ? 'warn' : ''}">${one ? 'ściśnięcie' : 'w' + (i + 1)}: ${Math.round(s * 100)}%</span>`)}${it.over ? html`<span class="bad" title="Tekst wymaga ściśnięcia poniżej granicy ${Math.round(squeezeFloor(it.p('squeezeMin')) * 100)}% (squeezeMin) – wystaje poza ramkę">⚠ nie mieści się – skróć tekst</span>` : ''}`);
   }
 }
 

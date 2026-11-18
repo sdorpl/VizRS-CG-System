@@ -1,5 +1,6 @@
 // Minimalny generator kodów QR (tryb bajtowy, poziom korekcji M, wersje 1–10, do ~213 bajtów UTF-8).
 // Zwraca macierz boolean[size][size] (true = ciemny moduł).
+import { html } from './dom.js';
 
 const ECC_M = {
   // wersja: [kody EC na blok, [[liczba bloków, kody danych w bloku], ...]]
@@ -153,12 +154,12 @@ export function qrMatrix(text) {
   return mod;
 }
 
-/** SVG z kodem QR (z marginesem `quiet` modułów). */
+/** SVG z kodem QR (z marginesem `quiet` modułów) – html`` (dom.js), do wpisania przez setHtml. */
 export function qrSvg(text, dark = '#000', light = '#fff', quiet = 2) {
   const m = qrMatrix(text);
-  if (!m) return `<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="${light}"/><text x="5" y="6" font-size="2" text-anchor="middle" fill="${dark}">za długi</text></svg>`;
+  if (!m) return html`<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="${light}"/><text x="5" y="6" font-size="2" text-anchor="middle" fill="${dark}">za długi</text></svg>`;
   const n = m.length, s = n + quiet * 2;
   let d = '';
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (m[y][x]) d += `M${x + quiet} ${y + quiet}h1v1h-1z`;
-  return `<svg viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" width="100%" height="100%"><rect width="${s}" height="${s}" fill="${light}"/><path d="${d}" fill="${dark}"/></svg>`;
+  return html`<svg viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" width="100%" height="100%"><rect width="${s}" height="${s}" fill="${light}"/><path d="${d}" fill="${dark}"/></svg>`;
 }
