@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 26.11.11 (2026-11-19)
+
 - **Trio: przycisk ⎋ Wyloguj** (narzędzia, na telefonie w szufladzie ☰) – kończy sesję konta panelu i usuwa zapamiętany token operatora (ciasteczko ważne rok), antena działa dalej; w oknie natywnym ukryty. Sesja konta panelu jest sprawdzana w panelu co 15 s (było co minutę) – wylogowanie w panelu szybciej zamyka Trio.
 - **Poprawka: Trio z ciasteczkiem tokenu wyjścia.** Przeglądarka, która otworzyła podgląd `/output?token=<token wyjścia>` (np. ramka podglądu w panelu VizRS CG Playout pod tym samym hostem), dostawała na `/trio` i `/artist` tylko błąd „token wyjścia pozwala tylko na odczyt” – bez ekranu logowania i bez logowania kontem panelu. Teraz pojawia się ekran logowania (token operatora albo konto panelu, także wejście z sesją panelu); jawne `/trio?token=<token wyjścia>` i API zostają 403.
 - **Ekran logowania Trio: pole serwera.** Obok tokenu można wpisać adres zdalnego serwera (np. `cg.example.pl` = `https://cg.example.pl`). W aplikacji (`vizrs-shell`) otwiera się wtedy okno **Połącz z serwerem** z wpisanym adresem i tokenem – połączenie zatwierdza się w nim (zapamiętanie serwera i tokenu jak dotąd); w przeglądarce strona przechodzi na `/trio` tego serwera. DOKUMENTACJA §12.
