@@ -1,6 +1,6 @@
 # PLAN – belka „Za chwilę / Następnie” przed końcem audycji
 
-> Status (2026-11-02): **Z1, Z2, Z3 i Z6 wdrożone** – VizRS CG Playout 2.7.0 (gałąź `za-chwile`), VizRS: pole strony `playout` i **⏱ kanał** w Trio. Czeka: Z4 (odliczanie), Z5 (osobna scena, jeśli KafelProgramu nie wystarczy), weryfikacja na stosie (§5). Zgoda użytkownika na zmiany w obu repozytoriach: 2026-11-02.
+> Status (2026-11-24): **Z1–Z4 i Z6 wdrożone, Z5 niepotrzebne** – Z1–Z3, Z6: VizRS CG Playout 2.7.0, VizRS: pole strony `playout` i **⏱ kanał** w Trio. Z4 (2026-11-24): symbol `{next_start_iso}` / `{next2_start_iso}` w VizRS CG Playout (gałąź `za-chwile-z4`); tryb `target` zegara obsługują już oba renderery VizRS (`zoneTime` w `renderer.js`, `clock::zone_time` w `vizrs-render`, `Z` i przesunięcie strefy) – kod CG System bez zmian. Z5: KafelProgramu wystarcza (§4 Z5), wariant dwuwierszowy daje istniejący `{next2_*}` – osobnej sceny nie robimy. Czeka: weryfikacja na stosie (§5) i nagranie odliczania na antenie (wyprzedzenie transkodowania – `clock_offset_seconds`). Zgoda użytkownika na zmiany w obu repozytoriach: 2026-11-02.
 
 ## 1. Cel
 
