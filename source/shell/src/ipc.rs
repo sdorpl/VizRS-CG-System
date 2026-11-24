@@ -208,7 +208,12 @@ pub(crate) fn check_server(url: &str, token: Option<&str>) -> Result<(), String>
     match server::http_get(&addr, &path, token, Duration::from_secs(3)) {
         Ok((200, body)) if body.trim_start().starts_with('{') => Ok(()),
         Ok((200, _)) => Err(format!("{url} odpowiada, ale to nie jest serwer VizRS")),
-        Ok((401, _)) => Err(if token.is_some() { "Serwer odrzucił token.".into() } else { "Serwer wymaga tokenu.".into() }),
+        Ok((401, _)) if token.is_some() => Err("Serwer odrzucił token.".into()),
+        // bez tokenu: serwer z logowaniem kontem panelu VizRS CG Playout – Trio pokaże ekran logowania (login i hasło)
+        Ok((401, _)) => match server::http_get(&addr, &connect::login_info_path(&path), None, Duration::from_secs(3)) {
+            Ok((200, body)) if connect::panel_login_on(&body) => Ok(()),
+            _ => Err("Serwer wymaga tokenu (logowanie kontem panelu jest na nim wyłączone).".into()),
+        },
         Ok((403, _)) => Err("Ten token nie pozwala sterować (to token wyjścia OBS?).".into()),
         Ok((code, _)) => Err(format!("{url}: odpowiedź HTTP {code}")),
         Err(e) => Err(format!("Brak połączenia z serwerem: {e}")),

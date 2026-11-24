@@ -186,6 +186,8 @@ export function init() {
     if (p) { trySelect(p.id); $('#cmd').value = ''; $('#cmd').blur(); }
     else toast(`Brak strony ${$('#cmd').value}`, true);
   });
+  // okno natywne (vizrs-shell): zasobnik i skróty globalne wołają te same akcje co F1–F8 i Shift+Esc
+  if (window.__vizrsShell) window.__vizrsAction = (a) => { const A = { take, cont, out, next: rdNext, clear: clearAll }; if (A[a]) A[a](); };
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && $('#sysModal').classList.contains('open')) { $('#sysModal').classList.remove('open'); return; }
     const F = { F1: take, F2: cont, F3: out, F4: upd, F6: arm, F8: rdNext };

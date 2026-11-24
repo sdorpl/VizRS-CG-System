@@ -287,6 +287,7 @@ pub(crate) fn conn_error(app: &AppHandle, msg: &str) {
 
 /// Przełącza wszystkie okna na inny serwer (okno połączenia się zamyka); bez okien – otwiera Trio.
 pub(crate) fn switch(app: &AppHandle, base: String, token: Option<String>, note: String) {
+    tray::set_tooltip(app, &format!("VizRS Trio – {}", base.split("://").nth(1).unwrap_or(&base)));
     let targets: Vec<(String, String, String)> = {
         let mut a = state(app);
         a.base = base.clone();

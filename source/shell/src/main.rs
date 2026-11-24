@@ -22,6 +22,7 @@ mod screen;
 mod server;
 mod menu;
 mod window;
+mod tray;
 mod ipc;
 
 use menu::*;
@@ -387,6 +388,8 @@ fn main() {
     let first = args.kind;
     let built = builder
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().with_handler(|app, sc, ev| tray::on_shortcut(app, sc, ev.state())).build())
+        .manage(tray::Shortcuts::default())
         .manage(Mutex::new(app_state))
         .manage(Downloads::default())
         .invoke_handler(tauri::generate_handler![ipc::ipc])
@@ -398,6 +401,10 @@ fn main() {
             let menu = build_menu(&h, &monitors)?;
             app.set_menu(menu)?;
             app.on_menu_event(|app, ev| on_menu(app, ev.id().as_ref()));
+            // zasobnik i skróty globalne (akcje anteny bez fokusu okna)
+            tray::setup_tray(&h);
+            let keys = tray::setup_shortcuts(&h);
+            *h.state::<tray::Shortcuts>().inner().lock().unwrap_or_else(|p| p.into_inner()) = keys;
             // serwer: zdalny (--connect albo zapisany „przy uruchomieniu”), działający na tym katalogu danych albo uruchamiany teraz;
             // domyślny port zajęty (np. serwer na innym katalogu danych) – następny wolny; jawny --port bez zmian
             let port = if args.port_set { args.port } else { server::free_port(args.port) };

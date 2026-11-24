@@ -120,6 +120,16 @@ pub fn check_target(url: &str) -> Option<(String, String)> {
     Some((addr, format!("{prefix}/api/state")))
 }
 
+/// `…/login/info` obok ścieżki `…/api/state` z `check_target` (ten sam przedrostek).
+pub fn login_info_path(state_path: &str) -> String {
+    format!("{}/login/info", state_path.strip_suffix("/api/state").unwrap_or(""))
+}
+
+/// Odpowiedź `GET /login/info`: czy serwer przyjmuje konta panelu (`{"panel":true}`).
+pub fn panel_login_on(body: &str) -> bool {
+    serde_json::from_str::<Value>(body).is_ok_and(|v| v["panel"].as_bool() == Some(true))
+}
+
 /// Żądanie połączenia z serwerem.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Request {
@@ -187,6 +197,10 @@ mod tests {
         assert_eq!(check_target("http://10.0.0.5:8088"), Some(("10.0.0.5:8088".into(), "/api/state".into())));
         assert_eq!(check_target("http://cg.lan/vizrs"), Some(("cg.lan:80".into(), "/vizrs/api/state".into())));
         assert_eq!(check_target("https://cg.example.pl"), None);
+        assert_eq!(login_info_path("/vizrs/api/state"), "/vizrs/login/info");
+        assert_eq!(login_info_path("/api/state"), "/login/info");
+        assert!(panel_login_on(r#"{"panel":true}"#));
+        assert!(!panel_login_on(r#"{"panel":false}"#) && !panel_login_on("<html>"));
     }
 
     #[test]

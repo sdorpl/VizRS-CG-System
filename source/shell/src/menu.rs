@@ -107,6 +107,9 @@ pub(crate) fn build_menu(app: &AppHandle, monitors: &[Monitor]) -> tauri::Result
 }
 
 pub(crate) fn on_menu(app: &AppHandle, id: &str) {
+    if let Some(a) = id.strip_prefix("tray:") {
+        return tray::action(app, a);
+    }
     if id.starts_with("ctx:") {
         let hit = state(app).ctx.as_ref().and_then(|(l, map)| map.get(id).map(|c| (l.clone(), c.clone())));
         if let Some((l, cmd)) = hit {

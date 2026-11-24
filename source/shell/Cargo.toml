@@ -8,7 +8,9 @@
 # decyzja użytkownika 2026-11-12, plan PLAN-wyglad-live-i-tauri.md T1):
 #   tauri (okna, WebView, menu), tauri-plugin-dialog (okna dialogowe, „Zapisz jako”),
 #   tauri-plugin-single-instance (jedna instancja), serde_json (blokada katalogu danych, komunikaty mostu),
-#   webkit2gtk (tylko Linux, już zależność Tauri: pisownia polska, akceleracja GPU stron); tauri-build przy budowie.
+#   webkit2gtk (tylko Linux, już zależność Tauri: pisownia polska, akceleracja GPU stron); tauri-build przy budowie;
+#   tauri-plugin-global-shortcut (skróty globalne akcji anteny) i funkcja `tray-icon` tauri (ikona w zasobniku) –
+#   prośba użytkownika 2026-11-24.
 [package]
 name = "vizrs-shell"
 version = "26.11.12"
@@ -24,9 +26,10 @@ publish = false
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["devtools"] }
+tauri = { version = "2", features = ["devtools", "tray-icon"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
+tauri-plugin-global-shortcut = "2"
 serde_json = "1"
 
 # Linux: ustawienia WebKitGTK (pisownia polska, akceleracja); ta sama wersja, której używa Tauri – nic nowego do pobrania

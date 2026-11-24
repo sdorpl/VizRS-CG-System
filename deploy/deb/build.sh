@@ -73,6 +73,7 @@ Priority: optional
 Architecture: amd64
 Maintainer: VizRS <noreply@github.com>
 Depends: libc6, libgcc-s1, libwebkit2gtk-4.1-0, libgtk-3-0
+Recommends: libayatana-appindicator3-1
 Suggests: hunspell-pl, obs-studio
 Installed-Size: $(du -ks "$ROOT/usr" "$ROOT/lib" | awk '{s+=$1} END {print s}')
 Homepage: https://github.com/sdorpl/VizRS-CG-System
