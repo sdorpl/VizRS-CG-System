@@ -7,7 +7,7 @@
 # Dozwolone zależności (wyjątek od zasady „zero zależności” tylko w tym katalogu):
 #   tiny-skia (rasteryzacja 2D na CPU, wygładzanie jak Skia), rustybuzz (kształtowanie tekstu, kerning;
 #   razem z nim ttf-parser – kontury glifów), wuff (WOFF i WOFF2 → TTF), serde_json (show i zdarzenia),
-#   png i jpeg-decoder (obrazy z assets).
+#   png, jpeg-decoder i image-webp (obrazy z assets; WebP – prośba użytkownika 2026-11-24).
 [package]
 name = "vizrs-render"
 version = "0.3.0"
@@ -23,6 +23,7 @@ rustybuzz = "0.20"
 wuff = "0.2"
 serde_json = "1"
 png = "0.18"
+image-webp = "0.2"
 jpeg-decoder = { version = "0.3", default-features = false }
 
 [profile.release]

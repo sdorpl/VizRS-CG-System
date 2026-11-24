@@ -520,8 +520,8 @@ impl Player {
                 continue;
             }
             if let Some(m) = &node.motion {
-                if motion_used(m) {
-                    self.issue(i, "ruch (motion)");
+                for why in crate::motion::unsupported(m) {
+                    self.issue(i, &why);
                 }
             }
             self.states[i].w = self.num(i, "w").max(0.0);
@@ -543,6 +543,16 @@ impl Player {
 
         // przebieg 2: geometria (autofollow, punkty zaczepienia, przekształcenia)
         let k = 1.0 - (-dt * 12.0).exp();
+        // ruch (node.motion): wyjście od ostatniego stop pointu, „po węźle” przesuwa wejście – jak `_apply` w renderer.js
+        let out_start = match self.scene.stops.last() {
+            Some(&l) if self.scene.duration > l + 1e-3 => l,
+            _ => f64::INFINITY,
+        };
+        let shifts = if self.nodes.iter().any(|n| n.motion.as_ref().is_some_and(|m| m.get("after").is_some())) {
+            crate::motion::sequence_shifts(self.nodes.iter().map(|n| (n.id.as_str(), n.motion.as_ref())))
+        } else {
+            std::collections::HashMap::new()
+        };
         let mut built: Vec<Option<DNode>> = (0..n).map(|_| None).collect();
         for i in 0..n {
             if !self.states[i].vis {
@@ -622,7 +632,10 @@ impl Player {
                 } else {
                     0.0
                 };
-            let mut op = self.num(i, "opacity") * self.states[i].cy_op;
+            let mo = node.motion.as_ref().map(|m| {
+                (crate::motion::motion_at(m, self.t, out_start, shifts.get(&node.id).copied().unwrap_or(0.0)), crate::motion::origin_of(m))
+            });
+            let mut op = self.num(i, "opacity") * self.states[i].cy_op * mo.as_ref().map_or(1.0, |(s, _)| s.opacity as f32);
             let bl = self.num(i, "blink");
             if bl > 0.0 {
                 self.live = true;
@@ -637,27 +650,37 @@ impl Player {
                     0.15 + 0.85 * (0.5 + 0.5 * c)
                 };
             }
-            let rot = self.num(i, "rotation");
+            let ms = mo.as_ref().map(|(s, _)| s.clone()).unwrap_or_default();
+            let rot = self.num(i, "rotation") + ms.rot as f32;
             let sc = self.num(i, "scale");
-            let sk = self.num(i, "skewX");
-            // translate(left, top) · oś(środek) · rotate · scale · skewX · oś⁻¹
+            let sk = self.num(i, "skewX") + ms.skew as f32;
+            let (sx, sy) = (sc * ms.sx as f32, sc * ms.sy as f32);
+            let (tx, ty) = (ms.tx as f32, ms.ty as f32);
+            // translate(left, top) · oś · translate(ruch) · rotate · scale · skewX · oś⁻¹ (oś: punkt odniesienia ruchu, inaczej środek)
             let mut m = Transform::from_translate(left, top);
-            if rot != 0.0 || sc != 1.0 || sk != 0.0 {
-                let (ox, oy) = (w / 2.0, h / 2.0);
+            if rot != 0.0 || sx != 1.0 || sy != 1.0 || sk != 0.0 || tx != 0.0 || ty != 0.0 {
+                let org = ms.origin.or(mo.as_ref().and_then(|(_, o)| *o)).unwrap_or([0.5, 0.5]);
+                let (ox, oy) = (w * org[0] as f32, h * org[1] as f32);
                 let r = Transform::from_rotate(rot);
-                let s = Transform::from_scale(sc, sc);
+                let s = Transform::from_scale(sx, sy);
                 let kx = Transform::from_row(1.0, 0.0, sk.to_radians().tan(), 1.0, 0.0, 0.0);
-                let local = mul(mul(r, s), kx);
+                let local = mul(mul(mul(Transform::from_translate(tx, ty), r), s), kx);
                 m = mul(mul(mul(m, Transform::from_translate(ox, oy)), local), Transform::from_translate(-ox, -oy));
             }
             let mut d = DNode::new(m, w, h);
             d.opacity = op.clamp(0.0, 1.0);
             let (cl, cr, ct, cb) = (self.num(i, "clipL"), self.num(i, "clipR"), self.num(i, "clipT"), self.num(i, "clipB"));
-            let (cl, cr, ct, cb) = self.mask_clip(i, w, h, left, top, (cl, cr, ct, cb));
+            let (mut cl, mut cr, mut ct, mut cb) = self.mask_clip(i, w, h, left + tx, top + ty, (cl, cr, ct, cb));
+            if let Some(c) = ms.clip {
+                cl = cl.max((c[0] * 100.0) as f32);
+                ct = ct.max((c[1] * 100.0) as f32);
+                cr = cr.max((100.0 - c[2] * 100.0) as f32);
+                cb = cb.max((100.0 - c[3] * 100.0) as f32);
+            }
             if cl != 0.0 || cr != 0.0 || ct != 0.0 || cb != 0.0 {
                 d.clip = Some([ct, cr, cb, cl]);
             }
-            d.blur = self.num(i, "blur").max(0.0);
+            d.blur = (self.num(i, "blur") + ms.blur as f32).max(0.0);
             let kind = node.kind.clone();
             if matches!(kind.as_str(), "ticker" | "image" | "qr") {
                 d.overflow = Some(if kind == "ticker" { 0.0 } else { self.num(i, "radius").max(0.0) });
@@ -844,8 +867,8 @@ pub fn check_scene(scene: &Scene, fonts: &crate::font::FontDb) -> Vec<String> {
                     out.push(msg);
                 }
             };
-            if n.motion.as_ref().is_some_and(motion_used) {
-                add("ruch (motion)".into());
+            for why in n.motion.as_ref().map(crate::motion::unsupported).unwrap_or_default() {
+                add(why);
             }
             let p = |k: &str| n.prop_at(k, 0.0, &Map::new());
             match n.kind.as_str() {

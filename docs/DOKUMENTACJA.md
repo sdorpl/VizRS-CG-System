@@ -640,20 +640,20 @@ Wskazówki dla scen kanału wypalanego: ticker w trybie `roll` albo `wipe` koszt
 
 `vizrs-render` (katalog `source/render/`) rysuje antenę bez przeglądarki: czyta te same zdarzenia co `/output` (`/events`, fonty `/fonts`, pliki `/assets`), odtwarza sceny tą samą logiką co `renderer.js` (stop pointy, klucze i krzywe, pola strony, warianty, autofollow, `dock`, ticker `crawl`, zegary) i rastruje je na CPU (tiny-skia, tekst kształtowany jak w Chromium – rustybuzz). Służy playoutowi kanału (VizRS CG Playout, opcja `renderer`) na maszynach bez GPU: przewijany crawl 1080p25 kosztuje kilka procent jednego rdzenia zamiast ok. 2 rdzeni bezgłowego Chromium. OBS, Trio i Artist dalej używają `renderer.js`; renderer natywny to drugi wykonawca tej samej semantyki, nie nowy format.
 
-Czego jeszcze nie rysuje, zgłasza jako brak: playout przechodzi wtedy na Chromium (`renderer: auto`), więc grafika nie znika i nie zmienia wyglądu. Stan (wersja 0.2; INFO24 16/16 i R7 13/13 scen natywnie):
+Czego jeszcze nie rysuje, zgłasza jako brak: playout przechodzi wtedy na Chromium (`renderer: auto`), więc grafika nie znika i nie zmienia wyglądu. Stan (wersja 0.3; INFO24 16/16 i R7 13/13 scen natywnie):
 
 | Obsługiwane | Jeszcze nie (scena idzie do Chromium) |
 |---|---|
-| `group`, `rect`, `ellipse` (kolor, gradient, zaokrąglenie, ramka, cień), `image` PNG/JPEG, `qr` (te same moduły co `qr.js`) | obraz WebP/GIF/SVG, wideo |
+| `group`, `rect`, `ellipse` (kolor, gradient, zaokrąglenie, ramka, cień), `image` PNG/JPEG/WebP (nieruchomy, od 2026-11-24 – crate `image-webp`), `qr` (te same moduły co `qr.js`) | obraz GIF/SVG, animowany WebP, wideo |
 | `text`, `clock`: `textFit` (wszystkie tryby), `lineBreak`, `maxLines`, `padX`, `upper`, `spacing`, `lineHeight`, cień, `cycle`; tekst sformatowany (`[[wyróżnienie]]` z `hlColor`/`hlText`, `{b}`, `{i}`, `{u}`, `{c=}`, `{sz=}`); zegar `time`/`up`/`down`/`target`, strefy IANA | `{sz=}` nie powiększa wysokości wiersza (w przeglądarce większy fragment ją podnosi) |
 | `ticker` `crawl`, `roll`, `wipe`, `whip`: etykieta z `gleam`, plakietki kategorii i kolory, separatory (`text`, `dot`, `square`, `pipe`, `skew`), `crawlFrom`, `hold`, dopasowanie wiadomości, ciągłość po UPDATE | podgląd jednej wiadomości (`pin`, tylko Trio) |
-| klucze wszystkich animowanych właściwości, położenie sceny `x`/`y`, `opacity`, maski `clip*`, `blur`, `rotation`, `scale`, `skewX`, `blink` (też `fx=step`), `showIf`, `follow`, `dock`, warstwy i `?layers`/`?bus`/`?w`/`?h` | ruch (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) |
+| klucze wszystkich animowanych właściwości, położenie sceny `x`/`y`, `opacity`, maski `clip*`, `blur`, `rotation`, `scale`, `skewX`, `blink` (też `fx=step`), `showIf`, `follow`, `dock`, warstwy i `?layers`/`?bus`/`?w`/`?h`; **ruch** (`node.motion`, od 2026-11-24 – `render/src/motion.rs`, port `motion.js`): presety wejścia i wyjścia `slide`, `fade`, `zoom`, `zoom-in`, `pop`, `wipe`, `wipe-y`, `clip`, `blur`, `rotate`, `skew`, `drop`, `slide-overshoot`, `split-reveal`, `bar-grow` ze wszystkimi krzywymi (GSAP, aliasy, `cubic-bezier`), opóźnieniem, kierunkiem, `origin` i sekwencją „po węźle” (`after`); wyjście od ostatniego stop pointu | ruch: `flip`, `flip-x` (3D z perspektywą), `mask-diag`, `shutter`, `glitch`, `rgb-split`, efekty tekstu (`textIn`/`textOut`), pętle uwagi (`loop`), efekty tła (`bg`) |
 | fonty wbudowane (§4.8) i z assets (`.ttf`, `.otf`, `.woff`, `.woff2`) | fonty z Google Fonts (spoza wbudowanych) |
 
 ```bash
 cd source/render && cargo build --release      # osobny workspace z zależnościami (rdzeń vizrs bez zmian)
 vizrs-render check --show show.json            # które sceny pójdą natywnie, a które do Chromium i dlaczego
-vizrs-render frame --show show.json --page 1001 --stop 0 -o 1001.png   # jedna klatka (--time S: S sekund od TAKE)
+vizrs-render frame --show show.json --page 1001 --stop 0 -o 1001.png   # jedna klatka (--time S: S sekund od TAKE; --out-at S: OUT po S sekundach – wyjście i ruch `out`)
 vizrs-render bench --show show.json --page 3001 --seconds 10 [--area 0,960,1920,120]   # koszt klatki
 vizrs-render bounds --show show.json --all 1 --size 1600x900 [--url <adres /output>]   # granice stron (VizRS CG Playout, strefy grafiki)
 vizrs-render thumb --show show.json --all 1 --dir miniatury [--url <adres /output>] [--width 320]   # miniatury stron (panel VizRS Live)

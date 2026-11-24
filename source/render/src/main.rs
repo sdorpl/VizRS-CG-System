@@ -1,7 +1,7 @@
 //! vizrs-render – natywny renderer grafiki VizRS.
 //!
 //!   vizrs-render stream --url <adres /output> --size 1920x1080 [--area x,y,w,h]… [--fonts katalog]
-//!   vizrs-render frame  --show show.json (--scene NAZWA | --page N) [--values JSON] [--stop I | --time S]
+//!   vizrs-render frame  --show show.json (--scene NAZWA | --page N) [--values JSON] [--stop I | --time S [--out-at S]]
 //!                       [--size WxH] [--fonts katalog] [--assets katalog] [--wall-ms N] -o klatka.png
 //!   vizrs-render check  --show show.json [--fonts katalog] [--assets katalog]
 //!   vizrs-render bench  --show show.json --page N [--seconds 10] [--fps 25] [--size WxH] [--area x,y,w,h]
@@ -238,8 +238,15 @@ fn frame(a: &Args) -> Result<(), String> {
         let fps: f64 = a.get("fps").and_then(|v| v.parse().ok()).filter(|f: &f64| *f > 0.0).unwrap_or(25.0);
         host.handle(&serde_json::json!({"t":"take","layer":layer,"scene":scene_v,"values":values,"since":1}), clk);
         let frames = (t * fps).round() as u64;
+        // --out-at: OUT tyle sekund po TAKE (wyjście sceny i ruch `out` jak na antenie)
+        let out_at: Option<f64> = a.get("out-at").map(|v| v.parse().map_err(|_| "--out-at: liczba sekund")).transpose()?;
+        let mut out_sent = false;
         for k in 0..=frames {
             clk = Clock { now: k as f64 * 1000.0 / fps, wall: wall + k as f64 * 1000.0 / fps };
+            if out_at.is_some_and(|o| !out_sent && clk.now >= o * 1000.0 - 1e-6) {
+                host.handle(&serde_json::json!({"t":"out","layer":layer}), clk);
+                out_sent = true;
+            }
             host.tick(clk, &res);
         }
     } else {

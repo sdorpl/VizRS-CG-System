@@ -1,5 +1,5 @@
-//! Obrazy z assets: PNG i JPEG → `Pixmap` (alfa przemnożona, jak w Skia). Inne formaty (WebP, GIF, SVG, wideo)
-//! renderer natywny zgłasza jako nieobsługiwane (strona wraca do Chromium).
+//! Obrazy z assets: PNG, JPEG i WebP (nieruchomy) → `Pixmap` (alfa przemnożona, jak w Skia). Inne formaty (animowany
+//! WebP, GIF, SVG, wideo) renderer natywny zgłasza jako nieobsługiwane (strona wraca do Chromium).
 
 use tiny_skia::{IntSize, Pixmap};
 
@@ -10,13 +10,16 @@ pub fn decode(data: &[u8]) -> Result<Pixmap, String> {
     if data.starts_with(&[0xff, 0xd8]) {
         return decode_jpeg(data);
     }
+    if data.len() >= 12 && &data[..4] == b"RIFF" && &data[8..12] == b"WEBP" {
+        return decode_webp(data);
+    }
     Err("nieobsługiwany format obrazu".into())
 }
 
 /// Czy renderer natywny umie narysować plik o tej nazwie.
 pub fn supported_name(src: &str) -> bool {
     let l = src.to_ascii_lowercase();
-    l.ends_with(".png") || l.ends_with(".jpg") || l.ends_with(".jpeg")
+    l.ends_with(".png") || l.ends_with(".jpg") || l.ends_with(".jpeg") || l.ends_with(".webp")
 }
 
 fn premultiplied(mut rgba: Vec<u8>, w: u32, h: u32) -> Result<Pixmap, String> {
@@ -50,6 +53,23 @@ fn decode_png(data: &[u8]) -> Result<Pixmap, String> {
         png::ColorType::Grayscale => buf.iter().flat_map(|&g| [g, g, g, 255]).collect(),
         png::ColorType::Indexed => return Err("PNG: paleta bez rozwinięcia".into()),
     };
+    premultiplied(rgba, w, h)
+}
+
+/// WebP stratny i bezstratny, z alfą i bez; animowany – nieobsługiwany (Chromium go odtwarza).
+fn decode_webp(data: &[u8]) -> Result<Pixmap, String> {
+    let mut dec = image_webp::WebPDecoder::new(std::io::Cursor::new(data)).map_err(|e| format!("WebP: {e}"))?;
+    if dec.is_animated() {
+        return Err("WebP: animowany (rysuje Chromium)".into());
+    }
+    let (w, h) = dec.dimensions();
+    let size = dec.output_buffer_size().ok_or("WebP: za duży")?;
+    if size > 256 << 20 {
+        return Err("WebP: za duży".into());
+    }
+    let mut buf = vec![0; size];
+    dec.read_image(&mut buf).map_err(|e| format!("WebP: {e}"))?;
+    let rgba = if dec.has_alpha() { buf } else { buf.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect() };
     premultiplied(rgba, w, h)
 }
 
@@ -92,6 +112,12 @@ mod tests {
         let p = decode(&out).unwrap();
         assert_eq!(&p.data()[..4], &[128, 0, 0, 128]);
         assert!(decode(b"GIF89a").is_err());
-        assert!(supported_name("Logo.PNG") && !supported_name("a.webp"));
+        assert!(supported_name("Logo.PNG") && supported_name("a.WEBP") && !supported_name("a.gif"));
+        // WebP bezstratny z alfą (koder z image-webp): ten sam piksel co PNG wyżej
+        let mut webp = Vec::new();
+        image_webp::WebPEncoder::new(&mut webp).encode(&[255, 0, 0, 128, 0, 0, 255, 255], 2, 1, image_webp::ColorType::Rgba8).unwrap();
+        let p = decode(&webp).unwrap();
+        assert_eq!((p.width(), p.height()), (2, 1));
+        assert_eq!(&p.data()[..8], &[128, 0, 0, 128, 0, 0, 255, 255]);
     }
 }
