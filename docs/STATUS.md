@@ -2,10 +2,10 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [plany/PLAN-rozbudowy.md](plany/PLAN-rozbudowy.md).
 >
-> **Ostatnia aktualizacja:** 2026-11-19
+> **Ostatnia aktualizacja:** 2026-11-24
 
 ## Bieżący etap
-**Wydanie 26.11.11** (2026-11-19). Od 26.11.1 (2026-11-12) numeracja rok.miesiąc.rewizja; wydania 26.11.1–26.11.11 opisuje [CHANGELOG.md](../CHANGELOG.md).
+**Wydanie 26.11.12** (2026-11-24). Od 26.11.1 (2026-11-12) numeracja rok.miesiąc.rewizja; wydania 26.11.1–26.11.12 opisuje [CHANGELOG.md](../CHANGELOG.md).
 
 **Ruch belek (powiązania dock)** – [plany/PLAN-ruch-belek.md](plany/PLAN-ruch-belek.md): wdrożony (2026-11-16) – cel na innej warstwie w wyjściu jednej warstwy (A0b), krzywa `ease` (A1), edytor w VizRS CG Artist (A2), reguła krawędzi z obrysu celu, łańcuch, największe przesunięcie, powrót po OUT celu (B1–B4). Odłożone: ustawianie w Trio (A3), nazwany stos (B5).
 

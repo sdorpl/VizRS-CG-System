@@ -4,11 +4,11 @@ version = 4
 
 [[package]]
 name = "vizrs"
-version = "26.11.11"
+version = "26.11.12"
 dependencies = [
  "vizrs-model",
 ]
 
 [[package]]
 name = "vizrs-model"
-version = "26.11.11"
+version = "26.11.12"

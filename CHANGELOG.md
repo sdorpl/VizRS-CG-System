@@ -2,6 +2,11 @@
 
 ## Niewydane
 
+## 26.11.12 (2026-11-24)
+
+- **Crate `vizrs-model` (`source/model/`):** JSON, walidacja show (`validate.rs`) i model tekstu tickera wydzielone z serwera do osobnego crate'u bez zależności – serwer korzysta z niego bez zmian w działaniu; to ta sama walidacja, której użyje VizRS CG Artist (plan wydzielenia Artist, A1). Obraz Dockera buduje się z `source/model`.
+- **Plan „Za chwilę”:** Z4 (odliczanie do następnej audycji) – symbol `{next_start_iso}` w VizRS CG Playout 26.11.29; tryb `target` zegara obsługują już oba renderery. Z5 – osobna scena niepotrzebna.
+
 ## 26.11.11 (2026-11-19)
 
 - **Trio: przycisk ⎋ Wyloguj** (narzędzia, na telefonie w szufladzie ☰) – kończy sesję konta panelu i usuwa zapamiętany token operatora (ciasteczko ważne rok), antena działa dalej; w oknie natywnym ukryty. Sesja konta panelu jest sprawdzana w panelu co 15 s (było co minutę) – wylogowanie w panelu szybciej zamyka Trio.
