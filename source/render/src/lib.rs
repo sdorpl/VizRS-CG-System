@@ -10,6 +10,7 @@ pub mod font;
 pub mod host;
 pub mod image;
 pub mod model;
+pub mod motion;
 pub mod net;
 pub mod qr;
 pub mod raster;

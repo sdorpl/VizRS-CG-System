@@ -2,6 +2,10 @@
 
 ## Niewydane
 
+- **Renderer natywny (`vizrs-render`): ruch `node.motion`.** Presety wejścia i wyjścia (wjazd, przenikanie, zoom, wyskok, przesłony, przycięcia, rozmycie, obrót, skos, spadanie, wjazd z przeskokiem, rozsunięcie, rosnący pasek) z krzywymi, opóźnieniem, punktem odniesienia i sekwencją „po węźle” rysuje teraz bez Chromium – mniej CPU na kanale VizRS CG Playout. Zgodność z Chromium: 17 presetów × 6 chwil wejścia, sekwencji i wyjścia, każda klatka ≤ 2% pikseli. Odwrócenia 3D, maska ukośna, żaluzja, glitch, RGB, efekty tekstu, pętle i tło – dalej Chromium.
+- **Renderer natywny: obrazy WebP** (nieruchome; animowane – Chromium).
+- **`vizrs-render frame --out-at S`** – OUT po S sekundach od TAKE (klatki wyjścia sceny i ruchu `out`).
+
 ## 26.11.12 (2026-11-24)
 
 - **Crate `vizrs-model` (`source/model/`):** JSON, walidacja show (`validate.rs`) i model tekstu tickera wydzielone z serwera do osobnego crate'u bez zależności – serwer korzysta z niego bez zmian w działaniu; to ta sama walidacja, której użyje VizRS CG Artist (plan wydzielenia Artist, A1). Obraz Dockera buduje się z `source/model`.
