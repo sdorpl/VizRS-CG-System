@@ -16,14 +16,14 @@ mod fonts_data;
 mod guard;
 mod hook;
 mod http;
-mod json;
 mod osc;
 mod panel_login;
 mod routes;
 mod shutdown;
 mod static_files;
-mod ticker;
-mod validate;
+
+// Format show (JSON, walidacja, model tekstu tickera) – crate `vizrs-model` (`model/`); ścieżki `crate::json` itd. bez zmian.
+use vizrs_model::{json, ticker, validate};
 
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};

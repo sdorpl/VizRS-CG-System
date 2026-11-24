@@ -172,7 +172,7 @@ mod tests {
     /// Wspólne wektory z web/ticker-model.js (tests/vectors/ticker.json).
     #[test]
     fn shared_vectors() {
-        let v = Json::parse(include_str!("../tests/vectors/ticker.json")).unwrap();
+        let v = Json::parse(include_str!("../../tests/vectors/ticker.json")).unwrap();
         let mut n = 0;
         for c in v.arr("parse") {
             let it = parse_item(c.str("in").unwrap());

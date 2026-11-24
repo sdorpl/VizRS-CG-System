@@ -15,6 +15,7 @@ ARG VIZRS_GIT_HASH=docker
 WORKDIR /src
 COPY source/Cargo.toml source/Cargo.lock source/build.rs ./
 COPY source/src ./src
+COPY source/model ./model
 COPY source/web ./web
 RUN case "$TARGETARCH" in \
       amd64) T=x86_64; OPTS="" ;; \

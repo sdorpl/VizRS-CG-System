@@ -152,13 +152,12 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/render/` | `vizrs-render` – renderer natywny dla playoutu kanału (tiny-skia, rustybuzz): `stream` (klatki przez stdin/stdout), `frame`, `check`, `bench`, `bounds` (granice stron dla stref VizRS CG Playout), `thumb` (miniatury stron dla panelu VizRS Live); osobny workspace z zależnościami (DOKUMENTACJA §10.1) |
 | `source/shell/` | `vizrs-shell` – okno natywne Trio i wyjścia na Tauri 2 (WebKitGTK / WebView2 / WKWebView): menu, „Zapisz jako”, pytanie przy zamknięciu, okno połączenia (`ui/connect.html`), jedna instancja, pisownia pl; `tauri.conf.json` + `tauri.bundle.json` (paczki z serwerem `vizrs` obok okna); bez Artist (`artist` odsyła do VizRS CG Artist); osobny workspace z zależnościami |
 | `source/src/engine/` | silnik: typy i `Engine::new` (`mod.rs`); `onair.rs` (TAKE/CONTINUE/OUT/UPDATE/ARM, deploy, warstwy), `channels.rs` (anteny kanałów), `dock.rs`, `rundown.rs` (rundowny, makra, karuzela), `show.rs` (edycja show, presety, Word Replace), `persist.rs` (zapis atomowy, biblioteka show, kopie), `sse.rs` (subskrypcje, snapshoty), `locks.rs`, `diag.rs` (błędy scen, `/health`); testy w `tests.rs` |
-| `source/src/validate.rs` | schemat i limity show (sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace) |
-| `source/src/ticker.rs` | zapis wiadomości tickera (`KAT|treść`), komendy `TICKER` |
+| `source/model/` | crate `vizrs-model` (bez zależności, plan Artist A1): `json.rs` (własny JSON), `validate.rs` (schemat i limity show: sceny, strony, playlisty, rundowny, makra, `fieldMeta`, presety, Word Replace), `ticker.rs` (zapis wiadomości tickera `KAT|treść`, komendy `TICKER`); serwer importuje je jako `crate::json` itd. (`use vizrs_model::…` w `main.rs`) |
 | `source/src/guard.rs` | tokeny (operator, wyjście tylko do odczytu), ochrona przed obcymi witrynami (CSRF), spowalnianie złych prób |
 | `source/src/panel_login.rs` | logowanie kontami panelu VizRS CG Playout (`--panel-login`, przełącznik w panelu): sesje `vizrs_session`, sprawdzanie w panelu co minutę |
 | `source/src/backup.rs`, `audit.rs` | kopie zapasowe show, log audytowy |
 | `source/src/osc.rs`, `hook.rs` | OSC (UDP), webhook |
-| `source/src/http.rs`, `json.rs` | własny parser HTTP/1.1 i JSON |
+| `source/src/http.rs` | własny parser HTTP/1.1 (JSON – `source/model/src/json.rs`) |
 | `source/src/fonts.rs`, `fonts_data.rs` | wbudowane fonty offline (`/fonts/fonts.css`) |
 | `source/web/renderer.js` | `ScenePlayer`, `PROPS`, `TYPES`, krzywe, pola, autofollow, tekst, ticker, zegar |
 | `source/web/artist.html` | edytor scen (zamrożony – zapas w przeglądarce) |

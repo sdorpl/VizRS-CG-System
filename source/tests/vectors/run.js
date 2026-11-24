@@ -29,7 +29,7 @@ wr.parse.forEach((c) => {
 
 load('spell-tokens').cases.forEach((c) => check('spellTokens: ' + JSON.stringify(c.text).slice(0, 30), eq(T.spellTokens(c.text), c.expect)));
 
-// model wiadomości tickera (web/ticker-model.js) – te same wektory sprawdza src/ticker.rs
+// model wiadomości tickera (web/ticker-model.js) – te same wektory sprawdza model/src/ticker.rs
 import(pathToFileURL(path.join(__dirname, '../../web/ticker-model.js')).href).then(async (K) => {
   const tk = load('ticker');
   tk.parse.forEach((c) => check('ticker parse: ' + c.in, eq(K.parseTickerItem(c.in), c.out), K.parseTickerItem(c.in)));

@@ -69,7 +69,7 @@ impl Json {
         }
     }
 
-    #[cfg(test)]
+    /// Elementy tablicy (inna wartość – pusto). Do testów serwera i Artist – dawniej tylko `#[cfg(test)]`.
     pub fn as_arr(&self) -> &[Json] {
         match self {
             Json::Arr(a) => a,
@@ -77,7 +77,7 @@ impl Json {
         }
     }
 
-    #[cfg(test)]
+    /// Tekst (inna wartość – `None`).
     pub fn as_str(&self) -> Option<&str> {
         if let Json::Str(s) = self { Some(s) } else { None }
     }

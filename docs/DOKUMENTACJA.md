@@ -77,10 +77,10 @@ Zasady zgodności:
  Output ──┘ └────────────────────────────────────────┘
       │  HTTP /api/*  ·  SSE /events
       ▼
- vizrs (Rust, jeden plik, zero zależności)
+ vizrs (Rust, jeden plik, zero zależności zewnętrznych)
    engine/  show + warstwy on-air + kanały + karuzela/rundown/makra
    routes.rs  API  ·  commands.rs  komendy TCP/OSC  ·  static_files.rs  UI
-   validate.rs  schemat i limity  ·  backup.rs  kopie  ·  audit.rs  log
+   model/ (vizrs-model): JSON, validate.rs schemat i limity  ·  backup.rs  kopie  ·  audit.rs  log
    TCP :6100  ·  OSC (UDP)  ·  webhook
       │
       ▼
@@ -121,7 +121,7 @@ Show to jeden plik JSON (`vizrs-data/show.json`):
 
 **Rewizje i konflikty.** Show i każdy obiekt mają `rev`. Zapis z nieaktualnym `rev` kończy się błędem 409 (Trio pyta: nadpisać czy zachować zmiany). Import całego show (`PUT /api/show`) z innym `rev` wymaga `force=1`.
 
-**Walidacja** (`validate.rs`) odrzuca m.in.: zły typ pola, numer strony niecałkowity, za głębokie drzewo lub za dużo węzłów, czasy kluczy poza 0–3600 s, ticker ponad 200 wiadomości × 500 znaków, `softMax > maxChars`, makro z `MACRO`.
+**Walidacja** (`validate.rs` w crate `vizrs-model`, `source/model/` – ta sama dla serwera i, przez zależność git, dla VizRS CG Artist) odrzuca m.in.: zły typ pola, numer strony niecałkowity, za głębokie drzewo lub za dużo węzłów, czasy kluczy poza 0–3600 s, ticker ponad 200 wiadomości × 500 znaków, `softMax > maxChars`, makro z `MACRO`.
 
 ## 4. Scena: węzły, właściwości, animacja
 

@@ -5,6 +5,13 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
+# Jedyna zależność: format show z tego repo (`model/`, też bez zależności) – plan wydzielenia Artist A1.
+vizrs-model = { path = "model" }
+
+# `cargo test` / `clippy` w `source/` obejmują serwer i `vizrs-model`; `shell/` i `render/` mają własne workspace'y.
+[workspace]
+members = [".", "model"]
+default-members = [".", "model"]
 
 [profile.release]
 opt-level = 3
