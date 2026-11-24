@@ -13,7 +13,7 @@
 #   prośba użytkownika 2026-11-24.
 [package]
 name = "vizrs-shell"
-version = "26.11.12"
+version = "26.11.13"
 license = "MIT"
 edition = "2021"
 description = "Natywne okno VizRS Trio (Tauri 2)"

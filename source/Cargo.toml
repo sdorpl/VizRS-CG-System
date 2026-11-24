@@ -1,6 +1,6 @@
 [package]
 name = "vizrs"
-version = "26.11.12"
+version = "26.11.13"
 license = "MIT"
 edition = "2021"
 

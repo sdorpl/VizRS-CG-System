@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+## 26.11.13 (2026-11-24)
+
 - **Okno Trio: ikona w zasobniku systemowym** – lewy klik wysuwa Trio, menu daje TAKE, CONTINUE, OUT, następną pozycję rundownu, ZDEJMIJ wszystko, połączenie z serwerem i zakończenie.
 - **Okno Trio: skróty globalne** – Ctrl+Alt+F1/F2/F3/F8 (TAKE, CONTINUE, OUT, następna pozycja rundownu), Ctrl+Alt+Shift+F3 (ZDEJMIJ wszystko), Ctrl+Alt+T (pokaż Trio) działają także, gdy okno nie ma fokusu, np. przy pracy w OBS; zmiana albo wyłączenie: `VIZRS_GLOBAL_KEYS`. Na Waylandzie system skrótów globalnych nie daje.
 - **Okno Trio: logowanie kontem panelu bez tokenu** – okno połączenia przyjmuje serwer bez tokenu, gdy ten loguje kontami panelu VizRS CG Playout; Trio pokazuje wtedy ekran logowania.

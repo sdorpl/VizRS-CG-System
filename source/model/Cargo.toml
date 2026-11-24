@@ -1,6 +1,6 @@
 [package]
 name = "vizrs-model"
-version = "26.11.12"
+version = "26.11.13"
 license = "MIT"
 edition = "2021"
 description = "Format show VizRS: JSON, walidacja show i model tekstu tickera – bez zależności (serwer vizrs, VizRS CG Artist)"
