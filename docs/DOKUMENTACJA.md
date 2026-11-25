@@ -893,7 +893,7 @@ node tools/native-compare.js                         # zgodność renderera naty
 
 Pełna bramka przed commitem: [../CLAUDE.md](../CLAUDE.md#testy-bramka-przed-commitem). Zapisana galeria: `media/galeria/index.html`, film: `media/vizrs_WSZYSTKIE_PACZKI.mp4`.
 
-CI: `.github/workflows/ci.yml` (Linux, macOS, Windows).
+CI: `.github/workflows/ci.yml` (Linux, macOS, Windows) – przy każdym wypchnięciu na gałąź i ręcznie. Wydanie (`release.yml`, znacznik `v*` albo ręcznie) wywołuje CI tego commita i publikuje obraz oraz wydanie dopiero po zielonym; sprawdza też, że wersja (bez części po łączniku) = manifesty wersji. `:latest` obrazu przesuwa tylko publikacja wersji bez łącznika; szkic i wydanie wstępne (`v26.12.1-rc1`) dostają sam obraz `vizrs:v<wersja>`. Instalator Windows z wydania przechodzi ten sam test co w CI (`deploy/windows/test-installer.ps1`).
 
 ## 15. Znane ograniczenia
 

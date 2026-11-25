@@ -552,8 +552,11 @@ async function waitUp() {
       await pb.click('.dlg [data-dlg="0"]'); await sleep(300);
       const locksAfter = (await api('/api/locks')).filter((l) => l.kind === 'pages');
       ok(locksAfter.length === 1 && locksAfter[0].who === 'Anna', 'blokada: Jan nie przejął blokady', locksAfter);
-      await pa.goto(B + '/trio'); await sleep(900); // Anna wychodzi (pagehide → unlock)
-      ok(!(await api('/api/locks')).some((l) => l.id === 'prules'), 'blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę');
+      await pa.goto(B + '/trio'); // Anna wychodzi (pagehide → unlock)
+      // beacon zwalniający dochodzi asynchronicznie – na wolnym runnerze CI po ponad 900 ms; czekamy do 10 s
+      let held = true;
+      for (let i = 0; i < 50 && held; i++) { await sleep(200); held = (await api('/api/locks')).some((l) => l.id === 'prules'); }
+      ok(!held, 'blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę');
       await ctxA.close(); await ctxB.close();
       await trio.goto(B + '/trio'); await sleep(800);
     }

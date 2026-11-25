@@ -4,7 +4,11 @@ name: Release
 #   binarki vizrs + vizrs-app + vizrs-shell: Windows (.zip), macOS (.tar.gz), Linux (.tar.gz)
 #   AppImage okna Trio: VizRS-Trio-<wersja>-x86_64.AppImage (deploy/appimage/build.sh, Ubuntu 22.04)
 #   .deb: pakiet Debian/Ubuntu vizrs_<wersja>_amd64.deb (deploy/deb/build.sh)
-#   serwer: obraz Docker ghcr.io/<właściciel>/vizrs:<wersja> i :latest
+#   serwer: obraz Docker ghcr.io/<właściciel>/vizrs:v<wersja> i :latest
+# Bramka: CI (ci.yml przez workflow_call) – obraz i wydanie powstają dopiero po zielonym CI tego commita.
+# Wersja (bez części po łączniku) = manifesty wersji (CLAUDE.md „Tego projektu”); znacznik zawsze v<wersja>.
+# Wersja z łącznikiem (v26.12.1-rc1) = wydanie wstępne. :latest tylko przy publikacji wersji bez łącznika
+# (znacznik albo ręcznie z `publish`); szkic dostaje sam obraz z numerem.
 on:
   push:
     tags: ['v*']
@@ -26,7 +30,36 @@ env:
   VERSION: ${{ github.event.inputs.version || github.ref_name }}
 
 jobs:
+  wersja:
+    runs-on: ubuntu-latest
+    outputs:
+      v: ${{ steps.w.outputs.v }}
+      tag: ${{ steps.w.outputs.tag }}
+      pre: ${{ steps.w.outputs.pre }}
+      latest: ${{ steps.w.outputs.latest }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wersja = manifesty
+        id: w
+        env:
+          PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
+        run: |
+          V=${VERSION#v}; VB=${V%%-*}
+          for f in source/Cargo.toml source/shell/Cargo.toml; do
+            C=$(sed -n 's/^version *= *"\(.*\)"/\1/p' "$f" | head -1)
+            [ "$VB" = "$C" ] || { echo "::error::wersja $VERSION ≠ $C z $f – podnieś version"; exit 1; }
+          done
+          T=$(sed -n 's/^ *"version": *"\(.*\)".*/\1/p' source/shell/tauri.conf.json | head -1)
+          [ "$VB" = "$T" ] || { echo "::error::wersja $VERSION ≠ $T z source/shell/tauri.conf.json"; exit 1; }
+          pre=false; case "$V" in *-*) pre=true;; esac
+          latest=false; [ "$PUBLISH" = true ] && [ "$pre" = false ] && latest=true
+          { echo "v=$V"; echo "tag=v$V"; echo "pre=$pre"; echo "latest=$latest"; } | tee -a "$GITHUB_OUTPUT"
+
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   bin:
+    needs: wersja
     strategy:
       fail-fast: false
       matrix:
@@ -40,15 +73,17 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Biblioteki WebKitGTK (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libxdo-dev libayatana-appindicator3-dev
+        uses: ./.github/actions/webkit-deps
       - run: cargo build --release --locked
         working-directory: source
       - run: cargo build --release --locked
         working-directory: source/shell
       - name: Paczka
         shell: bash
+        env:
+          V: ${{ needs.wersja.outputs.v }}
         run: |
-          v=${VERSION#v}; d=VizRS-$v-${{ matrix.name }}; mkdir -p dist/$d
+          v=$V; d=VizRS-$v-${{ matrix.name }}; mkdir -p dist/$d
           for f in source/target/release/vizrs source/target/release/vizrs-app source/shell/target/release/vizrs-shell; do
             for x in "$f" "$f.exe"; do [ -f "$x" ] && cp "$x" dist/$d/; done
           done
@@ -66,30 +101,29 @@ jobs:
       - name: Buduj instalator Windows (Inno Setup)
         if: matrix.os == 'windows-latest'
         shell: pwsh
-        run: |
-          # bez VCRUNTIME140.dll (statyczny CRT, source/.cargo/config.toml): czysty Windows 10 nie ma Visual C++ Redistributable
-          foreach ($f in 'source/target/release/vizrs.exe', 'source/target/release/vizrs-app.exe', 'source/shell/target/release/vizrs-shell.exe') {
-            $t = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($f))
-            if ($t -match '(?i)vcruntime\d+\.dll|msvcp\d+\.dll') { throw "$f wymaga $($Matches[0]) (Visual C++ Redistributable)" }
-            "$f – bez bibliotek Visual C++"
-          }
-          $v = "${{ env.VERSION }}".TrimStart('v')
-          if (-not $v) { $v = "2.0.2" }
-          # instalator Evergreen WebView2 Runtime (Microsoft) – instalator VizRS uruchamia go, gdy w systemie brak WebView2
-          Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile deploy/windows/MicrosoftEdgeWebview2Setup.exe
-          iscc "/DAppVersion=$v" deploy/windows/installer.iss
-          Get-ChildItem dist
+        run: deploy/windows/build-installer.ps1 -Version '${{ needs.wersja.outputs.v }}'
+      - uses: actions/setup-node@v4
+        if: matrix.os == 'windows-latest'
+        with:
+          node-version: 22
+      - name: Instalator z wydania – instalacja, okno, deinstalacja (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: deploy/windows/test-installer.ps1
       - uses: actions/upload-artifact@v4
         with:
           name: bin-${{ matrix.name }}
           path: dist/*
 
   appimage:
+    needs: wersja
     runs-on: ubuntu-22.04   # starsza glibc = AppImage działa na większej liczbie dystrybucji
+    env:
+      V: ${{ needs.wersja.outputs.v }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libxdo-dev libayatana-appindicator3-dev
+      - uses: ./.github/actions/webkit-deps
       - run: cargo build --release --locked
         working-directory: source
       - run: cargo build --release --locked
@@ -99,11 +133,11 @@ jobs:
           # appimagetool to AppImage – na runnerze bez FUSE rozpakowuje się sam
           APPIMAGE_EXTRACT_AND_RUN: "1"
         run: |
-          deploy/appimage/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "${VERSION#v}" dist
+          deploy/appimage/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "$V" dist
           rm -rf dist/appimagetool dist/*.AppDir
           ls dist/VizRS-Trio-*-x86_64.AppImage >/dev/null 2>&1 || { echo "::error::brak AppImage"; exit 1; }
           APPIMAGE_EXTRACT_AND_RUN=1 dist/VizRS-Trio-*-x86_64.AppImage --version
-      - run: deploy/deb/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "${VERSION#v}" dist
+      - run: deploy/deb/build.sh source/target/release/vizrs source/shell/target/release/vizrs-shell "$V" dist
       - uses: actions/upload-artifact@v4
         with:
           name: appimage
@@ -112,6 +146,8 @@ jobs:
             dist/*.deb
 
   docker:
+    # publikuje obraz – dopiero po zielonym CI
+    needs: [wersja, ci]
     runs-on: ubuntu-latest
     env:
       # bez artefaktu „*.dockerbuild” (zapis budowy) – download-artifact w jobie release nie umiał go pobrać
@@ -137,11 +173,11 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: VIZRS_GIT_HASH=${{ github.sha }}
           tags: |
-            ${{ steps.img.outputs.name }}:${{ env.VERSION }}
-            ${{ steps.img.outputs.name }}:latest
+            ${{ steps.img.outputs.name }}:${{ needs.wersja.outputs.tag }}
+            ${{ needs.wersja.outputs.latest == 'true' && format('{0}:latest', steps.img.outputs.name) || '' }}
 
   release:
-    needs: [bin, appimage, docker]
+    needs: [wersja, ci, bin, appimage, docker]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -156,20 +192,22 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.wersja.outputs.tag }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.draft and .name == \"$VERSION\") | .id" |
+          gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.draft and .name == \"$TAG\") | .id" |
             xargs -r -I{} gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/{}"
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.VERSION }}
+          tag_name: ${{ needs.wersja.outputs.tag }}
           # znacznik tworzony przy publikacji wskazuje zbudowany commit, nie gałąź domyślną
           target_commitish: ${{ github.sha }}
           draft: ${{ github.event_name == 'workflow_dispatch' && !inputs.publish }}
-          make_latest: ${{ github.event_name == 'push' || inputs.publish }}
+          prerelease: ${{ needs.wersja.outputs.pre == 'true' }}
+          make_latest: ${{ needs.wersja.outputs.latest }}
           generate_release_notes: true
           files: dist/*
           body: |
-            **Serwer (Docker):** `docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data ghcr.io/${{ github.repository_owner }}/vizrs:${{ env.VERSION }}`
+            **Serwer (Docker):** `docker run -d -p 8088:8088 -e VIZRS_TOKEN=TWOJ_TOKEN -v vizrs-data:/data ghcr.io/${{ github.repository_owner }}/vizrs:${{ needs.wersja.outputs.tag }}`
             **Linux:** `VizRS-Trio-*.AppImage` (wymaga WebKitGTK 4.1, bez niego okno Chromium; dane w `~/.local/share/vizrs`).
             **Debian / Ubuntu (22.04+):** `sudo apt install ./vizrs_*_amd64.deb` – okna Trio i „Trio – serwer zdalny” w menu, usługa `vizrs` (wyłączona).
             **Windows:** `VizRS-Trio-*-windows-x86_64-setup.exe` (instalator) lub archiwum przenośne `.zip` z launcherami `.bat`.

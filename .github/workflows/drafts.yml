@@ -1,11 +1,18 @@
 name: Usuń szkic wydania
 # Ręcznie (Actions → Usuń szkic wydania → Run workflow): kasuje szkice wydań o podanej nazwie.
 # Opublikowanych wydań i znaczników nie rusza.
+# Wspólny dla pakietu: VizRS CG Artist i CG Playout wywołują ten plik (workflow_call,
+# sdorpl/VizRS-CG-System/.github/workflows/drafts.yml@main) – działa na repozytorium wywołującym.
 on:
   workflow_dispatch:
     inputs:
       name:
-        description: 'Nazwa szkicu (np. v2.0.6)'
+        description: 'Nazwa szkicu (np. v26.11.13)'
+        required: true
+  workflow_call:
+    inputs:
+      name:
+        type: string
         required: true
 
 permissions:

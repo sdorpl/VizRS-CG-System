@@ -2,6 +2,9 @@
 
 ## Niewydane
 
+- **Wydanie z bramką CI:** `release.yml` wywołuje `ci.yml` i publikuje obraz Docker oraz wydanie dopiero po zielonym CI tego commita (dotąd wydania v26.11.1–v26.11.6 i v26.11.10 powstały przy czerwonym CI). Sprawdza wersję z manifestami (`source/Cargo.toml`, `source/shell/Cargo.toml`, `tauri.conf.json`); znacznik i obraz zawsze `v<wersja>`, także przy wydaniu ręcznym. `:latest` tylko przy publikacji wersji bez łącznika; wersja z łącznikiem = wydanie wstępne. Instalator Windows z wydania instalowany i uruchamiany jak w CI (`deploy/windows/build-installer.ps1`, `test-installer.ps1`).
+- **CI:** bez drugiego przebiegu na znacznikach i podwójnego przy PR (tylko wypchnięcie na gałąź); binarki z joba `test` i `shell` przechodzą artefaktem do e2e, render, shell-e2e i shell-smoke (bez 5 ponownych kompilacji), pamięć podręczna Cargo, Playwright przypięty (1.65.1), biblioteki WebKitGTK w jednej akcji (`.github/actions/webkit-deps`). Test „blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę” czeka na zwolnienie do 10 s (wcześniej stałe 900 ms – niestabilny na runnerze).
+
 ## 26.11.13 (2026-11-24)
 
 - **Okno Trio: ikona w zasobniku systemowym** – lewy klik wysuwa Trio, menu daje TAKE, CONTINUE, OUT, następną pozycję rundownu, ZDEJMIJ wszystko, połączenie z serwerem i zakończenie.

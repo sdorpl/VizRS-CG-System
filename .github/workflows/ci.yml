@@ -1,7 +1,18 @@
 name: CI
+# Bramka przy każdym wypchnięciu na gałąź (statusy commitów widać też w PR z tego repo) i ręcznie.
+# Znaczniki nie uruchamiają CI osobno: release.yml wywołuje ten workflow (workflow_call) i publikuje dopiero po zielonym.
+# Binarki z joba test (vizrs, vizrs-app) i shell (vizrs-shell) przechodzą artefaktem do e2e, render, shell-e2e i shell-smoke.
 on:
   push:
-  pull_request:
+    branches: ['**']
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_VERSION: 1.65.1
 
 jobs:
   test:
@@ -18,6 +29,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: source
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       - uses: actions/setup-node@v4
@@ -57,12 +71,15 @@ jobs:
         working-directory: source
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
+      - uses: actions/download-artifact@v4
+        with:
+          name: vizrs-ubuntu-latest
+          path: source/target/release
+      - run: chmod +x target/release/vizrs target/release/vizrs-app
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - run: npm install --no-save playwright@$PLAYWRIGHT_VERSION && npx playwright install --with-deps chromium
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/run.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/mobile.js target/release/vizrs
       - run: PLAYWRIGHT_DIR=$PWD node tests/e2e/artist.js target/release/vizrs
@@ -111,14 +128,21 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-      - run: cargo build --release
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: source/render
+      - uses: actions/download-artifact@v4
+        with:
+          name: vizrs-ubuntu-latest
+          path: source/target/release
+      - run: chmod +x target/release/vizrs target/release/vizrs-app
       - name: vizrs-render – formatowanie, clippy, testy, budowa
         working-directory: source/render
         run: cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test && cargo build --release
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - run: npm install --no-save playwright@$PLAYWRIGHT_VERSION && npx playwright install --with-deps chromium
       - name: Zgodność z Chromium
         run: PLAYWRIGHT_DIR=$PWD node tools/native-compare.js && PLAYWRIGHT_DIR=$PWD node tools/native-compare.js ../examples/archiwum/R7_NEWS.show.json
       - uses: actions/upload-artifact@v4
@@ -142,9 +166,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: source/shell
       - name: Biblioteki WebKitGTK (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libxdo-dev libayatana-appindicator3-dev
+        uses: ./.github/actions/webkit-deps
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       - run: cargo build --release
@@ -157,7 +184,7 @@ jobs:
 
   # okno natywne w działaniu (Linux, wirtualny ekran): cykl życia serwera i zgodność WebKitGTK z Chromium
   shell-e2e:
-    needs: shell
+    needs: [test, shell]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -168,72 +195,56 @@ jobs:
       WEBKIT_DISABLE_DMABUF_RENDERER: '1'
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libxdo-dev libayatana-appindicator3-dev xvfb hunspell-pl
-      - run: cargo build --release
-      - run: cargo build --release
-        working-directory: source/shell
+      - uses: ./.github/actions/webkit-deps
+        with:
+          extra: xvfb hunspell-pl
+      - uses: actions/download-artifact@v4
+        with:
+          name: vizrs-ubuntu-latest
+          path: source/target/release
+      - uses: actions/download-artifact@v4
+        with:
+          name: vizrs-shell-ubuntu-latest
+          path: source/shell/target/release
+      - run: chmod +x target/release/vizrs target/release/vizrs-app shell/target/release/vizrs-shell
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - run: npm install --no-save playwright@$PLAYWRIGHT_VERSION && npx playwright install --with-deps chromium
       # pojedyncza instancja Tauri (tauri-plugin-single-instance) na Linuksie działa przez D-Bus sesji – w CI trzeba go uruchomić
       - run: dbus-run-session -- xvfb-run -a node tests/e2e/shell.js target/release/vizrs shell/target/release/vizrs-shell
       - run: PLAYWRIGHT_DIR=$PWD xvfb-run -a node tools/engines.js target/release/vizrs shell/target/release/vizrs-shell
 
   # okno natywne na prawdziwym Windows i macOS (Linux: shell-e2e). Windows idzie przez instalator w trybie „dla wszystkich”
-  # (C:\Program Files bez prawa zapisu) i skrót bez --data – tak, jak użytkownik; wydanie 2.0.20 nie otwierało tam Trio.
+  # i skrót bez --data – tak, jak użytkownik (deploy/windows/test-installer.ps1, ten sam test w wydaniu).
   shell-smoke:
-    needs: shell
+    needs: [test, shell]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: source
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --release
-      - run: cargo build --release
-        working-directory: source/shell
+      - uses: actions/download-artifact@v4
+        with:
+          name: vizrs-${{ matrix.os }}
+          path: source/target/release
+      - uses: actions/download-artifact@v4
+        with:
+          name: vizrs-shell-${{ matrix.os }}
+          path: source/shell/target/release
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Instalator (Inno Setup, z instalatorem WebView2)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        working-directory: .
-        run: |
-          # bez VCRUNTIME140.dll (statyczny CRT, source/.cargo/config.toml): czysty Windows 10 nie ma Visual C++ Redistributable
-          foreach ($f in 'source/target/release/vizrs.exe', 'source/target/release/vizrs-app.exe', 'source/shell/target/release/vizrs-shell.exe') {
-            $t = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($f))
-            if ($t -match '(?i)vcruntime\d+\.dll|msvcp\d+\.dll') { throw "$f wymaga $($Matches[0]) (Visual C++ Redistributable)" }
-            "$f – bez bibliotek Visual C++"
-          }
-          Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile deploy/windows/MicrosoftEdgeWebview2Setup.exe
-          iscc /DAppVersion=0.0.0 deploy/windows/installer.iss
-          $setup = Get-ChildItem dist/VizRS-Trio-*-setup.exe | Select-Object -First 1
-          $p = Start-Process -Wait -PassThru $setup.FullName -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/ALLUSERS', '/LOG=install.log'
-          if ($p.ExitCode -ne 0) { Get-Content install.log -Tail 40; exit 1 }
-          $app = "$env:ProgramFiles\VizRS"
-          foreach ($f in 'vizrs.exe', 'vizrs-shell.exe', 'serwer.bat') { if (-not (Test-Path "$app\$f")) { throw "brak $app\$f" } }
-          $lnk = (New-Object -ComObject WScript.Shell).CreateShortcut("$env:ProgramData\Microsoft\Windows\Start Menu\Programs\VizRS\VizRS Trio.lnk")
-          "skrót: $($lnk.TargetPath) $($lnk.Arguments)"
-          if ($lnk.Arguments -ne 'trio') { throw "skrót VizRS Trio ma argumenty: $($lnk.Arguments)" }
-      - name: Okno z instalacji (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: node tests/e2e/native-smoke.js "$env:ProgramFiles\VizRS\vizrs.exe" "$env:ProgramFiles\VizRS\vizrs-shell.exe" --installed
-      - name: Deinstalacja (Windows)
+      - name: Instalator, okno z instalacji, deinstalacja (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $p = Start-Process -Wait -PassThru "$env:ProgramFiles\VizRS\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
-          Start-Sleep 3
-          if ($p.ExitCode -ne 0 -or (Test-Path "$env:ProgramFiles\VizRS\vizrs-shell.exe")) { throw 'deinstalacja nie usunęła programu' }
+          deploy/windows/build-installer.ps1 -Version 0.0.0
+          deploy/windows/test-installer.ps1
       - name: Okno z budowy (macOS)
         if: runner.os == 'macOS'
-        run: node tests/e2e/native-smoke.js target/release/vizrs shell/target/release/vizrs-shell
+        run: |
+          chmod +x source/target/release/vizrs source/target/release/vizrs-app source/shell/target/release/vizrs-shell
+          node source/tests/e2e/native-smoke.js source/target/release/vizrs source/shell/target/release/vizrs-shell
