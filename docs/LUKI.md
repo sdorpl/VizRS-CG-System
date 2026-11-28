@@ -9,6 +9,7 @@ Zamykając pozycję, usuń wiersz i dopisz wersję w `CHANGELOG.md`. Nowe braki 
 | 2 | Wątek na połączenie (limit 512, nie pula) | wystarcza dla studia; pula przy większej skali |
 | 3 | `PUT /api/show` (import) nadal zastępuje cały show | chronione `rev`/`force`, kopiami i walidacją; brak scalania |
 | 4 | Blokady edycji są miękkie (ostrzeżenie + potwierdzenie) | zamierzone – operator może przejąć |
+| 21 | Strony UI (Trio, `/output`, strona startowa, zamrożony `/artist`) bez nagłówka CSP – CSP ma tylko podgląd zasobów (`static_files.rs`, `sandbox`); zasada pakietu „Dane z zewnątrz są obce” (2026-11-28) wymaga CSP bez skryptów inline | Trio i `/artist` mają skrypty i obsługę zdarzeń inline do sprawdzenia; `/output` działa też w CEF OBS – CSP sprawdzić w OBS |
 | 5 | Testy macOS/Windows działają tylko w CI, nie lokalnie | CI przechodzi na trzech systemach; działanie okien: #18 |
 
 ## G2 – wierność
