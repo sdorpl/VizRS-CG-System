@@ -103,6 +103,16 @@ export async function lockPage(id) {
   renderStatus();
 }
 
+/** Zwalnia blokady stron tego operatora zostawione przez poprzednie wczytanie strony: sygnał z `pagehide`
+ *  (`sendBeacon`) przy przeładowaniu potrafi zginąć i blokada wisiałaby do wygaśnięcia (45 s). Drugie okno
+ *  z tą samą nazwą operatora odzyska swoją blokadę przy odświeżeniu co 15 s. */
+export async function releaseOwnLocks() {
+  try {
+    const mine = (await api('GET', '/api/locks')).filter((l) => l.kind === 'pages' && l.who === who);
+    await Promise.all(mine.map((l) => api('POST', `/api/unlock/pages/${encodeURIComponent(l.id)}?who=${encodeURIComponent(who)}`).catch(() => {})));
+  } catch { /* bez sieci albo bez uprawnień – blokady wygasną same */ }
+}
+
 /** Zdarzenia i stan początkowy; woła main.js, moduły w kolejności dawnego skryptu. */
 export function init() {
   // token z adresu trafił już do ciasteczka: nie zostawiamy go w historii, skrótach ani na zrzutach ekranu

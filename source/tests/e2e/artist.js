@@ -206,7 +206,7 @@ const api = (p, o = {}) => fetch(B + p, o).then((r) => r.json());
     ok(errs.length === 0, 'brak błędów JS w Artist' + (errs.length ? ': ' + errs.join('; ') : ''));
   } catch (e) { console.error(e); failures++; } finally {
     if (browser) await browser.close();
-    srv.kill(); fs.rmSync(data, { recursive: true, force: true });
+    srv.kill(); fs.rmSync(data, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `\n${failures} NIEUDANYCH` : '\nWszystkie testy Artist zaliczone');
   process.exit(failures ? 1 : 0);

@@ -63,7 +63,7 @@ let failures = 0;
         console.log((good ? 'PASS ' : 'FAIL ') + `${setName} ${p.number} ${p.name} (różnica ${(ratio * 100).toFixed(2)}%)`);
       }
       await page.close();
-    } finally { srv.kill(); fs.rmSync(data, { recursive: true, force: true }); }
+    } finally { srv.kill(); fs.rmSync(data, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
   }
   await browser.close();
   console.log(failures ? `\n${failures} różnic powyżej progu (pliki *.actual.png)` : '\nZrzuty wzorcowe zgodne');

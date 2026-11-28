@@ -9,7 +9,7 @@ import { init as rundownInit } from './rundown.js';
 import { init as systemInit } from './system.js';
 import { init as mobileInit } from './mobile.js';
 import { connectEvents } from '/renderer.js';
-import { $, loadShow, loadState, phone, toast } from './core.js';
+import { $, loadShow, loadState, phone, releaseOwnLocks, toast } from './core.js';
 import { syncPv } from './pages.js';
 import { setConnected } from './system.js';
 import { applyLayout, keepAwake, syncPgm } from './mobile.js';
@@ -46,4 +46,4 @@ document.addEventListener('visibilitychange', () => {
   lost = true; listen(); keepAwake();
 });
 listen(); applyLayout(); keepAwake();
-loadShow().then(loadState).catch((e) => toast(e.message, true));
+releaseOwnLocks().then(loadShow).then(loadState).catch((e) => toast(e.message, true));

@@ -557,6 +557,14 @@ async function waitUp() {
       let held = true;
       for (let i = 0; i < 50 && held; i++) { await sleep(200); held = (await api('/api/locks')).some((l) => l.id === 'prules'); }
       ok(!held, 'blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę');
+      // sygnał z pagehide zginął (sendBeacon nic nie wysyła) – przeładowane Trio Anny samo zwalnia jej blokadę na starcie
+      await pa.fill('#filter', '9200'); await sleep(150); await pa.click('#pages .item'); await sleep(500);
+      ok((await api('/api/locks')).some((l) => l.id === 'prules' && l.who === 'Anna'), 'blokada: Anna znowu zajęła stronę 9200');
+      await pa.evaluate(() => { navigator.sendBeacon = () => true; });
+      await pa.goto(B + '/trio');
+      held = true;
+      for (let i = 0; i < 50 && held; i++) { await sleep(200); held = (await api('/api/locks')).some((l) => l.id === 'prules'); }
+      ok(!held, 'blokada: bez sygnału pagehide przeładowane Trio zwalnia blokadę swojego operatora');
       await ctxA.close(); await ctxB.close();
       await trio.goto(B + '/trio'); await sleep(800);
     }
@@ -583,7 +591,7 @@ async function waitUp() {
       s2 = await fetch(`http://127.0.0.1:${p2}/api/state`).then((r) => r.json());
       ok(s2.layers.length === 0, 'OSC /vizrs/clear → antena czysta');
       ok(got.some((g) => g.event === 'offAir'), 'webhook: zdarzenie offAir dostarczone');
-      srv2.kill(); hook.close(); fs.rmSync(d2, { recursive: true, force: true });
+      srv2.kill(); hook.close(); fs.rmSync(d2, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 
     // --- token wyjścia (tylko odczyt): OBS widzi grafikę, ale nie steruje (osobna instancja) ---
@@ -605,7 +613,7 @@ async function waitUp() {
       await sleep(2200);
       ok(await out3.evaluate(() => document.body.innerText.includes('TOKEN WYJSCIA')), 'token wyjścia: Output pokazuje grafikę po TAKE operatora');
       ok(errs3.length === 0, 'token wyjścia: Output bez błędów i odmów (fonty, grafiki, zdarzenia)', errs3);
-      await ctx3.close(); srv3.kill(); fs.rmSync(d3, { recursive: true, force: true });
+      await ctx3.close(); srv3.kill(); fs.rmSync(d3, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     }
 
     // --- ticker: edytor wiadomości w Trio, UPDATE na antenie bez restartu przewijania, /api/ticker ---
@@ -817,7 +825,7 @@ async function waitUp() {
   } finally {
     if (browser) await browser.close();
     srv.kill();
-    fs.rmSync(data, { recursive: true, force: true });
+    fs.rmSync(data, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `\n${failures} NIEUDANYCH` : '\nWszystkie testy E2E zaliczone');
   process.exit(failures ? 1 : 0);

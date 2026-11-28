@@ -2,6 +2,8 @@
 
 ## Niewydane
 
+- **Trio: przeładowanie strony nie zostawia blokady na 45 s.** Zwolnienie blokady edytowanej strony szło tylko sygnałem przy opuszczaniu strony (`sendBeacon` w `pagehide`), który przy przeładowaniu potrafił zginąć – strona zostawała zablokowana dla innych operatorów do wygaśnięcia. Teraz wczytane Trio na starcie zwalnia blokady stron swojego operatora (drugie okno z tą samą nazwą odzyska swoją przy odświeżeniu co 15 s). DOKUMENTACJA §9.8.
+- **Testy e2e:** usuwanie katalogu danych po zatrzymaniu serwera z ponowieniami (`ENOTEMPTY`, gdy serwer jeszcze dopisuje), `panel-login.js` czeka na wyjście serwera – niestabilne przebiegi CI z 2026-11-28.
 - **Wydanie z bramką CI:** `release.yml` wywołuje `ci.yml` i publikuje obraz Docker oraz wydanie dopiero po zielonym CI tego commita (dotąd wydania v26.11.1–v26.11.6 i v26.11.10 powstały przy czerwonym CI). Sprawdza wersję z manifestami (`source/Cargo.toml`, `source/shell/Cargo.toml`, `tauri.conf.json`); znacznik i obraz zawsze `v<wersja>`, także przy wydaniu ręcznym. `:latest` tylko przy publikacji wersji bez łącznika; wersja z łącznikiem = wydanie wstępne. Instalator Windows z wydania instalowany i uruchamiany jak w CI (`deploy/windows/build-installer.ps1`, `test-installer.ps1`).
 - **CI:** bez drugiego przebiegu na znacznikach i podwójnego przy PR (tylko wypchnięcie na gałąź); binarki z joba `test` i `shell` przechodzą artefaktem do e2e, render, shell-e2e i shell-smoke (bez 5 ponownych kompilacji), pamięć podręczna Cargo, Playwright przypięty (1.65.1), biblioteki WebKitGTK w jednej akcji (`.github/actions/webkit-deps`). Test „blokada: strona 9200 zwolniona po opuszczeniu jej przez Annę” czeka na zwolnienie do 10 s (wcześniej stałe 900 ms – niestabilny na runnerze).
 

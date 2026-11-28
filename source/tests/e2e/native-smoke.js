@@ -100,7 +100,7 @@ const health = (port) => new Promise((res) => {
     console.error(e);
     failures++;
   } finally {
-    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `\n${failures} NIEUDANYCH` : '\nTest dymny okna natywnego zaliczony');
   process.exit(failures ? 1 : 0);

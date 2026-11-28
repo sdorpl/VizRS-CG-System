@@ -550,7 +550,7 @@ Zdrowie serwera i wyjść, błędy scen (z przyciskiem Wyczyść), lista Word Re
 
 ### 9.8 Wielu operatorów
 
-Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudzej strony wymaga potwierdzenia. Blokada wygasa po 45 s bez aktywności. Konflikt zapisu → wybór „Nadpisz moją wersją / Nie zapisuj” (zmiany zostają w edytorze).
+Edytowana strona jest blokowana miękko: inni widzą 🔒 z imieniem; zapis cudzej strony wymaga potwierdzenia. Blokada wygasa po 45 s bez aktywności; zamknięcie albo przeładowanie Trio zwalnia ją od razu (sygnał przy opuszczaniu strony, a gdy ten zginie – nowo wczytane Trio zwalnia blokady stron swojego operatora przy starcie). Konflikt zapisu → wybór „Nadpisz moją wersją / Nie zapisuj” (zmiany zostają w edytorze).
 
 **Pytania w Trio** (usunięcie, CLEAR ALL, zmiana show, nazwy playlist, rundownów, makr i warstw) zadaje okno aplikacji, nie okienko przeglądarki: przyciski nazywają czynność (np. **Zdejmij wszystko**, czerwony przy czynności nieodwracalnej lub zdejmującej z anteny), **Enter** wybiera wyróżniony przycisk, **Esc** albo kliknięcie obok – Anuluj. Gdy okno jest otwarte, skróty Trio (F1–F8, Ctrl+Enter) nie działają.
 

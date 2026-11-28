@@ -116,7 +116,7 @@ const exited = (p, ms) => Promise.race([p.done, sleep(ms).then(() => 'działa')]
   } finally {
     for (const p of procs) p.kill();
     await sleep(300);
-    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `\n${failures} NIEUDANYCH` : '\nWszystkie testy okien zaliczone');
   process.exit(failures ? 1 : 0);

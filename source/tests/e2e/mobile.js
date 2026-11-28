@@ -334,7 +334,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   } finally {
     await browser?.close();
     srv.kill();
-    fs.rmSync(data, { recursive: true, force: true });
+    fs.rmSync(data, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `\n${failures} błędów` : '\nOK');
   process.exit(failures ? 1 : 0);

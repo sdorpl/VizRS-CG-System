@@ -162,7 +162,7 @@ const probe = (kind) => {
     failures++;
   } finally {
     obs?.destroy();
-    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.rmSync(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `\n${failures} NIEUDANYCH` : '\nWszystkie testy okna natywnego zaliczone');
   process.exit(failures ? 1 : 0);

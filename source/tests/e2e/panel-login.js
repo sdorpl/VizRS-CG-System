@@ -137,8 +137,10 @@ const panel = http.createServer((req, res) => {
   } finally {
     if (browser) await browser.close();
     srv.kill();
+    // serwer kończy zapisy (kopie, log) dopiero po sygnale – katalog usuwamy po jego wyjściu
+    await new Promise((r) => (srv.exitCode !== null || srv.signalCode !== null ? r() : srv.once('exit', r)));
     panel.close();
-    fs.rmSync(data, { recursive: true, force: true });
+    fs.rmSync(data, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
   console.log(failures ? `${failures} błędów` : 'Wszystkie testy logowania kontami panelu zaliczone');
   process.exit(failures ? 1 : 0);
