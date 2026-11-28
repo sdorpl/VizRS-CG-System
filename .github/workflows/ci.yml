@@ -61,7 +61,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # tools/check-docs.sh porównuje CHANGELOG z HEAD~1
       - run: tools/sync-zasady.sh --check
+      - name: Dokumentacja stanu (CHANGELOG, STATUS)
+        run: tools/check-docs.sh
 
   e2e:
     needs: test

@@ -26,7 +26,8 @@ Zgodność – wszystkie aplikacje w bieżących wersjach działają razem:
 - **Styk zmienia się po obu stronach w tym samym cyklu.** Opis styku jest u dostawcy; klient opisuje tylko, jak z niego korzysta.
 - **Starsza wersja sąsiada nie psuje aplikacji ani emisji** – brak nowego pola lub ścieżki to „niedostępne w tej wersji”, nie błąd.
 - **Wydania razem:** przed wydaniem sprawdź z bieżącymi wersjami sąsiadów; zmianę wymagającą nowszego sąsiada odnotuj w `CHANGELOG.md` z minimalną wersją.
-- **Po wydaniu – centrum projektu:** w sdorpl/VizRS wiersz w `ZGODNOSC.md` (wersja, data, pliki, nowe minimalne wersje sąsiadów); zmiana funkcji albo styku – także README (§1–§2) i `STYKI.md`; nowy dokument aplikacji – wiersz w spisie dokumentacji README.
+- **Po wydaniu – centrum projektu:** w sdorpl/VizRS wiersz w `ZGODNOSC.md` (wersja, data, pliki, nowe minimalne wersje sąsiadów); zmiana funkcji albo styku – także README (§1–§2) i `STYKI.md`; nowy dokument aplikacji – wiersz w spisie dokumentacji README; zmiana otwartych planów aplikacji – README §9 „Stan prac i otwarte plany”.
+- **Plan w innym repo:** wdrożenie punktu planu, który leży w sąsiednim repozytorium (np. A1 Artist w CG System, renderer natywny w CG System i CG Playout), aktualizuje stan tego planu w tym samym cyklu – commit w repo planu, nie tylko w repo kodu.
 <!-- /pakiet:A -->
 
 ## Zacznij każdą sesję tutaj
@@ -53,6 +54,7 @@ Zgodność – wszystkie aplikacje w bieżących wersjach działają razem:
 - **Numer wersji: rok.miesiąc.rewizja** (`26.11.1` = listopad 2026, pierwsze wydanie w miesiącu; kolejne `26.11.2`, w grudniu od `26.12.1`), bez zer wiodących (semver: Cargo, paczki, obrazy). Znacznik `v<wersja>` = wersja we wszystkich manifestach projektu (lista – „Tego projektu”). Wydania z gałęzi `main`; `main-oldstable` to stan sprzed 26.11.1.
 - **Gdzie co opisywać:** README tylko wprowadza i odsyła; opis działania, opcje i zmienne tylko w `docs/DOKUMENTACJA.md` (nie powielaj w README, planach ani STATUS); API, którego aplikacja jest dostawcą – `docs/API.md` (albo sekcja wskazana w „Tego projektu”); praca użytkownika – `docs/INSTRUKCJA*.md`; wdrożenie i awarie – `docs/RUNBOOK.md`; plany – `docs/plany/` + wiersz w `docs/plany/README.md`; opis całego pakietu – sdorpl/VizRS.
 - **Dokumentacja razem z kodem:** commit zmieniający zachowanie (UI, API, format, opcje, obrazy) aktualizuje w tym samym commicie `docs/DOKUMENTACJA.md`, a gdy dotyczy codziennej pracy – także instrukcję; API – `docs/API.md`; wdrożenie – `docs/RUNBOOK.md`; zmiany wydania – `CHANGELOG.md` (sekcja „Niewydane”); zamknięta luka – usuń wiersz z `docs/LUKI.md`; zmiana etapu – `docs/STATUS.md`.
+- **Dokumentacja stanu – jedno źródło, wszystkie miejsca w jednym cyklu.** Stan punktu planu (zrobione / częściowo / czeka / decyzja / propozycja, z wersją wydania) trzyma tabela etapów w planie; nagłówek planu, wiersz w `docs/plany/README.md` i `docs/STATUS.md` podają go krótko z tą samą wersją, `docs/LUKI.md` – tylko braki. Kto zmienia stan, poprawia wszystkie te miejsca w tym samym commicie. **Wydanie** (nowa wersja w manifestach) aktualizuje też `docs/STATUS.md` – data „Ostatnia aktualizacja”, „Bieżący etap”, „Następne”. **Scalenie gałęzi** do `main` usuwa z dokumentów zapisy „na gałęzi X”, „czeka na tag/scalenie”. Nowa propozycja punktu od razu dostaje wiersz w tabeli planu z numerem i stanem „propozycja” – numerów nie używa się ponownie. `CHANGELOG.md` tylko się wydłuża (wpisy wydanych wersji nie znikają); pilnuje tego i daty STATUS `tools/check-docs.sh` (CI, bramka przed commitem).
 - **Produkcji i danych użytkownika nie ruszaj bez prośby.** Testy na kopii danych, innym porcie albo stosie testowym; działających serwerów, stosów i kontenerów nie zatrzymuj (mogą nadawać).
 - **Zobacz wynik.** Przy pracy nad UI zrzut ekranu (Playwright; pliki PNG poza repo) i obejrzenie go przed commitem.
 <!-- /pakiet:B -->
@@ -66,7 +68,7 @@ Zgodność – wszystkie aplikacje w bieżących wersjach działają razem:
   - nowy plik w `web/` trzeba dopisać do `STATIC`;
   - `start-linux.sh` uruchamia `bin/linux-x86_64/vizrs` (plik w repo) — po zmianach UI skopiuj tam `source/target/release/vizrs`.
 - **Jeden renderer.** `web/renderer.js` (`ScenePlayer`) renderuje wyjście OBS, podgląd w Trio i kanwę Artist. Nie duplikuj logiki rysowania w Trio/Artist.
-- **Wyjątek: renderer natywny `source/render/`** (`vizrs-render`, gałąź `render-native`, plan [PLAN-native.md](docs/plany/PLAN-native.md)) — drugi wykonawca tej samej semantyki tylko dla playoutu kanału bez GPU; osobny workspace z własnym `Cargo.lock`, dozwolone crate'y z nagłówka `source/render/Cargo.toml` (tiny-skia, rustybuzz, wuff, serde_json, png, jpeg-decoder, image-webp). Czego nie umie, zgłasza (`check`, flaga klatki) zamiast zgadywać. Zmiana w `renderer.js` (rysowanie, tekst, krzywe, ticker) → ta sama w `source/render/` + `node tools/native-compare.js`.
+- **Wyjątek: renderer natywny `source/render/`** (`vizrs-render`, w `main`, plan [PLAN-native.md](docs/plany/PLAN-native.md)) — drugi wykonawca tej samej semantyki tylko dla playoutu kanału bez GPU; osobny workspace z własnym `Cargo.lock`, dozwolone crate'y z nagłówka `source/render/Cargo.toml` (tiny-skia, rustybuzz, wuff, serde_json, png, jpeg-decoder, image-webp). Czego nie umie, zgłasza (`check`, flaga klatki) zamiast zgadywać. Zmiana w `renderer.js` (rysowanie, tekst, krzywe, ticker) → ta sama w `source/render/` + `node tools/native-compare.js`.
 - **`validate.rs` – granica danych.** Każdy zapis show przechodzi przez `validate.rs` (limity, typy). Nowe pole w modelu = reguła w `validate.rs` + test.
 - **Serwer nie pada:** blokady `lk()` odporne na zatrucie, wolny klient SSE jest odłączany. Antena ma działać dalej, nawet gdy zapis na dysk się nie uda.
 - **Model tekstu:** `web/text-model.js` (sanityzacja, RichText, typografia PL, reguły pól, Word Replace); zachowanie pilnują wektory `source/tests/vectors/*.json` (`node tests/vectors/run.js`) – zmiana zachowania = zmiana wektorów w tym samym commicie.
@@ -88,7 +90,7 @@ Szczegóły: [docs/AGENCI.md](docs/AGENCI.md) – wspólny dla pakietu. W skróc
 
 ### Ten projekt
 
-- **Kod (tylko Claude):** `source/**` – serwer (`source/src/*.rs`; `validate.rs` – granica danych, `guard.rs` – tokeny i CSRF), strony i moduły `source/web/*` (wkompilowane w binarkę), okno `source/shell/` (`src/bridge.rs` – biała lista), renderer `source/render/`, testy i narzędzia; `deploy/**`, `start-*`, `build-*`, `bin/`, `examples/*.cgpack`, `examples/**/*.json`, `render.yaml`, `Dockerfile`, `tools/sync-zasady.sh`.
+- **Kod (tylko Claude):** `source/**` – serwer (`source/src/*.rs`; `validate.rs` – granica danych, `guard.rs` – tokeny i CSRF), strony i moduły `source/web/*` (wkompilowane w binarkę), okno `source/shell/` (`src/bridge.rs` – biała lista), renderer `source/render/`, testy i narzędzia; `deploy/**`, `start-*`, `build-*`, `bin/`, `examples/*.cgpack`, `examples/**/*.json`, `render.yaml`, `Dockerfile`, `tools/sync-zasady.sh`, `tools/check-docs.sh`.
 - **Dokumentacja (Gemini – tylko pliki wskazane w zleceniu):** `README.md`, `CHANGELOG.md`, `SZYBKI_START.txt`, `examples/README.md`, `docs/DOKUMENTACJA.md`, `docs/INSTRUKCJA-poczatkujacy.md`, `docs/API.md`, `docs/COMPANION.md`, `docs/RUNBOOK.md`, `docs/STATUS.md`, `docs/LUKI.md`, `docs/README.md`.
 - **Bramka (Gemini może uruchomić i streścić):** `cargo clippy --manifest-path source/Cargo.toml --all-targets -- -D warnings`, `cargo test --manifest-path source/Cargo.toml`, `cargo build --release --manifest-path source/Cargo.toml` (okno i renderer: `source/shell/Cargo.toml`, `source/render/Cargo.toml`); `cargo fmt` tylko z `--check`.
 - **Zawsze:** serwer i okna tylko na kopii danych i innym porcie (`--data <kopia> --port 8099 --tcp 0`); nie zatrzymuj działającego `vizrs` (może nadawać grafikę na antenę).
@@ -134,6 +136,7 @@ node tests/cgpack.mjs                             # reguły zasobów paczki (naz
 node tests/motion.js && node tests/e2e/motion.js target/release/vizrs   # ruch (node.motion)
 node tests/e2e/golden.js target/release/vizrs     # zrzuty wzorcowe (lokalnie, zależne od fontów)
 ../tools/sync-zasady.sh --check                  # AGENTS.md = CLAUDE.md (zasady pakietu)
+../tools/check-docs.sh                           # CHANGELOG bez utraconych wpisów, nagłówek wersji, data STATUS
 ```
 
 Playwright nie jest zależnością repo: `PLAYWRIGHT_DIR` wskazuje katalog z `node_modules/playwright` (bez niej – zwykłe `require('playwright')`).
@@ -183,6 +186,7 @@ Przy pracy nad UI **zobacz wynik** — zrzut ekranu z Playwright (pliki PNG trzy
 | `source/tools/` | narzędzia pakietów, galerii, filmów i zgodności (`build-packs.mjs`, `gallery.js`, `engines.js`, `video.js`…); pełna lista: DOKUMENTACJA §14 |
 | `examples/` | paczki `INFO24.cgpack`, `R7_NEWS.cgpack` (budowa: `tools/build-packs.mjs`); `archiwum/` – źródłowe `.show.json` i `assets/` (używane przez testy) |
 | `deploy/`, `render.yaml` | systemd, launchd, Windows (NSSM), Docker compose + Caddy, nginx, Render.com, AppImage i `.deb`, skróty okien (Linux `.desktop`, Windows `.ps1`) |
+| `tools/check-docs.sh` | kontrola dokumentacji stanu (wspólna dla pakietu, kopiowana przez `sync-zasady.sh`): `CHANGELOG.md` niepusty, z „Niewydane” i nagłówkiem wersji z manifestu, bez utraconych wpisów wobec HEAD~1; data `docs/STATUS.md` nie starsza niż wydanie |
 | `tools/sync-zasady.sh` | zasady pakietu VizRS (bloki `pakiet:*` w `CLAUDE.md`, `GEMINI.md`, `docs/AGENCI.md`): to repo jest źródłem; pozostałe repo kopiują je tym skryptem (`--check` w CI) |
 | `LICENSE`, `THIRD-PARTY.md` | licencja MIT; składniki zewnętrzne (fonty SIL OFL, crate'y okna i renderera) |
 | `docs/` | dokumentacja (spis: `docs/README.md`); `docs/plany/` – plany i raport (dokumenty projektowe, nie opis bieżącego działania) |
