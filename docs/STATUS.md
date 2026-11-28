@@ -2,10 +2,10 @@
 
 > Aktualizuj w tym samym commicie, który zmienia stan. Plan: [plany/PLAN-rozbudowy.md](plany/PLAN-rozbudowy.md).
 >
-> **Ostatnia aktualizacja:** 2026-11-24
+> **Ostatnia aktualizacja:** 2026-11-28
 
 ## Bieżący etap
-**Wydanie 26.11.13** (2026-11-24). Od 26.11.1 (2026-11-12) numeracja rok.miesiąc.rewizja; wydania 26.11.1–26.11.13 opisuje [CHANGELOG.md](../CHANGELOG.md).
+**Wydanie 26.11.13** (2026-11-24): okno Trio z zasobnikiem, skrótami globalnymi i logowaniem kontem panelu bez tokenu; renderer natywny z ruchem `node.motion` 2D i WebP. 26.11.12 – crate `vizrs-model` (A1). Po wydaniu w `main` (sekcja „Niewydane” CHANGELOG): wydanie z bramką CI, szybsze CI, zasady pakietu „najpierw graf wiedzy” (60f0fa1) – bez nowego wydania. Od 26.11.1 (2026-11-12) numeracja rok.miesiąc.rewizja; wersje sąsiadów – `ZGODNOSC.md` w [sdorpl/VizRS](https://github.com/sdorpl/VizRS/blob/main/ZGODNOSC.md).
 
 **Ruch belek (powiązania dock)** – [plany/PLAN-ruch-belek.md](plany/PLAN-ruch-belek.md): wdrożony (2026-11-16) – cel na innej warstwie w wyjściu jednej warstwy (A0b), krzywa `ease` (A1), edytor w VizRS CG Artist (A2), reguła krawędzi z obrysu celu, łańcuch, największe przesunięcie, powrót po OUT celu (B1–B4). Odłożone: ustawianie w Trio (A3), nazwany stos (B5).
 
@@ -15,7 +15,9 @@
 
 **Playout kanału** – [plany/PLAN-kanal.md](plany/PLAN-kanal.md): własny playout na bazie ffplayout („VizRS Playout”, repo `VizRS ffPlayout System`) **porzucony 2026-10-24** – repozytorium zostaje jako archiwum i wzorzec. Kanał z grafiką VizRS: **VizRS CG Playout** (sidecar dla ErsatzTV, `../VizRS CG Playout`) – komendy na start klipu, reklamy bez grafiki, wtapianie `/output` bezgłowym Chromium.
 
-**Renderer natywny** – [plany/PLAN-native.md](plany/PLAN-native.md): `vizrs-render` (`source/render/`, gałąź `render-native`) rysuje antenę bez Chromium dla playoutu kanału; etapy N1 i N2 (0.2) zrobione – INFO24 i R7 w całości natywnie; następne: ruch `node.motion` (N3), pomiar na Ampere A1.
+**Renderer natywny** – [plany/PLAN-native.md](plany/PLAN-native.md): `vizrs-render` (`source/render/`, w `main`) rysuje antenę bez Chromium dla playoutu kanału (VizRS CG Playout wkompilowuje go w obraz `vizrs-cg`); N1, N2 zrobione, N3/N4 częściowo w 26.11.13 (ruch 2D, WebP nieruchome); następne: reszta N3/N4 (3D, efekty tekstu, pętle, tło, glitch/RGB), pomiar na Ampere A1, N5 (`renderer: auto` domyślnie).
+
+**Artist i model** – A1 [plany/PLAN-artist-osobny.md](plany/PLAN-artist-osobny.md): crate `vizrs-model` (`source/model/`) w 26.11.12, VizRS CG Artist 26.11.12 waliduje nim magazyn lokalny. A5 (`.cgpack` w Ruście) wstrzymany – decyzja; T3 (usunięcie `/artist`) – wydanie 3.0.
 
 | Etap | Stan |
 |---|---|
@@ -25,7 +27,9 @@
 | N3 okna aplikacji (`vizrs artist|trio|output`, `--connect`, `vizrs-app` bez konsoli, skróty Linux/Windows, wskaźnik połączenia, `tests/e2e/app.js`) | zrobione; Windows/macOS: sprawdzona kompilacja (clippy dla celów), uruchomienie okien – do sprawdzenia na tych systemach |
 | N4.1 okno natywne `vizrs-shell` (Trio i wyjście; menu, pisownia pl, dołączanie/uruchamianie serwera, skróty, CI, `tools/engines.js`; Artist to osobny program VizRS CG Artist) | zrobione; Linux sprawdzony w działaniu, Windows – kompilacja (clippy), macOS – CI |
 | Krok A7 planu PLAN-artist-osobny (wydzielenie Artist do osobnego programu VizRS CG Artist 0.3.0 na Tauri 2; w `vizrs-shell` tylko Trio i wyjście, `/artist` jako zamrożony zapas w przeglądarce) | zrobione (2026-11-07) |
-| N4.2, N4.3, instalatory Windows/macOS, N5 relay i kanały | opcjonalne – czekają na decyzję |
+| N4.2 zasobnik, N4.3 skróty globalne okna Trio | zrobione – wydanie 26.11.13 |
+| Instalator Windows (Inno Setup) | zrobione (2.0.20) |
+| N4.5 paczka macOS (`.app`/`.dmg`, podpis), N5 relay i kanały | opcjonalne – czekają na decyzję |
 
 ## Zrobione (wg planu)
 | Etap | Kroki | Gdzie |
@@ -41,7 +45,10 @@
 | F4 | F4.1 wektory modelu tekstu, F4.3 blokady edycji, F4.4 `deploy/`, runbook | `tests/vectors`, `deploy/`, `docs/` |
 
 ## Następne zadanie
-Wybierz z [LUKI.md](LUKI.md) pozycję o najwyższym priorytecie (G1 → G2 → G3).
+Wybierz z [LUKI.md](LUKI.md) pozycję o najwyższym priorytecie (G1 → G2 → G3). Otwarte plany (szczegóły w [plany/README.md](plany/README.md)):
+- renderer natywny – reszta N3/N4, pomiar na A1 (N0, PLAN-ampere A1/A3/A4), N5;
+- L5 – wskaźnik scen z ciągłym ruchem w Artist (LUKI #20, praca w VizRS CG Artist);
+- do decyzji: A5 (`.cgpack` w Ruście), T3 (usunięcie `/artist`, 3.0), A3/B5 ruchu belek, P5 przenoszenia, T5.2 tickera, N4.5/N5, GTK 4 (G0).
 
 ## Blokery / uwagi
 - Binarki macOS/Windows buduje CI (`.github/workflows/ci.yml`); lokalnie przetestowano tylko Linux x86_64.

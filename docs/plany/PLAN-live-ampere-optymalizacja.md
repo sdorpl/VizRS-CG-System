@@ -1,6 +1,8 @@
 # PLAN: Optymalizacja VizRS Live pod emisję FFmpeg na Oracle Ampere A1
 
-> Status: **Projekt techniczny (2026-11-09)**. Dotyczy optymalizacji panelu zarządczego `VizRS Live` (nakładka na ErsatzTV legacy + Next) na instancji Oracle Cloud Infrastructure (OCI Always Free) Ampere A1 (ARM64, 4 OCPU, 24 GB RAM, bez GPU).
+> Stan (2026-11-28): **częściowo** – ustawienia GC .NET (`DOTNET_gcServer=0`, `DOTNET_GCHeapHardLimit`, `DOTNET_EnableWriteXorExecute=0`) w `docker-compose.ampere.yml` VizRS CG Playout; web GUI legacy zamknięte za proxy i zastąpione panelem (R10). VizRS Live jest od 26.11.11 częścią VizRS CG Playout (`panel/`), zmienne `VIZRS_LIVE_*` z §6 – zob. DOKUMENTACJA CG Playout.
+>
+> Pierwotnie: **projekt techniczny (2026-11-09)**. Dotyczy optymalizacji panelu zarządczego `VizRS Live` (nakładka na ErsatzTV legacy + Next) na instancji Oracle Cloud Infrastructure (OCI Always Free) Ampere A1 (ARM64, 4 OCPU, 24 GB RAM, bez GPU).
 
 ## 1. Rola VizRS Live w torze emisyjnym
 

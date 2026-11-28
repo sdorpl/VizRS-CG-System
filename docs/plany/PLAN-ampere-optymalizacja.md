@@ -1,6 +1,8 @@
 # PLAN: Optymalizacja VizRS CG System pod emisję FFmpeg na Oracle Ampere A1
 
-> Status: **Projekt techniczny (2026-11-09)**. Dotyczy optymalizacji rdzenia VizRS CG System oraz natywnego renderera `vizrs-render` na bezpłatnej instancji Oracle Cloud Infrastructure (OCI Always Free) Ampere A1. Powiązany plan dla toru playoutu: [PLAN-playout-ampere-optymalizacja.md](PLAN-playout-ampere-optymalizacja.md).
+> Stan (2026-11-28): **A2 wdrożony** (2.0.20: `-C target-cpu=neoverse-n1 -C opt-level=3` dla `linux/arm64` w `Dockerfile`). **Do zrobienia:** A1 (benchmark `vizrs-render bench` na A1), A3 (`stream.rs` nadal woła `unpremultiply`), A4 (test 24 h).
+>
+> Pierwotnie: **projekt techniczny (2026-11-09)**. Dotyczy optymalizacji rdzenia VizRS CG System oraz natywnego renderera `vizrs-render` na bezpłatnej instancji Oracle Cloud Infrastructure (OCI Always Free) Ampere A1. Powiązany plan dla toru playoutu: [PLAN-playout-ampere-optymalizacja.md](PLAN-playout-ampere-optymalizacja.md).
 
 ## 1. Cel i uwarunkowania sprzętowe
 

@@ -1,6 +1,6 @@
 # PLAN: renderer natywny VizRS (`vizrs-render`, bez Chromium)
 
-> Stan (2026-10-31): **etapy N1 i N2 zrobione** na gałęzi `render-native` (renderer 0.2). Uzasadnienie, odrzucone kierunki
+> Stan (2026-11-28): **N1, N2 i N2+ zrobione, N3 i N4 częściowo** (wydanie 26.11.13, w `main`; od VizRS CG Playout 26.11.30 renderer z 26.11.13 jest w obrazie `vizrs-cg`). Dalej: reszta N3/N4, pomiar na A1 (N0), N5. Uzasadnienie, odrzucone kierunki
 > i decyzje: plan wspólny z playoutem kanału – `VizRS CG Playout`, `docs/plany/native.md`. Opis działania: [DOKUMENTACJA §10.1](../DOKUMENTACJA.md#101-renderer-natywny-vizrs-render).
 
 ## Cel
@@ -28,8 +28,8 @@ z tym samym wyglądem i ruchem. OBS, Trio i Artist zostają przy `renderer.js`.
 | N1 | prymitywy, klucze, tekst bez znaczników, zegary, crawl, host warstw, `stream`, `check`, `frame`, `bench`; sidecar: `renderer: chromium\|native\|auto` | **zrobione (0.1)**: INFO24 i R7 – 13/13 stron poniżej 1% różnych pikseli wobec Chromium (poza stronami z `[[ ]]`) |
 | N2 | tekst sformatowany (`[[ ]]`, `{b}{i}{u}{c=}{sz=}`), ticker `roll`/`wipe`/`whip`, kod QR | **zrobione (0.2)**: INFO24 16/16 i R7 13/13 scen natywnie, 39 stron (także z tickerami) poniżej 1% różnych pikseli |
 | N2+ | wierność: plansze testowe, pomiar szerokości tekstu, błąd klatek ruchu; reguły Blink/Skia (DOKUMENTACJA §10.1) | **zrobione**: oprawy średnio poniżej 0,6/255, ruch – MSE klatek poniżej 5; zostaje wygładzanie krawędzi glifów (FreeType analitycznie, tiny-skia nadpróbkowaniem) |
-| N3 | ruch (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) – port `motion.js` | czeka |
-| N4 | WebP, efekty specjalne (3D, RGB, glitch), szybsza ścieżka `yuva420p` i prostokąty zmian | czeka |
+| N3 | ruch (`node.motion`: presety IN/OUT, efekty tekstu, pętle, tło) – port `motion.js` | **częściowo (26.11.13)**: presety IN/OUT 2D (przekształcenie, krycie, przycięcie prostokątne, rozmycie), krzywe, opóźnienie, punkt odniesienia, sekwencja „po węźle” – `source/render/src/motion.rs`; zgodność 17 presetów × 6 chwil ≤ 2% pikseli. Czeka: odwrócenia 3D, maska ukośna, żaluzja, efekty tekstu, pętle uwagi, tło (`unsupported` → Chromium) |
+| N4 | WebP, efekty specjalne (3D, RGB, glitch), szybsza ścieżka `yuva420p` i prostokąty zmian | **częściowo (26.11.13)**: WebP nieruchome. Czeka: WebP animowane, glitch, RGB, 3D, `yuva420p`, prostokąty zmian |
 | N5 | `renderer: auto` domyślnie w `docker-compose.ampere.yml` po tygodniu emisji testowej | czeka |
 
 ## Dostosowanie szablonów

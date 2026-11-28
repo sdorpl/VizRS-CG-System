@@ -1,6 +1,6 @@
 # PLAN: VizRS w oknie systemowym (Artist, Trio) i jako serwer bez GUI (VPS, Docker)
 
-> Status: **N0–N3 i N4.1 (okno natywne `vizrs-shell`) wdrożone** (wydanie 2.0.1, 2026-10-22, gałąź `main`); N4.2–N4.5 i N5 czekają na decyzję (LUKI #17–#19). Stan: [docs/STATUS.md](../STATUS.md).
+> Status: **N0–N3 i N4.1 (okno natywne `vizrs-shell`) wdrożone** (wydanie 2.0.1, 2026-10-22, gałąź `main`); N4.2 (zasobnik) i N4.3 (skróty globalne) wdrożone w oknie Trio w 26.11.13 (`source/shell/src/tray.rs`, `VIZRS_GLOBAL_KEYS`; na Waylandzie bez skrótów globalnych); N4.4, N4.5 (paczka macOS `.app`/`.dmg`, podpis) i N5 czekają na decyzję (LUKI #17–#19). Stan: [docs/STATUS.md](../STATUS.md).
 
 ### Realizacja i odstępstwa od planu
 - Decyzje z §9 przyjęte wg rekomendacji: wariant A (Chromium `--app`, zero zależności), najpierw serwer (N0–N2), potem okna (N3), obraz `scratch`, Caddy w compose, dwie role tokenów (operator / wyjście), kanał = kontener.

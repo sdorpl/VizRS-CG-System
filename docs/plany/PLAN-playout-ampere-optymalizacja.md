@@ -1,6 +1,8 @@
 # PLAN: Optymalizacja VizRS CG Playout i toru FFmpeg na Oracle Ampere A1
 
-> Status: **Projekt techniczny (2026-11-09)**. Dotyczy optymalizacji procesów transkodowania, nakładania grafiki (`overlay`) oraz wejść sygnału na żywo w repozytorium `VizRS CG Playout` (`VirtRS CG Playout`) z wykorzystaniem wrappera `vizrs-ffmpeg` i silnika ErsatzTV Next na instancji Oracle Cloud Infrastructure (OCI Always Free) Ampere A1.
+> Stan (2026-11-28): **częściowo w VizRS CG Playout** – stały klatkaż `VIZRS_FFMPEG_FPS` (domyślnie 25 w `docker-compose.ampere.yml`), preset kodera `VIZRS_FFMPEG_PRESET` (`encoder.json`), plansza `VIZRS_FFMPEG_STANDBY`. Nie wdrożone: przydział rdzeni `cpuset` (§4); pomiarów na A1 w tym dokumencie brak.
+>
+> Pierwotnie: **projekt techniczny (2026-11-09)**. Dotyczy optymalizacji procesów transkodowania, nakładania grafiki (`overlay`) oraz wejść sygnału na żywo w repozytorium `VizRS CG Playout` (`VirtRS CG Playout`) z wykorzystaniem wrappera `vizrs-ffmpeg` i silnika ErsatzTV Next na instancji Oracle Cloud Infrastructure (OCI Always Free) Ampere A1.
 
 ## 1. Kontekst architektoniczny
 

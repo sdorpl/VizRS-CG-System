@@ -9,18 +9,18 @@ Dokumenty projektowe: decyzje, etapy i ich uzasadnienie. Bieżący stan prac jes
 | [PLAN-natywne-i-serwer.md](PLAN-natywne-i-serwer.md) | N0–N4.1 wdrożone (2.0.1), reszta czeka | okna aplikacji, okno natywne `vizrs-shell`, VPS/Docker |
 | [PLAN-gtk4.md](PLAN-gtk4.md) | propozycja (G0–G6), czeka na prototyp G0 | przebudowa okna natywnego na Linuksie na GTK 4 i WebKitGTK 6.0 |
 | [PLAN-kanal.md](PLAN-kanal.md) | realizacja w ffplayout porzucona (2026-10-24, repo archiwalne); kanał: VizRS CG Playout (ErsatzTV) | VizRS Playout – branding kanału sterowany harmonogramem (Viz Multichannel) |
-| [PLAN-native.md](PLAN-native.md) | N1 w toku (gałąź `render-native`, renderer 0.1) | renderer natywny `vizrs-render` dla playoutu kanału bez GPU: sceny rysowane bez Chromium, braki do Chromium |
+| [PLAN-native.md](PLAN-native.md) | N1, N2 zrobione; N3/N4 częściowo (26.11.13: ruch 2D, WebP); dalej reszta N3/N4, pomiar na A1, N5 | renderer natywny `vizrs-render` dla playoutu kanału bez GPU: sceny rysowane bez Chromium, braki do Chromium |
 | [PLAN-za-chwile.md](PLAN-za-chwile.md) | Z1–Z4 i Z6 wdrożone (Z4: `{next_start_iso}` w CG Playout, 2026-11-24), Z5 niepotrzebne; test na stosie czeka | belka „Za chwilę / Następnie” N s przed końcem audycji: planowanie względem końca w VizRS CG Playout (`on_end`, parametry elementu), scena w VizRS |
 | [PLAN-lekkie-output.md](PLAN-lekkie-output.md) | L1–L4 wdrożone (2026-10-24), L5 później | lekkie `/output` dla bezgłowego Chromium bez GPU (Ampere A1): `?fps=N`, schodkowe efekty, wskazówki dla scen kanału |
 | [PLAN-panel-wlasciwosci.md](PLAN-panel-wlasciwosci.md) | P1–P8 wdrożone (P8 – edycja wielu zaznaczonych – w VizRS CG Artist 26.11.5) | prostszy panel Właściwości w Artist: zwijane sekcje, wiersze złożone, tryb podstawowy, widoczność warunkowa, szukanie, zakładki |
 | [PLAN-jeden-ruch.md](PLAN-jeden-ruch.md) | J1–J5 wdrożone (2026-11-14; J1–J4 w VizRS CG Artist), J6 przeniesiony do PLAN-ruch-belek | jeden model ruchu w Artist: presety jako klipy na wspólnej osi czasu z kluczami |
 | [PLAN-ruch-belek.md](PLAN-ruch-belek.md) | wdrożony (2026-11-16: A0b, A1, A2, B1–B4; A3 odłożone, A4 – nie, B5 – decyzja) | wzajemny ruch belek jak dokowanie w BTB CG: część A – zgodność i błąd anteny A0b, część B – ponad BTB (krawędź i dynamiczna wysokość B1, łańcuch, stos; LUKI #7) |
-| [PLAN-artist-osobny.md](PLAN-artist-osobny.md) | A0, A2–A4, A6, A7 wdrożone (2026-11-07); A1, A5 – do zrobienia | **VizRS CG Artist** – osobne repo i aplikacja (Tauri 2: Linux, Windows, macOS, wydanie 0.3.0 z 2026-11-07): pliki i okno w Ruście, kanwa i panele w JS (walidacja `vizrs-model` i paczki `.cgpack` w Ruście – A1, A5); w VizRS CG System: `vizrs-shell` tylko Trio/wyjście, `/artist` w serwerze zamrożony do 3.0 |
+| [PLAN-artist-osobny.md](PLAN-artist-osobny.md) | A0–A4, A6, A7 wdrożone (A1 – crate `vizrs-model` w 26.11.12, używany przez VizRS CG Artist 26.11.12); A5 wstrzymany – decyzja | **VizRS CG Artist** – osobne repo i aplikacja (Tauri 2: Linux, Windows, macOS, wydanie 0.3.0 z 2026-11-07): pliki i okno w Ruście, kanwa i panele w JS (walidacja `vizrs-model` i paczki `.cgpack` w Ruście – A1, A5); w VizRS CG System: `vizrs-shell` tylko Trio/wyjście, `/artist` w serwerze zamrożony do 3.0 |
 | [PLAN-wyglad-live-i-tauri.md](PLAN-wyglad-live-i-tauri.md) | W0–W3, T1–T2 wdrożone (2026-11-12/13); T3 później | wygląd VizRS Live w Trio i Artist (wspólny rdzeń stylu), jeden frontend www + okno, okno Trio i aplikacja VizRS Live na Tauri 2 |
 | [PLAN-przenoszenie.md](PLAN-przenoszenie.md) | P0–P4 wdrożone (2026-11-14), P5 (atomowy import) odłożony | przenoszenie i edycja elementów grafiki w pakiecie VizRS: jedna tożsamość sceny dla importu `.cgpack` i wysyłki z Artist, plan przed zapisem, eksport stron z Trio, błędy `cgpack.js` (P0–P5) |
-| [PLAN-ampere-optymalizacja.md](PLAN-ampere-optymalizacja.md) | projekt techniczny (2026-11-09) | optymalizacja VizRS CG System i renderera natywnego `vizrs-render` na Oracle Ampere A1 (ARM64, Neoverse-N1) |
-| [PLAN-playout-ampere-optymalizacja.md](PLAN-playout-ampere-optymalizacja.md) | projekt techniczny (2026-11-09) | optymalizacja VizRS CG Playout, wrappera `vizrs-ffmpeg`, filtru `overlay` i koderów pod Ampere A1 |
-| [PLAN-live-ampere-optymalizacja.md](PLAN-live-ampere-optymalizacja.md) | projekt techniczny (2026-11-09) | optymalizacja VizRS Live (ErsatzTV legacy + Next), środowiska .NET CLR, profili FFmpeg i skanera mediów na Ampere A1 |
+| [PLAN-ampere-optymalizacja.md](PLAN-ampere-optymalizacja.md) | A2 (`neoverse-n1` w `Dockerfile`) wdrożony (2.0.20); A1, A3, A4 – do zrobienia | optymalizacja VizRS CG System i renderera natywnego `vizrs-render` na Oracle Ampere A1 (ARM64, Neoverse-N1) |
+| [PLAN-playout-ampere-optymalizacja.md](PLAN-playout-ampere-optymalizacja.md) | częściowo: klatkaż, preset, plansza `STANDBY` w CG Playout; przydział rdzeni – nie | optymalizacja VizRS CG Playout, wrappera `vizrs-ffmpeg`, filtru `overlay` i koderów pod Ampere A1 |
+| [PLAN-live-ampere-optymalizacja.md](PLAN-live-ampere-optymalizacja.md) | częściowo: GC .NET w `docker-compose.ampere.yml`, panel zamiast Blazora (R10); VizRS Live jest dziś częścią CG Playout | optymalizacja VizRS Live (ErsatzTV legacy + Next), środowiska .NET CLR, profili FFmpeg i skanera mediów na Ampere A1 |
 
 ## Plany dalekosiężne
 
@@ -28,6 +28,6 @@ Pomysły na rozwój pakietu VizRS bez decyzji i terminu – kierunek, nie zobowi
 
 | Dokument | Stan | Zakres |
 |---|---|---|
-| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | prototyp 0.1.0 działa (2026-11-06, repo `VizRS Live`): most C# w legacy + panel w Ruście; dalej: edycja pozostałych ekranów, sloty na żywo | **VizRS Live** – nakładka na ErsatzTV legacy z funkcjami jego UI (kanały, media, harmonogramy, EPG), spięta z grafiką VizRS i VizRS CG Playout |
+| [PLAN-vizrs-live.md](PLAN-vizrs-live.md) | historyczny: VizRS Live wchłonięty przez VizRS CG Playout (`panel/`, od 26.11.11, 2026-11-16), repo `VizRS-Live-Playout` zarchiwizowane; dalszy rozwój panelu – `PLAN-mcr.md` w CG Playout | **VizRS Live** – nakładka na ErsatzTV legacy z funkcjami jego UI (kanały, media, harmonogramy, EPG), spięta z grafiką VizRS i VizRS CG Playout |
 
 Założenia Z1–Z10 z planu rozbudowy obowiązują przy każdej nowej funkcji.

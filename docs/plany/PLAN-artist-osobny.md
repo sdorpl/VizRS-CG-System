@@ -1,6 +1,6 @@
 # PLAN: VizRS CG Artist jako osobna aplikacja (osobne repo), Rust tam, gdzie się opłaca
 
-> Stan (2026-11-24): **A0–A4, A6, A7 wykonane; A1 (2026-11-24, gałąź `vizrs-model`): crate `source/model/` (`json.rs`, `validate.rs`, `ticker.rs`), serwer z niego korzysta; użycie w Artist (magazyn lokalny – LUKI Artist #7) czeka na tag CG System z crate'em. A5 (`.cgpack` w Ruście) – do zrobienia** (wcześniej 2026-11-07: A0, A2–A4, A6, A7), VizRS CG Artist wydany (0.3.0). Decyzja użytkownika (2026-11-07): **nie przepisujemy wszystkiego na Rust
+> Stan (2026-11-24): **A0–A4, A6, A7 wykonane; A1 (wydanie 26.11.12, 2026-11-24): crate `source/model/` (`json.rs`, `validate.rs`, `ticker.rs`), serwer z niego korzysta, VizRS CG Artist 26.11.12 waliduje nim zapis sceny i import show (tag `v26.11.12`, LUKI Artist #7 zamknięta). A5 (`.cgpack` w Ruście) – do zrobienia** (wcześniej 2026-11-07: A0, A2–A4, A6, A7), VizRS CG Artist wydany (0.3.0). Decyzja użytkownika (2026-11-07): **nie przepisujemy wszystkiego na Rust
 > na siłę – kanwa zostaje w JS** (`renderer.js`, `ScenePlayer`), zasada „Jeden renderer” obowiązuje dalej.
 > Opis bieżącego działania Artist w [DOKUMENTACJA](../DOKUMENTACJA.md) dotyczy zamrożonego `/artist`.
 
